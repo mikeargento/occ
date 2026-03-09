@@ -1,0 +1,19 @@
+{
+  "version": "proofwork/1",
+  "artifact": {
+    "hashAlg": "sha256",
+    "digestB64": "nf5vFdGrc6+Jhzk5T9Iv1yoD2wGDRYLyS7Lhxmx6rq4="
+  },
+  "commit": {
+    "nonceB64": "16rSYBDoGzuYtWI3fW7lWJsRAjpaZsIzmscpc6sZsmA=",
+    "counter": "2"
+  },
+  "signer": {
+    "publicKeyB64": "E+4AxJLfU7SEc7mIFjiPjyYfeWQ/06oRwoEWG/Z22+s=",
+    "signatureB64": "O4jm78RCTWg4WSbsjnVRQdLBRIveLe30trRl+5IqL/v1MTptAWhUQoM94zibiwMER9QOjeHejy/g3UB20uJQDQ=="
+  },
+  "environment": {
+    "enforcement": "stub",
+    "measurement": "stub-measurement-v1"
+  }
+}
