@@ -1,5 +1,5 @@
-# OCC — Origin Controlled Computing
-**Portable cryptographic proof at finalization**
+# Origin Controlled Computing (OCC)
+**Proof as a reachability property of system architecture.**
 
 [![npm occproof](https://img.shields.io/npm/v/occproof?label=occproof&color=cb3837)](https://www.npmjs.com/package/occproof)
 
