@@ -1,0 +1,31 @@
+{
+  "name": "@occ/adapter-nitro",
+  "version": "1.0.0",
+  "description": "AWS Nitro Enclaves adapter for OCC",
+  "author": "Mike Argento",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "cbor2": "^1.0.0",
+    "occproof": "file:../../"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

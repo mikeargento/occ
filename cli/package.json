@@ -1,0 +1,25 @@
+{
+  "name": "@occ/cli",
+  "version": "1.0.0",
+  "description": "OCC CLI — hash files locally, get TEE-signed proofs",
+  "author": "Mike Argento",
+  "license": "Apache-2.0",
+  "type": "module",
+  "bin": {
+    "occ": "./dist/occ.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "fflate": "^0.8.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
