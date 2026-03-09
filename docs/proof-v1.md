@@ -549,7 +549,7 @@ as unsigned/advisory.
 ```
 STEP 1 — Structural validation
   REQUIRE proof is a non-null object
-  REQUIRE proof.version ∈ ACCEPTED_VERSIONS ("occ/1", "proofwork/1", "provenclave/1", "prethereum/1")
+  REQUIRE proof.version === "occ/1"
   REQUIRE proof.artifact is object
   REQUIRE proof.artifact.hashAlg === "sha256"
   REQUIRE proof.artifact.digestB64 is non-empty string
@@ -727,18 +727,6 @@ Result: { valid: true }
 ### Current version: `occ/1`
 
 All proofs produced by OCC v0.1.x carry `"version": "occ/1"`.
-
-### Accepted legacy versions
-
-The verifier also accepts these legacy version strings for backward compatibility:
-
-| Version | Status |
-|---------|--------|
-| `"proofwork/1"` | Deprecated; pre-OCC format |
-| `"provenclave/1"` | Deprecated; original format |
-| `"prethereum/1"` | Deprecated; pre-rename |
-
-Legacy versions use the same signed body composition and verification algorithm.
 
 ### Breaking changes (require new version string)
 

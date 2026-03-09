@@ -180,8 +180,7 @@ function validateStructure(proof: unknown): string | null {
   }
   const p = proof as Record<string, unknown>;
 
-  const ACCEPTED_VERSIONS = ["occ/1", "proofwork/1", "provenclave/1", "prethereum/1"];
-  if (!ACCEPTED_VERSIONS.includes(p["version"] as string)) {
+  if (p["version"] !== "occ/1") {
     return `unsupported proof version: ${String(p["version"])}`;
   }
 

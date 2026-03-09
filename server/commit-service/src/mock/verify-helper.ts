@@ -17,8 +17,7 @@ export async function verifySignatureOnly(
 ): Promise<VerifyResult> {
   const checks: string[] = [];
 
-  const ACCEPTED_VERSIONS = ["occ/1", "proofwork/1", "provenclave/1", "prethereum/1"];
-  if (!ACCEPTED_VERSIONS.includes(proof.version)) {
+  if (proof.version !== "occ/1") {
     return { valid: false, reason: `unsupported version: ${proof.version}`, checks };
   }
   checks.push("structure: ok");
