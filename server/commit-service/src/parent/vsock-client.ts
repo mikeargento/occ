@@ -55,10 +55,14 @@ export class VsockClient implements EnclaveClient {
   async send(request: EnclaveRequest): Promise<EnclaveResponse> {
     return new Promise((resolve, reject) => {
       const sock: Socket = connect({ host: this.#host, port: this.#port }, () => {
-        const payload = Buffer.from(JSON.stringify(request), "utf8");
-        const header = Buffer.alloc(4);
-        header.writeUInt32BE(payload.length, 0);
-        sock.write(Buffer.concat([header, payload]));
+        // Map { type: "commit", ... } → { action: "commit", ... } to match
+        // the enclave's dispatcher which reads req.action, not req.type.
+        const { type, ...rest } = request;
+        const wireMsg = { action: type, ...rest };
+
+        // Send raw JSON — the enclave expects plain JSON, no length prefix.
+        const payload = JSON.stringify(wireMsg);
+        sock.end(payload);
       });
 
       const chunks: Buffer[] = [];
@@ -66,9 +70,24 @@ export class VsockClient implements EnclaveClient {
       sock.on("end", () => {
         try {
           const buf = Buffer.concat(chunks);
-          const jsonBuf = buf.length > 4 ? buf.subarray(4) : buf;
-          const resp = JSON.parse(jsonBuf.toString("utf8")) as EnclaveResponse;
-          resolve(resp);
+          const text = buf.toString("utf8");
+          if (text.length === 0) {
+            reject(new Error("VsockClient: empty response from enclave"));
+            return;
+          }
+          const raw = JSON.parse(text) as Record<string, unknown>;
+
+          // Normalize: the enclave's "key" handler returns raw data
+          // (e.g. { publicKeyB64, measurement, ... }) without an ok/data
+          // wrapper. The "commit" handler returns { ok, data }.
+          // Wrap raw responses into EnclaveResponse format for the caller.
+          if ("ok" in raw) {
+            resolve(raw as unknown as EnclaveResponse);
+          } else if ("error" in raw) {
+            resolve({ ok: false, error: String(raw["error"]) });
+          } else {
+            resolve({ ok: true, data: raw });
+          }
         } catch (err) {
           reject(new Error(`VsockClient: failed to parse response: ${err}`));
         }
