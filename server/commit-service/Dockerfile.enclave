@@ -20,8 +20,11 @@ COPY src/ ./src/
 # Copy adapter-nitro
 COPY packages/adapter-nitro/ ./packages/adapter-nitro/
 
-# Copy commit-service
-COPY server/commit-service/ ./server/commit-service/
+# Copy commit-service (exclude mock sources — they depend on @occ/stub
+# which is a dev/test package not needed inside the enclave)
+COPY server/commit-service/package.json server/commit-service/package-lock.json server/commit-service/tsconfig.json ./server/commit-service/
+COPY server/commit-service/src/enclave/ ./server/commit-service/src/enclave/
+COPY server/commit-service/src/parent/ ./server/commit-service/src/parent/
 
 # Install and build core library
 RUN npm ci --ignore-scripts
@@ -32,13 +35,12 @@ WORKDIR /build/packages/adapter-nitro
 RUN npm ci --ignore-scripts
 RUN npx tsc
 
-# Build commit-service
+# Build commit-service (only enclave + parent, no mock/)
 WORKDIR /build/server/commit-service
 RUN npm ci --ignore-scripts
 RUN npx tsc
 
 # Pre-compile the NSM ioctl helper (so it doesn't need gcc at runtime)
-COPY packages/adapter-nitro/src/nitro-host.ts /tmp/extract-c.ts
 RUN mkdir -p /tmp/nsm && \
     node -e " \
       const src = require('fs').readFileSync('/build/packages/adapter-nitro/src/nitro-host.ts','utf8'); \
