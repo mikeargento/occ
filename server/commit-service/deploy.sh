@@ -26,7 +26,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 ENCLAVE_CPU="${ENCLAVE_CPU:-2}"
-ENCLAVE_MEM="${ENCLAVE_MEM:-512}"
+ENCLAVE_MEM="${ENCLAVE_MEM:-1024}"
 EIF_PATH="$SCRIPT_DIR/enclave.eif"
 
 echo "=== OCC Enclave Deploy ==="
