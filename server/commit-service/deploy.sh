@@ -88,9 +88,10 @@ pkill -f "node.*dist/parent/server.js" 2>/dev/null || true
 sleep 1
 
 # Build parent server TypeScript
-echo "  Building commit-service..."
+echo "  Installing dependencies & building commit-service..."
 cd "$SCRIPT_DIR"
-npm run build
+npm install
+npx tsc
 
 # Start parent server in background
 echo "  Starting server on port ${PORT:-443}..."
@@ -99,7 +100,7 @@ echo "  Parent PID: $!"
 
 echo ""
 echo "=== Deploy complete ==="
-echo "  Enclave: running (vsock CID 16, port 5000)"
+echo "  Enclave: running (vsock port 5000)"
 echo "  Parent:  http://0.0.0.0:${PORT:-443}"
 echo "  Logs:    /var/log/occ-parent.log"
 echo "           nitro-cli console --enclave-id \$(nitro-cli describe-enclaves | jq -r '.[0].EnclaveID')"
