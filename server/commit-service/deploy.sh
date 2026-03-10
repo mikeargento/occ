@@ -112,13 +112,13 @@ if [ -z "$ENCLAVE_CID" ]; then
   echo "  WARNING: Could not determine enclave CID — socat bridge not started"
 else
   echo "  Starting vsock bridge: TCP :${BRIDGE_PORT} → vsock ${ENCLAVE_CID}:5000"
-  nohup socat TCP-LISTEN:"$BRIDGE_PORT",fork,reuseaddr VSOCK-CONNECT:"$ENCLAVE_CID":5000 > /var/log/occ-bridge.log 2>&1 &
+  nohup socat TCP-LISTEN:"$BRIDGE_PORT",fork,reuseaddr VSOCK-CONNECT:"$ENCLAVE_CID":5000 > ~/occ-bridge.log 2>&1 &
   echo "  Bridge PID: $!"
 fi
 
 # Start parent server in background
 echo "  Starting server on port ${PORT:-8080}..."
-nohup env PORT="${PORT:-8080}" VSOCK_BRIDGE_PORT="$BRIDGE_PORT" node dist/parent/server.js > /var/log/occ-parent.log 2>&1 &
+nohup env PORT="${PORT:-8080}" VSOCK_BRIDGE_PORT="$BRIDGE_PORT" node dist/parent/server.js > ~/occ-parent.log 2>&1 &
 echo "  Parent PID: $!"
 
 echo ""
@@ -126,6 +126,6 @@ echo "=== Deploy complete ==="
 echo "  Enclave: running (vsock port 5000)"
 echo "  Bridge:  TCP :${BRIDGE_PORT} → vsock ${ENCLAVE_CID:-?}:5000"
 echo "  Parent:  http://0.0.0.0:${PORT:-8080}"
-echo "  Logs:    /var/log/occ-parent.log"
-echo "           /var/log/occ-bridge.log"
+echo "  Logs:    ~/occ-parent.log"
+echo "           ~/occ-bridge.log"
 echo "           nitro-cli console --enclave-id \$(nitro-cli describe-enclaves | jq -r '.[0].EnclaveID')"
