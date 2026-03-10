@@ -1,0 +1,597 @@
+"use client";
+
+import { useState, useCallback, useRef } from "react";
+import { FileDrop } from "@/components/file-drop";
+import { ProofViewer } from "@/components/proof-viewer";
+import { ProofMeta } from "@/components/proof-meta";
+import { hashFile, hashBytes, commitDigest, formatFileSize, type OCCProof } from "@/lib/occ";
+import { zipSync, unzipSync, strFromU8 } from "fflate";
+import { verifyAsync as ed25519Verify } from "@noble/ed25519";
+
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+type CreateStatus = "idle" | "hashing" | "signing" | "done" | "error";
+
+interface CheckResult {
+  label: string;
+  status: "pass" | "fail" | "warn" | "info";
+  detail: string;
+}
+
+// ─── Ed25519 helpers ─────────────────────────────────────────────────────────
+
+/** Decode standard base64 to Uint8Array */
+function b64ToBytes(b64: string): Uint8Array {
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+/**
+ * Canonical JSON serialization matching occ-core/canonical.ts.
+ * Sorts object keys lexicographically at every level, no whitespace.
+ */
+function canonicalize(obj: unknown): Uint8Array {
+  return new TextEncoder().encode(JSON.stringify(sortKeys(obj)));
+}
+
+function sortKeys(value: unknown): unknown {
+  if (value === null || typeof value !== "object") return value;
+  if (Array.isArray(value)) return value.map(sortKeys);
+  const sorted: Record<string, unknown> = {};
+  for (const key of Object.keys(value as Record<string, unknown>).sort()) {
+    const child = (value as Record<string, unknown>)[key];
+    if (typeof child === "undefined") continue;
+    sorted[key] = sortKeys(child);
+  }
+  return sorted;
+}
+
+// ─── Studio Page ─────────────────────────────────────────────────────────────
+
+export default function StudioPage() {
+  // Create state
+  const [file, setFile] = useState<File | null>(null);
+  const [proof, setProof] = useState<OCCProof | null>(null);
+  const [createStatus, setCreateStatus] = useState<CreateStatus>("idle");
+  const [createError, setCreateError] = useState<string | null>(null);
+
+  // Verify state
+  const [zipFile, setZipFile] = useState<File | null>(null);
+  const [verifyResults, setVerifyResults] = useState<CheckResult[] | null>(null);
+  const [verifying, setVerifying] = useState(false);
+  const [extractedName, setExtractedName] = useState<string | null>(null);
+  const zipInputRef = useRef<HTMLInputElement>(null);
+  const [dragover, setDragover] = useState(false);
+
+  // ── Create handlers ──
+
+  const handleFile = useCallback((f: File) => {
+    setFile(f);
+    setProof(null);
+    setCreateError(null);
+    setCreateStatus("idle");
+  }, []);
+
+  const handleClearFile = useCallback(() => {
+    setFile(null);
+    setProof(null);
+    setCreateError(null);
+    setCreateStatus("idle");
+  }, []);
+
+  const handleGenerate = async () => {
+    if (!file) return;
+    setCreateError(null);
+    setVerifyResults(null);
+
+    try {
+      setCreateStatus("hashing");
+      const digestB64 = await hashFile(file);
+
+      setCreateStatus("signing");
+      const result = await commitDigest(digestB64, {
+        source: "occ-studio",
+        fileName: file.name,
+      });
+
+      setProof(result);
+      setCreateStatus("done");
+    } catch (err) {
+      setCreateError(err instanceof Error ? err.message : "Unknown error");
+      setCreateStatus("error");
+    }
+  };
+
+  const handleDownloadZip = async () => {
+    if (!file || !proof) return;
+
+    const originalData = new Uint8Array(await file.arrayBuffer());
+    const proofJson = JSON.stringify(proof, null, 2);
+
+    const verifyTxt = `VERIFICATION INSTRUCTIONS
+========================
+
+This proof.zip was created by OCC Studio (https://occproof.com).
+
+It contains:
+  - ${file.name}  (the original file)
+  - proof.json           (the cryptographic proof)
+  - VERIFY.txt           (this file)
+
+The proof guarantees that "${file.name}" existed at the time
+the proof was created. The file was hashed locally — it was never
+uploaded to any server. Only the SHA-256 digest was sent to a
+Trusted Execution Environment (TEE) for signing.
+
+To verify this proof:
+  1. Visit https://occproof.com/studio
+  2. Drop this proof.zip file onto the Verify section
+  3. The verifier checks the SHA-256 hash and Ed25519 signature
+
+Proof details:
+  Version:     ${proof.version}
+  Digest:      ${proof.artifact.digestB64}
+  Algorithm:   ${proof.artifact.hashAlg}
+  Public Key:  ${proof.signer.publicKeyB64}
+
+Learn more: https://occproof.com
+`;
+
+    const zipped = zipSync({
+      [file.name]: originalData,
+      "proof.json": new TextEncoder().encode(proofJson),
+      "VERIFY.txt": new TextEncoder().encode(verifyTxt),
+    });
+
+    const blob = new Blob([zipped.buffer as ArrayBuffer], { type: "application/zip" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${file.name}.proof.zip`.replace(/^\./, "");
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  // ── Verify handlers ──
+
+  const handleZipFile = useCallback((f: File) => {
+    setZipFile(f);
+    setVerifyResults(null);
+    setExtractedName(null);
+  }, []);
+
+  const handleClearZip = useCallback(() => {
+    setZipFile(null);
+    setVerifyResults(null);
+    setExtractedName(null);
+  }, []);
+
+  const handleVerify = async () => {
+    if (!zipFile) return;
+    setVerifying(true);
+    setVerifyResults(null);
+    setProof(null);
+
+    const checks: CheckResult[] = [];
+
+    try {
+      const zipData = new Uint8Array(await zipFile.arrayBuffer());
+      let entries: Record<string, Uint8Array>;
+
+      try {
+        entries = unzipSync(zipData);
+      } catch {
+        checks.push({ label: "ZIP extraction", status: "fail", detail: "Could not extract the file. Make sure it is a valid proof.zip." });
+        setVerifyResults(checks);
+        setVerifying(false);
+        return;
+      }
+
+      const proofEntry = entries["proof.json"];
+      if (!proofEntry) {
+        checks.push({ label: "ZIP structure", status: "fail", detail: "No proof.json found inside the archive." });
+        setVerifyResults(checks);
+        setVerifying(false);
+        return;
+      }
+
+      let vProof: OCCProof;
+      try {
+        vProof = JSON.parse(strFromU8(proofEntry));
+      } catch {
+        checks.push({ label: "Proof parsing", status: "fail", detail: "proof.json is not valid JSON." });
+        setVerifyResults(checks);
+        setVerifying(false);
+        return;
+      }
+
+      checks.push({ label: "ZIP structure", status: "pass", detail: `Extracted ${Object.keys(entries).length} files, proof.json found` });
+
+      const originalFileName = Object.keys(entries).find((k) => k !== "proof.json" && k !== "VERIFY.txt");
+
+      if (!originalFileName) {
+        checks.push({ label: "Original file", status: "fail", detail: "No original file found in the archive." });
+        setVerifyResults(checks);
+        setVerifying(false);
+        return;
+      }
+
+      setExtractedName(originalFileName);
+      const originalBytes = entries[originalFileName];
+      checks.push({ label: "Original file", status: "pass", detail: `${originalFileName} (${formatFileSize(originalBytes.length)})` });
+
+      // Structural
+      checks.push(vProof.version === "occ/1"
+        ? { label: "Version", status: "pass", detail: "occ/1" }
+        : { label: "Version", status: "fail", detail: `Expected "occ/1", got "${vProof.version}"` });
+
+      checks.push(vProof.artifact?.hashAlg === "sha256" && vProof.artifact?.digestB64
+        ? { label: "Artifact structure", status: "pass", detail: "hashAlg: sha256, digestB64 present" }
+        : { label: "Artifact structure", status: "fail", detail: "Missing or invalid artifact fields" });
+
+      checks.push(vProof.commit?.nonceB64
+        ? { label: "Commit nonce", status: "pass", detail: `${vProof.commit.nonceB64.length} chars` }
+        : { label: "Commit nonce", status: "fail", detail: "Missing nonceB64" });
+
+      checks.push(vProof.signer?.publicKeyB64 && vProof.signer?.signatureB64
+        ? { label: "Signer fields", status: "pass", detail: "publicKeyB64 and signatureB64 present" }
+        : { label: "Signer fields", status: "fail", detail: "Missing signer fields" });
+
+      const validEnforcements = ["stub", "hw-key", "measured-tee"];
+      checks.push(vProof.environment?.enforcement && validEnforcements.includes(vProof.environment.enforcement)
+        ? { label: "Enforcement tier", status: "pass", detail: vProof.environment.enforcement }
+        : { label: "Enforcement tier", status: "fail", detail: `Invalid: "${vProof.environment?.enforcement}"` });
+
+      checks.push(vProof.environment?.measurement
+        ? { label: "Measurement", status: "pass", detail: `${vProof.environment.measurement.slice(0, 32)}…` }
+        : { label: "Measurement", status: "fail", detail: "Missing measurement" });
+
+      // Digest
+      const computedDigest = await hashBytes(originalBytes);
+      checks.push(computedDigest === vProof.artifact?.digestB64
+        ? { label: "Artifact digest match", status: "pass", detail: "SHA-256 of original file matches proof.artifact.digestB64" }
+        : { label: "Artifact digest match", status: "fail", detail: `Mismatch — computed: ${computedDigest.slice(0, 24)}…` });
+
+      // Ed25519 signature verification
+      try {
+        const pubBytes = b64ToBytes(vProof.signer.publicKeyB64);
+        const sigBytes = b64ToBytes(vProof.signer.signatureB64);
+
+        if (pubBytes.length !== 32) {
+          checks.push({ label: "Ed25519 signature", status: "fail", detail: `Public key is ${pubBytes.length} bytes; expected 32` });
+        } else if (sigBytes.length !== 64) {
+          checks.push({ label: "Ed25519 signature", status: "fail", detail: `Signature is ${sigBytes.length} bytes; expected 64` });
+        } else {
+          // Reconstruct the signed body exactly as occ-core does
+          const signedBody: Record<string, unknown> = {
+            version: vProof.version,
+            artifact: vProof.artifact,
+            commit: vProof.commit,
+            publicKeyB64: vProof.signer.publicKeyB64,
+            enforcement: vProof.environment.enforcement,
+            measurement: vProof.environment.measurement,
+          };
+          if (vProof.environment.attestation) {
+            signedBody.attestationFormat = vProof.environment.attestation.format;
+          }
+
+          const canonicalBytes = canonicalize(signedBody);
+          const valid = await ed25519Verify(sigBytes, canonicalBytes, pubBytes);
+
+          checks.push(valid
+            ? { label: "Ed25519 signature", status: "pass", detail: "Signature is cryptographically valid" }
+            : { label: "Ed25519 signature", status: "fail", detail: "Signature does not match the signed body" });
+        }
+      } catch (sigErr) {
+        checks.push({ label: "Ed25519 signature", status: "fail", detail: `Verification error: ${sigErr instanceof Error ? sigErr.message : "unknown"}` });
+      }
+
+      // Attestation
+      checks.push(vProof.environment?.attestation
+        ? { label: "Attestation", status: "pass", detail: `Format: ${vProof.environment.attestation.format}` }
+        : { label: "Attestation", status: "warn", detail: "No attestation report. Hardware verification not available." });
+
+      // Timestamps
+      const tsa = vProof.timestamps?.artifact || vProof.timestamps?.proof;
+      checks.push(tsa
+        ? { label: "Timestamp (TSA)", status: "pass", detail: `${tsa.authority} — ${tsa.time}` }
+        : { label: "Timestamp (TSA)", status: "warn", detail: "No RFC 3161 timestamp. Time is self-reported only." });
+
+      // Chain
+      checks.push(vProof.commit?.prevB64
+        ? { label: "Chain link", status: "pass", detail: `Linked: ${vProof.commit.prevB64.slice(0, 16)}…` }
+        : { label: "Chain link", status: "info", detail: "No chain link. First proof in epoch or chaining not used." });
+
+      if (vProof.commit?.counter) checks.push({ label: "Counter", status: "pass", detail: `Value: ${vProof.commit.counter}` });
+      if (vProof.commit?.epochId) checks.push({ label: "Epoch", status: "pass", detail: `${vProof.commit.epochId.slice(0, 20)}…` });
+
+    } catch (err) {
+      checks.push({ label: "Verification error", status: "fail", detail: err instanceof Error ? err.message : "Unknown error" });
+    }
+
+    setVerifyResults(checks);
+    setVerifying(false);
+  };
+
+  const busy = createStatus === "hashing" || createStatus === "signing";
+  const allPass = verifyResults?.every((r) => r.status === "pass" || r.status === "info");
+  const anyFail = verifyResults?.some((r) => r.status === "fail");
+
+  return (
+    <div className="mx-auto max-w-6xl px-6 py-16">
+      {/* Header */}
+      <div className="mb-12">
+        <h1 className="text-3xl font-semibold tracking-tight mb-3">
+          Studio
+        </h1>
+        <p className="text-text-secondary max-w-2xl">
+          Create cryptographic proofs for any file, or verify existing proofs.
+          Everything runs locally in your browser — files are never uploaded.
+        </p>
+      </div>
+
+      {/* Two-column input panels */}
+      <div className="grid lg:grid-cols-2 gap-8">
+        {/* ── Create ── */}
+        <div className="flex flex-col">
+          <h2 className="text-xl font-semibold tracking-tight mb-2">
+            Make a proof.
+          </h2>
+          <p className="text-text-secondary text-sm mb-6 lg:min-h-[40px]">
+            Drop any file. Your browser hashes it locally, sends only the digest
+            to an AWS Nitro Enclave, and returns a signed proof.
+          </p>
+
+          <div className="flex-1 flex flex-col gap-4">
+            <div className="flex-1">
+              <FileDrop
+                onFile={handleFile}
+                file={file}
+                onClear={handleClearFile}
+                disabled={busy}
+              />
+            </div>
+
+            <button
+              onClick={handleGenerate}
+              disabled={!file || busy}
+              className={`
+                w-full h-11 rounded-lg text-sm font-semibold uppercase tracking-wider transition-all shrink-0
+                ${!file || busy
+                  ? "bg-bg-subtle text-text-tertiary cursor-not-allowed"
+                  : "bg-text text-bg hover:opacity-85 cursor-pointer"
+                }
+              `}
+            >
+              {createStatus === "hashing"
+                ? "Hashing…"
+                : createStatus === "signing"
+                ? "Signing in enclave…"
+                : "Make a Proof"}
+            </button>
+
+            {createError && (
+              <div className="rounded-lg border border-error/30 bg-error/5 p-4">
+                <div className="text-sm text-error font-medium mb-1">Error</div>
+                <div className="text-sm text-text-secondary">{createError}</div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── Verify ── */}
+        <div className="flex flex-col">
+          <h2 className="text-xl font-semibold tracking-tight mb-2">
+            Verify a proof.
+          </h2>
+          <p className="text-text-secondary text-sm mb-6 lg:min-h-[40px]">
+            Drop a <code className="text-xs bg-bg-subtle px-1.5 py-0.5 rounded border border-border-subtle font-mono">proof.zip</code> to
+            extract, re-hash, and check the digest against the proof.
+          </p>
+
+          <div className="flex-1 flex flex-col gap-4">
+            <div
+              onDragOver={(e) => { e.preventDefault(); setDragover(true); }}
+              onDragLeave={() => setDragover(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setDragover(false);
+                if (e.dataTransfer.files.length) handleZipFile(e.dataTransfer.files[0]);
+              }}
+              onClick={() => !zipFile && zipInputRef.current?.click()}
+              className={`
+                flex-1 relative rounded-lg border-2 border-dashed transition-all cursor-pointer min-h-[160px] flex items-center
+                ${dragover ? "border-text/30 bg-text/5" : zipFile ? "border-border bg-bg-elevated" : "border-border-subtle hover:border-border bg-bg-elevated/50 hover:bg-bg-elevated"}
+              `}
+            >
+              <input
+                ref={zipInputRef}
+                type="file"
+                accept=".zip,.proof.zip"
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files?.length) handleZipFile(e.target.files[0]);
+                }}
+              />
+
+              {zipFile ? (
+                <div className="flex items-center justify-between px-6 py-5 w-full">
+                  <div>
+                    <div className="text-sm font-medium text-text">{zipFile.name}</div>
+                    <div className="text-xs text-text-tertiary mt-0.5">
+                      {formatFileSize(zipFile.size)}
+                      {extractedName && (
+                        <span className="ml-2 text-text-secondary">
+                          → <span className="font-mono">{extractedName}</span>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleClearZip(); }}
+                    className="text-xs text-text-tertiary hover:text-text transition-colors"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center py-12 px-6 w-full">
+                  <div className="w-10 h-10 rounded-lg border border-border-subtle bg-bg-subtle flex items-center justify-center mb-4">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-text-tertiary">
+                      <path d="M10 2L3 5.5v4.5c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V5.5L10 2z" />
+                      <path d="M7 10l2.5 2.5L13 8" />
+                    </svg>
+                  </div>
+                  <div className="text-sm text-text-secondary">
+                    Drop <code className="text-xs bg-bg-subtle px-1 py-0.5 rounded border border-border-subtle font-mono">proof.zip</code> files
+                    here, or <span className="text-text font-medium">click to select</span>
+                  </div>
+                  <div className="text-xs text-text-tertiary mt-1">
+                    Runs entirely in your browser
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={handleVerify}
+              disabled={!zipFile || verifying}
+              className={`
+                w-full h-11 rounded-lg text-sm font-semibold uppercase tracking-wider transition-all shrink-0
+                ${!zipFile || verifying
+                  ? "bg-bg-subtle text-text-tertiary cursor-not-allowed"
+                  : "bg-text text-bg hover:opacity-85 cursor-pointer"
+                }
+              `}
+            >
+              {verifying ? "Verifying…" : "Verify Proof"}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Create Results (full width) ── */}
+      {proof && (
+        <div className="mt-10 pt-8 border-t border-border-subtle space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-success" />
+              <span className="text-sm font-medium text-success">Proof generated</span>
+            </div>
+            <button
+              onClick={handleDownloadZip}
+              className="inline-flex items-center gap-2 rounded-md bg-success px-4 py-2 text-xs font-semibold text-bg hover:bg-success/85 transition-colors cursor-pointer"
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M7 2v7M4 6l3 3 3-3" />
+                <path d="M2 10v1.5a.5.5 0 00.5.5h9a.5.5 0 00.5-.5V10" />
+              </svg>
+              Download proof.zip
+            </button>
+          </div>
+          <ProofMeta proof={proof} fileName={file?.name} fileSize={file?.size} />
+          <ProofViewer proof={proof} />
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-2">
+            <InfoCard
+              title="Artifact"
+              items={[
+                { label: "Hash Algorithm", value: proof.artifact.hashAlg },
+                { label: "Digest", value: proof.artifact.digestB64 },
+              ]}
+            />
+            <InfoCard
+              title="Commit"
+              items={[
+                { label: "Nonce", value: proof.commit.nonceB64 },
+                ...(proof.commit.counter ? [{ label: "Counter", value: proof.commit.counter }] : []),
+                ...(proof.commit.epochId ? [{ label: "Epoch", value: proof.commit.epochId }] : []),
+                ...(proof.commit.prevB64 ? [{ label: "Chain Link", value: proof.commit.prevB64 }] : []),
+              ]}
+            />
+            <InfoCard
+              title="Environment"
+              items={[
+                { label: "Enforcement", value: proof.environment.enforcement },
+                { label: "Measurement", value: proof.environment.measurement },
+                ...(proof.environment.attestation ? [{ label: "Attestation", value: proof.environment.attestation.format }] : []),
+              ]}
+            />
+            <InfoCard
+              title="Signer"
+              items={[
+                { label: "Public Key", value: proof.signer.publicKeyB64 },
+                { label: "Signature", value: proof.signer.signatureB64 },
+              ]}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* ── Verify Results (full width) ── */}
+      {verifyResults && (
+        <div className="mt-10 pt-8 border-t border-border-subtle space-y-4">
+          <div className={`rounded-lg border p-4 ${
+            anyFail ? "border-error/30 bg-error/5" :
+            allPass ? "border-success/30 bg-success/5" :
+            "border-warning/30 bg-warning/5"
+          }`}>
+            <div className={`text-sm font-semibold ${
+              anyFail ? "text-error" : allPass ? "text-success" : "text-warning"
+            }`}>
+              {anyFail ? "Verification Failed" : allPass ? "Verification Passed" : "Passed with Warnings"}
+            </div>
+            <p className="text-xs text-text-secondary mt-1">
+              {anyFail
+                ? "One or more checks failed. This proof may not be valid for the provided file."
+                : allPass
+                ? "All checks passed. The artifact digest matches and the proof structure is valid."
+                : "Core checks passed, but some optional fields are missing or could not be fully verified."}
+            </p>
+          </div>
+
+          <div className="rounded-lg border border-border-subtle overflow-hidden">
+            {verifyResults.map((check, i) => (
+              <div
+                key={i}
+                className={`flex items-start gap-3 px-4 py-3 ${i > 0 ? "border-t border-border-subtle" : ""}`}
+              >
+                <div className="mt-0.5 shrink-0">
+                  {check.status === "pass" && <span className="inline-flex w-4 h-4 items-center justify-center rounded-full bg-success/20 text-success text-[10px]">✓</span>}
+                  {check.status === "fail" && <span className="inline-flex w-4 h-4 items-center justify-center rounded-full bg-error/20 text-error text-[10px]">✕</span>}
+                  {check.status === "warn" && <span className="inline-flex w-4 h-4 items-center justify-center rounded-full bg-warning/20 text-warning text-[10px]">!</span>}
+                  {check.status === "info" && <span className="inline-flex w-4 h-4 items-center justify-center rounded-full bg-info/20 text-info text-[10px]">i</span>}
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-text">{check.label}</div>
+                  <div className="text-xs text-text-secondary mt-0.5">{check.detail}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function InfoCard({ title, items }: { title: string; items: { label: string; value: string }[] }) {
+  return (
+    <div className="rounded-lg border border-border-subtle bg-bg-elevated p-4">
+      <div className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-3">{title}</div>
+      <div className="space-y-2">
+        {items.map((item) => (
+          <div key={item.label} className="flex justify-between gap-4">
+            <span className="text-xs text-text-tertiary shrink-0">{item.label}</span>
+            <span className="text-xs font-mono text-text-secondary truncate">{item.value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

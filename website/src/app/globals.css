@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: var(--bg);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-bg-subtle: var(--bg-subtle);
+  --color-border: var(--c-border);
+  --color-border-subtle: var(--c-border-subtle);
+  --color-text: var(--c-text);
+  --color-text-secondary: var(--c-text-secondary);
+  --color-text-tertiary: var(--c-text-tertiary);
+  --color-accent: var(--c-accent);
+  --color-accent-dim: var(--c-accent-dim);
+  --color-success: #22c55e;
+  --color-warning: #eab308;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
+  --font-sans: -apple-system, "SF Pro Display", "SF Pro Text", system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "SF Mono", "Fira Code", "JetBrains Mono", ui-monospace, monospace;
+}
+
+/* ── Dark (default) ── */
+:root, .dark {
+  --bg: #09090b;
+  --bg-elevated: #18181b;
+  --bg-subtle: #27272a;
+  --c-border: #3f3f46;
+  --c-border-subtle: #27272a;
+  --c-text: #fafafa;
+  --c-text-secondary: #a1a1aa;
+  --c-text-tertiary: #71717a;
+  --c-accent: #e4e4e7;
+  --c-accent-dim: #52525b;
+  color-scheme: dark;
+}
+
+/* ── Light ── */
+.light {
+  --bg: #ffffff;
+  --bg-elevated: #f4f4f5;
+  --bg-subtle: #e4e4e7;
+  --c-border: #c4c4c8;
+  --c-border-subtle: #d4d4d8;
+  --c-text: #09090b;
+  --c-text-secondary: #3f3f46;
+  --c-text-tertiary: #52525b;
+  --c-accent: #18181b;
+  --c-accent-dim: #71717a;
+  color-scheme: light;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg);
+  color: var(--c-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-wrap: pretty;
+}
+
+.dark ::selection {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.light ::selection {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--c-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--c-text-tertiary); }
+
+pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+*:focus-visible {
+  outline: 1px solid var(--c-text-tertiary);
+  outline-offset: 2px;
+}

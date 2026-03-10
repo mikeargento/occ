@@ -1,0 +1,103 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Integration Guide",
+  description: "How to commit artifacts, verify proofs, and integrate OCC into your application.",
+};
+
+export default function IntegrationPage() {
+  return (
+    <article>
+      <h1 className="text-3xl font-semibold tracking-tight mb-4">Integration Guide</h1>
+      <p className="text-text-secondary mb-8">
+        How to commit artifacts, verify proofs, and integrate OCC into your application.
+      </p>
+
+      <h2 className="text-xl font-semibold mt-12 mb-4">Quick start: commit via API</h2>
+      <p className="text-text-secondary mb-4">
+        Hash your artifact locally, then send only the digest to the OCC endpoint:
+      </p>
+      <div className="rounded-lg border border-border-subtle bg-bg-elevated p-4 overflow-x-auto mb-8">
+        <pre className="text-xs font-mono leading-relaxed text-text-secondary">{`# 1. Hash your file
+DIGEST=$(openssl dgst -sha256 -binary myfile.pdf | base64)
+
+# 2. Send to OCC endpoint
+curl -X POST https://nitro.occproof.com/commit \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "digests": [{
+      "digestB64": "'$DIGEST'",
+      "hashAlg": "sha256"
+    }],
+    "metadata": {
+      "source": "my-app"
+    }
+  }'`}</pre>
+      </div>
+
+      <h2 className="text-xl font-semibold mt-12 mb-4">TypeScript / JavaScript</h2>
+      <div className="rounded-lg border border-border-subtle bg-bg-elevated p-4 overflow-x-auto mb-8">
+        <pre className="text-xs font-mono leading-relaxed text-text-secondary">{`import { hashBytes, commitDigest } from "@occ/client";
+
+// Hash locally
+const bytes = new Uint8Array(await file.arrayBuffer());
+const hashBuf = await crypto.subtle.digest("SHA-256", bytes);
+const digestB64 = btoa(String.fromCharCode(...new Uint8Array(hashBuf)));
+
+// Commit to enclave
+const proof = await commitDigest(digestB64, {
+  source: "my-app",
+  fileName: file.name,
+});
+
+// proof is a complete OCCProof JSON object
+console.log(proof.commit.counter);
+console.log(proof.environment.enforcement);`}</pre>
+      </div>
+
+      <h2 className="text-xl font-semibold mt-12 mb-4">Verify a proof</h2>
+      <div className="rounded-lg border border-border-subtle bg-bg-elevated p-4 overflow-x-auto mb-8">
+        <pre className="text-xs font-mono leading-relaxed text-text-secondary">{`import { verify } from "occproof";
+
+const result = await verify({
+  proof: myProof,
+  bytes: originalFileBytes,
+  trustAnchors: {
+    requireEnforcement: "measured-tee",
+    allowedMeasurements: ["ac813febd1ac4261..."],
+    requireAttestation: true,
+    requireAttestationFormat: ["aws-nitro"],
+  },
+});
+
+if (result.valid) {
+  console.log("Proof verified successfully");
+} else {
+  console.error("Verification failed:", result.reason);
+}`}</pre>
+      </div>
+
+      <h2 className="text-xl font-semibold mt-12 mb-4">Enclave info</h2>
+      <div className="rounded-lg border border-border-subtle bg-bg-elevated p-4 overflow-x-auto mb-8">
+        <pre className="text-xs font-mono leading-relaxed text-text-secondary">{`# Get enclave public key and measurement
+curl https://nitro.occproof.com/key
+
+# Response:
+# {
+#   "publicKeyB64": "...",
+#   "measurement": "ac813febd1ac4261...",
+#   "enforcement": "measured-tee"
+# }`}</pre>
+      </div>
+
+      <h2 className="text-xl font-semibold mt-12 mb-4">Important notes</h2>
+      <ul className="space-y-2 text-sm text-text-secondary">
+        <li>• <strong className="text-text">Files are never uploaded.</strong> Only the SHA-256 digest crosses the network.</li>
+        <li>• <strong className="text-text">The proof is portable.</strong> Store it alongside the artifact or in a separate system.</li>
+        <li>• <strong className="text-text">Verification is offline.</strong> No API calls needed to verify — just the public key and original bytes.</li>
+        <li>• <strong className="text-text">Pin measurements.</strong> For production, always pin allowedMeasurements and require attestation.</li>
+        <li>• <strong className="text-text">Track counters.</strong> Store the last accepted counter value to prevent replay.</li>
+      </ul>
+    </article>
+  );
+}
