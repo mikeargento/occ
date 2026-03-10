@@ -87,11 +87,14 @@ echo "[5/5] Starting parent HTTP server..."
 pkill -f "node.*dist/parent/server.js" 2>/dev/null || true
 sleep 1
 
-# Build parent server TypeScript
-echo "  Installing dependencies & building commit-service..."
+# Build parent server TypeScript (parent-only — avoids enclave/mock deps)
+echo "  Installing dependencies & building parent server..."
+cd "$REPO_ROOT"
+npm ci --ignore-scripts 2>/dev/null || npm install --ignore-scripts
+npx tsc
 cd "$SCRIPT_DIR"
 npm install
-npx tsc
+npx tsc -p tsconfig.parent.json
 
 # Start parent server in background
 echo "  Starting server on port ${PORT:-443}..."
