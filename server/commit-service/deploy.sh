@@ -83,8 +83,9 @@ echo ""
 # Step 5: Start parent HTTP server
 echo "[5/5] Starting parent HTTP server..."
 
-# Kill existing parent server if running
+# Kill existing parent server and socat bridge if running
 pkill -f "node.*dist/parent/server.js" 2>/dev/null || true
+pkill -f "socat.*VSOCK-CONNECT" 2>/dev/null || true
 sleep 1
 
 # Build parent server TypeScript (parent-only — avoids enclave/mock deps)
@@ -96,14 +97,35 @@ cd "$SCRIPT_DIR"
 npm install
 npx tsc -p tsconfig.parent.json
 
+# Start socat bridge: local TCP port → enclave vsock
+BRIDGE_PORT="${VSOCK_BRIDGE_PORT:-9000}"
+ENCLAVE_CID=$(nitro-cli describe-enclaves | python3 -c "
+import sys, json
+enclaves = json.load(sys.stdin)
+for e in enclaves:
+    if e.get('State') == 'RUNNING':
+        print(e['EnclaveCID'])
+        break
+" 2>/dev/null || echo "")
+
+if [ -z "$ENCLAVE_CID" ]; then
+  echo "  WARNING: Could not determine enclave CID — socat bridge not started"
+else
+  echo "  Starting vsock bridge: TCP :${BRIDGE_PORT} → vsock ${ENCLAVE_CID}:5000"
+  nohup socat TCP-LISTEN:"$BRIDGE_PORT",fork,reuseaddr VSOCK-CONNECT:"$ENCLAVE_CID":5000 > /var/log/occ-bridge.log 2>&1 &
+  echo "  Bridge PID: $!"
+fi
+
 # Start parent server in background
 echo "  Starting server on port ${PORT:-8080}..."
-nohup node dist/parent/server.js > /var/log/occ-parent.log 2>&1 &
+nohup env PORT="${PORT:-8080}" VSOCK_BRIDGE_PORT="$BRIDGE_PORT" node dist/parent/server.js > /var/log/occ-parent.log 2>&1 &
 echo "  Parent PID: $!"
 
 echo ""
 echo "=== Deploy complete ==="
 echo "  Enclave: running (vsock port 5000)"
+echo "  Bridge:  TCP :${BRIDGE_PORT} → vsock ${ENCLAVE_CID:-?}:5000"
 echo "  Parent:  http://0.0.0.0:${PORT:-8080}"
 echo "  Logs:    /var/log/occ-parent.log"
+echo "           /var/log/occ-bridge.log"
 echo "           nitro-cli console --enclave-id \$(nitro-cli describe-enclaves | jq -r '.[0].EnclaveID')"

@@ -27,21 +27,34 @@ export interface EnclaveClient {
   close(): void;
 }
 
-const VSOCK_CID = 16;
-const VSOCK_PORT = 5000;
+/**
+ * Connects to the enclave via a local socat TCP bridge.
+ *
+ * Node.js `net` doesn't support AF_VSOCK natively, so we rely on a
+ * socat process on the parent that bridges a local TCP port to the
+ * enclave's vsock CID:port.
+ *
+ *   socat TCP-LISTEN:<bridgePort>,fork,reuseaddr VSOCK-CONNECT:<cid>:5000
+ *
+ * The VsockClient then connects to localhost:<bridgePort> via plain TCP.
+ */
+const DEFAULT_BRIDGE_PORT = 9000;
 
 export class VsockClient implements EnclaveClient {
-  readonly #cid: number;
+  readonly #host: string;
   readonly #port: number;
 
-  constructor(opts?: { cid?: number; port?: number }) {
-    this.#cid = opts?.cid ?? VSOCK_CID;
-    this.#port = opts?.port ?? VSOCK_PORT;
+  constructor(opts?: { host?: string; port?: number }) {
+    this.#host = opts?.host
+      ?? process.env["VSOCK_BRIDGE_HOST"]
+      ?? "127.0.0.1";
+    this.#port = opts?.port
+      ?? Number(process.env["VSOCK_BRIDGE_PORT"] || DEFAULT_BRIDGE_PORT);
   }
 
   async send(request: EnclaveRequest): Promise<EnclaveResponse> {
     return new Promise((resolve, reject) => {
-      const sock: Socket = connect({ host: `vsock://${this.#cid}`, port: this.#port }, () => {
+      const sock: Socket = connect({ host: this.#host, port: this.#port }, () => {
         const payload = Buffer.from(JSON.stringify(request), "utf8");
         const header = Buffer.alloc(4);
         header.writeUInt32BE(payload.length, 0);
