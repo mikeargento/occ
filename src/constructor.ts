@@ -41,10 +41,16 @@ import type { OCCPolicy, OCCProof, SignedBody } from "./types.js";
 export class Constructor {
   readonly #host: HostCapabilities;
   readonly #policy: Required<OCCPolicy>;
+  readonly #epochId: string | undefined;
 
-  private constructor(host: HostCapabilities, policy: Required<OCCPolicy>) {
+  private constructor(
+    host: HostCapabilities,
+    policy: Required<OCCPolicy>,
+    epochId: string | undefined,
+  ) {
     this.#host = host;
     this.#policy = policy;
+    this.#epochId = epochId;
   }
 
   /**
@@ -54,14 +60,19 @@ export class Constructor {
    * and a public key. If either fails the returned promise rejects and no
    * Constructor is created.
    *
-   * @param opts.host    - Host capabilities implementation (TEE adapter)
-   * @param opts.policy  - Optional policy constraints
+   * @param opts.host     - Host capabilities implementation (TEE adapter)
+   * @param opts.policy   - Optional policy constraints
+   * @param opts.epochId  - Optional epoch identifier (generated at enclave boot).
+   *                        When provided, included in every proof's commit.epochId field
+   *                        (signed, tamper-evident). Verifiers use epochId to detect
+   *                        enclave lifecycle boundaries.
    */
   static async initialize(opts: {
     host: HostCapabilities;
     policy?: OCCPolicy;
+    epochId?: string;
   }): Promise<Constructor> {
-    const { host, policy = {} } = opts;
+    const { host, policy = {}, epochId } = opts;
 
     const resolvedPolicy: Required<OCCPolicy> = {
       requireCounter: policy.requireCounter ?? false,
@@ -91,7 +102,7 @@ export class Constructor {
       );
     }
 
-    return new Constructor(host, resolvedPolicy);
+    return new Constructor(host, resolvedPolicy, epochId);
   }
 
   /**
@@ -219,6 +230,7 @@ export class Constructor {
     if (counter !== undefined) commitFields.counter = counter;
     if (time !== undefined) commitFields.time = time;
     if (prevProofHashB64 !== undefined) commitFields.prevB64 = prevProofHashB64;
+    if (this.#epochId !== undefined) commitFields.epochId = this.#epochId;
 
     const signedBody: SignedBody = {
       version: "occ/1",

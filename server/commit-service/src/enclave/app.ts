@@ -6,8 +6,21 @@
  *
  * Runs INSIDE the Nitro Enclave. On boot:
  *   1. Generate Ed25519 keypair in memory (private key never leaves enclave)
- *   2. Initialize Constructor with NitroHost
- *   3. Listen on vsock port 5000 for length-prefixed JSON requests
+ *   2. Generate boot nonce (32 bytes from NSM GetRandom)
+ *   3. Compute epochId = SHA-256(publicKeyB64 + ":" + bootNonceB64)
+ *   4. Initialize Constructor with NitroHost
+ *   5. Listen on vsock port 5000 for length-prefixed JSON requests
+ *
+ * Epoch semantics:
+ *   - epochId uniquely identifies this enclave lifecycle
+ *   - Changes on every enclave restart (new keypair + new boot nonce)
+ *   - Included in every proof's commit field (signed, tamper-evident)
+ *   - Verifiers use it to detect epoch boundaries
+ *
+ * Proof chaining:
+ *   - Each proof records prevB64 = BASE64(SHA-256(canonicalize(previousProof)))
+ *   - First proof of an epoch has no prevB64
+ *   - Chain is forward-only, signed, and fork-detectable
  *
  * Vsock wire format: [4 bytes big-endian length][JSON payload]
  *
@@ -30,17 +43,14 @@ import type { EnclaveRequest, EnclaveResponse } from "../parent/vsock-client.js"
 
 const privateKey = utils.randomPrivateKey();
 const publicKey = await getPublicKeyAsync(privateKey);
+const publicKeyB64 = Buffer.from(publicKey).toString("base64");
 
 console.log("[enclave] Ed25519 keypair generated in enclave memory");
-console.log(`[enclave] publicKey: ${Buffer.from(publicKey).toString("base64")}`);
+console.log(`[enclave] publicKey: ${publicKeyB64}`);
 
 // ---------------------------------------------------------------------------
 // Enclave HostCapabilities (NitroHost for real enclaves)
 // ---------------------------------------------------------------------------
-
-// In a real Nitro Enclave, this would use NitroHost from @occ/adapter-nitro.
-// For the enclave binary itself, we import NitroHost and wire it up.
-// Since this file runs inside the enclave, we use the real NSM device.
 
 import { NitroHost, DefaultNsmClient } from "@occ/adapter-nitro";
 
@@ -51,16 +61,44 @@ const nitroHost = new NitroHost({
   nsmClient,
 });
 
-const constructor = await Constructor.initialize({ host: nitroHost });
-
 const measurement = await nitroHost.getMeasurement();
 console.log(`[enclave] measurement (PCR0): ${measurement}`);
 
 // ---------------------------------------------------------------------------
-// Monotonic counter (in-memory for now; production uses KmsCounter)
+// Epoch identity — computed once at boot, included in every proof
+// epochId = BASE64(SHA-256(publicKeyB64 + ":" + bootNonceB64))
+// ---------------------------------------------------------------------------
+
+const bootNonceBytes = await nitroHost.getFreshNonce();
+const bootNonceB64 = Buffer.from(bootNonceBytes).toString("base64");
+const epochIdBytes = sha256(
+  new TextEncoder().encode(publicKeyB64 + ":" + bootNonceB64)
+);
+const epochId = Buffer.from(epochIdBytes).toString("base64");
+
+console.log(`[enclave] epochId: ${epochId}`);
+
+// ---------------------------------------------------------------------------
+// Constructor — initialized with epochId so callers that use
+// constructor.commit()/commitDigest() also get epochId in proofs.
+// The manual proof-building flow below uses epochId from module scope.
+// ---------------------------------------------------------------------------
+
+const constructor = await Constructor.initialize({ host: nitroHost, epochId });
+
+// ---------------------------------------------------------------------------
+// Monotonic counter (in-memory; initialized from DynamoDB on boot)
 // ---------------------------------------------------------------------------
 
 let counter = 0n;
+
+// ---------------------------------------------------------------------------
+// Proof chain state — tracks last proof for prevB64 chaining
+// prevB64 = BASE64(SHA-256(canonicalize(previousProof)))
+// First proof of an epoch has no prevB64.
+// ---------------------------------------------------------------------------
+
+let lastProofHashB64: string | undefined;
 
 // ---------------------------------------------------------------------------
 // Commit handler — produces OCC proofs for pre-computed digests
@@ -80,11 +118,9 @@ async function handleCommit(req: {
       throw new Error(`Invalid SHA-256 digest length: ${digestBytes.length}`);
     }
 
-    // For digest-only mode, we create the proof directly using the Constructor.
-    // The Constructor.commit() expects raw bytes, but we have a pre-computed digest.
-    // We use commitDigest() which accepts a pre-computed digestB64.
-    // Since commitDigest() doesn't exist yet (Phase 2), we use the raw approach:
     // Build the proof manually using the same 10-step atomic flow.
+    // (We don't delegate to Constructor.commitDigest() here because the
+    // enclave manages its own counter, epoch, and chain state directly.)
 
     // Step 1: Counter
     counter += 1n;
@@ -96,15 +132,20 @@ async function handleCommit(req: {
     // Step 3: Time (advisory)
     const time = Date.now();
 
-    // Step 5: Identity
-    const publicKeyB64 = Buffer.from(publicKey).toString("base64");
+    // Step 5: Identity (publicKeyB64 computed at module level)
 
     // Step 6: Build signed body
     const commitFields: OCCProof["commit"] = {
       nonceB64: Buffer.from(nonceBytes).toString("base64"),
       counter: counterStr,
       time,
+      epochId,
     };
+
+    // Proof chaining: include prevB64 if we have a previous proof
+    if (lastProofHashB64 !== undefined) {
+      commitFields.prevB64 = lastProofHashB64;
+    }
 
     const signedBody: SignedBody = {
       version: "occ/1",
@@ -153,6 +194,10 @@ async function handleCommit(req: {
       proof.metadata = req.metadata;
     }
 
+    // Update proof chain state: hash this proof for the next proof's prevB64
+    const proofCanonicalBytes = canonicalize(proof);
+    lastProofHashB64 = Buffer.from(sha256(proofCanonicalBytes)).toString("base64");
+
     proofs.push(proof);
   }
 
@@ -180,22 +225,24 @@ async function handleRequest(req: Record<string, unknown>): Promise<unknown> {
       } else {
         console.log(`[enclave] counter already at ${counter}, ignoring init(${lastKnown})`);
       }
-      return { ok: true, counter: String(counter) };
+      return { ok: true, counter: String(counter), epochId };
     }
     case "health": {
       return {
         status: "ok",
         counter: String(counter),
-        publicKeyB64: Buffer.from(publicKey).toString("base64"),
+        publicKeyB64,
         measurement,
         enforcement: "measured-tee",
+        epochId,
       };
     }
     case "key": {
       return {
-        publicKeyB64: Buffer.from(publicKey).toString("base64"),
+        publicKeyB64,
         measurement,
         enforcement: "measured-tee",
+        epochId,
       };
     }
     case "commitDigest": {

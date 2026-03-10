@@ -162,7 +162,7 @@ async function handleCommit(req: IncomingMessage, res: ServerResponse): Promise<
     for (let i = 0; i < proofs.length; i++) {
       const tsa = tsaResults[i];
       if (tsa && proofs[i]) {
-        proofs[i]!.metadata = { ...proofs[i]!.metadata, tsa };
+        proofs[i]!.timestamps = { artifact: tsa };
       }
     }
   }

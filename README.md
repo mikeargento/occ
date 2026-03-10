@@ -7,7 +7,7 @@
 npm install occproof
 ```
 
-Whitepaper: [Proof as a Reachability Property](https://occproof.com/documentation)
+Documentation: [Proof as a Reachability Property](https://occproof.com/whitepaper.html)
 
 OCC is a TypeScript library for producing tamper-evident, process-bound commit proofs.  It enforces one invariant:
 

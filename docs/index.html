@@ -1,0 +1,777 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Origin Controlled Computing (OCC)</title>
+  <meta
+    name="description"
+    content="Proof should be a property of creation, not verification. Origin Controlled Computing."
+  />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { color-scheme: light; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      font-size: 14px;
+      line-height: 1.65;
+      color: #202122;
+      background: #fff;
+    }
+    a { color: #3366cc; }
+    a:hover { text-decoration: underline; }
+
+    .wrap {
+      max-width: 1060px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ── Nav ── */
+    nav {
+      max-width: 1060px;
+      margin: 0 auto;
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-brand {
+      font-size: 16px;
+      font-weight: 700;
+      color: #202122;
+      text-decoration: none;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .nav-brand:hover { text-decoration: none; }
+    .nav-links { display: flex; gap: 16px; }
+    .nav-links a { font-size: 13px; }
+    .hamburger { display: none; }
+    .nav-rule {
+      border: none;
+      border-top: 1px solid #a2a9b1;
+      margin: 0;
+    }
+
+    .eyebrow, .section-label {
+      font-size: 13px;
+      color: #54595d;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      text-decoration: none;
+    }
+    h1 {
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 1.3;
+      margin-bottom: 18px;
+    }
+    .hero-copy { color: #202122; }
+    .hero-copy + .hero-copy { margin-top: 16px; }
+    .hero-actions { margin-top: 18px; }
+    .subsection { margin-top: 44px; }
+    .subsection p { color: #202122; }
+    .button {
+      font-family: inherit;
+      font-size: 14px;
+      color: #3366cc;
+    }
+
+    /* ── Sections ── */
+    section:first-child {
+      padding-top: 36px;
+    }
+    section {
+      padding: 24px 0;
+    }
+    section + section .wrap {
+      padding-top: 40px;
+    }
+    h2 {
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 1.3;
+      margin-bottom: 18px;
+    }
+    .section-main p {
+      color: #202122;
+    }
+    .section-main p + p {
+      margin-top: 16px;
+    }
+    .statement {
+      margin-top: 24px;
+      font-size: 15px;
+      font-weight: 500;
+      font-style: italic;
+      color: #202122;
+    }
+
+    /* ── Flow ── */
+    .flow {
+      margin-top: 24px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+    }
+    .flow-item {
+      padding: 16px 18px;
+      background: #f8f9fa;
+      border: 1px solid #c8ccd1;
+    }
+    .flow-num {
+      font-size: 12px;
+      color: #72777d;
+      margin-bottom: 4px;
+    }
+    .flow-content h3 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .flow-content p {
+      font-size: 13px;
+      color: #54595d;
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    .diagram-heading {
+      font-size: 15px;
+      font-weight: 600;
+      margin-top: 32px;
+      margin-bottom: 14px;
+    }
+
+    /* ── Diagram ── */
+    .diagram {
+      margin: 24px 0 0;
+      padding: 20px 16px;
+      background: #f8f9fa;
+      border: 1px solid #c8ccd1;
+      overflow-x: auto;
+    }
+    .dia-main {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .dia-harrow {
+      color: #72777d;
+      padding: 4px 0;
+      transform: rotate(90deg);
+      font-size: 14px;
+    }
+    .dia-input, .dia-output {
+      text-align: center;
+      padding: 10px;
+      border: 1px solid #c8ccd1;
+      background: #fff;
+      width: 100%;
+    }
+    .dia-input-icon, .dia-output-icon {
+      font-size: 16px;
+      margin-bottom: 2px;
+    }
+    .dia-input-title, .dia-output-title {
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .dia-input-sub, .dia-output-sub {
+      font-size: 11px;
+      color: #54595d;
+    }
+    .dia-boundary {
+      border: 1px solid #c8ccd1;
+      padding: 20px 10px 12px;
+      position: relative;
+      width: 100%;
+      background: #fff;
+    }
+    .dia-boundary-label {
+      position: absolute;
+      top: -9px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #f8f9fa;
+      padding: 1px 8px;
+      font-size: 10px;
+      font-weight: 500;
+      border: 1px solid #c8ccd1;
+      white-space: nowrap;
+    }
+    .dia-steps {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+    }
+    .dia-step {
+      text-align: center;
+      padding: 8px 4px;
+      border: 1px solid #c8ccd1;
+      background: #f8f9fa;
+    }
+    .dia-step-title {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+    .dia-step-desc {
+      font-size: 11px;
+      line-height: 1.4;
+      color: #54595d;
+    }
+    .dia-blocked {
+      margin-top: 12px;
+      padding-top: 8px;
+      border-top: 1px solid #c8ccd1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .dia-blocked-label {
+      font-size: 11px;
+      color: #54595d;
+    }
+    .dia-blocked-item {
+      font-size: 11px;
+      color: #54595d;
+      padding: 1px 6px;
+      border: 1px solid #c8ccd1;
+    }
+
+    /* ── Compare ── */
+    .compare {
+      margin-top: 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .panel {
+      padding: 16px 18px;
+      background: #f8f9fa;
+      border: 1px solid #c8ccd1;
+    }
+    .mini-label {
+      font-size: 12px;
+      color: #54595d;
+      margin-bottom: 6px;
+    }
+    .panel h3 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .panel p { color: #202122; margin: 0; }
+
+    /* ── Applications ── */
+    .applications {
+      margin-top: 22px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .app {
+      padding: 16px 18px;
+      background: #f8f9fa;
+      border: 1px solid #c8ccd1;
+    }
+    .app-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .app-desc {
+      font-size: 13px;
+      color: #54595d;
+      line-height: 1.5;
+    }
+
+    /* ── Proof Maker ── */
+    .proof-maker { margin-top: 24px; }
+    .proof-dropzone {
+      width: 100%;
+      padding: 40px 20px;
+      border: 2px dashed #c8ccd1;
+      background: #f8f9fa;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .proof-dropzone:hover { border-color: #a2a9b1; }
+    .proof-dropzone.dragover { border-color: #3366cc; background: #eaf0fa; }
+    .proof-dropzone.has-file { border-style: solid; border-color: #202122; background: #fff; }
+    .proof-drop-icon { font-size: 28px; margin-bottom: 8px; }
+    .proof-drop-text { font-size: 14px; color: #54595d; }
+    .proof-drop-text strong { color: #202122; }
+    .proof-file-info { display: none; }
+    .proof-file-info.visible { display: block; }
+    .proof-file-name { font-size: 14px; font-weight: 600; color: #202122; }
+    .proof-file-size { font-size: 12px; color: #54595d; margin-top: 2px; }
+    .proof-file-remove { font-size: 12px; color: #3366cc; cursor: pointer; margin-top: 4px; border: none; background: none; font-family: inherit; }
+    .proof-file-remove:hover { text-decoration: underline; }
+    .proof-drop-prompt { }
+    .proof-dropzone input[type="file"] { display: none; }
+    .proof-btn {
+      margin-top: 10px;
+      padding: 8px 20px;
+      background: #202122;
+      color: #fff;
+      border: none;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+    }
+    .proof-btn:hover:not(:disabled) { background: #3366cc; }
+    .proof-btn:disabled { opacity: 0.6; cursor: default; }
+    .proof-output {
+      margin-top: 14px;
+      padding: 16px;
+      background: #f8f9fa;
+      border: 1px solid #c8ccd1;
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      color: #202122;
+      overflow-x: auto;
+      white-space: pre;
+      display: none;
+    }
+    .proof-output.visible { display: block; }
+    .proof-meta {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #54595d;
+    }
+
+    /* ── Footer ── */
+    footer { padding-bottom: 120px; }
+
+    /* ── Mobile ── */
+    @media (max-width: 600px) {
+      .compare { grid-template-columns: 1fr; }
+      .applications { grid-template-columns: 1fr; }
+      .flow { grid-template-columns: 1fr; }
+      .dia-steps { grid-template-columns: repeat(2, 1fr); }
+      .hamburger {
+        display: block;
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #202122;
+      }
+      .hamburger svg { display: block; }
+      .nav-links {
+        display: none;
+        position: absolute;
+        top: 48px;
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        background: #fff;
+        padding: 12px 24px;
+        gap: 8px;
+        border-bottom: 1px solid #a2a9b1;
+      }
+      .nav-links.open { display: flex; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="/" class="nav-brand">🤖 <span style="position:relative;top:1px">occ.wtf</span></a>
+    <div class="nav-links">
+      <a href="/whitepaper.html">doc</a>
+      <a href="https://github.com/mikeargento/occ" target="_blank">github</a>
+      <a href="https://npmjs.com/package/occproof" target="_blank">npm</a>
+    </div>
+    <button class="hamburger" aria-label="Menu" onclick="document.querySelector('.nav-links').classList.toggle('open')">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+        <line x1="3" y1="6" x2="17" y2="6"/><line x1="3" y1="10" x2="17" y2="10"/><line x1="3" y1="14" x2="17" y2="14"/>
+      </svg>
+    </button>
+  </nav>
+  <div class="wrap"><hr class="nav-rule"></div>
+  <main>
+    <section id="hero">
+      <div class="wrap">
+        <p class="eyebrow">Origin Controlled Computing</p>
+        <h1>🔐 Proof should be a property of creation, not verification.</h1>
+        <p class="hero-copy">
+          Today, digital artifacts are created freely and verified later.
+          OCC introduces a different model: valid proof exists only if specific bytes
+          were committed through an authorized execution boundary during a single
+          atomic event.
+        </p>
+        <div class="subsection" id="idea">
+          <div class="section-label">The Problem</div>
+          <h2>⚠️ Computers create data first, then try to prove it later.</h2>
+          <p>
+            Photos, documents, sensor outputs, logs, model responses, and files are
+            usually created without structural proof. Only afterward do we attach
+            signatures, metadata, timestamps, registries, or credentials.
+          </p>
+          <p style="margin-top: 10px;">
+            By then, the artifact already exists. Proof becomes optional. Trust becomes
+            something we attempt to recover after creation instead of something the
+            system enforced at the moment the artifact came into being.
+          </p>
+        </div>
+
+        <div class="subsection" id="shift">
+          <div class="section-label">The Shift</div>
+          <h2>🔄 OCC moves math to the commit path.</h2>
+          <p>
+            Under OCC, proof is not wrapped around an artifact after the fact. It is
+            produced only when candidate bytes cross an authorized execution boundary
+            and are committed through a protected path.
+          </p>
+          <div class="statement">
+            If proof exists, the authorized commit path was traversed.
+          </div>
+        </div>
+      </div>
+    </section>
+    <section id="how">
+      <div class="wrap">
+        <div class="section-label">How It Works</div>
+        <div class="section-main">
+          <h2>⚛️ One atomic event.</h2>
+          <p>
+            OCC binds authorization, cryptographic binding, and commit into a single
+            indivisible operation. Not a later check. Not a label. A creation event.
+          </p>
+          <div class="flow">
+            <div class="flow-item">
+              <div class="flow-num">01</div>
+              <div class="flow-content">
+                <h3>Authorize</h3>
+                <p>
+                  Candidate bytes enter a protected commit interface controlled by an
+                  authorized execution boundary.
+                </p>
+              </div>
+            </div>
+            <div class="flow-item">
+              <div class="flow-num">02</div>
+              <div class="flow-content">
+                <h3>Bind</h3>
+                <p>
+                  Inside the boundary, the system computes a content-dependent hash and
+                  combines it with boundary-fresh cryptographic output.
+                </p>
+              </div>
+            </div>
+            <div class="flow-item">
+              <div class="flow-num">03</div>
+              <div class="flow-content">
+                <h3>Commit</h3>
+                <p>
+                  The artifact and its proof are committed together. If the event does
+                  not occur, no valid proof can exist.
+                </p>
+              </div>
+            </div>
+          </div>
+          <h3 class="diagram-heading">Proof is caused, not added.</h3>
+          <div class="diagram">
+            <div class="dia-main">
+              <div class="dia-input">
+                <div class="dia-input-icon">&#x1F4C4;</div>
+                <div class="dia-input-title">Candidate</div>
+                <div class="dia-input-sub">Digital State</div>
+              </div>
+              <div class="dia-harrow">&rarr;</div>
+              <div class="dia-boundary">
+                <div class="dia-boundary-label">Protected Boundary</div>
+                <div class="dia-steps">
+                  <div class="dia-step">
+                    <div class="dia-step-title">Authorize</div>
+                    <div class="dia-step-desc">Boundary-held capability exercised. Caller cannot invoke this directly.</div>
+                  </div>
+                  <div class="dia-step">
+                    <div class="dia-step-title">Nonce</div>
+                    <div class="dia-step-desc">A fresh cryptographic nonce is chosen, never used before, generated inside the boundary.</div>
+                  </div>
+                  <div class="dia-step">
+                    <div class="dia-step-title">Bind</div>
+                    <div class="dia-step-desc">N + H(content) bound together cryptographically. N can only have come from inside this boundary.</div>
+                  </div>
+                  <div class="dia-step">
+                    <div class="dia-step-title">Commit</div>
+                    <div class="dia-step-desc">Authenticated artifact persists to storage. Fail-closed: if any step fails, nothing is produced.</div>
+                  </div>
+                </div>
+              </div>
+              <div class="dia-harrow">&rarr;</div>
+              <div class="dia-output">
+                <div class="dia-output-icon">&#x2713;</div>
+                <div class="dia-output-title">Authenticated</div>
+                <div class="dia-output-sub">Artifact + Proof</div>
+              </div>
+            </div>
+            <div class="dia-blocked">
+              <span class="dia-blocked-label">Alternative paths blocked:</span>
+              <span class="dia-blocked-item">&#x2715; Direct key access</span>
+              <span class="dia-blocked-item">&#x2715; Bypass signing</span>
+              <span class="dia-blocked-item">&#x2715; Observe intermediate state</span>
+              <span class="dia-blocked-item">&#x2715; Partial commit</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section id="what-changes">
+      <div class="wrap">
+        <div class="section-label">What Changes</div>
+        <div class="section-main">
+          <h2>🧱 Proof becomes structural.</h2>
+          <div class="compare">
+            <div class="panel">
+              <p class="mini-label">Before OCC</p>
+              <h3>Create first.</h3>
+              <p>
+                Artifacts are created freely. Verification is applied later. The trust
+                model begins after the artifact already exists.
+              </p>
+            </div>
+            <div class="panel">
+              <p class="mini-label">With OCC</p>
+              <h3>Commit with proof.</h3>
+              <p>
+                Valid proof exists only because the system made it reachable through a
+                specific authorized boundary and commit path.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section id="why">
+      <div class="wrap">
+        <div class="section-label">Why It Matters</div>
+        <div class="section-main">
+          <h2>🌍 A new primitive for trustworthy digital systems.</h2>
+          <p>
+            OCC applies anywhere digital artifacts must be trusted as outputs of a
+            particular creation path rather than merely inspected after creation.
+            It is not proof of truth. It is proof that specific bytes were committed
+            by a specific boundary under a specific authorization event.
+          </p>
+          <div class="applications">
+            <div class="app">
+              <div class="app-title">AI Outputs</div>
+              <div class="app-desc">LLM responses, generated images, model predictions. Prove which model, version, and prompt produced a specific output.</div>
+            </div>
+            <div class="app">
+              <div class="app-title">Journalism &amp; Media</div>
+              <div class="app-desc">Photos, video, audio recordings. Prove a file was captured by a specific device at a specific time, not fabricated later.</div>
+            </div>
+            <div class="app">
+              <div class="app-title">Scientific Instruments</div>
+              <div class="app-desc">Sensor readings, lab equipment data, telescope imagery. Prove raw data came from an authorized instrument, unmodified.</div>
+            </div>
+            <div class="app">
+              <div class="app-title">Compliance Logs</div>
+              <div class="app-desc">Audit trails, financial records, regulatory filings. Prove log entries were created by the system at the recorded time.</div>
+            </div>
+            <div class="app">
+              <div class="app-title">Software Pipelines</div>
+              <div class="app-desc">Build artifacts, deployment packages, signed releases. Prove a binary was produced by a specific CI/CD pipeline run.</div>
+            </div>
+            <div class="app">
+              <div class="app-title">Digital Identity</div>
+              <div class="app-desc">Credentials, attestations, signed claims. Prove an identity artifact was issued by an authorized authority through a controlled path.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section id="prove">
+      <div class="wrap">
+        <div class="section-label">Try It</div>
+        <div class="section-main">
+          <h2>🧪 Generate a proof.</h2>
+          <p>
+            Drop any file below. Your browser hashes it locally, then sends only
+            the hash to an AWS Nitro Enclave which signs it with Ed25519,
+            binds it with a boundary-fresh nonce, and returns a real proof
+            timestamped by FreeTSA. Nothing is uploaded.
+          </p>
+          <div class="proof-maker">
+            <div class="proof-dropzone" id="proof-dropzone">
+              <input type="file" id="proof-file-input" />
+              <div class="proof-drop-prompt">
+                <div class="proof-drop-icon">📄</div>
+                <div class="proof-drop-text">Drag a file here or <strong>click to browse</strong></div>
+              </div>
+              <div class="proof-file-info" id="proof-file-info">
+                <div class="proof-file-name" id="proof-file-name"></div>
+                <div class="proof-file-size" id="proof-file-size"></div>
+                <button class="proof-file-remove" id="proof-file-remove">remove</button>
+              </div>
+            </div>
+            <button class="proof-btn" id="proof-btn" onclick="generateProof()">Make a Proof</button>
+            <div class="proof-output" id="proof-output"></div>
+            <div class="proof-meta" id="proof-meta"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer></footer>
+  <script>
+  var OCC_ENDPOINT = 'https://nitro.occproof.com';
+  var selectedFile = null;
+  var dropzone = document.getElementById('proof-dropzone');
+  var fileInput = document.getElementById('proof-file-input');
+  var fileInfo = document.getElementById('proof-file-info');
+  var fileName = document.getElementById('proof-file-name');
+  var fileSize = document.getElementById('proof-file-size');
+  var dropPrompt = dropzone.querySelector('.proof-drop-prompt');
+  var proofBtn = document.getElementById('proof-btn');
+
+  function formatSize(b) {
+    if (b < 1024) return b + ' B';
+    if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+    return (b / 1048576).toFixed(1) + ' MB';
+  }
+
+  function toB64(buf) {
+    return btoa(String.fromCharCode.apply(null, new Uint8Array(buf)));
+  }
+
+  function setFile(f) {
+    selectedFile = f;
+    fileName.textContent = f.name;
+    fileSize.textContent = formatSize(f.size);
+    fileInfo.classList.add('visible');
+    dropPrompt.style.display = 'none';
+    dropzone.classList.add('has-file');
+  }
+
+  function clearFile() {
+    selectedFile = null;
+    fileInput.value = '';
+    fileInfo.classList.remove('visible');
+    dropPrompt.style.display = '';
+    dropzone.classList.remove('has-file');
+    document.getElementById('proof-output').classList.remove('visible');
+    document.getElementById('proof-meta').textContent = '';
+  }
+
+  document.getElementById('proof-file-remove').addEventListener('click', function(e) { e.stopPropagation(); clearFile(); });
+  dropzone.addEventListener('click', function() { fileInput.click(); });
+  fileInput.addEventListener('change', function() { if (fileInput.files.length) setFile(fileInput.files[0]); });
+
+  dropzone.addEventListener('dragover', function(e) { e.preventDefault(); dropzone.classList.add('dragover'); });
+  dropzone.addEventListener('dragleave', function() { dropzone.classList.remove('dragover'); });
+  dropzone.addEventListener('drop', function(e) {
+    e.preventDefault();
+    dropzone.classList.remove('dragover');
+    if (e.dataTransfer.files.length) setFile(e.dataTransfer.files[0]);
+  });
+
+  async function generateProof() {
+    if (!selectedFile) return;
+
+    var el = document.getElementById('proof-output');
+    var metaEl = document.getElementById('proof-meta');
+
+    // Show progress
+    proofBtn.disabled = true;
+    proofBtn.textContent = 'HASHING...';
+    metaEl.textContent = '';
+    el.classList.remove('visible');
+
+    try {
+      // ① Hash file locally in browser (nothing uploaded)
+      var bytes = new Uint8Array(await selectedFile.arrayBuffer());
+      var hashBuf = await crypto.subtle.digest('SHA-256', bytes);
+      var digestB64 = toB64(hashBuf);
+
+      // ② Send only the hash to the Nitro Enclave
+      proofBtn.textContent = 'SIGNING IN ENCLAVE...';
+
+      var resp = await fetch(OCC_ENDPOINT + '/commit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          digests: [{ digestB64: digestB64, hashAlg: 'sha256' }],
+          metadata: { source: 'occ.wtf', fileName: selectedFile.name }
+        })
+      });
+
+      if (!resp.ok) {
+        var err = await resp.json().catch(function() { return { error: resp.statusText }; });
+        throw new Error(err.error || 'Enclave returned ' + resp.status);
+      }
+
+      var proofs = await resp.json();
+      var raw = Array.isArray(proofs) ? proofs[0] : proofs;
+
+      // ③ Normalize to occ/1 — canonical field order:
+      //    version, artifact, commit, signer, environment, timestamps
+      var proof = { version: 'occ/1' };
+      if (raw.artifact)    proof.artifact    = raw.artifact;
+      if (raw.commit)      proof.commit      = raw.commit;
+      if (raw.signer)      proof.signer      = raw.signer;
+      if (raw.environment) proof.environment = raw.environment;
+      // timestamps is a top-level field in occ/1
+      if (raw.timestamps)  proof.timestamps  = raw.timestamps;
+      // TSA may come via metadata.tsa from server — promote to timestamps
+      if (!proof.timestamps && raw.metadata && raw.metadata.tsa) {
+        proof.timestamps = { artifact: raw.metadata.tsa };
+      }
+
+      // Display occ/1 proof
+      el.textContent = JSON.stringify(proof, null, 2);
+      el.classList.add('visible');
+
+      // Build meta line
+      var meta = selectedFile.name + ' (' + formatSize(bytes.length) + ')';
+      meta += ' \u2192 SHA-256 \u2192 signed by Nitro Enclave';
+      if (proof.environment && proof.environment.enforcement) {
+        meta += ' (' + proof.environment.enforcement + ')';
+      }
+      if (proof.commit && proof.commit.counter) {
+        meta += ' \u00b7 counter ' + proof.commit.counter;
+      }
+      if (proof.commit && proof.commit.epochId) {
+        meta += ' \u00b7 epoch ' + proof.commit.epochId.slice(0, 8) + '...';
+      }
+      var tsa = proof.timestamps && (proof.timestamps.artifact || proof.timestamps.proof);
+      if (tsa && tsa.authority) {
+        meta += ' \u00b7 timestamped by ' + tsa.authority;
+      }
+      if (proof.commit && proof.commit.prevB64) {
+        meta += ' \u00b7 chained';
+      }
+      metaEl.textContent = meta;
+
+    } catch (err) {
+      el.textContent = 'Error: ' + err.message + '\n\nMake sure the Nitro Enclave is running at ' + OCC_ENDPOINT;
+      el.classList.add('visible');
+      metaEl.textContent = '';
+    } finally {
+      proofBtn.disabled = false;
+      proofBtn.textContent = 'MAKE A PROOF';
+    }
+  }
+  </script>
+</body>
+</html>

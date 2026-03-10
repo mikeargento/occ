@@ -191,6 +191,32 @@ export interface OCCProof {
   };
 
   /**
+   * Optional external timestamps (e.g. RFC 3161 TSA tokens).
+   * NOT included in the signed body. Independently verifiable.
+   *
+   * When present, each entry contains a TSA authority, ISO 8601 time,
+   * DER-encoded token (base64), digest algorithm, and the digest
+   * that was timestamped. The "artifact" timestamp covers the artifact
+   * digest; the "proof" timestamp covers the proof's canonical hash.
+   */
+  timestamps?: {
+    artifact?: {
+      authority: string;
+      time: string;
+      tokenB64: string;
+      digestAlg: string;
+      digestB64: string;
+    };
+    proof?: {
+      authority: string;
+      time: string;
+      tokenB64: string;
+      digestAlg: string;
+      digestB64: string;
+    };
+  };
+
+  /**
    * Caller-supplied metadata key/value pairs.
    * NOT included in the signed body. Treat as advisory only.
    */
