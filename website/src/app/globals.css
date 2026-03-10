@@ -11,54 +11,72 @@
   --color-text-tertiary: var(--c-text-tertiary);
   --color-accent: var(--c-accent);
   --color-accent-dim: var(--c-accent-dim);
+  --color-syntax-key: var(--c-syntax-key);
+  --color-syntax-string: var(--c-syntax-string);
+  --color-syntax-number: var(--c-syntax-number);
   --color-success: #22c55e;
   --color-warning: #eab308;
   --color-error: #ef4444;
   --color-info: #3b82f6;
-  --font-sans: -apple-system, "SF Pro Display", "SF Pro Text", system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-mono: "SF Mono", "Fira Code", "JetBrains Mono", ui-monospace, monospace;
+  --font-sans: "acumin-pro", "Helvetica Neue", Helvetica, sans-serif;
+  --font-serif: "acumin-pro", "Helvetica Neue", Helvetica, sans-serif;
+  --font-mono: var(--font-mono, "JetBrains Mono", "SF Mono", ui-monospace, monospace);
 }
 
 /* ── Dark (default) ── */
 :root, .dark {
-  --bg: #09090b;
-  --bg-elevated: #18181b;
-  --bg-subtle: #27272a;
-  --c-border: #3f3f46;
-  --c-border-subtle: #27272a;
-  --c-text: #fafafa;
-  --c-text-secondary: #a1a1aa;
-  --c-text-tertiary: #71717a;
-  --c-accent: #e4e4e7;
-  --c-accent-dim: #52525b;
+  --bg: #111111;
+  --bg-elevated: #1a1a1a;
+  --bg-subtle: #2a2a2a;
+  --c-border: #3a3a3a;
+  --c-border-subtle: #2a2a2a;
+  --c-text: #ececec;
+  --c-text-secondary: #a0a0a0;
+  --c-text-tertiary: #707070;
+  --c-accent: #e0e0e0;
+  --c-accent-dim: #555555;
+  --c-syntax-key: #93c5fd;
+  --c-syntax-string: #6ee7b7;
+  --c-syntax-number: #fbbf24;
   color-scheme: dark;
 }
 
 /* ── Light ── */
 .light {
-  --bg: #ffffff;
-  --bg-elevated: #f4f4f5;
-  --bg-subtle: #e4e4e7;
-  --c-border: #c4c4c8;
-  --c-border-subtle: #d4d4d8;
-  --c-text: #09090b;
-  --c-text-secondary: #3f3f46;
-  --c-text-tertiary: #52525b;
-  --c-accent: #18181b;
-  --c-accent-dim: #71717a;
+  --bg: #f5f5f0;
+  --bg-elevated: #eaeae5;
+  --bg-subtle: #ddddd8;
+  --c-border: #c0c0bb;
+  --c-border-subtle: #d0d0cb;
+  --c-text: #1a1a1a;
+  --c-text-secondary: #4a4a4a;
+  --c-text-tertiary: #6a6a6a;
+  --c-accent: #1a1a1a;
+  --c-accent-dim: #707070;
+  --c-syntax-key: #2563eb;
+  --c-syntax-string: #047857;
+  --c-syntax-number: #b45309;
   color-scheme: light;
 }
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 body {
   background: var(--bg);
   color: var(--c-text);
+  font-family: var(--font-serif);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-wrap: pretty;
+}
+
+h1, h2, h3, h4, h5, h6,
+nav, button, [class*="uppercase"],
+[class*="inline-flex"], [class*="rounded-md"][class*="px-6"] {
+  font-family: var(--font-sans);
 }
 
 .dark ::selection {

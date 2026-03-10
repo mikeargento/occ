@@ -19,65 +19,67 @@ export function Nav() {
 
   return (
     <header className="sticky top-0 z-50 bg-bg/80 backdrop-blur-xl">
-      <nav className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6 border-b border-border-subtle">
-        <Link
-          href="/"
-          className="flex items-center gap-2 text-sm font-semibold tracking-wider uppercase text-text"
-        >
-          <span className="text-base font-black tracking-wide">OCC.WTF</span>
-        </Link>
-
-        {/* Desktop */}
-        <div className="hidden flex-1 items-center justify-end gap-6 md:flex">
-          {links.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              className={`text-[13px] transition-colors ${
-                pathname.startsWith(l.href)
-                  ? "text-text"
-                  : "text-text-secondary hover:text-text"
-              }`}
-            >
-              {l.label}
-            </Link>
-          ))}
-          {/* Theme toggle */}
-          <ThemeToggle theme={theme} toggle={toggle} />
-        </div>
-
-        {/* Mobile: theme toggle + hamburger */}
-        <div className="flex items-center gap-1 md:hidden">
-          <ThemeToggle theme={theme} toggle={toggle} />
-          <button
-            onClick={() => setOpen(!open)}
-            className="flex h-8 w-8 items-center justify-center rounded-md hover:bg-bg-subtle"
-            aria-label="Toggle menu"
+      <div className="mx-auto max-w-7xl px-6">
+        <nav className="flex h-14 items-center justify-between">
+          <Link
+            href="/"
+            className="flex items-center gap-2 text-sm font-semibold tracking-wider uppercase text-text"
           >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
+            <span className="text-xl font-extrabold tracking-wide" style={{ fontFamily: '"acumin-variable", "acumin-pro", sans-serif' }}>OCC.WTF</span>
+          </Link>
+
+          {/* Desktop */}
+          <div className="hidden flex-1 items-center justify-end gap-4 md:flex">
+            {links.map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                className={`text-[13px] font-semibold rounded-md px-3 py-1.5 transition-colors ${
+                  pathname.startsWith(l.href)
+                    ? "text-text bg-bg-subtle/50"
+                    : "text-text-secondary hover:text-text hover:bg-bg-subtle/50"
+                }`}
+              >
+                {l.label}
+              </Link>
+            ))}
+            {/* Theme toggle */}
+            <ThemeToggle theme={theme} toggle={toggle} />
+          </div>
+
+          {/* Mobile: theme toggle + hamburger */}
+          <div className="flex items-center gap-1 md:hidden">
+            <ThemeToggle theme={theme} toggle={toggle} />
+            <button
+              onClick={() => setOpen(!open)}
+              className="flex h-8 w-8 items-center justify-center rounded-md hover:bg-bg-subtle"
+              aria-label="Toggle menu"
             >
-              {open ? (
-                <>
-                  <line x1="3" y1="3" x2="13" y2="13" />
-                  <line x1="13" y1="3" x2="3" y2="13" />
-                </>
-              ) : (
-                <>
-                  <line x1="2" y1="4" x2="14" y2="4" />
-                  <line x1="2" y1="8" x2="14" y2="8" />
-                  <line x1="2" y1="12" x2="14" y2="12" />
-                </>
-              )}
-            </svg>
-          </button>
-        </div>
-      </nav>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              >
+                {open ? (
+                  <>
+                    <line x1="3" y1="3" x2="13" y2="13" />
+                    <line x1="13" y1="3" x2="3" y2="13" />
+                  </>
+                ) : (
+                  <>
+                    <line x1="2" y1="4" x2="14" y2="4" />
+                    <line x1="2" y1="8" x2="14" y2="8" />
+                    <line x1="2" y1="12" x2="14" y2="12" />
+                  </>
+                )}
+              </svg>
+            </button>
+          </div>
+        </nav>
+      </div>
 
       {/* Mobile menu */}
       {open && (
@@ -88,7 +90,7 @@ export function Nav() {
                 key={l.href}
                 href={l.href}
                 onClick={() => setOpen(false)}
-                className={`rounded-md px-3 py-2 text-sm ${
+                className={`rounded-md px-3 py-2 text-sm font-semibold ${
                   pathname.startsWith(l.href)
                     ? "text-text bg-bg-subtle"
                     : "text-text-secondary hover:text-text"

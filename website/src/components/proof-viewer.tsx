@@ -67,7 +67,7 @@ function highlightJson(json: string): React.ReactNode[] {
     const keyMatch = remaining.match(/^(\s*)"([^"]+)":/);
     if (keyMatch) {
       parts.push(<span key={key++} className="text-text-tertiary">{keyMatch[1]}</span>);
-      parts.push(<span key={key++} className="text-blue-400">&quot;{keyMatch[2]}&quot;</span>);
+      parts.push(<span key={key++} className="text-syntax-key">&quot;{keyMatch[2]}&quot;</span>);
       parts.push(<span key={key++} className="text-text-tertiary">: </span>);
       remaining = remaining.slice(keyMatch[0].length);
 
@@ -78,13 +78,13 @@ function highlightJson(json: string): React.ReactNode[] {
         const strMatch = remaining.match(/^"([^"]*)"(,?)$/);
         if (strMatch) {
           const val = strMatch[1];
-          parts.push(<span key={key++} className="text-emerald-400">&quot;{val}&quot;</span>);
+          parts.push(<span key={key++} className="text-syntax-string">&quot;{val}&quot;</span>);
           if (strMatch[2]) parts.push(<span key={key++} className="text-text-tertiary">,</span>);
         } else {
-          parts.push(<span key={key++} className="text-emerald-400">{remaining}</span>);
+          parts.push(<span key={key++} className="text-syntax-string">{remaining}</span>);
         }
       } else if (remaining.match(/^\d/)) {
-        parts.push(<span key={key++} className="text-amber-400">{remaining.replace(/,$/, "")}</span>);
+        parts.push(<span key={key++} className="text-syntax-number">{remaining.replace(/,$/, "")}</span>);
         if (remaining.endsWith(",")) parts.push(<span key={key++} className="text-text-tertiary">,</span>);
       } else {
         parts.push(<span key={key++} className="text-text-secondary">{remaining}</span>);

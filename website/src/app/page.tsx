@@ -1,17 +1,18 @@
 import Link from "next/link";
+import { CommitPathDiagram } from "@/components/commit-path-diagram";
 
 function Section({
   children,
   className = "",
-  border = false,
 }: {
   children: React.ReactNode;
   className?: string;
-  border?: boolean;
 }) {
   return (
-    <section className={`${border ? "pb-24" : "py-24"} ${className}`}>
-      <div className={`mx-auto max-w-6xl px-6 ${border ? "border-t border-border-subtle py-24" : ""}`}>{children}</div>
+    <section className={`py-24 ${className}`}>
+      <div className="mx-auto max-w-7xl px-6">
+        {children}
+      </div>
     </section>
   );
 }
@@ -45,13 +46,13 @@ export default function Home() {
             <div className="mt-10 flex flex-wrap gap-4">
               <Link
                 href="/studio"
-                className="inline-flex h-11 items-center rounded-md bg-text px-6 text-sm font-medium text-bg transition-colors hover:opacity-85"
+                className="inline-flex h-11 items-center rounded-md bg-text px-6 text-sm font-semibold text-bg transition-colors hover:opacity-85"
               >
                 Try the Studio
               </Link>
               <Link
                 href="/docs"
-                className="inline-flex h-11 items-center rounded-md border border-border px-6 text-sm font-medium text-text-secondary transition-colors hover:text-text hover:border-text-tertiary"
+                className="inline-flex h-11 items-center rounded-md border border-border px-6 text-sm font-semibold text-text-secondary transition-colors hover:text-text hover:border-text-tertiary"
               >
                 Read the Docs
               </Link>
@@ -65,7 +66,7 @@ export default function Home() {
                 <div className="w-2.5 h-2.5 rounded-full bg-[#FFBD2E]" />
                 <div className="w-2.5 h-2.5 rounded-full bg-[#27C93F]" />
               </div>
-              <span className="text-[10px] font-mono text-text-tertiary ml-2">proof.json</span>
+              <span className="text-[10px] font-mono text-text-tertiary ml-2">real occ/1 proof</span>
             </div>
             <div className="max-h-[420px] overflow-y-auto p-4">
               <pre className="text-[11px] leading-relaxed font-mono text-text-secondary whitespace-pre-wrap break-all">{`{
@@ -116,7 +117,7 @@ export default function Home() {
       </Section>
 
       {/* ── Problem ── */}
-      <Section border>
+      <Section>
         <div className="grid lg:grid-cols-2 gap-16">
           <div>
             <Label>The Problem</Label>
@@ -157,7 +158,7 @@ export default function Home() {
       </Section>
 
       {/* ── The Shift ── */}
-      <Section border>
+      <Section>
         <Label>The Shift</Label>
         <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-6">
           OCC moves math to the commit path.
@@ -167,13 +168,14 @@ export default function Home() {
           produced only when candidate bytes cross an authorized execution
           boundary and are committed through a protected path.
         </p>
-        <p className="text-lg font-medium text-text/90 italic">
+        <CommitPathDiagram />
+        <p className="mt-10 text-lg font-medium text-text/90 italic">
           If proof exists, the authorized commit path was traversed.
         </p>
       </Section>
 
       {/* ── How It Works ── */}
-      <Section border>
+      <Section>
         <Label>How It Works</Label>
         <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-12">
           One atomic event.
@@ -212,18 +214,18 @@ export default function Home() {
         </div>
 
         {/* Diagram */}
-        <div className="mt-12 rounded-lg border border-border-subtle bg-bg-elevated p-8 overflow-x-auto">
-          <div className="flex flex-col items-center gap-3 min-w-[300px]">
+        <div className="mt-12 rounded-lg border border-border-subtle bg-bg-elevated p-6 sm:p-8">
+          <div className="flex flex-col items-center gap-3">
             <div className="rounded-md border border-border bg-bg px-6 py-3 text-center">
               <div className="text-xs font-medium text-text-tertiary">Input</div>
               <div className="text-sm font-medium mt-1">Candidate Bytes</div>
             </div>
             <div className="text-text-tertiary text-lg">↓</div>
-            <div className="w-full max-w-xl rounded-md border border-border relative px-6 py-8">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-bg-elevated px-3 py-0.5 text-[10px] font-medium uppercase tracking-wider text-text-tertiary border border-border rounded">
+            <div className="max-w-xl w-full rounded-md border border-border relative px-4 sm:px-6 py-8">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-bg-elevated px-3 py-0.5 text-[10px] font-medium uppercase tracking-wider text-text-tertiary border border-border rounded whitespace-nowrap">
                 Protected Boundary
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 {["Authorize", "Nonce", "Bind", "Commit"].map((s) => (
                   <div key={s} className="rounded bg-bg-subtle border border-border-subtle px-3 py-2 text-center">
                     <div className="text-[10px] font-semibold uppercase tracking-wider">{s}</div>
@@ -245,7 +247,7 @@ export default function Home() {
       </Section>
 
       {/* ── What OCC Is Not ── */}
-      <Section border>
+      <Section>
         <Label>Distinctions</Label>
         <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-8">
           What OCC is not.
@@ -268,7 +270,7 @@ export default function Home() {
       </Section>
 
       {/* ── Use Cases ── */}
-      <Section border>
+      <Section>
         <Label>Applications</Label>
         <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-8">
           Where proof-at-creation matters.
@@ -296,12 +298,12 @@ export default function Home() {
       </Section>
 
       {/* ── Proof Anatomy Preview ── */}
-      <Section border>
+      <Section>
         <Label>Proof Structure</Label>
         <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-8">
           Anatomy of an OCC proof.
         </h2>
-        <div className="grid lg:grid-cols-2 gap-8">
+        <div className="grid lg:grid-cols-2 gap-8 items-center">
           <div className="rounded-lg border border-border-subtle bg-bg-elevated p-6 overflow-x-auto">
             <pre className="text-xs leading-relaxed font-mono text-text-secondary">
 {`{
@@ -363,13 +365,13 @@ export default function Home() {
           <div className="flex flex-wrap justify-center gap-4">
             <Link
               href="/studio"
-              className="inline-flex h-11 items-center rounded-md bg-text px-6 text-sm font-medium text-bg transition-colors hover:opacity-85"
+              className="inline-flex h-11 items-center rounded-md bg-text px-6 text-sm font-semibold text-bg transition-colors hover:opacity-85"
             >
               Open Studio
             </Link>
             <Link
               href="/api-reference"
-              className="inline-flex h-11 items-center rounded-md border border-border px-6 text-sm font-medium text-text-secondary transition-colors hover:text-text hover:border-text-tertiary"
+              className="inline-flex h-11 items-center rounded-md border border-border px-6 text-sm font-semibold text-text-secondary transition-colors hover:text-text hover:border-text-tertiary"
             >
               API Reference
             </Link>
@@ -377,9 +379,9 @@ export default function Home() {
               href="https://github.com/mikeargento/occ"
               target="_blank"
               rel="noopener"
-              className="inline-flex h-11 items-center rounded-md border border-border px-6 text-sm font-medium text-text-secondary transition-colors hover:text-text hover:border-text-tertiary"
+              className="inline-flex h-11 items-center rounded-md border border-border px-6 text-sm font-semibold text-text-secondary transition-colors hover:text-text hover:border-text-tertiary"
             >
-              GitHub ↗
+              GitHub
             </a>
           </div>
         </div>
