@@ -314,7 +314,10 @@ export class NitroHost implements HostCapabilities {
       );
     }
 
-    return random.random;
+    // NSM GetRandom returns 256 bytes (its full entropy pool).
+    // Truncate to 32 bytes (256 bits) — the standard nonce size for OCC.
+    // This is still well above the 128-bit minimum required by HostCapabilities.
+    return random.random.slice(0, 32);
   }
 
   async sign(data: Uint8Array): Promise<Uint8Array> {

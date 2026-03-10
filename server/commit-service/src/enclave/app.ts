@@ -63,6 +63,12 @@ const nitroHost = new NitroHost({
 
 const measurement = await nitroHost.getMeasurement();
 console.log(`[enclave] measurement (PCR0): ${measurement}`);
+if (/^0+$/.test(measurement)) {
+  console.warn(
+    "[enclave] WARNING: measurement is all zeros — enclave is running in debug mode.\n" +
+    "[enclave] Proofs will contain a zero measurement. Redeploy without --debug-mode for production."
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Epoch identity — computed once at boot, included in every proof
