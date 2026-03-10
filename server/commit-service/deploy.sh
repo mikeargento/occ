@@ -64,7 +64,7 @@ for e in enclaves:
 
 if [ -n "$EXISTING" ]; then
   echo "  Terminating enclave: $EXISTING"
-  nitro-cli terminate-enclave --enclave-id "$EXISTING"
+  nitro-cli terminate-enclave --enclave-id "$EXISTING" || echo "  (terminate returned non-zero — enclave may already be stopped)"
 else
   echo "  No running enclave found."
 fi
