@@ -78,5 +78,5 @@ RUN apk add --no-cache socat
 
 # The enclave app listens on /app/enclave.sock.
 # socat bridges vsock port 5000 to that socket.
-CMD socat VSOCK-LISTEN:5000,fork UNIX-CONNECT:/app/enclave.sock & \
-    node --experimental-vm-modules dist/enclave/app.js
+CMD cd /app && socat VSOCK-LISTEN:5000,fork UNIX-CONNECT:/app/enclave.sock & \
+    cd /app && node --experimental-vm-modules /app/dist/enclave/app.js
