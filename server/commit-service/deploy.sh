@@ -18,7 +18,7 @@
 #   ENCLAVE_CPU    — vCPUs for enclave (default: 2)
 #   ENCLAVE_MEM    — Memory in MB for enclave (default: 512)
 #   API_KEYS       — Comma-separated API keys for the parent HTTP server
-#   PORT           — Parent HTTP server port (default: 443)
+#   PORT           — Parent HTTP server port (default: 8080)
 
 set -euo pipefail
 
@@ -97,13 +97,13 @@ npm install
 npx tsc -p tsconfig.parent.json
 
 # Start parent server in background
-echo "  Starting server on port ${PORT:-443}..."
+echo "  Starting server on port ${PORT:-8080}..."
 nohup node dist/parent/server.js > /var/log/occ-parent.log 2>&1 &
 echo "  Parent PID: $!"
 
 echo ""
 echo "=== Deploy complete ==="
 echo "  Enclave: running (vsock port 5000)"
-echo "  Parent:  http://0.0.0.0:${PORT:-443}"
+echo "  Parent:  http://0.0.0.0:${PORT:-8080}"
 echo "  Logs:    /var/log/occ-parent.log"
 echo "           nitro-cli console --enclave-id \$(nitro-cli describe-enclaves | jq -r '.[0].EnclaveID')"

@@ -20,7 +20,7 @@ import { requestTimestamp } from "./tsa-client.js";
 const PORT = Number(
   process.argv.find((a) => a.startsWith("--port="))?.split("=")[1]
     ?? process.env["PORT"]
-    ?? 443
+    ?? 8080
 );
 
 // ---------------------------------------------------------------------------
