@@ -61,8 +61,11 @@ export class VsockClient implements EnclaveClient {
         const wireMsg = { action: type, ...rest };
 
         // Send raw JSON — the enclave expects plain JSON, no length prefix.
+        // Use write() not end() — end() half-closes the TCP connection,
+        // and socat propagates the FIN through the vsock chain, tearing
+        // down the connection before the enclave can respond.
         const payload = JSON.stringify(wireMsg);
-        sock.end(payload);
+        sock.write(payload);
       });
 
       const chunks: Buffer[] = [];
