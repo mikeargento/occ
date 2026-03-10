@@ -353,7 +353,7 @@ export default function Home() {
       </Section>
 
       {/* ── CTA ── */}
-      <Section border className="pb-32">
+      <Section className="pb-32">
         <div className="text-center">
           <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-4">
             Try it now.
