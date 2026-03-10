@@ -127,7 +127,7 @@ async function handleVerify(req: IncomingMessage, res: ServerResponse): Promise<
   }
 
   try {
-    const { verifySignatureOnly } = await import("./verify-helper.js");
+    const { verifySignatureOnly } = await import("../parent/verify-helper.js");
     const result = await verifySignatureOnly(body.proof, body.policy);
     sendJson(res, 200, result);
   } catch {
