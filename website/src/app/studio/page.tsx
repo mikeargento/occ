@@ -1,16 +1,26 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { FileDrop } from "@/components/file-drop";
 import { ProofViewer } from "@/components/proof-viewer";
 import { ProofMeta } from "@/components/proof-meta";
-import { hashFile, hashBytes, commitDigest, formatFileSize, type OCCProof } from "@/lib/occ";
+import { hashFile, hashBytes, commitDigest, requestChallenge, formatFileSize, type OCCProof } from "@/lib/occ";
+import {
+  isWebAuthnAvailable,
+  isPlatformAuthenticatorAvailable,
+  getStoredCredential,
+  registerPasskey,
+  requestAssertion,
+  buildAgencyEnvelope,
+  type StoredCredential,
+} from "@/lib/webauthn";
 import { zipSync, unzipSync, strFromU8 } from "fflate";
 import { verifyAsync as ed25519Verify } from "@noble/ed25519";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-type CreateStatus = "idle" | "hashing" | "signing" | "done" | "error";
+type CreateStatus = "idle" | "hashing" | "challenging" | "authorizing" | "signing" | "done" | "error";
+type AuthorshipMode = "none" | "passkey";
 
 interface CheckResult {
   label: string;
@@ -57,6 +67,18 @@ export default function StudioPage() {
   const [createStatus, setCreateStatus] = useState<CreateStatus>("idle");
   const [createError, setCreateError] = useState<string | null>(null);
 
+  // Authorship state
+  const [authorshipMode, setAuthorshipMode] = useState<AuthorshipMode>("none");
+  const [passkeyAvailable, setPasskeyAvailable] = useState(false);
+  const [storedCredential, setStoredCredential] = useState<StoredCredential | null>(null);
+  const [registering, setRegistering] = useState(false);
+
+  // Check WebAuthn availability on mount
+  useEffect(() => {
+    isPlatformAuthenticatorAvailable().then(setPasskeyAvailable);
+    setStoredCredential(getStoredCredential());
+  }, []);
+
   // Verify state
   const [zipFile, setZipFile] = useState<File | null>(null);
   const [verifyResults, setVerifyResults] = useState<CheckResult[] | null>(null);
@@ -81,6 +103,18 @@ export default function StudioPage() {
     setCreateStatus("idle");
   }, []);
 
+  const handleRegisterPasskey = async () => {
+    setRegistering(true);
+    try {
+      const cred = await registerPasskey();
+      setStoredCredential(cred);
+    } catch (err) {
+      setCreateError(err instanceof Error ? err.message : "Passkey registration failed");
+    } finally {
+      setRegistering(false);
+    }
+  };
+
   const handleGenerate = async () => {
     if (!file) return;
     setCreateError(null);
@@ -90,11 +124,35 @@ export default function StudioPage() {
       setCreateStatus("hashing");
       const digestB64 = await hashFile(file);
 
+      let agency: ReturnType<typeof buildAgencyEnvelope> | undefined;
+
+      if (authorshipMode === "passkey" && storedCredential) {
+        // Step 1: Get challenge from enclave
+        setCreateStatus("challenging");
+        const challengeB64 = await requestChallenge();
+
+        // Step 2: Biometric authorization
+        setCreateStatus("authorizing");
+        const assertion = await requestAssertion(
+          challengeB64,
+          storedCredential.credentialIdB64
+        );
+
+        // Step 3: Build agency envelope
+        agency = buildAgencyEnvelope(
+          storedCredential,
+          assertion,
+          digestB64,
+          challengeB64
+        );
+      }
+
       setCreateStatus("signing");
-      const result = await commitDigest(digestB64, {
-        source: "occ-studio",
-        fileName: file.name,
-      });
+      const result = await commitDigest(
+        digestB64,
+        { source: "occ-studio", fileName: file.name },
+        agency
+      );
 
       setProof(result);
       setCreateStatus("done");
@@ -349,16 +407,6 @@ Learn more: https://occproof.com
             ? { label: "Actor keyId derivation", status: "pass", detail: "keyId = SHA-256(SPKI pubkey) matches" }
             : { label: "Actor keyId derivation", status: "fail", detail: "keyId does not match SHA-256 of public key" });
 
-          // Build canonical authorization payload (sorted keys, no signatureB64)
-          const canonicalPayload = {
-            actorKeyId: authorization.actorKeyId,
-            artifactHash: authorization.artifactHash,
-            challenge: authorization.challenge,
-            purpose: authorization.purpose,
-            timestamp: authorization.timestamp,
-          };
-          const payloadBytes = new TextEncoder().encode(JSON.stringify(canonicalPayload));
-
           // Import P-256 SPKI key
           const cryptoKey = await crypto.subtle.importKey(
             "spki",
@@ -369,16 +417,63 @@ Learn more: https://occproof.com
           );
 
           const sigBytes = b64ToBytes(authorization.signatureB64);
-          const p256Valid = await crypto.subtle.verify(
-            { name: "ECDSA", hash: "SHA-256" },
-            cryptoKey,
-            sigBytes as unknown as BufferSource,
-            payloadBytes as unknown as BufferSource
-          );
+          const isWebAuthnFormat = "format" in authorization && (authorization as Record<string, unknown>).format === "webauthn";
 
-          checks.push(p256Valid
-            ? { label: "P-256 actor signature", status: "pass", detail: "Device signature is cryptographically valid" }
-            : { label: "P-256 actor signature", status: "fail", detail: "Device signature verification failed" });
+          let p256Valid: boolean;
+          if (isWebAuthnFormat) {
+            // WebAuthn: verify over authenticatorData || SHA-256(clientDataJSON)
+            const wa = authorization as Record<string, string>;
+            const authData = b64ToBytes(wa.authenticatorDataB64);
+            const clientDataHash = await crypto.subtle.digest(
+              "SHA-256",
+              new TextEncoder().encode(wa.clientDataJSON) as unknown as BufferSource
+            );
+            const signedData = new Uint8Array(authData.length + 32);
+            signedData.set(authData, 0);
+            signedData.set(new Uint8Array(clientDataHash), authData.length);
+
+            // Check UP/UV flags
+            if (authData.length >= 33) {
+              const flags = authData[32];
+              const UP = (flags & 0x01) !== 0;
+              const UV = (flags & 0x04) !== 0;
+              checks.push(UP && UV
+                ? { label: "Biometric verification", status: "pass", detail: "User Present and User Verified flags set" }
+                : { label: "Biometric verification", status: "fail", detail: `Flags: UP=${UP}, UV=${UV}` });
+            }
+
+            p256Valid = await crypto.subtle.verify(
+              { name: "ECDSA", hash: "SHA-256" },
+              cryptoKey,
+              sigBytes as unknown as BufferSource,
+              signedData as unknown as BufferSource
+            );
+
+            checks.push(p256Valid
+              ? { label: "P-256 actor signature (WebAuthn)", status: "pass", detail: "Device biometric signature is cryptographically valid" }
+              : { label: "P-256 actor signature (WebAuthn)", status: "fail", detail: "WebAuthn signature verification failed" });
+          } else {
+            // Direct: verify over canonical JSON payload
+            const canonicalPayload = {
+              actorKeyId: authorization.actorKeyId,
+              artifactHash: authorization.artifactHash,
+              challenge: authorization.challenge,
+              purpose: authorization.purpose,
+              timestamp: authorization.timestamp,
+            };
+            const payloadBytes = new TextEncoder().encode(JSON.stringify(canonicalPayload));
+
+            p256Valid = await crypto.subtle.verify(
+              { name: "ECDSA", hash: "SHA-256" },
+              cryptoKey,
+              sigBytes as unknown as BufferSource,
+              payloadBytes as unknown as BufferSource
+            );
+
+            checks.push(p256Valid
+              ? { label: "P-256 actor signature", status: "pass", detail: "Device signature is cryptographically valid" }
+              : { label: "P-256 actor signature", status: "fail", detail: "Device signature verification failed" });
+          }
         } catch (agencyErr) {
           checks.push({ label: "P-256 actor signature", status: "fail", detail: `Verification error: ${agencyErr instanceof Error ? agencyErr.message : "unknown"}` });
         }
@@ -394,7 +489,7 @@ Learn more: https://occproof.com
     setVerifying(false);
   };
 
-  const busy = createStatus === "hashing" || createStatus === "signing";
+  const busy = createStatus === "hashing" || createStatus === "challenging" || createStatus === "authorizing" || createStatus === "signing";
   const allPass = verifyResults?.every((r) => r.status === "pass" || r.status === "info");
   const anyFail = verifyResults?.some((r) => r.status === "fail");
 
@@ -433,12 +528,67 @@ Learn more: https://occproof.com
               />
             </div>
 
+            {/* ── Proof Authorship toggle ── */}
+            {passkeyAvailable && (
+              <div className="rounded-lg border border-border-subtle bg-bg-elevated p-4">
+                <div className="text-[11px] font-medium uppercase tracking-[0.12em] text-text-tertiary mb-3">
+                  Proof Authorship
+                </div>
+                <div className="space-y-2">
+                  <label className="flex items-start gap-3 cursor-pointer group">
+                    <input
+                      type="radio"
+                      name="authorship"
+                      checked={authorshipMode === "none"}
+                      onChange={() => setAuthorshipMode("none")}
+                      className="mt-0.5 accent-text"
+                    />
+                    <div>
+                      <div className="text-sm font-medium text-text group-hover:text-text/80">None</div>
+                      <div className="text-xs text-text-tertiary">Proof attests the commit boundary only</div>
+                    </div>
+                  </label>
+                  <label className="flex items-start gap-3 cursor-pointer group">
+                    <input
+                      type="radio"
+                      name="authorship"
+                      checked={authorshipMode === "passkey"}
+                      onChange={() => setAuthorshipMode("passkey")}
+                      className="mt-0.5 accent-text"
+                    />
+                    <div>
+                      <div className="text-sm font-medium text-text group-hover:text-text/80">Authorize with device biometrics</div>
+                      <div className="text-xs text-text-tertiary">Each proof requires Face ID or Touch ID</div>
+                    </div>
+                  </label>
+                </div>
+
+                {authorshipMode === "passkey" && !storedCredential && (
+                  <button
+                    onClick={handleRegisterPasskey}
+                    disabled={registering}
+                    className="mt-3 w-full h-9 rounded-md border border-border text-xs font-semibold text-text-secondary hover:text-text hover:border-text-tertiary transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {registering ? "Registering…" : "Register Passkey"}
+                  </button>
+                )}
+
+                {authorshipMode === "passkey" && storedCredential && (
+                  <div className="mt-3 flex items-center gap-2 text-xs text-success">
+                    <span className="inline-flex w-4 h-4 items-center justify-center rounded-full bg-success/20 text-[10px]">✓</span>
+                    <span>Passkey registered</span>
+                    <span className="text-text-tertiary font-mono ml-1">{storedCredential.keyId.slice(0, 12)}…</span>
+                  </div>
+                )}
+              </div>
+            )}
+
             <button
               onClick={handleGenerate}
-              disabled={!file || busy}
+              disabled={!file || busy || (authorshipMode === "passkey" && !storedCredential)}
               className={`
                 w-full h-11 rounded-lg text-sm font-semibold uppercase tracking-wider transition-all shrink-0
-                ${!file || busy
+                ${!file || busy || (authorshipMode === "passkey" && !storedCredential)
                   ? "bg-bg-subtle text-text-tertiary cursor-not-allowed"
                   : "bg-text text-bg hover:opacity-85 cursor-pointer"
                 }
@@ -446,6 +596,10 @@ Learn more: https://occproof.com
             >
               {createStatus === "hashing"
                 ? "Hashing…"
+                : createStatus === "challenging"
+                ? "Requesting challenge…"
+                : createStatus === "authorizing"
+                ? "Waiting for biometrics…"
                 : createStatus === "signing"
                 ? "Signing in enclave…"
                 : "Make a Proof"}

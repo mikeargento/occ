@@ -424,25 +424,59 @@ export interface AuthorizationPayload {
 }
 
 /**
+ * WebAuthn authorization payload — sent when the device signs via
+ * navigator.credentials.get() (passkey / Face ID / Touch ID).
+ *
+ * WebAuthn signs `authenticatorData || SHA-256(clientDataJSON)`, not
+ * arbitrary data. The enclave-issued challenge is embedded in
+ * clientDataJSON.challenge. The enclave must verify the WebAuthn
+ * signature over the standard WebAuthn signed data format.
+ */
+export interface WebAuthnAuthorization {
+  /** Domain separation — same as direct. */
+  purpose: "occ/commit-authorize/v1";
+  /** Discriminator for verification path. */
+  format: "webauthn";
+  /** Must match actor.keyId. */
+  actorKeyId: string;
+  /** Base64 SHA-256 of artifact — must match proof.artifact.digestB64. */
+  artifactHash: string;
+  /** Enclave-issued challenge (base64). Embedded in clientDataJSON. */
+  challenge: string;
+  /** Unix epoch ms — checked for freshness. */
+  timestamp: number;
+  /** Base64-encoded raw authenticator data bytes. */
+  authenticatorDataB64: string;
+  /** Full clientDataJSON string (UTF-8). Contains challenge, origin, type. */
+  clientDataJSON: string;
+  /** Base64 DER ECDSA P-256 signature from the authenticator. */
+  signatureB64: string;
+}
+
+/**
  * Full agency envelope — lives in OCCProof.agency.
  *
  * Contains the actor identity and the authorization payload
  * (including the device's P-256 signature). Independently verifiable:
  * any verifier can check the P-256 signature over the authorization
  * payload without needing any server or API.
+ *
+ * Two authorization formats:
+ *   - Direct: P-256 signature over canonical JSON (native apps, test scripts)
+ *   - WebAuthn: Standard WebAuthn assertion (browser passkeys, Face ID / Touch ID)
  */
 export interface AgencyEnvelope {
   /** Actor identity (matches SignedBody.actor when present). */
   actor: ActorIdentity;
   /** The possession commitment the actor signed. */
-  authorization: AuthorizationPayload & {
+  authorization: (AuthorizationPayload & {
     /**
      * Base64 DER ECDSA signature over canonical JSON of the
      * AuthorizationPayload (excluding signatureB64 itself).
      * P-256 / ES256 — verifiable with actor.publicKeyB64.
      */
     signatureB64: string;
-  };
+  }) | WebAuthnAuthorization;
 }
 
 // ---------------------------------------------------------------------------

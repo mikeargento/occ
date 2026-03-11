@@ -6,7 +6,7 @@ import { sha256 } from "@noble/hashes/sha256";
 import { signAsync } from "@noble/ed25519";
 import { canonicalize } from "occproof";
 import { Constructor } from "occproof";
-import type { HostCapabilities, OCCProof, SignedBody, AgencyEnvelope, AuthorizationPayload } from "occproof";
+import type { HostCapabilities, OCCProof, SignedBody, AgencyEnvelope, AuthorizationPayload, WebAuthnAuthorization } from "occproof";
 import { StubHost } from "@occ/stub";
 import type {
   EnclaveClient,
@@ -74,6 +74,7 @@ export class MockEnclave implements EnclaveClient {
 
   #verifyAgency(agency: AgencyEnvelope, digestB64: string): void {
     const { actor, authorization } = agency;
+    const isWebAuthn = "format" in authorization && authorization.format === "webauthn";
 
     // Clean expired challenges
     const now = Date.now();
@@ -113,29 +114,76 @@ export class MockEnclave implements EnclaveClient {
       throw new Error("Agency: authorization timestamp too far from current time");
     }
 
-    // Build canonical payload for signature verification
-    const canonicalPayload: AuthorizationPayload = {
-      purpose: authorization.purpose,
-      actorKeyId: authorization.actorKeyId,
-      artifactHash: authorization.artifactHash,
-      challenge: authorization.challenge,
-      timestamp: authorization.timestamp,
-    };
-    const payloadBytes = Buffer.from(
-      JSON.stringify(canonicalPayload, Object.keys(canonicalPayload).sort()),
-      "utf8"
-    );
+    if (isWebAuthn) {
+      // ── WebAuthn assertion verification ──
+      const webauthn = authorization as WebAuthnAuthorization;
 
-    // P-256 signature verification
-    const sigBytes = Buffer.from(authorization.signatureB64, "base64");
-    const verifier = createVerify("SHA256");
-    verifier.update(payloadBytes);
-    const valid = verifier.verify(
-      { key: pubKeyDer, format: "der", type: "spki" },
-      sigBytes
-    );
-    if (!valid) {
-      throw new Error("Agency: P-256 signature verification failed");
+      let clientData: { type?: string; challenge?: string; origin?: string };
+      try {
+        clientData = JSON.parse(webauthn.clientDataJSON);
+      } catch {
+        throw new Error("Agency: clientDataJSON is not valid JSON");
+      }
+
+      if (clientData.type !== "webauthn.get") {
+        throw new Error(`Agency: clientDataJSON.type must be "webauthn.get"`);
+      }
+
+      // Verify challenge in clientDataJSON (base64url → base64)
+      if (!clientData.challenge) {
+        throw new Error("Agency: clientDataJSON missing challenge field");
+      }
+      let clientChallenge = clientData.challenge
+        .replace(/-/g, "+")
+        .replace(/_/g, "/");
+      while (clientChallenge.length % 4) clientChallenge += "=";
+      if (clientChallenge !== authorization.challenge) {
+        throw new Error("Agency: clientDataJSON challenge does not match enclave nonce");
+      }
+
+      // Check authenticatorData flags
+      const authData = Buffer.from(webauthn.authenticatorDataB64, "base64");
+      if (authData.length < 37) throw new Error("Agency: authenticatorData too short");
+      const flags = authData[32]!;
+      if (!(flags & 0x01)) throw new Error("Agency: UP flag not set");
+      if (!(flags & 0x04)) throw new Error("Agency: UV flag not set");
+
+      // Build signed data and verify P-256 signature
+      const clientDataHash = createHash("sha256")
+        .update(Buffer.from(webauthn.clientDataJSON, "utf8"))
+        .digest();
+      const signedData = Buffer.concat([authData, clientDataHash]);
+
+      const sigBytes = Buffer.from(webauthn.signatureB64, "base64");
+      const verifier = createVerify("SHA256");
+      verifier.update(signedData);
+      const valid = verifier.verify(
+        { key: pubKeyDer, format: "der", type: "spki" },
+        sigBytes
+      );
+      if (!valid) throw new Error("Agency: WebAuthn P-256 signature verification failed");
+    } else {
+      // ── Direct P-256 signature verification ──
+      const canonicalPayload: AuthorizationPayload = {
+        purpose: authorization.purpose,
+        actorKeyId: authorization.actorKeyId,
+        artifactHash: authorization.artifactHash,
+        challenge: authorization.challenge,
+        timestamp: authorization.timestamp,
+      };
+      const payloadBytes = Buffer.from(
+        JSON.stringify(canonicalPayload, Object.keys(canonicalPayload).sort()),
+        "utf8"
+      );
+
+      const sigBytes = Buffer.from(authorization.signatureB64, "base64");
+      const verifier = createVerify("SHA256");
+      verifier.update(payloadBytes);
+      const valid = verifier.verify(
+        { key: pubKeyDer, format: "der", type: "spki" },
+        sigBytes
+      );
+      if (!valid) throw new Error("Agency: P-256 signature verification failed");
     }
 
     // Consume challenge

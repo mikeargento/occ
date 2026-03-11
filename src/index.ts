@@ -17,6 +17,7 @@ export type {
   EnforcementTier,
   ActorIdentity,
   AuthorizationPayload,
+  WebAuthnAuthorization,
   AgencyEnvelope,
 } from "./types.js";
 

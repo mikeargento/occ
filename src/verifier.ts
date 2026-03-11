@@ -33,7 +33,7 @@ import { createVerify, createHash } from "node:crypto";
 import { verifyAsync as ed25519VerifyAsync } from "@noble/ed25519";
 import { sha256 } from "@noble/hashes/sha256";
 import { canonicalize, constantTimeEqual } from "./canonical.js";
-import type { EnforcementTier, OCCProof, SignedBody, VerificationPolicy, AgencyEnvelope, AuthorizationPayload } from "./types.js";
+import type { EnforcementTier, OCCProof, SignedBody, VerificationPolicy, AgencyEnvelope, AuthorizationPayload, WebAuthnAuthorization } from "./types.js";
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -430,6 +430,7 @@ function checkPolicy(proof: OCCProof, policy: VerificationPolicy): string | null
 function verifyAgency(proof: OCCProof): string | null {
   const agency = proof.agency!;
   const { actor, authorization } = agency;
+  const isWebAuthn = "format" in authorization && authorization.format === "webauthn";
 
   // 1. Structural validation
   if (typeof actor.keyId !== "string" || actor.keyId.length === 0) {
@@ -473,20 +474,7 @@ function verifyAgency(proof: OCCProof): string | null {
     return "agency: authorization.artifactHash does not match proof.artifact.digestB64";
   }
 
-  // 5. Build canonical payload (sorted keys, compact JSON, no signatureB64)
-  const canonicalPayload: AuthorizationPayload = {
-    purpose: authorization.purpose,
-    actorKeyId: authorization.actorKeyId,
-    artifactHash: authorization.artifactHash,
-    challenge: authorization.challenge,
-    timestamp: authorization.timestamp,
-  };
-  const payloadBytes = Buffer.from(
-    JSON.stringify(canonicalPayload, Object.keys(canonicalPayload).sort()),
-    "utf8"
-  );
-
-  // 6. P-256 signature verification
+  // 5. Signature verification (format-dependent)
   let sigBytes: Buffer;
   try {
     sigBytes = Buffer.from(authorization.signatureB64, "base64");
@@ -495,14 +483,89 @@ function verifyAgency(proof: OCCProof): string | null {
   }
 
   try {
-    const verifier = createVerify("SHA256");
-    verifier.update(payloadBytes);
-    const valid = verifier.verify(
-      { key: pubKeyDer, format: "der", type: "spki" },
-      sigBytes
-    );
-    if (!valid) {
-      return "agency: P-256 signature verification failed";
+    if (isWebAuthn) {
+      // ── WebAuthn assertion verification ──
+      const webauthn = authorization as WebAuthnAuthorization;
+
+      if (typeof webauthn.clientDataJSON !== "string" || !webauthn.clientDataJSON) {
+        return "agency: WebAuthn authorization missing clientDataJSON";
+      }
+      if (typeof webauthn.authenticatorDataB64 !== "string" || !webauthn.authenticatorDataB64) {
+        return "agency: WebAuthn authorization missing authenticatorDataB64";
+      }
+
+      // Parse clientDataJSON
+      let clientData: { type?: string; challenge?: string; origin?: string };
+      try {
+        clientData = JSON.parse(webauthn.clientDataJSON);
+      } catch {
+        return "agency: clientDataJSON is not valid JSON";
+      }
+
+      if (clientData.type !== "webauthn.get") {
+        return `agency: clientDataJSON.type must be "webauthn.get", got "${clientData.type}"`;
+      }
+
+      // Verify challenge in clientDataJSON (base64url → base64)
+      if (!clientData.challenge) {
+        return "agency: clientDataJSON missing challenge field";
+      }
+      let clientChallenge = clientData.challenge
+        .replace(/-/g, "+")
+        .replace(/_/g, "/");
+      while (clientChallenge.length % 4) clientChallenge += "=";
+      if (clientChallenge !== authorization.challenge) {
+        return "agency: clientDataJSON challenge does not match authorization.challenge";
+      }
+
+      // Check authenticatorData flags
+      const authData = Buffer.from(webauthn.authenticatorDataB64, "base64");
+      if (authData.length < 37) {
+        return "agency: authenticatorData too short";
+      }
+      const flags = authData[32]!;
+      if (!(flags & 0x01)) return "agency: authenticatorData UP flag not set";
+      if (!(flags & 0x04)) return "agency: authenticatorData UV flag not set";
+
+      // Build signed data: authenticatorData || SHA-256(clientDataJSON)
+      const clientDataHash = createHash("sha256")
+        .update(Buffer.from(webauthn.clientDataJSON, "utf8"))
+        .digest();
+      const signedData = Buffer.concat([authData, clientDataHash]);
+
+      // P-256 signature verification over WebAuthn signed data
+      const verifier = createVerify("SHA256");
+      verifier.update(signedData);
+      const valid = verifier.verify(
+        { key: pubKeyDer, format: "der", type: "spki" },
+        sigBytes
+      );
+      if (!valid) {
+        return "agency: WebAuthn P-256 signature verification failed";
+      }
+    } else {
+      // ── Direct P-256 signature verification ──
+      const canonicalPayload: AuthorizationPayload = {
+        purpose: authorization.purpose,
+        actorKeyId: authorization.actorKeyId,
+        artifactHash: authorization.artifactHash,
+        challenge: authorization.challenge,
+        timestamp: authorization.timestamp,
+      };
+      const payloadBytes = Buffer.from(
+        JSON.stringify(canonicalPayload, Object.keys(canonicalPayload).sort()),
+        "utf8"
+      );
+
+      const verifier = createVerify("SHA256");
+      verifier.update(payloadBytes);
+      const valid = verifier.verify(
+        { key: pubKeyDer, format: "der", type: "spki" },
+        sigBytes
+      );
+      if (!valid) {
+        return "agency: P-256 signature verification failed";
+      }
     }
   } catch (err: unknown) {
     return `agency: P-256 signature verification error: ${err instanceof Error ? err.message : String(err)}`;

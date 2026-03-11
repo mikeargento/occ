@@ -74,15 +74,19 @@ export async function hashBytes(bytes: Uint8Array): Promise<string> {
 
 export async function commitDigest(
   digestB64: string,
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
+  agency?: AgencyEnvelope
 ): Promise<OCCProof> {
+  const body: Record<string, unknown> = {
+    digests: [{ digestB64, hashAlg: "sha256" }],
+    metadata,
+  };
+  if (agency) body.agency = agency;
+
   const resp = await fetch(`${OCC_ENDPOINT}/commit`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      digests: [{ digestB64, hashAlg: "sha256" }],
-      metadata,
-    }),
+    body: JSON.stringify(body),
   });
 
   if (!resp.ok) {
@@ -101,6 +105,7 @@ export async function commitDigest(
     signer: raw.signer,
     environment: raw.environment,
     timestamps: raw.timestamps,
+    agency: raw.agency,
     metadata: raw.metadata,
     claims: raw.claims,
   };
