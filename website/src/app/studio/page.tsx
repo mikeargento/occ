@@ -278,6 +278,10 @@ Learn more: https://occproof.com
           if (vProof.environment.attestation) {
             signedBody.attestationFormat = vProof.environment.attestation.format;
           }
+          // Include actor in signed body when agency is present
+          if (vProof.agency) {
+            signedBody.actor = vProof.agency.actor;
+          }
 
           const canonicalBytes = canonicalize(signedBody);
           const valid = await ed25519Verify(sigBytes, canonicalBytes, pubBytes);
@@ -309,6 +313,79 @@ Learn more: https://occproof.com
       if (vProof.commit?.counter) checks.push({ label: "Counter", status: "pass", detail: `Value: ${vProof.commit.counter}` });
       if (vProof.commit?.epochId) checks.push({ label: "Epoch", status: "pass", detail: `${vProof.commit.epochId.slice(0, 20)}…` });
 
+      // Agency verification
+      if (vProof.agency) {
+        const { actor, authorization } = vProof.agency;
+
+        // Structural checks
+        checks.push(actor.keyId && actor.publicKeyB64 && actor.algorithm === "ES256" && actor.provider
+          ? { label: "Actor identity", status: "pass", detail: `${actor.provider} — ${actor.keyId.slice(0, 16)}…` }
+          : { label: "Actor identity", status: "fail", detail: "Missing or invalid actor fields" });
+
+        checks.push(authorization.purpose === "occ/commit-authorize/v1"
+          ? { label: "Agency purpose", status: "pass", detail: authorization.purpose }
+          : { label: "Agency purpose", status: "fail", detail: `Expected "occ/commit-authorize/v1", got "${authorization.purpose}"` });
+
+        // Artifact hash binding
+        checks.push(authorization.artifactHash === vProof.artifact.digestB64
+          ? { label: "Agency artifact binding", status: "pass", detail: "authorization.artifactHash matches proof.artifact.digestB64" }
+          : { label: "Agency artifact binding", status: "fail", detail: "artifactHash does not match proof artifact digest" });
+
+        // actorKeyId consistency
+        checks.push(authorization.actorKeyId === actor.keyId
+          ? { label: "Agency key ID binding", status: "pass", detail: "authorization.actorKeyId matches actor.keyId" }
+          : { label: "Agency key ID binding", status: "fail", detail: "actorKeyId does not match actor.keyId" });
+
+        // P-256 signature verification via WebCrypto
+        try {
+          const pubKeyDer = b64ToBytes(actor.publicKeyB64);
+          // Compute keyId = hex(SHA-256(SPKI DER pubkey bytes))
+          const keyIdHash = await crypto.subtle.digest("SHA-256", pubKeyDer as unknown as BufferSource);
+          const computedKeyId = Array.from(new Uint8Array(keyIdHash))
+            .map((b) => b.toString(16).padStart(2, "0"))
+            .join("");
+
+          checks.push(computedKeyId === actor.keyId
+            ? { label: "Actor keyId derivation", status: "pass", detail: "keyId = SHA-256(SPKI pubkey) matches" }
+            : { label: "Actor keyId derivation", status: "fail", detail: "keyId does not match SHA-256 of public key" });
+
+          // Build canonical authorization payload (sorted keys, no signatureB64)
+          const canonicalPayload = {
+            actorKeyId: authorization.actorKeyId,
+            artifactHash: authorization.artifactHash,
+            challenge: authorization.challenge,
+            purpose: authorization.purpose,
+            timestamp: authorization.timestamp,
+          };
+          const payloadBytes = new TextEncoder().encode(JSON.stringify(canonicalPayload));
+
+          // Import P-256 SPKI key
+          const cryptoKey = await crypto.subtle.importKey(
+            "spki",
+            pubKeyDer as unknown as BufferSource,
+            { name: "ECDSA", namedCurve: "P-256" },
+            false,
+            ["verify"]
+          );
+
+          const sigBytes = b64ToBytes(authorization.signatureB64);
+          const p256Valid = await crypto.subtle.verify(
+            { name: "ECDSA", hash: "SHA-256" },
+            cryptoKey,
+            sigBytes as unknown as BufferSource,
+            payloadBytes as unknown as BufferSource
+          );
+
+          checks.push(p256Valid
+            ? { label: "P-256 actor signature", status: "pass", detail: "Device signature is cryptographically valid" }
+            : { label: "P-256 actor signature", status: "fail", detail: "Device signature verification failed" });
+        } catch (agencyErr) {
+          checks.push({ label: "P-256 actor signature", status: "fail", detail: `Verification error: ${agencyErr instanceof Error ? agencyErr.message : "unknown"}` });
+        }
+      } else {
+        checks.push({ label: "Agency", status: "info", detail: "No actor identity. Proof does not identify WHO authorized the commitment." });
+      }
+
     } catch (err) {
       checks.push({ label: "Verification error", status: "fail", detail: err instanceof Error ? err.message : "Unknown error" });
     }
@@ -322,7 +399,7 @@ Learn more: https://occproof.com
   const anyFail = verifyResults?.some((r) => r.status === "fail");
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-16">
+    <div className="mx-auto max-w-7xl px-6 py-16">
       {/* Header */}
       <div className="mb-12">
         <h1 className="text-3xl font-semibold tracking-tight mb-3">
@@ -527,6 +604,17 @@ Learn more: https://occproof.com
                 { label: "Signature", value: proof.signer.signatureB64 },
               ]}
             />
+            {proof.agency && (
+              <InfoCard
+                title="Agency"
+                items={[
+                  { label: "Actor", value: proof.agency.actor.keyId },
+                  { label: "Provider", value: proof.agency.actor.provider },
+                  { label: "Algorithm", value: proof.agency.actor.algorithm },
+                  { label: "Purpose", value: proof.agency.authorization.purpose },
+                ]}
+              />
+            )}
           </div>
         </div>
       )}

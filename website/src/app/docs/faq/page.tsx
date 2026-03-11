@@ -24,7 +24,7 @@ const faqs = [
   },
   {
     q: "Does OCC prove who created the content?",
-    a: "No. OCC proves which execution boundary committed specific bytes. It does not attribute creation to any person. A human could write text that an enclave then commits — OCC proves the commit, not the authorship.",
+    a: "A base proof attests which execution boundary committed specific bytes — not who created them. Actor-bound proofs (using device-bound biometric keys) can additionally attest that a specific person or device authorized the commitment.",
   },
   {
     q: "What if someone modifies the proof JSON?",

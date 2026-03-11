@@ -5,7 +5,8 @@
  * Parent EC2 instance — HTTPS API server
  *
  * Endpoints:
- *   POST /commit      — { digests: [{ digestB64, hashAlg }], metadata? }  (requires API key)
+ *   POST /commit      — { digests: [{ digestB64, hashAlg }], metadata?, agency? }  (requires API key)
+ *   POST /challenge   — {} → { challenge }  (public — issues enclave nonce for agency signing)
  *   POST /convert-bw  — { imageB64 }  (public demo — grayscale conversion inside TEE)
  *   GET  /key          — { publicKeyB64, measurement, enforcement }
  *   POST /verify       — { proof, policy? }
@@ -14,7 +15,7 @@
 
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { verify } from "occproof";
-import type { OCCProof, VerificationPolicy } from "occproof";
+import type { OCCProof, VerificationPolicy, AgencyEnvelope } from "occproof";
 import { VsockClient, type EnclaveClient } from "./vsock-client.js";
 import { requestTimestamp } from "./tsa-client.js";
 
@@ -120,6 +121,7 @@ async function handleCommit(req: IncomingMessage, res: ServerResponse): Promise<
     digests: Array<{ digestB64: string; hashAlg: "sha256" }>;
     metadata?: Record<string, unknown>;
     prevProofId?: string;
+    agency?: AgencyEnvelope;
   };
 
   try {
@@ -147,6 +149,7 @@ async function handleCommit(req: IncomingMessage, res: ServerResponse): Promise<
       digests: body.digests,
       metadata: body.metadata,
       prevProofId: body.prevProofId,
+      agency: body.agency,
     }),
     Promise.all(
       body.digests.map((d) => requestTimestamp(d.digestB64).catch(() => null))
@@ -204,6 +207,21 @@ async function handleVerify(req: IncomingMessage, res: ServerResponse): Promise<
   const { verifySignatureOnly } = await import("./verify-helper.js");
   const result = await verifySignatureOnly(body.proof, body.policy);
   sendJson(res, 200, result);
+}
+
+async function handleChallenge(_req: IncomingMessage, res: ServerResponse): Promise<void> {
+  // Public endpoint — no API key required.
+  // Issues a fresh enclave nonce for agency signing.
+  try {
+    const result = await enclaveClient.send({ type: "challenge" });
+    if (!result.ok || !result.data) {
+      sendError(res, 500, result.error ?? "challenge failed");
+      return;
+    }
+    sendJson(res, 200, result.data);
+  } catch (err) {
+    sendError(res, 500, `Failed to get challenge: ${err instanceof Error ? err.message : String(err)}`);
+  }
 }
 
 async function handleHealth(_req: IncomingMessage, res: ServerResponse): Promise<void> {
@@ -281,6 +299,8 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
 
     if (method === "POST" && url.pathname === "/commit") {
       await handleCommit(req, res);
+    } else if (method === "POST" && url.pathname === "/challenge") {
+      await handleChallenge(req, res);
     } else if (method === "POST" && url.pathname === "/convert-bw") {
       await handleConvertBW(req, res);
     } else if (method === "GET" && url.pathname === "/key") {
@@ -301,6 +321,7 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
 server.listen(PORT, () => {
   console.log(`[parent] listening on http://localhost:${PORT}`);
   console.log(`  POST /commit      (Content-Type: application/json, Authorization: Bearer <key>)`);
+  console.log(`  POST /challenge   (public — issues enclave nonce for agency signing)`);
   console.log(`  POST /convert-bw  (Content-Type: application/json — public demo)`);
   console.log(`  GET  /key`);
   console.log(`  POST /verify      (Content-Type: application/json)`);

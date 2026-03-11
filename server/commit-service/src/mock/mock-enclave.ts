@@ -1,25 +1,30 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2024-2026 Mike Argento
 
+import { createVerify, createHash, randomBytes } from "node:crypto";
 import { sha256 } from "@noble/hashes/sha256";
 import { signAsync } from "@noble/ed25519";
 import { canonicalize } from "occproof";
 import { Constructor } from "occproof";
-import type { HostCapabilities, OCCProof, SignedBody } from "occproof";
+import type { HostCapabilities, OCCProof, SignedBody, AgencyEnvelope, AuthorizationPayload } from "occproof";
 import { StubHost } from "@occ/stub";
 import type {
   EnclaveClient,
   EnclaveRequest,
   EnclaveResponse,
   CommitRequest,
+  ChallengeRequest,
   ConvertBWRequest,
 } from "../parent/vsock-client.js";
+
+const CHALLENGE_TTL_MS = 60_000;
 
 export class MockEnclave implements EnclaveClient {
   #stub: StubHost;
   #ctor: Constructor;
   #publicKeyB64: string;
   #measurement: string;
+  #pendingChallenges = new Map<string, number>(); // challenge → expiresAt
 
   private constructor(stub: StubHost, ctor: Constructor, publicKeyB64: string, measurement: string) {
     this.#stub = stub;
@@ -43,6 +48,7 @@ export class MockEnclave implements EnclaveClient {
     try {
       switch (request.type) {
         case "commit": return await this.#handleCommit(request);
+        case "challenge": return this.#handleChallenge();
         case "convertBW": return await this.#handleConvertBW(request);
         case "key": return this.#handleKey();
         default:
@@ -53,8 +59,101 @@ export class MockEnclave implements EnclaveClient {
     }
   }
 
+  #handleChallenge(): EnclaveResponse {
+    // Clean expired challenges
+    const now = Date.now();
+    for (const [c, exp] of this.#pendingChallenges) {
+      if (now >= exp) this.#pendingChallenges.delete(c);
+    }
+
+    // Generate fresh challenge from crypto RNG
+    const challenge = randomBytes(32).toString("base64");
+    this.#pendingChallenges.set(challenge, now + CHALLENGE_TTL_MS);
+    return { ok: true, data: { challenge } };
+  }
+
+  #verifyAgency(agency: AgencyEnvelope, digestB64: string): void {
+    const { actor, authorization } = agency;
+
+    // Clean expired challenges
+    const now = Date.now();
+    for (const [c, exp] of this.#pendingChallenges) {
+      if (now >= exp) this.#pendingChallenges.delete(c);
+    }
+
+    // Validate challenge
+    if (!this.#pendingChallenges.has(authorization.challenge)) {
+      throw new Error("Agency: challenge not found or expired");
+    }
+
+    // Validate purpose
+    if (authorization.purpose !== "occ/commit-authorize/v1") {
+      throw new Error(`Agency: invalid purpose "${authorization.purpose}"`);
+    }
+
+    // Validate actorKeyId matches actor.keyId
+    if (authorization.actorKeyId !== actor.keyId) {
+      throw new Error("Agency: actorKeyId does not match actor.keyId");
+    }
+
+    // Validate artifactHash matches digest
+    if (authorization.artifactHash !== digestB64) {
+      throw new Error("Agency: artifactHash does not match committed digest");
+    }
+
+    // Validate keyId = SHA-256(pubkey DER)
+    const pubKeyDer = Buffer.from(actor.publicKeyB64, "base64");
+    const computedKeyId = createHash("sha256").update(pubKeyDer).digest("hex");
+    if (computedKeyId !== actor.keyId) {
+      throw new Error("Agency: actor.keyId does not match SHA-256 of public key");
+    }
+
+    // Validate timestamp freshness
+    if (Math.abs(now - authorization.timestamp) > CHALLENGE_TTL_MS) {
+      throw new Error("Agency: authorization timestamp too far from current time");
+    }
+
+    // Build canonical payload for signature verification
+    const canonicalPayload: AuthorizationPayload = {
+      purpose: authorization.purpose,
+      actorKeyId: authorization.actorKeyId,
+      artifactHash: authorization.artifactHash,
+      challenge: authorization.challenge,
+      timestamp: authorization.timestamp,
+    };
+    const payloadBytes = Buffer.from(
+      JSON.stringify(canonicalPayload, Object.keys(canonicalPayload).sort()),
+      "utf8"
+    );
+
+    // P-256 signature verification
+    const sigBytes = Buffer.from(authorization.signatureB64, "base64");
+    const verifier = createVerify("SHA256");
+    verifier.update(payloadBytes);
+    const valid = verifier.verify(
+      { key: pubKeyDer, format: "der", type: "spki" },
+      sigBytes
+    );
+    if (!valid) {
+      throw new Error("Agency: P-256 signature verification failed");
+    }
+
+    // Consume challenge
+    this.#pendingChallenges.delete(authorization.challenge);
+  }
+
   async #handleCommit(req: CommitRequest): Promise<EnclaveResponse> {
     const proofs: OCCProof[] = [];
+
+    // Verify agency once against the first digest
+    if (req.agency) {
+      const firstDigest = req.digests[0]?.digestB64;
+      if (!firstDigest) {
+        return { ok: false, error: "Agency provided but no digests to commit" };
+      }
+      this.#verifyAgency(req.agency, firstDigest);
+    }
+
     for (const { digestB64 } of req.digests) {
       const digestBytes = Buffer.from(digestB64, "base64");
       if (digestBytes.length !== 32) {
@@ -83,6 +182,11 @@ export class MockEnclave implements EnclaveClient {
         measurement,
       };
 
+      // Include verified actor in signed body
+      if (req.agency) {
+        signedBody.actor = req.agency.actor;
+      }
+
       const canonicalBytes = canonicalize(signedBody);
       const signatureBytes = await this.#stub.host.sign(canonicalBytes);
 
@@ -100,6 +204,7 @@ export class MockEnclave implements EnclaveClient {
         },
       };
 
+      if (req.agency) proof.agency = req.agency;
       if (req.metadata !== undefined) proof.metadata = req.metadata;
       proofs.push(proof);
     }

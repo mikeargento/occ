@@ -18,7 +18,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
   const pathname = usePathname();
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-12">
+    <div className="mx-auto max-w-7xl px-6 py-12">
       {/* Mobile nav */}
       <div className="lg:hidden mb-8">
         <select
@@ -59,7 +59,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
                 API Reference →
               </Link>
               <a href="https://github.com/mikeargento/occ" target="_blank" rel="noopener" className="block text-[13px] text-text-secondary hover:text-text transition-colors px-3 py-1.5">
-                GitHub ↗
+                GitHub
               </a>
             </div>
           </div>

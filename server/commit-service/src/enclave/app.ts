@@ -25,17 +25,19 @@
  * Vsock wire format: [4 bytes big-endian length][JSON payload]
  *
  * Supported request types:
- *   { type: "commit", digests: [{ digestB64, hashAlg }], metadata?, prevProofId? }
+ *   { type: "commit", digests: [{ digestB64, hashAlg }], metadata?, prevProofId?, agency? }
+ *   { type: "challenge" }  — issue a fresh nonce for agency signing
  *   { type: "key" }
  *   { type: "convertBW", imageB64: "<base64 JPEG>" }  — grayscale conversion + proof
  */
 
 import { createServer, type Socket } from "node:net";
+import { createVerify, createHash } from "node:crypto";
 import { sha256 } from "@noble/hashes/sha256";
 import { getPublicKeyAsync, signAsync, utils } from "@noble/ed25519";
 import { canonicalize, canonicalizeToString } from "occproof";
 import { Constructor } from "occproof";
-import type { HostCapabilities, OCCProof, SignedBody } from "occproof";
+import type { HostCapabilities, OCCProof, SignedBody, ActorIdentity, AgencyEnvelope, AuthorizationPayload } from "occproof";
 import type { EnclaveRequest, EnclaveResponse } from "../parent/vsock-client.js";
 
 // ---------------------------------------------------------------------------
@@ -108,6 +110,128 @@ let counter = 0n;
 let lastProofHashB64: string | undefined;
 
 // ---------------------------------------------------------------------------
+// Challenge state — pending challenges for agency signing
+// Each challenge is a fresh enclave nonce with a TTL.
+// ---------------------------------------------------------------------------
+
+const CHALLENGE_TTL_MS = 60_000; // 60 seconds
+const pendingChallenges = new Map<string, number>(); // challenge → expiresAt
+
+function cleanExpiredChallenges(): void {
+  const now = Date.now();
+  for (const [challenge, expiresAt] of pendingChallenges) {
+    if (now >= expiresAt) {
+      pendingChallenges.delete(challenge);
+    }
+  }
+}
+
+async function handleChallenge(): Promise<{ challenge: string }> {
+  cleanExpiredChallenges();
+
+  // Generate fresh nonce from NSM hardware RNG
+  const nonceBytes = await nitroHost.getFreshNonce();
+  const challenge = Buffer.from(nonceBytes).toString("base64");
+
+  // Store with TTL
+  pendingChallenges.set(challenge, Date.now() + CHALLENGE_TTL_MS);
+
+  console.log(`[enclave] challenge issued (${pendingChallenges.size} pending)`);
+  return { challenge };
+}
+
+// ---------------------------------------------------------------------------
+// Agency verification — validates P-256 device signature
+// ---------------------------------------------------------------------------
+
+/**
+ * Verify an agency envelope before including the actor in the proof.
+ *
+ * Checks:
+ *   1. challenge is pending and unused (consumed on success)
+ *   2. P-256 signature is valid over canonical authorization payload
+ *   3. authorization.artifactHash matches the committed digest
+ *   4. authorization.actorKeyId matches actor.keyId
+ *   5. actor.keyId == hex(SHA-256(SPKI DER pubkey bytes))
+ *   6. timestamp is within CHALLENGE_TTL_MS of now
+ */
+function verifyAgencyEnvelope(
+  agency: AgencyEnvelope,
+  digestB64: string
+): void {
+  const { actor, authorization } = agency;
+
+  // 1. Validate challenge is pending
+  cleanExpiredChallenges();
+  if (!pendingChallenges.has(authorization.challenge)) {
+    throw new Error("Agency: challenge not found or expired");
+  }
+
+  // 2. Validate purpose
+  if (authorization.purpose !== "occ/commit-authorize/v1") {
+    throw new Error(`Agency: invalid purpose "${authorization.purpose}"`);
+  }
+
+  // 3. Validate actorKeyId matches actor.keyId
+  if (authorization.actorKeyId !== actor.keyId) {
+    throw new Error("Agency: authorization.actorKeyId does not match actor.keyId");
+  }
+
+  // 4. Validate artifactHash matches the committed digest
+  if (authorization.artifactHash !== digestB64) {
+    throw new Error("Agency: authorization.artifactHash does not match committed digest");
+  }
+
+  // 5. Validate actor.keyId == hex(SHA-256(SPKI DER pubkey bytes))
+  const pubKeyDer = Buffer.from(actor.publicKeyB64, "base64");
+  const computedKeyId = createHash("sha256").update(pubKeyDer).digest("hex");
+  if (computedKeyId !== actor.keyId) {
+    throw new Error("Agency: actor.keyId does not match SHA-256 of public key");
+  }
+
+  // 6. Validate timestamp freshness
+  const now = Date.now();
+  if (Math.abs(now - authorization.timestamp) > CHALLENGE_TTL_MS) {
+    throw new Error("Agency: authorization timestamp too far from current time");
+  }
+
+  // 7. Validate algorithm
+  if (actor.algorithm !== "ES256") {
+    throw new Error(`Agency: unsupported algorithm "${actor.algorithm}"`);
+  }
+
+  // 8. Build canonical payload (sorted keys, compact JSON, no signatureB64)
+  const canonicalPayload: AuthorizationPayload = {
+    purpose: authorization.purpose,
+    actorKeyId: authorization.actorKeyId,
+    artifactHash: authorization.artifactHash,
+    challenge: authorization.challenge,
+    timestamp: authorization.timestamp,
+  };
+  const payloadBytes = Buffer.from(
+    JSON.stringify(canonicalPayload, Object.keys(canonicalPayload).sort()),
+    "utf8"
+  );
+
+  // 9. P-256 signature verification
+  const sigBytes = Buffer.from(authorization.signatureB64, "base64");
+  const verifier = createVerify("SHA256");
+  verifier.update(payloadBytes);
+  const valid = verifier.verify(
+    { key: pubKeyDer, format: "der", type: "spki" },
+    sigBytes
+  );
+
+  if (!valid) {
+    throw new Error("Agency: P-256 signature verification failed");
+  }
+
+  // 10. Consume the challenge (single-use)
+  pendingChallenges.delete(authorization.challenge);
+  console.log(`[enclave] agency verified: actor=${actor.keyId.slice(0, 12)}... provider=${actor.provider}`);
+}
+
+// ---------------------------------------------------------------------------
 // Commit handler — produces OCC proofs for pre-computed digests
 // ---------------------------------------------------------------------------
 
@@ -115,8 +239,22 @@ async function handleCommit(req: {
   digests: Array<{ digestB64: string; hashAlg: "sha256" }>;
   metadata?: Record<string, unknown>;
   prevProofId?: string;
+  agency?: AgencyEnvelope;
 }): Promise<OCCProof[]> {
   const proofs: OCCProof[] = [];
+
+  // If agency is provided, verify it ONCE against the first digest.
+  // (Batch commits with agency apply the actor to all proofs in the batch.)
+  let verifiedActor: ActorIdentity | undefined;
+  if (req.agency) {
+    // Agency verification uses the first digest's artifactHash
+    const firstDigest = req.digests[0]?.digestB64;
+    if (!firstDigest) {
+      throw new Error("Agency provided but no digests to commit");
+    }
+    verifyAgencyEnvelope(req.agency, firstDigest);
+    verifiedActor = req.agency.actor;
+  }
 
   for (const { digestB64 } of req.digests) {
     // Decode the digest to verify it's valid base64
@@ -163,6 +301,12 @@ async function handleCommit(req: {
       measurement,
     };
 
+    // Include verified actor identity in the signed body
+    // (TEE has verified the P-256 signature, so actor is trusted)
+    if (verifiedActor) {
+      signedBody.actor = verifiedActor;
+    }
+
     // Step 7: Canonicalize
     const canonicalBytes = canonicalize(signedBody);
 
@@ -196,6 +340,11 @@ async function handleCommit(req: {
         },
       },
     };
+
+    // Include full agency envelope in the proof (independently verifiable)
+    if (req.agency) {
+      proof.agency = req.agency;
+    }
 
     if (req.metadata !== undefined) {
       proof.metadata = req.metadata;
@@ -244,6 +393,9 @@ async function handleRequest(req: Record<string, unknown>): Promise<unknown> {
         epochId,
       };
     }
+    case "challenge": {
+      return await handleChallenge();
+    }
     case "key": {
       return {
         publicKeyB64,
@@ -272,10 +424,14 @@ async function handleRequest(req: Record<string, unknown>): Promise<unknown> {
         });
         return { proof: proofs[0] };
       }
-      // Batch digest mode: { action: "commit", digests: [...] }
-      const proofs = await handleCommit(req as {
-        digests: Array<{ digestB64: string; hashAlg: "sha256" }>;
-        metadata?: Record<string, unknown>;
+      // Batch digest mode: { action: "commit", digests: [...], agency? }
+      const agency = (req as { agency?: AgencyEnvelope }).agency;
+      const proofs = await handleCommit({
+        ...(req as {
+          digests: Array<{ digestB64: string; hashAlg: "sha256" }>;
+          metadata?: Record<string, unknown>;
+        }),
+        agency,
       });
       return { ok: true, data: proofs };
     }

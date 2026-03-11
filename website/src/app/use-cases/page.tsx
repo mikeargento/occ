@@ -3,14 +3,14 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Use Cases",
-  description: "Where OCC proof-at-creation matters — AI outputs, software pipelines, media, science, compliance, and agent workflows.",
+  description: "Where OCC applies — AI outputs, software pipelines, media, science, compliance, and agent workflows.",
 };
 
 const useCases = [
   {
     title: "AI Output Provenance",
     subtitle: "Model responses, generated images, predictions",
-    description: "When an LLM generates a response or a diffusion model produces an image, OCC commits the output inside a measured execution boundary. The resulting proof binds the exact output bytes to the specific model environment, version, and commit event. Downstream consumers can verify the proof offline without trusting the transport.",
+    description: "When a model generates a response or image, OCC commits the output inside a measured boundary. The proof binds the exact output bytes to the specific model environment and commit event. Downstream consumers can verify the proof offline without trusting the transport.",
     fields: "measurement identifies the model environment • counter provides ordering • attestation proves hardware boundary",
   },
   {
@@ -28,7 +28,7 @@ const useCases = [
   {
     title: "Media & Journalism",
     subtitle: "Photos, video, audio, published content",
-    description: "A camera, recording device, or content management system running inside a measured boundary can commit media at capture time. The proof establishes that specific bytes were committed by a specific device environment. This is not proof that content is true — it is proof that a specific boundary committed it at a specific point in sequence.",
+    description: "A capture device or content system running inside a measured boundary commits media at the moment of capture. The proof establishes that specific bytes were committed by a specific environment at a specific point in sequence. This is not proof that content is true — it is proof of commitment through an authorized boundary.",
     fields: "timestamps provide third-party time evidence • measurement identifies the capture environment",
   },
   {
@@ -65,13 +65,12 @@ export default function UseCasesPage() {
           Use Cases
         </span>
         <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-6">
-          Where proof-at-creation matters.
+          Where it applies.
         </h1>
         <p className="text-text-secondary max-w-2xl leading-relaxed">
-          OCC applies wherever digital artifacts must be trusted as outputs of a
-          particular creation path — not merely inspected after creation. These
-          are not theoretical scenarios. Each represents a concrete application
-          of the protocol.
+          OCC applies wherever artifacts need proof that they were committed
+          through a specific boundary — not merely inspected after the fact.
+          Each scenario below is a concrete application of the protocol.
         </p>
       </div>
 
@@ -102,7 +101,7 @@ export default function UseCasesPage() {
           </p>
           <ul className="space-y-2 text-sm text-text-secondary">
             <li>• <strong className="text-text">Truth or accuracy</strong> — the content may be factually wrong</li>
-            <li>• <strong className="text-text">Authorship</strong> — OCC proves which boundary committed, not who created</li>
+            <li>• <strong className="text-text">Authorship</strong> — a base proof attests which boundary committed, not who created. Actor-bound proofs can additionally attest a specific person or device.</li>
             <li>• <strong className="text-text">First creation</strong> — the same bytes could have existed elsewhere before</li>
             <li>• <strong className="text-text">Uniqueness</strong> — the same artifact can be committed to multiple boundaries</li>
           </ul>

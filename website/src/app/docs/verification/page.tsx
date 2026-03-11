@@ -33,7 +33,7 @@ export default function VerificationPage() {
           {
             step: "3",
             title: "Signed body reconstruction",
-            desc: "Build the SignedBody object from the proof fields. Canonicalize to sorted-key JSON, encode as UTF-8 bytes. This is what the signature covers.",
+            desc: "Build the SignedBody object from the proof fields (including actor identity from agency, when present). Canonicalize to sorted-key JSON, encode as UTF-8 bytes. This is what the signature covers.",
           },
           {
             step: "4",
@@ -71,6 +71,11 @@ export default function VerificationPage() {
   minTime?: number;                   // Unix ms
   maxTime?: number;
   requireEpochId?: boolean;
+
+  // Actor-bound proof policy
+  requireActor?: boolean;             // reject proofs without agency
+  allowedActorKeyIds?: string[];      // exact match
+  allowedActorProviders?: string[];   // e.g. ["apple-secure-enclave"]
 }`}</pre>
       </div>
 

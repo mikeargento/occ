@@ -35,6 +35,10 @@ export async function verifySignatureOnly(
     signedBody.attestationFormat = proof.environment.attestation.format;
   }
 
+  if (proof.agency !== undefined) {
+    signedBody.actor = proof.agency.actor;
+  }
+
   const canonicalBytes = canonicalize(signedBody);
   checks.push("canonicalize: ok");
 

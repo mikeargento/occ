@@ -15,6 +15,9 @@ export type {
   VerificationPolicy,
   SignedBody,
   EnforcementTier,
+  ActorIdentity,
+  AuthorizationPayload,
+  AgencyEnvelope,
 } from "./types.js";
 
 // Host interface

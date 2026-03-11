@@ -292,6 +292,22 @@ const proofs = await resp.json();
       reportB64: string;
     };
   };
+  agency?: {                         // actor-bound proof
+    actor: {
+      keyId: string;
+      publicKeyB64: string;
+      algorithm: "ES256";
+      provider: string;              // e.g. "apple-secure-enclave"
+    };
+    authorization: {
+      purpose: "occ/commit-authorize/v1";
+      actorKeyId: string;
+      artifactHash: string;
+      challenge: string;
+      timestamp: number;
+      signatureB64: string;          // P-256 ECDSA
+    };
+  };
   timestamps?: {
     artifact?: TsaToken;
     proof?: TsaToken;
@@ -314,6 +330,11 @@ const proofs = await resp.json();
   minTime?: number;
   maxTime?: number;
   requireEpochId?: boolean;
+
+  // Actor-bound proof policy
+  requireActor?: boolean;
+  allowedActorKeyIds?: string[];
+  allowedActorProviders?: string[];
 }`}
         />
 

@@ -29,10 +29,11 @@
  *   - The measurement allowlist is the primary cryptographic trust anchor.
  */
 
+import { createVerify, createHash } from "node:crypto";
 import { verifyAsync as ed25519VerifyAsync } from "@noble/ed25519";
 import { sha256 } from "@noble/hashes/sha256";
 import { canonicalize, constantTimeEqual } from "./canonical.js";
-import type { EnforcementTier, OCCProof, SignedBody, VerificationPolicy } from "./types.js";
+import type { EnforcementTier, OCCProof, SignedBody, VerificationPolicy, AgencyEnvelope, AuthorizationPayload } from "./types.js";
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -116,6 +117,11 @@ export async function verify(opts: {
     signedBody.attestationFormat = proof.environment.attestation.format;
   }
 
+  // Include actor in signed body when agency is present
+  if (proof.agency !== undefined) {
+    signedBody.actor = proof.agency.actor;
+  }
+
   const canonicalBytes = canonicalize(signedBody);
 
   // ------------------------------------------------------------------
@@ -149,6 +155,16 @@ export async function verify(opts: {
 
   if (!signatureValid) {
     return fail("signature verification failed: signature does not match");
+  }
+
+  // ------------------------------------------------------------------
+  // 4b. Agency verification (P-256 device signature)
+  // ------------------------------------------------------------------
+  if (proof.agency !== undefined) {
+    const agencyError = verifyAgency(proof);
+    if (agencyError !== null) {
+      return fail(agencyError);
+    }
   }
 
   // ------------------------------------------------------------------
@@ -357,6 +373,139 @@ function checkPolicy(proof: OCCProof, policy: VerificationPolicy): string | null
     if (proof.commit.epochId === undefined || proof.commit.epochId.length === 0) {
       return "policy requires epochId but proof has none";
     }
+  }
+
+  // Actor required check
+  if (policy.requireActor === true) {
+    if (proof.agency === undefined) {
+      return "policy requires actor (agency) but proof has none";
+    }
+  }
+
+  // Actor key ID allowlist
+  if (
+    policy.allowedActorKeyIds !== undefined &&
+    policy.allowedActorKeyIds.length > 0
+  ) {
+    if (proof.agency === undefined) {
+      return "policy requires allowed actor key ID but proof has no agency";
+    }
+    if (!policy.allowedActorKeyIds.includes(proof.agency.actor.keyId)) {
+      return "actor key ID is not in the allowed set";
+    }
+  }
+
+  // Actor provider allowlist
+  if (
+    policy.allowedActorProviders !== undefined &&
+    policy.allowedActorProviders.length > 0
+  ) {
+    if (proof.agency === undefined) {
+      return "policy requires allowed actor provider but proof has no agency";
+    }
+    if (!policy.allowedActorProviders.includes(proof.agency.actor.provider)) {
+      return `actor provider "${proof.agency.actor.provider}" is not in the allowed set`;
+    }
+  }
+
+  return null;
+}
+
+// ---------------------------------------------------------------------------
+// Agency verification (P-256 device signature)
+// ---------------------------------------------------------------------------
+
+/**
+ * Verify the agency envelope: P-256 signature, structural consistency,
+ * and artifact binding.
+ *
+ * Checks:
+ *   1. Structural validation of agency fields
+ *   2. actor.keyId == hex(SHA-256(SPKI DER pubkey bytes))
+ *   3. authorization.actorKeyId == actor.keyId
+ *   4. authorization.artifactHash == proof.artifact.digestB64
+ *   5. authorization.purpose == "occ/commit-authorize/v1"
+ *   6. P-256 signature over canonical authorization payload
+ */
+function verifyAgency(proof: OCCProof): string | null {
+  const agency = proof.agency!;
+  const { actor, authorization } = agency;
+
+  // 1. Structural validation
+  if (typeof actor.keyId !== "string" || actor.keyId.length === 0) {
+    return "agency.actor.keyId must be a non-empty string";
+  }
+  if (typeof actor.publicKeyB64 !== "string" || actor.publicKeyB64.length === 0) {
+    return "agency.actor.publicKeyB64 must be a non-empty string";
+  }
+  if (actor.algorithm !== "ES256") {
+    return `agency.actor.algorithm must be "ES256", got "${String(actor.algorithm)}"`;
+  }
+  if (typeof actor.provider !== "string" || actor.provider.length === 0) {
+    return "agency.actor.provider must be a non-empty string";
+  }
+  if (authorization.purpose !== "occ/commit-authorize/v1") {
+    return `agency.authorization.purpose must be "occ/commit-authorize/v1", got "${String(authorization.purpose)}"`;
+  }
+  if (typeof authorization.signatureB64 !== "string" || authorization.signatureB64.length === 0) {
+    return "agency.authorization.signatureB64 must be a non-empty string";
+  }
+
+  // 2. Verify keyId matches public key
+  let pubKeyDer: Buffer;
+  try {
+    pubKeyDer = Buffer.from(actor.publicKeyB64, "base64");
+  } catch {
+    return "agency.actor.publicKeyB64 is not valid base64";
+  }
+  const computedKeyId = createHash("sha256").update(pubKeyDer).digest("hex");
+  if (computedKeyId !== actor.keyId) {
+    return "agency: actor.keyId does not match SHA-256 of public key";
+  }
+
+  // 3. Verify actorKeyId matches actor.keyId
+  if (authorization.actorKeyId !== actor.keyId) {
+    return "agency: authorization.actorKeyId does not match actor.keyId";
+  }
+
+  // 4. Verify artifactHash matches proof.artifact.digestB64
+  if (authorization.artifactHash !== proof.artifact.digestB64) {
+    return "agency: authorization.artifactHash does not match proof.artifact.digestB64";
+  }
+
+  // 5. Build canonical payload (sorted keys, compact JSON, no signatureB64)
+  const canonicalPayload: AuthorizationPayload = {
+    purpose: authorization.purpose,
+    actorKeyId: authorization.actorKeyId,
+    artifactHash: authorization.artifactHash,
+    challenge: authorization.challenge,
+    timestamp: authorization.timestamp,
+  };
+  const payloadBytes = Buffer.from(
+    JSON.stringify(canonicalPayload, Object.keys(canonicalPayload).sort()),
+    "utf8"
+  );
+
+  // 6. P-256 signature verification
+  let sigBytes: Buffer;
+  try {
+    sigBytes = Buffer.from(authorization.signatureB64, "base64");
+  } catch {
+    return "agency.authorization.signatureB64 is not valid base64";
+  }
+
+  try {
+    const verifier = createVerify("SHA256");
+    verifier.update(payloadBytes);
+    const valid = verifier.verify(
+      { key: pubKeyDer, format: "der", type: "spki" },
+      sigBytes
+    );
+    if (!valid) {
+      return "agency: P-256 signature verification failed";
+    }
+  } catch (err: unknown) {
+    return `agency: P-256 signature verification error: ${err instanceof Error ? err.message : String(err)}`;
   }
 
   return null;

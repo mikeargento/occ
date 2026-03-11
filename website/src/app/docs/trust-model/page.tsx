@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Trust Model",
-  description: "OCC trust model — assumptions, threats, enforcement tiers, diagnostic guide.",
+  description: "OCC trust model — assumptions, threat model, enforcement tiers, non-goals.",
 };
 
 export default function TrustModelPage() {

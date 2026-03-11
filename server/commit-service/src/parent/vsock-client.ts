@@ -2,16 +2,23 @@
 // Copyright 2024-2026 Mike Argento
 
 import { connect, type Socket } from "node:net";
+import type { AgencyEnvelope } from "occproof";
 
 export interface CommitRequest {
   type: "commit";
   digests: Array<{ digestB64: string; hashAlg: "sha256" }>;
   metadata?: Record<string, unknown>;
   prevProofId?: string;
+  /** Optional agency envelope — actor identity + signed authorization. */
+  agency?: AgencyEnvelope;
 }
 
 export interface KeyRequest {
   type: "key";
+}
+
+export interface ChallengeRequest {
+  type: "challenge";
 }
 
 export interface ConvertBWRequest {
@@ -19,7 +26,7 @@ export interface ConvertBWRequest {
   imageB64: string;
 }
 
-export type EnclaveRequest = CommitRequest | KeyRequest | ConvertBWRequest;
+export type EnclaveRequest = CommitRequest | KeyRequest | ChallengeRequest | ConvertBWRequest;
 
 export interface EnclaveResponse {
   ok: boolean;

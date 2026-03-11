@@ -13,9 +13,8 @@ export function Footer() {
                 OCC.WTF
               </div>
               <p className="text-sm text-text-tertiary leading-relaxed">
-                OCC introduces a new computational primitive.<br />
-                Proof becomes reachable only through an authorized commit path.<br />
-                <span className="font-semibold italic">If proof exists, the path existed.</span>
+                Portable cryptographic proof, caused by system structure.<br />
+                <span className="font-semibold italic">If proof exists, the authorized commit path was traversed.</span>
               </p>
             </div>
 

@@ -40,6 +40,10 @@ export default function ProofFormatPage() {
       "reportB64": "<base64>"        // REQUIRED when parent present
     }
   },
+  "agency": {                         // OPTIONAL — actor-bound proof
+    "actor": { keyId, publicKeyB64, algorithm, provider },
+    "authorization": { purpose, actorKeyId, artifactHash, challenge, timestamp, signatureB64 }
+  },
   "timestamps": {                    // OPTIONAL — external timestamps
     "artifact": { TsaToken },
     "proof":    { TsaToken }
@@ -56,7 +60,8 @@ export default function ProofFormatPage() {
         <pre className="text-xs font-mono leading-relaxed text-text-secondary">{`{
   version:           proof.version,
   artifact:          proof.artifact,
-  commit:            proof.commit,              // ALL fields verbatim
+  actor:             proof.agency?.actor,        // when present
+  commit:            proof.commit,               // ALL fields verbatim
   publicKeyB64:      proof.signer.publicKeyB64,
   enforcement:       proof.environment.enforcement,
   measurement:       proof.environment.measurement,
@@ -106,7 +111,7 @@ export default function ProofFormatPage() {
       <p className="text-text-secondary mb-4">Top-level key order after sort:</p>
       <div className="rounded-lg border border-border-subtle bg-bg-elevated p-4 mb-8">
         <code className="text-xs font-mono text-text-secondary">
-          artifact → attestationFormat? → commit → enforcement → measurement → publicKeyB64 → version
+          actor? → artifact → attestationFormat? → commit → enforcement → measurement → publicKeyB64 → version
         </code>
       </div>
 
@@ -116,7 +121,7 @@ export default function ProofFormatPage() {
         These fields are in the SignedBody. Tampering invalidates the signature:
       </p>
       <div className="text-sm text-text-secondary mb-6">
-        <code className="font-mono text-xs">version</code>, <code className="font-mono text-xs">artifact.*</code>, <code className="font-mono text-xs">commit.*</code>, <code className="font-mono text-xs">signer.publicKeyB64</code>, <code className="font-mono text-xs">environment.enforcement</code>, <code className="font-mono text-xs">environment.measurement</code>, <code className="font-mono text-xs">attestation.format</code>
+        <code className="font-mono text-xs">version</code>, <code className="font-mono text-xs">artifact.*</code>, <code className="font-mono text-xs">agency.actor</code> (when present), <code className="font-mono text-xs">commit.*</code>, <code className="font-mono text-xs">signer.publicKeyB64</code>, <code className="font-mono text-xs">environment.enforcement</code>, <code className="font-mono text-xs">environment.measurement</code>, <code className="font-mono text-xs">attestation.format</code>
       </div>
 
       <h3 className="text-base font-semibold mt-6 mb-3">Self-authenticating</h3>
@@ -129,7 +134,7 @@ export default function ProofFormatPage() {
 
       <h3 className="text-base font-semibold mt-6 mb-3">Advisory (unsigned)</h3>
       <p className="text-sm text-text-secondary mb-6">
-        Not signed. Must not be used for security decisions: <code className="font-mono text-xs">timestamps</code>, <code className="font-mono text-xs">metadata</code>, <code className="font-mono text-xs">claims</code>.
+        Not signed. Must not be used for security decisions: <code className="font-mono text-xs">timestamps</code>, <code className="font-mono text-xs">metadata</code>.
       </p>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Algorithms</h2>

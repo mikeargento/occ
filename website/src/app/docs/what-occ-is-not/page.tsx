@@ -34,7 +34,7 @@ export default function WhatOCCIsNotPage() {
           },
           {
             title: "OCC is not proof of authorship",
-            body: "OCC proves which boundary committed an artifact, not who created the underlying content. A human could have written text that was then committed by an enclave. OCC attributes the commit to the boundary, not to any person.",
+            body: "A base proof attests which boundary committed an artifact, not who created the underlying content. Actor-bound proofs can additionally attest that a specific person or device authorized the commitment — but this is actor-binding, not authorship attribution.",
           },
           {
             title: "OCC is not proof of first creation",

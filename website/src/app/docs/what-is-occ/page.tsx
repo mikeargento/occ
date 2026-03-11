@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { CommitPathDiagram } from "@/components/commit-path-diagram";
 
 export const metadata: Metadata = {
   title: "What is OCC",
@@ -11,23 +12,24 @@ export default function WhatIsOCCPage() {
       <h1 className="text-3xl font-semibold tracking-tight mb-8">What is OCC</h1>
 
       <p className="text-text-secondary leading-relaxed mb-6">
-        OCC — Origin Controlled Computing — is a protocol for producing portable
-        cryptographic proof that specific bytes were committed through an
-        authorized execution boundary during a single atomic event.
+        OCC — Origin Controlled Computing — is a protocol that produces portable
+        cryptographic proof when bytes are committed through an authorized
+        execution boundary. The proof attests that a specific digital state was
+        demonstrably possessed and committed in a specific form, by a specific
+        boundary, no later than a specific moment.
       </p>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">The core idea</h2>
       <p className="text-text-secondary leading-relaxed mb-4">
-        Most digital systems create artifacts first and try to prove things
-        about them later. Photos, documents, model outputs, and logs are
-        produced freely — then we attach signatures, metadata, timestamps, or
-        register them in ledgers after the fact.
+        Most systems produce artifacts first and try to prove things about
+        them later — attaching signatures, metadata, timestamps, or ledger
+        entries after the fact.
       </p>
       <p className="text-text-secondary leading-relaxed mb-4">
-        OCC inverts this relationship. Under OCC, valid proof can only exist
-        if the artifact was committed through a protected path. The proof is
-        not added to the artifact — it is caused by the act of committing
-        through the authorized boundary.
+        OCC inverts this. Valid proof can only exist if the artifact was
+        committed through a protected path. The proof is not added to the
+        artifact — it is caused by the act of committing through the
+        authorized boundary.
       </p>
 
       <div className="rounded-lg border border-border-subtle bg-bg-elevated p-6 my-8">
@@ -38,24 +40,24 @@ export default function WhatIsOCCPage() {
 
       <h2 className="text-xl font-semibold mt-12 mb-4">How it works</h2>
       <p className="text-text-secondary leading-relaxed mb-4">
-        OCC binds authorization, cryptographic binding, and commit into a single
+        Authorization, cryptographic binding, and commit happen as one
         indivisible operation:
       </p>
       <ol className="space-y-3 mb-6">
         <li className="text-text-secondary leading-relaxed">
-          <strong className="text-text">1. Authorize</strong> — Candidate bytes enter a
-          protected commit interface controlled by an authorized execution
-          boundary (e.g., an AWS Nitro Enclave).
+          <strong className="text-text">1. Authorize</strong> — Bytes enter a protected
+          boundary (e.g., an AWS Nitro Enclave) that controls the only path
+          to a valid proof.
         </li>
         <li className="text-text-secondary leading-relaxed">
-          <strong className="text-text">2. Bind</strong> — Inside the boundary, the system
-          computes a content-dependent hash (SHA-256) and combines it with
-          boundary-fresh cryptographic output (nonce, counter, signature).
+          <strong className="text-text">2. Bind</strong> — Inside the boundary, a SHA-256
+          content hash is combined with a fresh nonce, a monotonic counter,
+          and a signature.
         </li>
         <li className="text-text-secondary leading-relaxed">
           <strong className="text-text">3. Commit</strong> — The artifact and its proof are
-          committed together. The operation is fail-closed: if any step fails,
-          nothing is produced.
+          produced together. Fail-closed: if any step fails, nothing is
+          produced.
         </li>
       </ol>
 
@@ -120,6 +122,12 @@ export default function WhatIsOCCPage() {
           </tbody>
         </table>
       </div>
+
+      <h2 className="text-xl font-semibold mt-12 mb-4">Formal properties</h2>
+      <p className="text-text-secondary leading-relaxed mb-4">
+        The commit path satisfies these structural properties:
+      </p>
+      <CommitPathDiagram />
     </article>
   );
 }

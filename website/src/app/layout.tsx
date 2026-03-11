@@ -1,8 +1,15 @@
 import type { Metadata } from "next";
+import { JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
 import { ThemeProvider } from "@/components/theme-provider";
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: {
@@ -16,7 +23,7 @@ export const metadata: Metadata = {
     "Origin Controlled Computing",
     "OCC Protocol",
     "cryptographic proof",
-    "proof of finalization",
+    "proof of commitment",
     "measured execution",
     "artifact verification",
     "content provenance",
@@ -45,15 +52,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
+    <html lang="en" className={`dark ${jetbrainsMono.variable}`} suppressHydrationWarning>
       <head>
+        <link rel="stylesheet" href="https://use.typekit.net/dzx2jda.css" />
         <script
           dangerouslySetInnerHTML={{
             __html: `try{const t=localStorage.getItem("occ-theme");if(t==="light"){document.documentElement.classList.remove("dark");document.documentElement.classList.add("light")}}catch(e){}`,
           }}
         />
       </head>
-      <body className="font-sans antialiased">
+      <body className="font-serif antialiased">
         <ThemeProvider>
           <Nav />
           <main className="min-h-screen">{children}</main>

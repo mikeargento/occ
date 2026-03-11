@@ -37,19 +37,22 @@ curl -X POST https://nitro.occproof.com/commit \\
 
       <h2 className="text-xl font-semibold mt-12 mb-4">TypeScript / JavaScript</h2>
       <div className="rounded-lg border border-border-subtle bg-bg-elevated p-4 overflow-x-auto mb-8">
-        <pre className="text-xs font-mono leading-relaxed text-text-secondary">{`import { hashBytes, commitDigest } from "@occ/client";
-
-// Hash locally
+        <pre className="text-xs font-mono leading-relaxed text-text-secondary">{`// Hash locally
 const bytes = new Uint8Array(await file.arrayBuffer());
 const hashBuf = await crypto.subtle.digest("SHA-256", bytes);
 const digestB64 = btoa(String.fromCharCode(...new Uint8Array(hashBuf)));
 
 // Commit to enclave
-const proof = await commitDigest(digestB64, {
-  source: "my-app",
-  fileName: file.name,
+const resp = await fetch("https://nitro.occproof.com/commit", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    digests: [{ digestB64, hashAlg: "sha256" }],
+    metadata: { source: "my-app", fileName: file.name },
+  }),
 });
 
+const [proof] = await resp.json();
 // proof is a complete OCCProof JSON object
 console.log(proof.commit.counter);
 console.log(proof.environment.enforcement);`}</pre>

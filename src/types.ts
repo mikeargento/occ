@@ -73,10 +73,12 @@ export type EnforcementTier = "stub" | "hw-key" | "measured-tee";
  * Signed body covers:
  *   version, artifact, commit, signer.publicKeyB64,
  *   environment.enforcement, environment.measurement,
- *   environment.attestation.format (when present)
+ *   environment.attestation.format (when present),
+ *   agency.actor identity (when agency is present)
  *
- * Outside the signature (advisory / vendor-signed):
- *   signer.signatureB64, environment.attestation.reportB64, metadata
+ * Outside the signature (advisory / vendor-signed / independently verifiable):
+ *   signer.signatureB64, environment.attestation.reportB64,
+ *   agency.authorization (P-256 signed, independently verifiable), metadata
  */
 export interface OCCProof {
   /** Schema version. Hard-coded for forward-compatibility detection. */
@@ -217,6 +219,30 @@ export interface OCCProof {
   };
 
   /**
+   * Optional agency envelope — binds actor identity to this proof.
+   *
+   * When present, proves WHO authorized the commitment:
+   *   - actor: device-bound identity (Secure Enclave P-256 key)
+   *   - authorization: the possession commitment the actor signed
+   *     (artifact hash + enclave-issued challenge + purpose + timestamp)
+   *
+   * Two independent signatures in the proof:
+   *   - P-256 ECDSA (device Secure Enclave) → proves WHO authorized it
+   *   - Ed25519 (Nitro Enclave) → proves it was committed inside the TEE
+   *
+   * The actor identity summary (keyId, publicKeyB64, algorithm, provider)
+   * is also included in the signed body (via SignedBody.actor), making it
+   * tamper-evident under the enclave's Ed25519 signature.
+   *
+   * The full authorization envelope (including the device's P-256 signature)
+   * lives here, outside the Ed25519 signed body — like attestation.reportB64,
+   * it is independently verifiable.
+   *
+   * NOT included in the Ed25519 signed body (independently verifiable).
+   */
+  agency?: AgencyEnvelope;
+
+  /**
    * Caller-supplied metadata key/value pairs.
    * NOT included in the signed body. Treat as advisory only.
    */
@@ -320,6 +346,103 @@ export interface VerificationPolicy {
    * monotonic anchor (e.g., DynamoDB) for cross-epoch continuity.
    */
   requireEpochId?: boolean;
+
+  /**
+   * If true, proof.agency must be present with a valid actor identity
+   * and authorization signature. The proof must answer WHO authorized
+   * the commitment, not just WHAT and WHERE.
+   */
+  requireActor?: boolean;
+
+  /**
+   * Accepted actor key IDs. The proof's agency.actor.keyId must
+   * exactly match one of the listed values.
+   * Key ID is hex(SHA-256(SPKI DER public key bytes)) — stable,
+   * deterministic, derived from the raw key material.
+   */
+  allowedActorKeyIds?: string[];
+
+  /**
+   * Accepted actor key providers. The proof's agency.actor.provider
+   * must exactly match one of the listed values.
+   * e.g. ["apple-secure-enclave", "android-strongbox", "webauthn"]
+   */
+  allowedActorProviders?: string[];
+}
+
+// ---------------------------------------------------------------------------
+// Agency types — actor identity + authorization
+// ---------------------------------------------------------------------------
+
+/**
+ * Actor identity — a device-bound key that identifies WHO authorized
+ * a commitment.
+ *
+ * This structure appears in two places:
+ *   1. SignedBody.actor — signed by the TEE's Ed25519 key (tamper-evident)
+ *   2. OCCProof.agency.actor — in the full agency envelope
+ *
+ * The keyId is deterministic: hex(SHA-256(SPKI DER public key bytes)).
+ * Any verifier can recompute it from the raw public key to confirm
+ * the binding.
+ */
+export interface ActorIdentity {
+  /** Stable device key ID: hex(SHA-256(SPKI DER public key bytes)). */
+  keyId: string;
+  /** Base64 SPKI DER P-256 public key (standard format, any platform can parse). */
+  publicKeyB64: string;
+  /** Signature algorithm the device used. */
+  algorithm: "ES256";
+  /** Key origin: "apple-secure-enclave", "android-strongbox", "webauthn". */
+  provider: string;
+}
+
+/**
+ * The canonical payload that the actor's device signs.
+ *
+ * Serialized as canonical JSON (sorted keys, compact, UTF-8) for signing.
+ * signatureB64 is excluded from the signed bytes (it IS the signature).
+ *
+ * Fields:
+ *   - purpose: domain separation — prevents cross-context signature reuse
+ *   - actorKeyId: must match actor.keyId (binds signature to specific key)
+ *   - artifactHash: must match proof.artifact.digestB64 (binds to specific artifact)
+ *   - challenge: enclave-issued nonce (prevents replay)
+ *   - timestamp: Unix epoch ms (enclave checks freshness)
+ */
+export interface AuthorizationPayload {
+  /** Domain separation: prevents cross-context signature reuse. */
+  purpose: "occ/commit-authorize/v1";
+  /** Must match actor.keyId. */
+  actorKeyId: string;
+  /** Base64 SHA-256 of artifact — must match proof.artifact.digestB64. */
+  artifactHash: string;
+  /** Enclave-issued challenge (prevents replay). */
+  challenge: string;
+  /** Unix epoch ms — enclave checks freshness. */
+  timestamp: number;
+}
+
+/**
+ * Full agency envelope — lives in OCCProof.agency.
+ *
+ * Contains the actor identity and the authorization payload
+ * (including the device's P-256 signature). Independently verifiable:
+ * any verifier can check the P-256 signature over the authorization
+ * payload without needing any server or API.
+ */
+export interface AgencyEnvelope {
+  /** Actor identity (matches SignedBody.actor when present). */
+  actor: ActorIdentity;
+  /** The possession commitment the actor signed. */
+  authorization: AuthorizationPayload & {
+    /**
+     * Base64 DER ECDSA signature over canonical JSON of the
+     * AuthorizationPayload (excluding signatureB64 itself).
+     * P-256 / ES256 — verifiable with actor.publicKeyB64.
+     */
+    signatureB64: string;
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -336,7 +459,8 @@ export interface VerificationPolicy {
  *
  * Signed fields:
  *   version, artifact, commit, publicKeyB64,
- *   enforcement, measurement, attestationFormat (when present)
+ *   enforcement, measurement, attestationFormat (when present),
+ *   actor (when agency is present)
  */
 export interface SignedBody {
   version: "occ/1";
@@ -354,4 +478,19 @@ export interface SignedBody {
    * reportB64 is intentionally excluded (vendor-signed).
    */
   attestationFormat?: string;
+
+  /**
+   * Actor identity summary — included in the signed body when agency
+   * is present.
+   *
+   * Follows the same pattern as attestationFormat: identity summary is
+   * signed (tamper-evident under Ed25519), while the full signature
+   * envelope (agency.authorization.signatureB64) lives outside the
+   * signed body and is independently verifiable.
+   *
+   * The TEE verifies the actor's P-256 signature BEFORE including this
+   * in the signed body, so its presence means the TEE confirmed the
+   * actor authorized this specific commitment.
+   */
+  actor?: ActorIdentity;
 }

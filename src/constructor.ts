@@ -32,7 +32,7 @@
 import { sha256 } from "@noble/hashes/sha256";
 import { canonicalize } from "./canonical.js";
 import type { HostCapabilities } from "./host.js";
-import type { OCCPolicy, OCCProof, SignedBody } from "./types.js";
+import type { OCCPolicy, OCCProof, SignedBody, AgencyEnvelope } from "./types.js";
 
 // ---------------------------------------------------------------------------
 // Constructor class
@@ -116,11 +116,13 @@ export class Constructor {
    * @param input.digestB64        - Base64-standard SHA-256 digest of the data
    * @param input.metadata         - Advisory metadata (NOT signed)
    * @param input.prevProofHashB64 - Optional base64 hash of a prior proof for chaining
+   * @param input.agency           - Optional agency envelope (actor + authorization)
    */
   async commitDigest(input: {
     digestB64: string;
     metadata?: Record<string, unknown>;
     prevProofHashB64?: string;
+    agency?: AgencyEnvelope;
   }): Promise<OCCProof> {
     const { digestB64, metadata, prevProofHashB64 } = input;
 
@@ -133,7 +135,7 @@ export class Constructor {
     }
 
     // Delegate to the internal commit flow, skipping step 4 (hashing)
-    return this.#commitInternal({ digestB64, metadata, prevProofHashB64 });
+    return this.#commitInternal({ digestB64, metadata, prevProofHashB64, agency: input.agency });
   }
 
   /**
@@ -145,11 +147,13 @@ export class Constructor {
    * @param input.bytes            - The raw bytes to commit
    * @param input.metadata         - Advisory metadata (NOT signed)
    * @param input.prevProofHashB64 - Optional base64 hash of a prior proof for chaining
+   * @param input.agency           - Optional agency envelope (actor + authorization)
    */
   async commit(input: {
     bytes: Uint8Array;
     metadata?: Record<string, unknown>;
     prevProofHashB64?: string;
+    agency?: AgencyEnvelope;
   }): Promise<OCCProof> {
     const { bytes, metadata, prevProofHashB64 } = input;
 
@@ -158,7 +162,7 @@ export class Constructor {
     const digestB64 = toBase64(digest);
 
     // Delegate to shared internal flow (steps 1-3, 5-10)
-    return this.#commitInternal({ digestB64, metadata, prevProofHashB64 });
+    return this.#commitInternal({ digestB64, metadata, prevProofHashB64, agency: input.agency });
   }
 
   // ------------------------------------------------------------------
@@ -169,8 +173,9 @@ export class Constructor {
     digestB64: string;
     metadata: Record<string, unknown> | undefined;
     prevProofHashB64: string | undefined;
+    agency: AgencyEnvelope | undefined;
   }): Promise<OCCProof> {
-    const { digestB64, metadata, prevProofHashB64 } = input;
+    const { digestB64, metadata, prevProofHashB64, agency } = input;
 
     // ------------------------------------------------------------------
     // Step 1: Monotonic counter (optional, policy-gated)
@@ -243,6 +248,11 @@ export class Constructor {
       enforcement: this.#host.enforcementTier,
       measurement,
     };
+
+    // Include actor identity in signed body when agency is present
+    if (agency !== undefined) {
+      signedBody.actor = agency.actor;
+    }
 
     // ------------------------------------------------------------------
     // Step 7: Canonicalize
@@ -318,6 +328,7 @@ export class Constructor {
         },
       };
 
+      if (agency !== undefined) proof.agency = agency;
       if (metadata !== undefined) proof.metadata = metadata;
       return proof;
     }
@@ -339,6 +350,7 @@ export class Constructor {
       },
     };
 
+    if (agency !== undefined) proof.agency = agency;
     if (metadata !== undefined) proof.metadata = metadata;
     return proof;
   }

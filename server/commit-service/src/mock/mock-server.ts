@@ -6,7 +6,7 @@
  */
 
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import type { OCCProof, VerificationPolicy } from "occproof";
+import type { OCCProof, VerificationPolicy, AgencyEnvelope } from "occproof";
 import { MockEnclave } from "./mock-enclave.js";
 
 const PORT = Number(
@@ -83,6 +83,7 @@ async function handleCommit(req: IncomingMessage, res: ServerResponse): Promise<
     digests: Array<{ digestB64: string; hashAlg: "sha256" }>;
     metadata?: Record<string, unknown>;
     prevProofId?: string;
+    agency?: AgencyEnvelope;
   };
 
   try { body = JSON.parse(raw.toString("utf8")); } catch { sendError(res, 400, "Invalid JSON body"); return; }
@@ -99,7 +100,7 @@ async function handleCommit(req: IncomingMessage, res: ServerResponse): Promise<
     }
   }
 
-  const result = await enclave.send({ type: "commit", digests: body.digests, metadata: body.metadata, prevProofId: body.prevProofId });
+  const result = await enclave.send({ type: "commit", digests: body.digests, metadata: body.metadata, prevProofId: body.prevProofId, agency: body.agency });
   if (!result.ok) { sendError(res, 500, result.error ?? "commit failed"); return; }
   sendJson(res, 200, result.data);
 }
@@ -164,6 +165,12 @@ async function handleConvertBW(req: IncomingMessage, res: ServerResponse): Promi
   sendJson(res, 200, result.data);
 }
 
+async function handleChallenge(_req: IncomingMessage, res: ServerResponse): Promise<void> {
+  const result = await enclave.send({ type: "challenge" });
+  if (!result.ok || !result.data) { sendError(res, 500, result.error ?? "challenge failed"); return; }
+  sendJson(res, 200, result.data);
+}
+
 async function handleHealth(_req: IncomingMessage, res: ServerResponse): Promise<void> {
   sendJson(res, 200, { ok: true });
 }
@@ -175,6 +182,7 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
   try {
     if (method === "OPTIONS") { res.writeHead(204, CORS_HEADERS); res.end(); return; }
     if (method === "POST" && url.pathname === "/commit") { await handleCommit(req, res); }
+    else if (method === "POST" && url.pathname === "/challenge") { await handleChallenge(req, res); }
     else if (method === "POST" && url.pathname === "/convert-bw") { await handleConvertBW(req, res); }
     else if (method === "GET" && url.pathname === "/key") { await handleKey(req, res); }
     else if (method === "POST" && url.pathname === "/verify") { await handleVerify(req, res); }
@@ -189,6 +197,7 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
 server.listen(PORT, () => {
   console.log(`[mock-server] listening on http://localhost:${PORT}`);
   console.log(`  POST /commit      (Content-Type: application/json, Authorization: Bearer <key>)`);
+  console.log(`  POST /challenge   (public — issues enclave nonce for agency signing)`);
   console.log(`  POST /convert-bw  (Content-Type: application/json — B&W demo)`);
   console.log(`  GET  /key`);
   console.log(`  POST /verify      (Content-Type: application/json)`);

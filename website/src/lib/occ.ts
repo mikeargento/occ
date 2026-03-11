@@ -1,5 +1,24 @@
 export const OCC_ENDPOINT = "https://nitro.occproof.com";
 
+export interface ActorIdentity {
+  keyId: string;
+  publicKeyB64: string;
+  algorithm: "ES256";
+  provider: string;
+}
+
+export interface AgencyEnvelope {
+  actor: ActorIdentity;
+  authorization: {
+    purpose: "occ/commit-authorize/v1";
+    actorKeyId: string;
+    artifactHash: string;
+    challenge: string;
+    timestamp: number;
+    signatureB64: string;
+  };
+}
+
 export interface OCCProof {
   version: string;
   artifact: {
@@ -29,6 +48,7 @@ export interface OCCProof {
     artifact?: TsaToken;
     proof?: TsaToken;
   };
+  agency?: AgencyEnvelope;
   metadata?: Record<string, unknown>;
   claims?: Record<string, unknown>;
 }
@@ -101,6 +121,27 @@ export async function getEnclaveInfo(): Promise<{
   const resp = await fetch(`${OCC_ENDPOINT}/key`);
   if (!resp.ok) throw new Error("Failed to fetch enclave info");
   return resp.json();
+}
+
+/**
+ * Request a fresh challenge nonce from the enclave for agency signing.
+ * The challenge must be signed by the device (P-256) and included in the
+ * commit request's agency envelope.
+ */
+export async function requestChallenge(): Promise<string> {
+  const resp = await fetch(`${OCC_ENDPOINT}/challenge`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: "{}",
+  });
+
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({ error: resp.statusText }));
+    throw new Error(err.error || `Challenge request failed: ${resp.status}`);
+  }
+
+  const result = await resp.json();
+  return result.challenge;
 }
 
 export function formatFileSize(bytes: number): string {
