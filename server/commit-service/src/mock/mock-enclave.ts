@@ -108,7 +108,7 @@ export class MockEnclave implements EnclaveClient {
   }
 
   async #handleConvertBW(req: ConvertBWRequest): Promise<EnclaveResponse> {
-    const sharp = (await import("sharp")).default;
+    const sharp = (await import("sharp") as any).default;
     const inputBuffer = Buffer.from(req.imageB64, "base64");
 
     // Convert to grayscale JPEG

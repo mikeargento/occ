@@ -288,7 +288,7 @@ async function handleRequest(req: Record<string, unknown>): Promise<unknown> {
         return { error: "convertBW requires imageB64 field" };
       }
 
-      const sharp = (await import("sharp")).default;
+      const sharp = (await import("sharp") as any).default;
       const inputBuffer = Buffer.from(imageB64, "base64");
 
       // Convert to grayscale JPEG inside the enclave
