@@ -476,8 +476,10 @@ async function handleRequest(req: Record<string, unknown>): Promise<unknown> {
     }
     case "commitDigest": {
       const digestB64 = (req as { digestB64: string }).digestB64;
+      const agency = (req as { agency?: AgencyEnvelope }).agency;
       const proofs = await handleCommit({
         digests: [{ digestB64, hashAlg: "sha256" }],
+        agency,
       });
       return { proof: proofs[0] };
     }
