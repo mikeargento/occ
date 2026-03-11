@@ -171,20 +171,20 @@ export default function StudioPage() {
     const verifyTxt = `VERIFICATION INSTRUCTIONS
 ========================
 
-This proof.zip was created by OCC Studio (https://occproof.com).
+This proof.zip was created by ProofStudio (https://proofstudio.wtf).
 
 It contains:
   - ${file.name}  (the original file)
   - proof.json           (the cryptographic proof)
   - VERIFY.txt           (this file)
 
-The proof guarantees that "${file.name}" existed at the time
-the proof was created. The file was hashed locally — it was never
-uploaded to any server. Only the SHA-256 digest was sent to a
+The proof demonstrates that "${file.name}" existed in its current form
+at the time the proof was created. The file was hashed locally — it was
+never uploaded to any server. Only the SHA-256 digest was sent to a
 Trusted Execution Environment (TEE) for signing.
 
 To verify this proof:
-  1. Visit https://occproof.com/studio
+  1. Visit https://proofstudio.wtf/studio
   2. Drop this proof.zip file onto the Verify section
   3. The verifier checks the SHA-256 hash and Ed25519 signature
 
@@ -194,7 +194,8 @@ Proof details:
   Algorithm:   ${proof.artifact.hashAlg}
   Public Key:  ${proof.signer.publicKeyB64}
 
-Learn more: https://occproof.com
+Powered by OCC (Origin Controlled Computing)
+Learn more: https://proofstudio.wtf
 `;
 
     const zipped = zipSync({
@@ -507,7 +508,7 @@ Learn more: https://occproof.com
           Studio
         </h1>
         <p className="text-text-secondary max-w-2xl">
-          Create cryptographic proofs for any file, or verify existing proofs.
+          Generate cryptographic proof for any file, or verify existing proofs.
           Everything runs locally in your browser — files are never uploaded.
         </p>
       </div>

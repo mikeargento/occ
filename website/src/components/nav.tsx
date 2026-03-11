@@ -5,12 +5,11 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useTheme } from "@/components/theme-provider";
 
-const links = [
+const links: { href: string; label: string; external?: boolean }[] = [
   { href: "/studio", label: "Studio" },
-  { href: "/bw-demo", label: "B&W Demo" },
   { href: "/docs", label: "Docs" },
   { href: "/api-reference", label: "API" },
-  { href: "/use-cases", label: "Use Cases" },
+  { href: "https://github.com/mikeargento/occ", label: "GitHub", external: true },
 ];
 
 export function Nav() {
@@ -24,26 +23,38 @@ export function Nav() {
         <nav className="flex h-14 items-center justify-between">
           <Link
             href="/"
-            className="flex items-center gap-2 text-sm font-semibold tracking-wider uppercase text-text"
+            className="flex items-center gap-2 text-text"
           >
-            <span className="text-2xl font-extrabold tracking-wide" style={{ fontFamily: '"acumin-variable", "acumin-pro", sans-serif' }}>OCC</span>
+            <span className="text-xl font-extrabold tracking-wide" style={{ fontFamily: '"acumin-variable", "acumin-pro", sans-serif' }}>ProofStudio</span>
           </Link>
 
           {/* Desktop */}
           <div className="hidden flex-1 items-center justify-end gap-4 md:flex">
-            {links.map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                className={`text-[13px] font-semibold rounded-md px-3 py-1.5 transition-colors ${
-                  pathname.startsWith(l.href)
-                    ? "text-text bg-bg-subtle/50"
-                    : "text-text-secondary hover:text-text hover:bg-bg-subtle/50"
-                }`}
-              >
-                {l.label}
-              </Link>
-            ))}
+            {links.map((l) =>
+              l.external ? (
+                <a
+                  key={l.href}
+                  href={l.href}
+                  target="_blank"
+                  rel="noopener"
+                  className="text-[13px] font-semibold rounded-md px-3 py-1.5 transition-colors text-text-secondary hover:text-text hover:bg-bg-subtle/50"
+                >
+                  {l.label}
+                </a>
+              ) : (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  className={`text-[13px] font-semibold rounded-md px-3 py-1.5 transition-colors ${
+                    pathname.startsWith(l.href)
+                      ? "text-text bg-bg-subtle/50"
+                      : "text-text-secondary hover:text-text hover:bg-bg-subtle/50"
+                  }`}
+                >
+                  {l.label}
+                </Link>
+              )
+            )}
             {/* Theme toggle */}
             <ThemeToggle theme={theme} toggle={toggle} />
           </div>
@@ -86,20 +97,33 @@ export function Nav() {
       {open && (
         <div className="border-t border-border-subtle bg-bg px-6 py-4 md:hidden">
           <div className="flex flex-col gap-1">
-            {links.map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                onClick={() => setOpen(false)}
-                className={`rounded-md px-3 py-2 text-sm font-semibold ${
-                  pathname.startsWith(l.href)
-                    ? "text-text bg-bg-subtle"
-                    : "text-text-secondary hover:text-text"
-                }`}
-              >
-                {l.label}
-              </Link>
-            ))}
+            {links.map((l) =>
+              l.external ? (
+                <a
+                  key={l.href}
+                  href={l.href}
+                  target="_blank"
+                  rel="noopener"
+                  onClick={() => setOpen(false)}
+                  className="rounded-md px-3 py-2 text-sm font-semibold text-text-secondary hover:text-text"
+                >
+                  {l.label}
+                </a>
+              ) : (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  onClick={() => setOpen(false)}
+                  className={`rounded-md px-3 py-2 text-sm font-semibold ${
+                    pathname.startsWith(l.href)
+                      ? "text-text bg-bg-subtle"
+                      : "text-text-secondary hover:text-text"
+                  }`}
+                >
+                  {l.label}
+                </Link>
+              )
+            )}
           </div>
         </div>
       )}

@@ -13,35 +13,34 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "OCC — Origin Controlled Computing",
-    template: "%s | OCC Protocol",
+    default: "ProofStudio — Cryptographic Proof for Any Digital Artifact",
+    template: "%s | ProofStudio",
   },
   description:
-    "Portable cryptographic proof caused by system structure. Proof should be a property of creation, not verification.",
+    "Generate portable cryptographic proof for any file or computation. Drop an artifact, receive proof it existed in its current form at a specific moment. No blockchain required.",
   keywords: [
+    "ProofStudio",
+    "cryptographic proof",
     "OCC",
     "Origin Controlled Computing",
-    "OCC Protocol",
-    "cryptographic proof",
-    "proof of commitment",
-    "measured execution",
     "artifact verification",
     "content provenance",
+    "proof of existence",
     "TEE",
     "Nitro Enclave",
-    "Ed25519",
+    "digital proof",
     "commit proof",
   ],
   openGraph: {
-    title: "OCC — Origin Controlled Computing",
-    description: "Portable cryptographic proof caused by system structure.",
+    title: "ProofStudio — Cryptographic Proof for Any Digital Artifact",
+    description: "Generate portable cryptographic proof for any file or computation. No blockchain required.",
     type: "website",
-    siteName: "OCC Protocol",
+    siteName: "ProofStudio",
   },
   twitter: {
     card: "summary_large_image",
-    title: "OCC — Origin Controlled Computing",
-    description: "Portable cryptographic proof caused by system structure.",
+    title: "ProofStudio — Cryptographic Proof for Any Digital Artifact",
+    description: "Generate portable cryptographic proof for any file or computation. No blockchain required.",
   },
   robots: { index: true, follow: true },
 };
