@@ -32,7 +32,7 @@ export default function Home() {
         <div className="max-w-5xl">
           <Label>Origin Controlled Computing</Label>
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-semibold tracking-tight leading-[1.08]">
-            Proof should be a property<br />
+            Proof should be a property<br className="hidden lg:inline" />{" "}
             of <em>creation,</em> not verification.
           </h1>
           <p className="mt-8 text-lg text-text-secondary max-w-3xl leading-relaxed">
