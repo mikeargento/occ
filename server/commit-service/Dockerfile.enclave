@@ -75,17 +75,11 @@ COPY --from=builder /build/server/commit-service/package.json ./package.json
 COPY --from=builder /build/node_modules/@noble/ ./node_modules/@noble/
 COPY --from=builder /build/packages/adapter-nitro/node_modules/cbor2/ ./node_modules/cbor2/
 
-# Copy sharp + platform prebuilds + all transitive runtime deps
+# Copy sharp + platform prebuilds + runtime deps
 COPY --from=builder /build/server/commit-service/node_modules/sharp/ ./node_modules/sharp/
 COPY --from=builder /build/server/commit-service/node_modules/@img/ ./node_modules/@img/
 COPY --from=builder /build/server/commit-service/node_modules/detect-libc/ ./node_modules/detect-libc/
-COPY --from=builder /build/server/commit-service/node_modules/color/ ./node_modules/color/
-COPY --from=builder /build/server/commit-service/node_modules/color-convert/ ./node_modules/color-convert/
-COPY --from=builder /build/server/commit-service/node_modules/color-string/ ./node_modules/color-string/
-COPY --from=builder /build/server/commit-service/node_modules/color-name/ ./node_modules/color-name/
 COPY --from=builder /build/server/commit-service/node_modules/semver/ ./node_modules/semver/
-COPY --from=builder /build/server/commit-service/node_modules/simple-swizzle/ ./node_modules/simple-swizzle/
-COPY --from=builder /build/server/commit-service/node_modules/is-arrayish/ ./node_modules/is-arrayish/
 
 # socat bridges vsock:5000 → the Unix domain socket the enclave app listens on
 RUN apk add --no-cache socat
