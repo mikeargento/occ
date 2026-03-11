@@ -2,7 +2,7 @@
 # Adds /convert-bw route to the http-server.js proxy and restarts it.
 set -euo pipefail
 
-FILE=$(sudo find / -name "http-server.js" -path "*occ*" -not -path "*/node_modules/*" 2>/dev/null | head -1)
+FILE="/home/ec2-user/nsm-test/http-server.js"
 if [ -z "$FILE" ]; then echo "ERROR: http-server.js not found"; exit 1; fi
 echo "Patching: $FILE"
 
