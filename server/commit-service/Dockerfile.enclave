@@ -71,13 +71,12 @@ COPY --from=builder /build/packages/adapter-nitro/package.json ./node_modules/@o
 COPY --from=builder /build/server/commit-service/dist/ ./dist/
 COPY --from=builder /build/server/commit-service/package.json ./package.json
 
-# Copy node_modules (runtime deps only)
+# Copy node_modules (runtime deps)
+# All commit-service deps first (sharp + transitive: detect-libc, color, semver, etc.)
+COPY --from=builder /build/server/commit-service/node_modules/ ./node_modules/
+# Core deps from their canonical locations
 COPY --from=builder /build/node_modules/@noble/ ./node_modules/@noble/
 COPY --from=builder /build/packages/adapter-nitro/node_modules/cbor2/ ./node_modules/cbor2/
-
-# Copy sharp and its platform-specific prebuilt binaries
-COPY --from=builder /build/server/commit-service/node_modules/sharp/ ./node_modules/sharp/
-COPY --from=builder /build/server/commit-service/node_modules/@img/ ./node_modules/@img/
 
 # socat bridges vsock:5000 → the Unix domain socket the enclave app listens on
 RUN apk add --no-cache socat
