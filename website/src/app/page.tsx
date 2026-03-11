@@ -31,11 +31,9 @@ export default function Home() {
       <Section className="pt-32 pb-20">
         <div className="max-w-5xl">
           <Label>Origin Controlled Computing</Label>
-          <h1 className="text-[44px] sm:text-6xl lg:text-7xl font-semibold tracking-tight leading-[1.08]">
-            Proof should be<br className="lg:hidden" />{" "}
-            a property of<br className="lg:hidden" />{" "}
-            <em>creation,</em> not<br className="lg:hidden" />{" "}
-            verification.
+          <h1 className="text-[clamp(1.75rem,5.5vw,4.5rem)] font-semibold tracking-tight leading-[1.08]">
+            Proof should be a property<br className="hidden lg:inline" />{" "}
+            of <em>creation,</em> not verification.
           </h1>
           <p className="mt-8 text-lg text-text-secondary max-w-3xl leading-relaxed">
             OCC is a protocol that produces portable cryptographic proof
