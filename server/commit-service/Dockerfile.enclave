@@ -38,6 +38,8 @@ RUN npx tsc
 # Build commit-service (only enclave + parent, no mock/)
 WORKDIR /build/server/commit-service
 RUN npm ci --ignore-scripts
+# Install sharp with scripts enabled (needs to download platform-specific prebuilds)
+RUN npm install sharp
 RUN npx tsc
 
 # Pre-compile the NSM ioctl helper (so it doesn't need gcc at runtime)
@@ -72,6 +74,10 @@ COPY --from=builder /build/server/commit-service/package.json ./package.json
 # Copy node_modules (runtime deps only)
 COPY --from=builder /build/node_modules/@noble/ ./node_modules/@noble/
 COPY --from=builder /build/packages/adapter-nitro/node_modules/cbor2/ ./node_modules/cbor2/
+
+# Copy sharp and its platform-specific prebuilt binaries
+COPY --from=builder /build/server/commit-service/node_modules/sharp/ ./node_modules/sharp/
+COPY --from=builder /build/server/commit-service/node_modules/@img/ ./node_modules/@img/
 
 # socat bridges vsock:5000 → the Unix domain socket the enclave app listens on
 RUN apk add --no-cache socat

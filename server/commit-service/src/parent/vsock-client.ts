@@ -14,7 +14,12 @@ export interface KeyRequest {
   type: "key";
 }
 
-export type EnclaveRequest = CommitRequest | KeyRequest;
+export interface ConvertBWRequest {
+  type: "convertBW";
+  imageB64: string;
+}
+
+export type EnclaveRequest = CommitRequest | KeyRequest | ConvertBWRequest;
 
 export interface EnclaveResponse {
   ok: boolean;

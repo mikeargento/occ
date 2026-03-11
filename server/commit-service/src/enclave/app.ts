@@ -27,6 +27,7 @@
  * Supported request types:
  *   { type: "commit", digests: [{ digestB64, hashAlg }], metadata?, prevProofId? }
  *   { type: "key" }
+ *   { type: "convertBW", imageB64: "<base64 JPEG>" }  — grayscale conversion + proof
  */
 
 import { createServer, type Socket } from "node:net";
@@ -277,6 +278,40 @@ async function handleRequest(req: Record<string, unknown>): Promise<unknown> {
         metadata?: Record<string, unknown>;
       });
       return { ok: true, data: proofs };
+    }
+    case "convertBW": {
+      // Grayscale conversion — happens entirely inside the enclave.
+      // The proof's artifact digest covers the B&W output, proving
+      // the state change (color → grayscale) occurred within the TEE.
+      const imageB64 = (req as { imageB64?: string }).imageB64;
+      if (!imageB64) {
+        return { error: "convertBW requires imageB64 field" };
+      }
+
+      const sharp = (await import("sharp")).default;
+      const inputBuffer = Buffer.from(imageB64, "base64");
+
+      // Convert to grayscale JPEG inside the enclave
+      const bwBuffer = await sharp(inputBuffer)
+        .grayscale()
+        .jpeg({ quality: 90 })
+        .toBuffer();
+
+      // Hash the B&W output — this becomes the proof's artifact digest
+      const digest = sha256(bwBuffer);
+      const digestB64 = Buffer.from(digest).toString("base64");
+
+      // Generate OCC proof for this digest
+      const proofs = await handleCommit({
+        digests: [{ digestB64, hashAlg: "sha256" }],
+        metadata: { source: "occ-bw-demo", operation: "grayscale" },
+      });
+
+      return {
+        imageB64: Buffer.from(bwBuffer).toString("base64"),
+        proof: proofs[0],
+        digestB64,
+      };
     }
     default:
       return { error: `Unknown action: ${String(action)}` };

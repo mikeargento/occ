@@ -7,6 +7,7 @@ import { useTheme } from "@/components/theme-provider";
 
 const links = [
   { href: "/studio", label: "Studio" },
+  { href: "/bw-demo", label: "B&W Demo" },
   { href: "/docs", label: "Docs" },
   { href: "/api-reference", label: "API" },
   { href: "/use-cases", label: "Use Cases" },

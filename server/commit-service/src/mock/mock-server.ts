@@ -138,6 +138,32 @@ async function handleVerify(req: IncomingMessage, res: ServerResponse): Promise<
   }
 }
 
+async function handleConvertBW(req: IncomingMessage, res: ServerResponse): Promise<void> {
+  const contentType = req.headers["content-type"] ?? "";
+  if (!contentType.includes("application/json")) {
+    sendError(res, 400, "POST /convert-bw requires Content-Type: application/json");
+    return;
+  }
+
+  const raw = await readBody(req);
+  if (raw.length > 2 * 1024 * 1024) {
+    sendError(res, 413, "Image too large. Max 2 MB.");
+    return;
+  }
+
+  let body: { imageB64: string };
+  try { body = JSON.parse(raw.toString("utf8")); } catch { sendError(res, 400, "Invalid JSON body"); return; }
+
+  if (typeof body.imageB64 !== "string" || body.imageB64.length === 0) {
+    sendError(res, 400, "body.imageB64 must be a non-empty base64 string");
+    return;
+  }
+
+  const result = await enclave.send({ type: "convertBW", imageB64: body.imageB64 });
+  if (!result.ok) { sendError(res, 500, result.error ?? "convertBW failed"); return; }
+  sendJson(res, 200, result.data);
+}
+
 async function handleHealth(_req: IncomingMessage, res: ServerResponse): Promise<void> {
   sendJson(res, 200, { ok: true });
 }
@@ -149,6 +175,7 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
   try {
     if (method === "OPTIONS") { res.writeHead(204, CORS_HEADERS); res.end(); return; }
     if (method === "POST" && url.pathname === "/commit") { await handleCommit(req, res); }
+    else if (method === "POST" && url.pathname === "/convert-bw") { await handleConvertBW(req, res); }
     else if (method === "GET" && url.pathname === "/key") { await handleKey(req, res); }
     else if (method === "POST" && url.pathname === "/verify") { await handleVerify(req, res); }
     else if (method === "GET" && url.pathname === "/health") { await handleHealth(req, res); }
@@ -161,9 +188,10 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
 
 server.listen(PORT, () => {
   console.log(`[mock-server] listening on http://localhost:${PORT}`);
-  console.log(`  POST /commit  (Content-Type: application/json, Authorization: Bearer <key>)`);
+  console.log(`  POST /commit      (Content-Type: application/json, Authorization: Bearer <key>)`);
+  console.log(`  POST /convert-bw  (Content-Type: application/json — B&W demo)`);
   console.log(`  GET  /key`);
-  console.log(`  POST /verify  (Content-Type: application/json)`);
+  console.log(`  POST /verify      (Content-Type: application/json)`);
   console.log(`  GET  /health`);
 });
 

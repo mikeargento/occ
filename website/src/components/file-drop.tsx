@@ -8,9 +8,11 @@ interface FileDropProps {
   file: File | null;
   onClear: () => void;
   disabled?: boolean;
+  accept?: string;
+  hint?: string;
 }
 
-export function FileDrop({ onFile, file, onClear, disabled }: FileDropProps) {
+export function FileDrop({ onFile, file, onClear, disabled, accept, hint }: FileDropProps) {
   const [dragover, setDragover] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -42,6 +44,7 @@ export function FileDrop({ onFile, file, onClear, disabled }: FileDropProps) {
       <input
         ref={inputRef}
         type="file"
+        accept={accept}
         className="hidden"
         onChange={(e) => {
           if (e.target.files?.length) onFile(e.target.files[0]);
@@ -80,7 +83,7 @@ export function FileDrop({ onFile, file, onClear, disabled }: FileDropProps) {
             Drop a file here or <span className="text-text font-medium">browse</span>
           </div>
           <div className="text-xs text-text-tertiary mt-1">
-            Any file type — hashed locally in your browser
+            {hint || "Any file type — hashed locally in your browser"}
           </div>
         </div>
       )}
