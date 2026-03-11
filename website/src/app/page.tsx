@@ -39,9 +39,9 @@ export default function Home() {
               not verification.
             </h1>
             <p className="mt-8 text-lg text-text-secondary max-w-2xl leading-relaxed">
-              OCC is a protocol for portable cryptographic proof. Valid proof
-              exists only if specific bytes were committed through an authorized
-              execution boundary during a single atomic event.
+              OCC is a protocol for portable cryptographic proof.
+              A proof is valid only if an artifact was committed through an
+              authorized execution boundary during a single atomic event.
             </p>
             <div className="mt-10 flex flex-wrap gap-4">
               <Link
