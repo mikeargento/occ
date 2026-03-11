@@ -545,13 +545,17 @@ function verifyAgency(proof: OCCProof): string | null {
       }
     } else {
       // ── Direct P-256 signature verification ──
-      const canonicalPayload: AuthorizationPayload = {
+      const canonicalPayload: Record<string, unknown> = {
         purpose: authorization.purpose,
         actorKeyId: authorization.actorKeyId,
         artifactHash: authorization.artifactHash,
         challenge: authorization.challenge,
         timestamp: authorization.timestamp,
       };
+      // Include protocolVersion when present (backward-compatible)
+      if ("protocolVersion" in authorization && authorization.protocolVersion !== undefined) {
+        canonicalPayload.protocolVersion = authorization.protocolVersion;
+      }
       const payloadBytes = Buffer.from(
         JSON.stringify(canonicalPayload, Object.keys(canonicalPayload).sort()),
         "utf8"

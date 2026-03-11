@@ -9,8 +9,8 @@ export function Footer() {
         <div className="border-t border-border-subtle pt-16">
           <div className="flex flex-col md:flex-row md:justify-between gap-12">
             <div className="max-w-md">
-              <div className="text-base font-black tracking-wide uppercase mb-4">
-                OCC.WTF
+              <div className="text-lg font-black tracking-wide uppercase mb-4">
+                OCC
               </div>
               <p className="text-sm text-text-tertiary leading-relaxed">
                 Portable cryptographic proof, caused by system structure.<br />

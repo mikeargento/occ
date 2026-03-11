@@ -26,7 +26,7 @@ export function Nav() {
             href="/"
             className="flex items-center gap-2 text-sm font-semibold tracking-wider uppercase text-text"
           >
-            <span className="text-xl font-extrabold tracking-wide" style={{ fontFamily: '"acumin-variable", "acumin-pro", sans-serif' }}>OCC.WTF</span>
+            <span className="text-2xl font-extrabold tracking-wide" style={{ fontFamily: '"acumin-variable", "acumin-pro", sans-serif' }}>OCC</span>
           </Link>
 
           {/* Desktop */}

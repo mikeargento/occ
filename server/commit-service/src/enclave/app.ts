@@ -268,13 +268,17 @@ function verifyAgencyEnvelope(
   } else {
     // ── Direct P-256 signature verification ──
     // Build canonical payload (sorted keys, compact JSON, no signatureB64)
-    const canonicalPayload: AuthorizationPayload = {
+    const canonicalPayload: Record<string, unknown> = {
       purpose: authorization.purpose,
       actorKeyId: authorization.actorKeyId,
       artifactHash: authorization.artifactHash,
       challenge: authorization.challenge,
       timestamp: authorization.timestamp,
     };
+    // Include protocolVersion when present (backward-compatible)
+    if ("protocolVersion" in authorization && (authorization as unknown as Record<string, unknown>).protocolVersion !== undefined) {
+      canonicalPayload.protocolVersion = (authorization as unknown as Record<string, unknown>).protocolVersion;
+    }
     const payloadBytes = Buffer.from(
       JSON.stringify(canonicalPayload, Object.keys(canonicalPayload).sort()),
       "utf8"

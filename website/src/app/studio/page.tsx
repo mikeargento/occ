@@ -345,8 +345,8 @@ Learn more: https://occproof.com
           const valid = await ed25519Verify(sigBytes, canonicalBytes, pubBytes);
 
           checks.push(valid
-            ? { label: "Ed25519 signature", status: "pass", detail: "Signature is cryptographically valid" }
-            : { label: "Ed25519 signature", status: "fail", detail: "Signature does not match the signed body" });
+            ? { label: "Enclave commit signature", status: "pass", detail: "Proof committed inside AWS Nitro Enclave" }
+            : { label: "Enclave commit signature", status: "fail", detail: "Signature does not match the signed body" });
         }
       } catch (sigErr) {
         checks.push({ label: "Ed25519 signature", status: "fail", detail: `Verification error: ${sigErr instanceof Error ? sigErr.message : "unknown"}` });
@@ -450,18 +450,24 @@ Learn more: https://occproof.com
             );
 
             checks.push(p256Valid
-              ? { label: "P-256 actor signature (WebAuthn)", status: "pass", detail: "Device biometric signature is cryptographically valid" }
-              : { label: "P-256 actor signature (WebAuthn)", status: "fail", detail: "WebAuthn signature verification failed" });
+              ? { label: "Device authorization (WebAuthn)", status: "pass", detail: "Proof authorized by device key" }
+              : { label: "Device authorization (WebAuthn)", status: "fail", detail: "WebAuthn signature verification failed" });
           } else {
             // Direct: verify over canonical JSON payload
-            const canonicalPayload = {
+            const canonicalPayload: Record<string, unknown> = {
               actorKeyId: authorization.actorKeyId,
               artifactHash: authorization.artifactHash,
               challenge: authorization.challenge,
               purpose: authorization.purpose,
               timestamp: authorization.timestamp,
             };
-            const payloadBytes = new TextEncoder().encode(JSON.stringify(canonicalPayload));
+            // Include protocolVersion when present (backward-compatible)
+            if ("protocolVersion" in authorization && (authorization as Record<string, unknown>).protocolVersion !== undefined) {
+              canonicalPayload.protocolVersion = (authorization as Record<string, unknown>).protocolVersion;
+            }
+            const payloadBytes = new TextEncoder().encode(
+              JSON.stringify(canonicalPayload, Object.keys(canonicalPayload).sort())
+            );
 
             p256Valid = await crypto.subtle.verify(
               { name: "ECDSA", hash: "SHA-256" },
@@ -471,8 +477,8 @@ Learn more: https://occproof.com
             );
 
             checks.push(p256Valid
-              ? { label: "P-256 actor signature", status: "pass", detail: "Device signature is cryptographically valid" }
-              : { label: "P-256 actor signature", status: "fail", detail: "Device signature verification failed" });
+              ? { label: "Device authorization", status: "pass", detail: "Proof authorized by device key" }
+              : { label: "Device authorization", status: "fail", detail: "Device authorization signature verification failed" });
           }
         } catch (agencyErr) {
           checks.push({ label: "P-256 actor signature", status: "fail", detail: `Verification error: ${agencyErr instanceof Error ? agencyErr.message : "unknown"}` });
@@ -532,7 +538,7 @@ Learn more: https://occproof.com
             {passkeyAvailable && (
               <div className="rounded-lg border border-border-subtle bg-bg-elevated p-4">
                 <div className="text-[11px] font-medium uppercase tracking-[0.12em] text-text-tertiary mb-3">
-                  Proof Authorship
+                  Device Authorization
                 </div>
                 <div className="space-y-2">
                   <label className="flex items-start gap-3 cursor-pointer group">
@@ -558,7 +564,7 @@ Learn more: https://occproof.com
                     />
                     <div>
                       <div className="text-sm font-medium text-text group-hover:text-text/80">Authorize with device biometrics</div>
-                      <div className="text-xs text-text-tertiary">Each proof requires Face ID or Touch ID</div>
+                      <div className="text-xs text-text-tertiary">A device key, unlocked by biometrics, authorizes proof creation</div>
                     </div>
                   </label>
                 </div>
@@ -597,11 +603,11 @@ Learn more: https://occproof.com
               {createStatus === "hashing"
                 ? "Hashing…"
                 : createStatus === "challenging"
-                ? "Requesting challenge…"
+                ? "Requesting authorization challenge…"
                 : createStatus === "authorizing"
-                ? "Waiting for biometrics…"
+                ? "Waiting for device authorization…"
                 : createStatus === "signing"
-                ? "Signing in enclave…"
+                ? "Committing in enclave…"
                 : "Make a Proof"}
             </button>
 

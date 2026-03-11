@@ -421,6 +421,13 @@ export interface AuthorizationPayload {
   challenge: string;
   /** Unix epoch ms — enclave checks freshness. */
   timestamp: number;
+  /**
+   * Optional protocol version. When present, included in the canonical
+   * JSON payload that is P-256-signed. Allows versioning the authorization
+   * format while maintaining backward compatibility (old payloads without
+   * this field remain valid).
+   */
+  protocolVersion?: string;
 }
 
 /**
