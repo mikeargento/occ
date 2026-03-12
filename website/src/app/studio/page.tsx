@@ -765,8 +765,7 @@ Learn more: https://proofstudio.wtf
               />
             </div>
 
-            {/* ── Proof Authorship toggle ── */}
-            {passkeyAvailable && (
+            {/* ── Device Authorization toggle ── */}
               <div className="rounded-xl border border-border-subtle bg-bg-elevated p-4">
                 <div className="text-[11px] font-medium uppercase tracking-[0.12em] text-text-tertiary mb-3">
                   Device Authorization
@@ -785,17 +784,22 @@ Learn more: https://proofstudio.wtf
                       <div className="text-xs text-text-tertiary">Proof attests the commit boundary only</div>
                     </div>
                   </label>
-                  <label className="flex items-start gap-3 cursor-pointer group">
+                  <label className={`flex items-start gap-3 group ${passkeyAvailable ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}>
                     <input
                       type="radio"
                       name="authorship"
                       checked={authorshipMode === "passkey"}
                       onChange={() => setAuthorshipMode("passkey")}
+                      disabled={!passkeyAvailable}
                       className="mt-0.5 accent-text"
                     />
                     <div>
                       <div className="text-sm font-medium text-text group-hover:text-text/80 transition-colors">Authorize with device biometrics</div>
-                      <div className="text-xs text-text-tertiary">A device key, unlocked by biometrics, authorizes proof creation</div>
+                      <div className="text-xs text-text-tertiary">
+                        {passkeyAvailable
+                          ? "A device key, unlocked by biometrics, authorizes proof creation"
+                          : "Not available on this browser — use Safari or the native app"}
+                      </div>
                     </div>
                   </label>
                 </div>
@@ -823,7 +827,6 @@ Learn more: https://proofstudio.wtf
                   </div>
                 )}
               </div>
-            )}
 
             {/* ── Attribution fields (connected group) ── */}
             <div className="rounded-xl border border-border-subtle bg-bg-elevated p-4">
