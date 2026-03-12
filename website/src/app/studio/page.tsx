@@ -28,7 +28,7 @@ interface CheckResult {
   detail: string;
 }
 
-// ─── Ed25519 helpers ─────────────────────────────────────────────────────────
+// ─── Helpers ────────────────────────────────────────────────────────────────
 
 /** Decode standard base64 to Uint8Array */
 function b64ToBytes(b64: string): Uint8Array {
@@ -36,6 +36,37 @@ function b64ToBytes(b64: string): Uint8Array {
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
   return bytes;
+}
+
+/**
+ * Convert DER-encoded ECDSA signature to IEEE P1363 (raw r||s) format.
+ * WebAuthn returns DER, but WebCrypto subtle.verify expects P1363.
+ */
+function derToP1363(der: Uint8Array, n: number = 32): Uint8Array {
+  // DER: 0x30 <len> 0x02 <rLen> <r> 0x02 <sLen> <s>
+  if (der[0] !== 0x30) throw new Error("Not a DER sequence");
+  let offset = 2; // skip 0x30 + length byte
+  // Handle multi-byte length
+  if (der[1]! & 0x80) offset = 2 + (der[1]! & 0x7f);
+
+  if (der[offset] !== 0x02) throw new Error("Expected INTEGER tag for r");
+  const rLen = der[offset + 1]!;
+  const rStart = offset + 2;
+  const rBytes = der.slice(rStart, rStart + rLen);
+
+  const sOffset = rStart + rLen;
+  if (der[sOffset] !== 0x02) throw new Error("Expected INTEGER tag for s");
+  const sLen = der[sOffset + 1]!;
+  const sStart = sOffset + 2;
+  const sBytes = der.slice(sStart, sStart + sLen);
+
+  // Pad or trim to n bytes (strip leading zero padding from DER)
+  const out = new Uint8Array(n * 2);
+  const rTrimmed = rBytes[0] === 0 && rBytes.length > n ? rBytes.slice(1) : rBytes;
+  const sTrimmed = sBytes[0] === 0 && sBytes.length > n ? sBytes.slice(1) : sBytes;
+  out.set(rTrimmed, n - rTrimmed.length);
+  out.set(sTrimmed, n * 2 - sTrimmed.length);
+  return out;
 }
 
 /**
@@ -417,7 +448,7 @@ Learn more: https://proofstudio.wtf
             ["verify"]
           );
 
-          const sigBytes = b64ToBytes(authorization.signatureB64);
+          const sigBytesRaw = b64ToBytes(authorization.signatureB64);
           const isWebAuthnFormat = "format" in authorization && (authorization as Record<string, unknown>).format === "webauthn";
 
           let p256Valid: boolean;
@@ -443,10 +474,13 @@ Learn more: https://proofstudio.wtf
                 : { label: "Biometric verification", status: "fail", detail: `Flags: UP=${UP}, UV=${UV}` });
             }
 
+            // WebAuthn signatures are DER-encoded; WebCrypto expects P1363 (raw r||s)
+            const sigP1363 = sigBytesRaw[0] === 0x30 ? derToP1363(sigBytesRaw) : sigBytesRaw;
+
             p256Valid = await crypto.subtle.verify(
               { name: "ECDSA", hash: "SHA-256" },
               cryptoKey,
-              sigBytes as unknown as BufferSource,
+              sigP1363 as unknown as BufferSource,
               signedData as unknown as BufferSource
             );
 
@@ -473,7 +507,7 @@ Learn more: https://proofstudio.wtf
             p256Valid = await crypto.subtle.verify(
               { name: "ECDSA", hash: "SHA-256" },
               cryptoKey,
-              sigBytes as unknown as BufferSource,
+              sigBytesRaw as unknown as BufferSource,
               payloadBytes as unknown as BufferSource
             );
 
