@@ -426,7 +426,21 @@ async function handleCommit(req: {
 
     // Include full agency envelope in the proof (independently verifiable)
     if (req.agency) {
-      proof.agency = req.agency;
+      // For batch proofs, add batchContext so verifiers can check that this
+      // proof's digest is part of the authorized batch (the P-256 signature
+      // binds to the first digest; batchContext maps the rest).
+      if (req.digests.length > 1) {
+        proof.agency = {
+          ...req.agency,
+          batchContext: {
+            batchSize: req.digests.length,
+            batchIndex: proofs.length,  // 0-based index of this proof
+            batchDigests: req.digests.map((d) => d.digestB64),
+          },
+        };
+      } else {
+        proof.agency = req.agency;
+      }
     }
 
     // Include attribution in the proof (sealed in signed body)

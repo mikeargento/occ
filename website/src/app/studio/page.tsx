@@ -543,9 +543,21 @@ Learn more: https://proofstudio.wtf
           ? { label: "Agency purpose", status: "pass", detail: authorization.purpose }
           : { label: "Agency purpose", status: "fail", detail: `Expected "occ/commit-authorize/v1", got "${authorization.purpose}"` });
 
-        // Artifact hash binding
-        checks.push(authorization.artifactHash === vProof.artifact.digestB64
-          ? { label: "Agency artifact binding", status: "pass", detail: "authorization.artifactHash matches proof.artifact.digestB64" }
+        // Artifact hash binding (batch-aware: agency binds to first digest,
+        // batchContext.batchDigests lists all authorized digests)
+        const bc = (vProof.agency as Record<string, unknown>).batchContext as
+          | { batchSize: number; batchIndex: number; batchDigests: string[] }
+          | undefined;
+        const artifactBindingOk =
+          authorization.artifactHash === vProof.artifact.digestB64 ||
+          (bc &&
+            Array.isArray(bc.batchDigests) &&
+            bc.batchDigests.includes(vProof.artifact.digestB64) &&
+            bc.batchDigests[0] === authorization.artifactHash);
+        checks.push(artifactBindingOk
+          ? { label: "Agency artifact binding", status: "pass", detail: bc
+              ? `Batch proof ${bc.batchIndex + 1}/${bc.batchSize} — authorized via first artifact`
+              : "authorization.artifactHash matches proof.artifact.digestB64" }
           : { label: "Agency artifact binding", status: "fail", detail: "artifactHash does not match proof artifact digest" });
 
         // actorKeyId consistency
