@@ -784,22 +784,17 @@ Learn more: https://proofstudio.wtf
                       <div className="text-xs text-text-tertiary">Proof attests the commit boundary only</div>
                     </div>
                   </label>
-                  <label className={`flex items-start gap-3 group ${passkeyAvailable ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}>
+                  <label className="flex items-start gap-3 cursor-pointer group">
                     <input
                       type="radio"
                       name="authorship"
                       checked={authorshipMode === "passkey"}
                       onChange={() => setAuthorshipMode("passkey")}
-                      disabled={!passkeyAvailable}
                       className="mt-0.5 accent-text"
                     />
                     <div>
                       <div className="text-sm font-medium text-text group-hover:text-text/80 transition-colors">Authorize with device biometrics</div>
-                      <div className="text-xs text-text-tertiary">
-                        {passkeyAvailable
-                          ? "A device key, unlocked by biometrics, authorizes proof creation"
-                          : "Not available on this browser — use Safari or the native app"}
-                      </div>
+                      <div className="text-xs text-text-tertiary">A device key, unlocked by biometrics, authorizes proof creation</div>
                     </div>
                   </label>
                 </div>
