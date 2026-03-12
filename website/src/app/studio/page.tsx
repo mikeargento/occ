@@ -798,7 +798,7 @@ Learn more: https://proofstudio.wtf
                     placeholder="Name"
                     value={attrName}
                     onChange={(e) => setAttrName(e.target.value)}
-                    className="w-full h-9 rounded-md border border-border-subtle bg-bg px-3 text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:border-text-tertiary transition-colors"
+                    className="w-full h-9 rounded-md border border-border-subtle bg-bg px-3 text-base sm:text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:border-text-tertiary transition-colors"
                   />
                 </div>
                 <div>
@@ -807,7 +807,7 @@ Learn more: https://proofstudio.wtf
                     placeholder="Title"
                     value={attrTitle}
                     onChange={(e) => setAttrTitle(e.target.value)}
-                    className="w-full h-9 rounded-md border border-border-subtle bg-bg px-3 text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:border-text-tertiary transition-colors"
+                    className="w-full h-9 rounded-md border border-border-subtle bg-bg px-3 text-base sm:text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:border-text-tertiary transition-colors"
                   />
                 </div>
                 <div>
@@ -816,7 +816,7 @@ Learn more: https://proofstudio.wtf
                     value={attrMessage}
                     onChange={(e) => setAttrMessage(e.target.value)}
                     rows={2}
-                    className="w-full rounded-md border border-border-subtle bg-bg px-3 py-2 text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:border-text-tertiary transition-colors resize-none"
+                    className="w-full rounded-md border border-border-subtle bg-bg px-3 py-2 text-base sm:text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:border-text-tertiary transition-colors resize-none"
                   />
                 </div>
               </div>

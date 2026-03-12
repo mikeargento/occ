@@ -22,13 +22,13 @@ export default function Home() {
       {/* ── Hero ── */}
       <Section className="pt-32 pb-20">
         <div className="max-w-5xl mx-auto text-center">
-          <h1 className="text-[clamp(1.75rem,4.5vw,3.5rem)] font-semibold tracking-tight leading-[1.15]">
+          <h1 className="text-[clamp(1.75rem,4.5vw,3.5rem)] font-semibold tracking-tight leading-[1.15] text-balance">
             Cryptographic proof for digital artifacts.
           </h1>
-          <p className="mt-6 text-[clamp(1.75rem,4.5vw,3.5rem)] font-semibold tracking-tight text-text-secondary leading-[1.2]">
+          <p className="mt-6 text-[clamp(1.75rem,4.5vw,3.5rem)] font-semibold tracking-tight text-text-secondary leading-[1.2] text-balance">
             No blockchain. No ledgers. WTF?
           </p>
-          <p className="mt-4 text-lg text-text-tertiary tracking-tight">
+          <p className="mt-4 text-lg text-text-tertiary tracking-tight text-balance">
             Proof should be a property of creation, not verification.
           </p>
           <div className="mt-10 flex flex-wrap justify-center gap-4">
@@ -54,7 +54,7 @@ export default function Home() {
           <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-4">
             How it works
           </h2>
-          <p className="text-text-secondary max-w-xl mx-auto">
+          <p className="text-text-secondary max-w-xl mx-auto text-balance">
             Three steps, one proof. Your file never leaves your device.
           </p>
         </div>
@@ -157,7 +157,7 @@ export default function Home() {
           <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-4">
             Prove anything
           </h2>
-          <p className="text-text-secondary max-w-xl mx-auto">
+          <p className="text-text-secondary max-w-xl mx-auto text-balance">
             Any file or computation result that needs verifiable proof of existence and integrity.
           </p>
         </div>
@@ -187,7 +187,7 @@ export default function Home() {
           <h2 className="text-xl sm:text-2xl font-semibold tracking-tight mb-4">
             OCC — Origin Controlled Computing
           </h2>
-          <p className="text-text-secondary max-w-2xl mx-auto leading-relaxed mb-6">
+          <p className="text-text-secondary max-w-2xl mx-auto leading-relaxed mb-6 text-balance">
             ProofStudio is built on the OCC protocol — a cryptographic proof system
             where proof is produced by the commit event itself. If the proof exists,
             the commit happened. If it doesn&apos;t, it didn&apos;t.
@@ -207,7 +207,7 @@ export default function Home() {
           <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-4">
             Try it now
           </h2>
-          <p className="text-text-secondary mb-8 max-w-lg mx-auto">
+          <p className="text-text-secondary mb-8 max-w-lg mx-auto text-balance">
             Drop a file, get a proof. Runs in your browser, verifiable by anyone.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
