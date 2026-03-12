@@ -359,14 +359,18 @@ Learn more: https://proofstudio.wtf
     downloadBlob(zipped, `${f.name}.proof.zip`.replace(/^\./, ""));
   };
 
-  /** Download all proof.zips (one per file) */
+  /** Download all proof.zips bundled into a single ZIP */
   const handleDownloadAll = async () => {
+    const folder = `batch-${new Date().toISOString().slice(0, 10)}`;
+    const entries: Record<string, Uint8Array> = {};
     for (let i = 0; i < files.length; i++) {
       if (files[i] && proofs[i]) {
         const zipped = await buildProofZip(files[i], proofs[i]);
-        downloadBlob(zipped, `${files[i].name}.proof.zip`.replace(/^\./, ""));
+        entries[`${folder}/${files[i].name}.proof.zip`.replace(/^\./, "")] = zipped;
       }
     }
+    const bundled = zipSync(entries);
+    downloadBlob(bundled, `${folder}.zip`);
   };
 
   // ── Verify handlers ──
