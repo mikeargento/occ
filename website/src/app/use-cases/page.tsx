@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Use Cases",
-  description: "Where OCC applies — AI outputs, software pipelines, media, science, compliance, and agent workflows.",
+  description: "Where OCC applies: AI outputs, software pipelines, media, science, compliance, and agent workflows.",
 };
 
 const useCases = [
@@ -28,7 +28,7 @@ const useCases = [
   {
     title: "Media & Journalism",
     subtitle: "Photos, video, audio, published content",
-    description: "A capture device or content system running inside a measured boundary commits media at the moment of capture. The proof establishes that specific bytes were committed by a specific environment at a specific point in sequence. This is not proof that content is true — it is proof of commitment through an authorized boundary.",
+    description: "A capture device or content system running inside a measured boundary commits media at the moment of capture. The proof establishes that specific bytes were committed by a specific environment at a specific point in sequence. This is not proof that content is true. It is proof of commitment through an authorized boundary.",
     fields: "timestamps provide third-party time evidence • measurement identifies the capture environment",
   },
   {
@@ -46,7 +46,7 @@ const useCases = [
   {
     title: "Agent-to-Agent Handoff",
     subtitle: "Data passing between AI systems",
-    description: "When Agent A passes data to Agent B, it can include an OCC proof. Agent B verifies the proof against the received bytes before processing. This eliminates trust in the transport layer — if the bytes match the proof, they are exactly what the source boundary committed.",
+    description: "When Agent A passes data to Agent B, it can include an OCC proof. Agent B verifies the proof against the received bytes before processing. This eliminates trust in the transport layer. If the bytes match the proof, they are exactly what the source boundary committed.",
     fields: "artifact.digestB64 verifies byte integrity • signer identifies the source boundary",
   },
   {
@@ -69,7 +69,7 @@ export default function UseCasesPage() {
         </h1>
         <p className="text-text-secondary max-w-2xl leading-relaxed">
           OCC applies wherever artifacts need proof that they were committed
-          through a specific boundary — not merely inspected after the fact.
+          through a specific boundary, not merely inspected after the fact.
           Each scenario below is a concrete application of the protocol.
         </p>
       </div>
@@ -100,10 +100,10 @@ export default function UseCasesPage() {
             execution boundary during a single atomic event. It does not prove:
           </p>
           <ul className="space-y-2 text-sm text-text-secondary">
-            <li>• <strong className="text-text">Truth or accuracy</strong> — the content may be factually wrong</li>
-            <li>• <strong className="text-text">Authorship</strong> — a base proof attests which boundary committed, not who created. Actor-bound proofs can additionally attest a specific person or device.</li>
-            <li>• <strong className="text-text">First creation</strong> — the same bytes could have existed elsewhere before</li>
-            <li>• <strong className="text-text">Uniqueness</strong> — the same artifact can be committed to multiple boundaries</li>
+            <li>• <strong className="text-text">Truth or accuracy</strong> - the content may be factually wrong</li>
+            <li>• <strong className="text-text">Authorship</strong> - a base proof attests which boundary committed, not who created. Actor-bound proofs can additionally attest a specific person or device.</li>
+            <li>• <strong className="text-text">First creation</strong> - the same bytes could have existed elsewhere before</li>
+            <li>• <strong className="text-text">Uniqueness</strong> - the same artifact can be committed to multiple boundaries</li>
           </ul>
         </div>
       </div>

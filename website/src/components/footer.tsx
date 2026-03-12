@@ -13,9 +13,9 @@ export function Footer() {
                 ProofStudio
               </div>
               <p className="text-sm text-text-tertiary leading-relaxed">
-                Cryptographic proof for any digital artifact.<br />
-                Powered by OCC (Origin Controlled Computing).<br />
-                Patent Pending.
+                Cryptographic proof for any digital artifact<br />
+                Powered by OCC (Origin Controlled Computing)<br />
+                Patent Pending
               </p>
             </div>
 

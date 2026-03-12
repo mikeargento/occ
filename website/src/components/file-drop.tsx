@@ -176,7 +176,7 @@ export function FileDrop({
             }
           </div>
           <div className="text-xs text-text-tertiary mt-1">
-            {hint || "Any file type — hashed locally in your browser"}
+            {hint || "Any file type. Hashed locally in your browser"}
           </div>
         </div>
       )}

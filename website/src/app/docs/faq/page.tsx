@@ -16,7 +16,7 @@ const faqs = [
   },
   {
     q: "What happens if the enclave restarts?",
-    a: "A new epoch begins — new Ed25519 keypair, new epochId, counter potentially resets. The first proof of the new epoch has no prevB64 (chain link). Cross-epoch counter continuity can be maintained via a DynamoDB anchor.",
+    a: "A new epoch begins: new Ed25519 keypair, new epochId, counter potentially resets. The first proof of the new epoch has no prevB64 (chain link). Cross-epoch counter continuity can be maintained via a DynamoDB anchor.",
   },
   {
     q: "Is this a blockchain?",
@@ -24,7 +24,7 @@ const faqs = [
   },
   {
     q: "Does OCC prove who created the content?",
-    a: "A base proof attests which execution boundary committed specific bytes — not who created them. Actor-bound proofs (using device-bound biometric keys) can additionally attest that a specific person or device authorized the commitment.",
+    a: "A base proof attests which execution boundary committed specific bytes, not who created them. Actor-bound proofs (using device-bound biometric keys) can additionally attest that a specific person or device authorized the commitment.",
   },
   {
     q: "What if someone modifies the proof JSON?",
@@ -32,7 +32,7 @@ const faqs = [
   },
   {
     q: "What is the measurement field?",
-    a: "For AWS Nitro Enclaves, it is the PCR0 value — a SHA-384 hash of the enclave image. It uniquely identifies the exact code running inside the boundary. Verifiers should pin allowedMeasurements to known-good values.",
+    a: "For AWS Nitro Enclaves, it is the PCR0 value, a SHA-384 hash of the enclave image. It uniquely identifies the exact code running inside the boundary. Verifiers should pin allowedMeasurements to known-good values.",
   },
   {
     q: "Are timestamps signed?",
@@ -40,7 +40,7 @@ const faqs = [
   },
   {
     q: "Can the same file produce different proofs?",
-    a: "Yes. Each commit generates a fresh nonce, increments the counter, and produces a new signature. The artifact digest will be the same (same file = same SHA-256), but the commit context differs. This is correct behavior — each is a distinct commit event.",
+    a: "Yes. Each commit generates a fresh nonce, increments the counter, and produces a new signature. The artifact digest will be the same (same file = same SHA-256), but the commit context differs. This is correct behavior. Each is a distinct commit event.",
   },
   {
     q: "What is prevB64?",
@@ -52,7 +52,7 @@ const faqs = [
   },
   {
     q: "What libraries does OCC use?",
-    a: "The core library uses @noble/ed25519 for signatures and @noble/hashes for SHA-256 — both audited, pure TypeScript, zero-dependency libraries. No Node.js native bindings.",
+    a: "The core library uses @noble/ed25519 for signatures and @noble/hashes for SHA-256. Both are audited, pure TypeScript, zero-dependency libraries. No Node.js native bindings.",
   },
 ];
 

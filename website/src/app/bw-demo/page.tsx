@@ -76,7 +76,7 @@ export default function BWDemoPage() {
       setBwImageB64(result.imageB64);
       setProof(result.proof);
 
-      // Step 4: Client-side verification — re-hash B&W bytes and compare
+      // Step 4: Client-side verification - re-hash B&W bytes and compare
       const bwBytes = Uint8Array.from(atob(result.imageB64), (c) =>
         c.charCodeAt(0)
       );
@@ -177,7 +177,7 @@ Learn more: https://www.occ.wtf
             onClear={handleClear}
             disabled={busy}
             accept="image/*"
-            hint="Drop a color photo — resized to 512px before sending"
+            hint="Drop a color photo. Resized to 512px before sending"
           />
         </div>
 
@@ -252,7 +252,7 @@ Learn more: https://www.occ.wtf
                 <>
                   <div className="w-2 h-2 rounded-full bg-success" />
                   <span className="text-sm font-medium text-success">
-                    Digest verified — B&W image matches proof
+                    Digest verified - B&W image matches proof
                   </span>
                 </>
               ) : digestMatch === false ? (
@@ -291,7 +291,7 @@ Learn more: https://www.occ.wtf
               digest (<code className="text-xs font-mono text-text-tertiary">artifact.digestB64</code>)
               is the SHA-256 hash of the B&W image bytes. Because both the
               conversion and the hashing occurred within the measured enclave
-              boundary, the proof — including the attestation report —
+              boundary, the proof (including the attestation report)
               cryptographically attests this output was produced by that exact
               code running in that exact TEE.
             </p>

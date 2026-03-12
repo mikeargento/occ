@@ -97,7 +97,7 @@ curl https://nitro.occproof.com/key
       <ul className="space-y-2 text-sm text-text-secondary">
         <li>• <strong className="text-text">Files are never uploaded.</strong> Only the SHA-256 digest crosses the network.</li>
         <li>• <strong className="text-text">The proof is portable.</strong> Store it alongside the artifact or in a separate system.</li>
-        <li>• <strong className="text-text">Verification is offline.</strong> No API calls needed to verify — just the public key and original bytes.</li>
+        <li>• <strong className="text-text">Verification is offline.</strong> No API calls needed to verify. Just the public key and original bytes.</li>
         <li>• <strong className="text-text">Pin measurements.</strong> For production, always pin allowedMeasurements and require attestation.</li>
         <li>• <strong className="text-text">Track counters.</strong> Store the last accepted counter value to prevent replay.</li>
       </ul>

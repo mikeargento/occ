@@ -472,7 +472,7 @@ Learn more: https://proofstudio.wtf
       const computedDigest = await hashBytes(originalBytes);
       checks.push(computedDigest === vProof.artifact?.digestB64
         ? { label: "Artifact digest match", status: "pass", detail: "SHA-256 of original file matches proof.artifact.digestB64" }
-        : { label: "Artifact digest match", status: "fail", detail: `Mismatch — computed: ${computedDigest.slice(0, 24)}…` });
+        : { label: "Artifact digest match", status: "fail", detail: `Mismatch - computed: ${computedDigest.slice(0, 24)}…` });
 
       // Ed25519 signature verification
       try {
@@ -524,7 +524,7 @@ Learn more: https://proofstudio.wtf
       // Timestamps
       const tsa = vProof.timestamps?.artifact || vProof.timestamps?.proof;
       checks.push(tsa
-        ? { label: "Timestamp (TSA)", status: "pass", detail: `${tsa.authority} — ${tsa.time}` }
+        ? { label: "Timestamp (TSA)", status: "pass", detail: `${tsa.authority} - ${tsa.time}` }
         : { label: "Timestamp (TSA)", status: "warn", detail: "No RFC 3161 timestamp. Time is self-reported only." });
 
       // Chain
@@ -541,7 +541,7 @@ Learn more: https://proofstudio.wtf
 
         // Structural checks
         checks.push(actor.keyId && actor.publicKeyB64 && actor.algorithm === "ES256" && actor.provider
-          ? { label: "Actor identity", status: "pass", detail: `${actor.provider} — ${actor.keyId.slice(0, 16)}…` }
+          ? { label: "Actor identity", status: "pass", detail: `${actor.provider} - ${actor.keyId.slice(0, 16)}…` }
           : { label: "Actor identity", status: "fail", detail: "Missing or invalid actor fields" });
 
         checks.push(authorization.purpose === "occ/commit-authorize/v1"
@@ -559,7 +559,7 @@ Learn more: https://proofstudio.wtf
             bc.batchDigests[0] === authorization.artifactHash);
         checks.push(artifactBindingOk
           ? { label: "Agency artifact binding", status: "pass", detail: bc
-              ? `Batch proof ${bc.batchIndex + 1}/${bc.batchSize} — authorized via first artifact`
+              ? `Batch proof ${bc.batchIndex + 1}/${bc.batchSize} - authorized via first artifact`
               : "authorization.artifactHash matches proof.artifact.digestB64" }
           : { label: "Agency artifact binding", status: "fail", detail: "artifactHash does not match proof artifact digest" });
 
@@ -673,7 +673,7 @@ Learn more: https://proofstudio.wtf
         checks.push({
           label: "Attribution",
           status: "pass",
-          detail: `Sealed claim: ${parts.join(" — ")}`,
+          detail: `Sealed claim: ${parts.join(" - ")}`,
         });
       }
 
@@ -706,7 +706,7 @@ Learn more: https://proofstudio.wtf
         </h1>
         <p className="text-text-secondary max-w-2xl">
           Generate cryptographic proof for any file, or verify existing proofs.
-          Everything runs locally in your browser — files are never uploaded.
+          Everything runs locally in your browser. Files are never uploaded.
         </p>
       </div>
 
@@ -1186,7 +1186,7 @@ Learn more: https://proofstudio.wtf
                     </div>
                   </div>
                 )}
-                {/* Single proof (non-batch) — always expanded */}
+                {/* Single proof (non-batch) - always expanded */}
                 {!isBatch && isExpanded && (
                   <>
                     <ProofMeta proof={p} fileName={files[idx]?.name} fileSize={files[idx]?.size} />

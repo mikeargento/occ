@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 export default function ProofFormatPage() {
   return (
     <article>
-      <h1 className="text-3xl font-semibold tracking-tight mb-4">Proof Format — occ/1</h1>
+      <h1 className="text-3xl font-semibold tracking-tight mb-4">Proof Format: occ/1</h1>
       <p className="text-text-secondary mb-8">
         Normative specification for the <code className="text-xs font-mono bg-bg-subtle px-1.5 py-0.5 rounded">occ/1</code> proof format. Derived from the reference implementation.
       </p>
@@ -16,39 +16,39 @@ export default function ProofFormatPage() {
       <h2 className="text-xl font-semibold mt-12 mb-4">Proof JSON schema</h2>
       <div className="rounded-lg border border-border-subtle bg-bg-elevated p-4 overflow-x-auto mb-8">
         <pre className="text-xs font-mono leading-relaxed text-text-secondary">{`{
-  "version": "occ/1",                // REQUIRED — exact value
+  "version": "occ/1",                // REQUIRED - exact value
   "artifact": {
-    "hashAlg": "sha256",             // REQUIRED — "sha256" only in v1
-    "digestB64": "<base64>"          // REQUIRED — SHA-256, 32 decoded bytes
+    "hashAlg": "sha256",             // REQUIRED - "sha256" only in v1
+    "digestB64": "<base64>"          // REQUIRED - SHA-256, 32 decoded bytes
   },
   "commit": {
-    "nonceB64": "<base64>",          // REQUIRED — ≥16 decoded bytes
-    "counter":  "42",                // OPTIONAL — decimal string, monotonic
-    "time":     1700000000000,       // OPTIONAL — Unix ms
-    "prevB64":  "<base64>",          // OPTIONAL — chain link, 32 bytes
-    "epochId":  "<hex>"              // OPTIONAL — SHA-256 hex
+    "nonceB64": "<base64>",          // REQUIRED - ≥16 decoded bytes
+    "counter":  "42",                // OPTIONAL - decimal string, monotonic
+    "time":     1700000000000,       // OPTIONAL - Unix ms
+    "prevB64":  "<base64>",          // OPTIONAL - chain link, 32 bytes
+    "epochId":  "<hex>"              // OPTIONAL - SHA-256 hex
   },
   "signer": {
-    "publicKeyB64":  "<base64>",     // REQUIRED — Ed25519, 32 bytes
-    "signatureB64":  "<base64>"      // REQUIRED — Ed25519, 64 bytes
+    "publicKeyB64":  "<base64>",     // REQUIRED - Ed25519, 32 bytes
+    "signatureB64":  "<base64>"      // REQUIRED - Ed25519, 64 bytes
   },
   "environment": {
-    "enforcement": "measured-tee",   // REQUIRED — "stub"|"hw-key"|"measured-tee"
-    "measurement": "<opaque>",       // REQUIRED — non-empty string
+    "enforcement": "measured-tee",   // REQUIRED - "stub"|"hw-key"|"measured-tee"
+    "measurement": "<opaque>",       // REQUIRED - non-empty string
     "attestation": {                 // OPTIONAL
       "format":    "aws-nitro",      // REQUIRED when parent present
       "reportB64": "<base64>"        // REQUIRED when parent present
     }
   },
-  "agency": {                         // OPTIONAL — actor-bound proof
+  "agency": {                         // OPTIONAL - actor-bound proof
     "actor": { keyId, publicKeyB64, algorithm, provider },
     "authorization": { purpose, actorKeyId, artifactHash, challenge, timestamp, signatureB64 }
   },
-  "timestamps": {                    // OPTIONAL — external timestamps
+  "timestamps": {                    // OPTIONAL - external timestamps
     "artifact": { TsaToken },
     "proof":    { TsaToken }
   },
-  "metadata": { }                    // OPTIONAL — NOT signed, advisory
+  "metadata": { }                    // OPTIONAL - NOT signed, advisory
 }`}</pre>
       </div>
 
@@ -81,7 +81,7 @@ export default function ProofFormatPage() {
           <tbody className="text-text-secondary">
             <tr className="border-b border-border-subtle">
               <td className="py-2 pr-4"><code className="text-xs font-mono">signatureB64</code></td>
-              <td className="py-2">The seal — cannot sign itself</td>
+              <td className="py-2">The seal - cannot sign itself</td>
             </tr>
             <tr className="border-b border-border-subtle">
               <td className="py-2 pr-4"><code className="text-xs font-mono">attestation.reportB64</code></td>
@@ -105,7 +105,7 @@ export default function ProofFormatPage() {
       </p>
       <ol className="space-y-2 mb-6 text-sm text-text-secondary">
         <li>1. Recursively sort all object keys in Unicode code-point order</li>
-        <li>2. Serialize with <code className="text-xs font-mono bg-bg-subtle px-1 rounded">JSON.stringify()</code> — no whitespace</li>
+        <li>2. Serialize with <code className="text-xs font-mono bg-bg-subtle px-1 rounded">JSON.stringify()</code> - no whitespace</li>
         <li>3. Encode the resulting string as UTF-8 (no BOM)</li>
       </ol>
       <p className="text-text-secondary mb-4">Top-level key order after sort:</p>

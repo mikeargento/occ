@@ -4,7 +4,7 @@
  * Uses platform authenticators (Face ID, Touch ID, Windows Hello) to
  * produce P-256 device-bound proofs of biometric user presence.
  *
- * The private key lives in the device Secure Enclave — never extractable.
+ * The private key lives in the device Secure Enclave, never extractable.
  */
 
 // ---------------------------------------------------------------------------
@@ -110,11 +110,11 @@ export function clearStoredCredential(): void {
 }
 
 // ---------------------------------------------------------------------------
-// Registration — create a platform passkey
+// Registration - create a platform passkey
 // ---------------------------------------------------------------------------
 
 export async function registerPasskey(): Promise<StoredCredential> {
-  // Random user handle (not sensitive — just for WebAuthn)
+  // Random user handle (not sensitive - just for WebAuthn)
   const userId = crypto.getRandomValues(new Uint8Array(16));
 
   const credential = (await navigator.credentials.create({
@@ -170,7 +170,7 @@ export async function registerPasskey(): Promise<StoredCredential> {
 }
 
 // ---------------------------------------------------------------------------
-// Assertion — biometric authorization for a specific commit
+// Assertion - biometric authorization for a specific commit
 // ---------------------------------------------------------------------------
 
 export interface WebAuthnAssertion {

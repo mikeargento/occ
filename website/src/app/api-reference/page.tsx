@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "API Reference",
-  description: "OCC Protocol API reference — commit, verify, key, and health endpoints.",
+  description: "OCC Protocol API reference: commit, verify, key, and health endpoints.",
 };
 
 function Endpoint({
@@ -218,7 +218,7 @@ const proofs = await resp.json();
         <Endpoint
           method="POST"
           path="/verify"
-          description="Server-side verification of a proof against an optional policy. Note: verification can also be done entirely client-side — no API call required."
+          description="Server-side verification of a proof against an optional policy. Note: verification can also be done entirely client-side. No API call required."
         >
           <h4 className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-2">
             Request body

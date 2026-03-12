@@ -22,14 +22,14 @@ export default function Home() {
       {/* ── Hero ── */}
       <Section className="pt-32 pb-20">
         <div className="max-w-5xl mx-auto text-center">
-          <h1 className="text-[clamp(1.75rem,4.5vw,3.5rem)] font-semibold tracking-tight leading-[1.15] text-balance">
-            Cryptographic proof for digital artifacts.
+          <h1 className="text-[clamp(1.75rem,3.8vw,3.5rem)] font-semibold tracking-tight leading-[1.15] whitespace-nowrap">
+            Cryptographic proof for digital artifacts
           </h1>
-          <p className="mt-6 text-[clamp(1.75rem,4.5vw,3.5rem)] font-semibold tracking-tight text-text-secondary leading-[1.2] text-balance">
-            No blockchain. No ledgers. WTF?
+          <p className="mt-6 text-[clamp(1.75rem,3.8vw,3.5rem)] font-semibold tracking-tight text-text-secondary leading-[1.2]">
+            No blockchain. No ledgers. Just proof.
           </p>
           <p className="mt-4 text-lg text-text-tertiary tracking-tight text-balance">
-            Establish provable control over any digital artifact — photos, videos, songs, documents, medical records, datasets, AI outputs, code, designs, and more.
+            Establish provable control over any digital artifact: photos, videos, songs, documents, medical records, datasets, AI outputs, code, designs, and more.
           </p>
           <div className="mt-10 flex flex-wrap justify-center gap-4">
             <Link
@@ -63,17 +63,17 @@ export default function Home() {
             {
               step: "01",
               title: "Drop your artifact",
-              desc: "Drag any file into ProofStudio. It's hashed locally in your browser — nothing is uploaded.",
+              desc: "Drag any file into ProofStudio. It's hashed locally in your browser. Nothing is uploaded.",
             },
             {
               step: "02",
               title: "Commit",
-              desc: "The hash is sent to a trusted execution environment where it's bound to a nonce, counter, and timestamp.",
+              desc: "Your artifact's fingerprint is sent to a secure environment and locked to a unique, unrepeatable commit event.",
             },
             {
               step: "03",
               title: "Receive proof",
-              desc: "You get back a portable proof object — a signed JSON that demonstrates this artifact existed in this exact form at this moment.",
+              desc: "You get back a portable proof file: signed evidence that this exact artifact existed in this exact form, in your possession, at that moment.",
             },
           ].map((item) => (
             <div
@@ -115,7 +115,7 @@ export default function Home() {
                   <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-text-tertiary shrink-0" />
                   <div>
                     <span className="text-sm font-medium text-text">{item.title}</span>
-                    <span className="text-sm text-text-secondary ml-1">&mdash; {item.desc}</span>
+                    <span className="text-sm text-text-secondary ml-1">- {item.desc}</span>
                   </div>
                 </div>
               ))}
@@ -165,7 +165,7 @@ export default function Home() {
           {[
             { title: "AI Outputs", desc: "Prove model responses, generated images, and predictions came from a specific boundary at a specific time." },
             { title: "Software Builds", desc: "Prove a build artifact was produced by a specific CI/CD pipeline inside a measured environment." },
-            { title: "Media & Journalism", desc: "Prove a photo or document existed in its current form at a specific moment — before edits, before distribution." },
+            { title: "Media & Journalism", desc: "Prove a photo or document existed in its current form at a specific moment, before edits, before distribution." },
             { title: "Scientific Data", desc: "Prove sensor readings and instrument output existed at capture time with sequence integrity." },
             { title: "Compliance & Audit", desc: "Produce tamper-evident records where any modification breaks the proof chain." },
             { title: "Agent-to-Agent", desc: "Pass proofs between systems so each can verify data integrity without trusting the transport." },
@@ -185,10 +185,10 @@ export default function Home() {
             Powered by
           </div>
           <h2 className="text-xl sm:text-2xl font-semibold tracking-tight mb-4">
-            OCC — Origin Controlled Computing
+            OCC: Origin Controlled Computing
           </h2>
           <p className="text-text-secondary max-w-2xl mx-auto leading-relaxed mb-6 text-balance">
-            ProofStudio is built on the OCC protocol — a cryptographic proof system
+            ProofStudio is built on the OCC protocol, a cryptographic proof system
             where proof is produced by the commit event itself. If the proof exists,
             the commit happened. If it doesn&apos;t, it didn&apos;t.
           </p>

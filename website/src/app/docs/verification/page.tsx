@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Verification",
-  description: "OCC five-step verification algorithm — structural validation, digest check, signature verification, policy enforcement.",
+  description: "OCC five-step verification algorithm: structural validation, digest check, signature verification, policy enforcement.",
 };
 
 export default function VerificationPage() {
@@ -83,15 +83,15 @@ export default function VerificationPage() {
       <div className="space-y-3 mb-8">
         <div className="rounded-lg border border-border-subtle p-4">
           <code className="text-xs font-mono text-warning">requireEnforcement</code>
-          <span className="text-sm text-text-secondary ml-2">alone — prevents in-transit downgrade only</span>
+          <span className="text-sm text-text-secondary ml-2">alone - prevents in-transit downgrade only</span>
         </div>
         <div className="rounded-lg border border-border-subtle p-4">
           <code className="text-xs font-mono text-info">requireEnforcement + allowedMeasurements</code>
-          <span className="text-sm text-text-secondary ml-2">— pins to specific enclave image</span>
+          <span className="text-sm text-text-secondary ml-2">- pins to specific enclave image</span>
         </div>
         <div className="rounded-lg border border-border-subtle p-4">
           <code className="text-xs font-mono text-success">+ requireAttestation</code>
-          <span className="text-sm text-text-secondary ml-2">— full trust (vendor-attested hardware boundary)</span>
+          <span className="text-sm text-text-secondary ml-2">- full trust (vendor-attested hardware boundary)</span>
         </div>
       </div>
 

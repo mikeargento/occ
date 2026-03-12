@@ -222,7 +222,7 @@ export function formatFileSize(bytes: number): string {
 }
 
 // ---------------------------------------------------------------------------
-// B&W Demo — TEE-proven grayscale conversion
+// B&W Demo - TEE-proven grayscale conversion
 // ---------------------------------------------------------------------------
 
 export interface BWConversionResult {
