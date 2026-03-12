@@ -108,6 +108,7 @@ export default function StudioPage() {
   const [destDirName, setDestDirName] = useState<string | null>(null);
   const [fsDirSupported, setFsDirSupported] = useState(false);
   const [savedCount, setSavedCount] = useState(0);
+  const [expandedProofs, setExpandedProofs] = useState<Set<number>>(new Set());
 
   // Check File System Access API support on mount
   useEffect(() => {
@@ -1034,77 +1035,108 @@ Learn more: https://proofstudio.wtf
             </div>
           </div>
 
-          {proofs.map((p, idx) => (
-            <div key={idx} className={proofs.length > 1 ? "rounded-lg border border-border-subtle p-4 space-y-4" : "space-y-4"}>
-              {proofs.length > 1 && (
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-text">{files[idx]?.name || `Proof ${idx + 1}`}</span>
-                  <button
-                    onClick={() => handleDownloadZip(idx)}
-                    className="text-xs text-text-secondary hover:text-text transition-colors"
-                  >
-                    Download
-                  </button>
-                </div>
-              )}
-              <ProofMeta proof={p} fileName={files[idx]?.name} fileSize={files[idx]?.size} />
-              {proofs.length === 1 && <ProofViewer proof={p} />}
-              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-2">
-                <InfoCard
-                  title="Artifact"
-                  items={[
-                    { label: "Hash Algorithm", value: p.artifact.hashAlg },
-                    { label: "Digest", value: p.artifact.digestB64 },
-                  ]}
-                />
-                <InfoCard
-                  title="Commit"
-                  items={[
-                    { label: "Nonce", value: p.commit.nonceB64 },
-                    ...(p.commit.counter ? [{ label: "Counter", value: p.commit.counter }] : []),
-                    ...(p.commit.epochId ? [{ label: "Epoch", value: p.commit.epochId }] : []),
-                    ...(p.commit.prevB64 ? [{ label: "Chain Link", value: p.commit.prevB64 }] : []),
-                  ]}
-                />
-                <InfoCard
-                  title="Environment"
-                  items={[
-                    { label: "Enforcement", value: p.environment.enforcement },
-                    { label: "Measurement", value: p.environment.measurement },
-                    ...(p.environment.attestation ? [{ label: "Attestation", value: p.environment.attestation.format }] : []),
-                  ]}
-                />
-                <InfoCard
-                  title="Signer"
-                  items={[
-                    { label: "Public Key", value: p.signer.publicKeyB64 },
-                    { label: "Signature", value: p.signer.signatureB64 },
-                  ]}
-                />
-                {p.agency && (
-                  <InfoCard
-                    title="Agency"
-                    items={[
-                      { label: "Actor", value: p.agency.actor.keyId },
-                      { label: "Provider", value: p.agency.actor.provider },
-                      { label: "Algorithm", value: p.agency.actor.algorithm },
-                      { label: "Purpose", value: p.agency.authorization.purpose },
-                    ]}
-                  />
+          {proofs.map((p, idx) => {
+            const isBatch = proofs.length > 1;
+            const isExpanded = !isBatch || expandedProofs.has(idx);
+            const toggleExpand = () => {
+              setExpandedProofs((prev) => {
+                const next = new Set(prev);
+                if (next.has(idx)) next.delete(idx);
+                else next.add(idx);
+                return next;
+              });
+            };
+
+            return (
+              <div key={idx} className={isBatch ? "rounded-lg border border-border-subtle p-4 space-y-3" : "space-y-4"}>
+                {isBatch && (
+                  <div className="flex items-center justify-between">
+                    <button
+                      onClick={toggleExpand}
+                      className="flex items-center gap-2 text-sm font-medium text-text hover:text-text/80 transition-colors"
+                    >
+                      <svg
+                        width="10" height="10" viewBox="0 0 10 10" fill="currentColor"
+                        className={`transition-transform ${isExpanded ? "rotate-90" : ""}`}
+                      >
+                        <path d="M3 1l4 4-4 4" />
+                      </svg>
+                      {files[idx]?.name || `Proof ${idx + 1}`}
+                    </button>
+                    <button
+                      onClick={() => handleDownloadZip(idx)}
+                      className="text-xs text-text-secondary hover:text-text transition-colors"
+                    >
+                      Download
+                    </button>
+                  </div>
                 )}
-                {p.attribution && (
-                  <InfoCard
-                    title="Attribution"
-                    items={[
-                      ...(p.attribution.name ? [{ label: "Name", value: p.attribution.name }] : []),
-                      ...(p.attribution.title ? [{ label: "Title", value: p.attribution.title }] : []),
-                      ...(p.attribution.message ? [{ label: "Message", value: p.attribution.message }] : []),
-                    ]}
-                  />
+                {isBatch && !isExpanded && (
+                  <ProofMeta proof={p} fileName={files[idx]?.name} fileSize={files[idx]?.size} />
+                )}
+                {isExpanded && (
+                  <>
+                    <ProofMeta proof={p} fileName={files[idx]?.name} fileSize={files[idx]?.size} />
+                    {!isBatch && <ProofViewer proof={p} />}
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-2">
+                      <InfoCard
+                        title="Artifact"
+                        items={[
+                          { label: "Hash Algorithm", value: p.artifact.hashAlg },
+                          { label: "Digest", value: p.artifact.digestB64 },
+                        ]}
+                      />
+                      <InfoCard
+                        title="Commit"
+                        items={[
+                          { label: "Nonce", value: p.commit.nonceB64 },
+                          ...(p.commit.counter ? [{ label: "Counter", value: p.commit.counter }] : []),
+                          ...(p.commit.epochId ? [{ label: "Epoch", value: p.commit.epochId }] : []),
+                          ...(p.commit.prevB64 ? [{ label: "Chain Link", value: p.commit.prevB64 }] : []),
+                        ]}
+                      />
+                      <InfoCard
+                        title="Environment"
+                        items={[
+                          { label: "Enforcement", value: p.environment.enforcement },
+                          { label: "Measurement", value: p.environment.measurement },
+                          ...(p.environment.attestation ? [{ label: "Attestation", value: p.environment.attestation.format }] : []),
+                        ]}
+                      />
+                      <InfoCard
+                        title="Signer"
+                        items={[
+                          { label: "Public Key", value: p.signer.publicKeyB64 },
+                          { label: "Signature", value: p.signer.signatureB64 },
+                        ]}
+                      />
+                      {p.agency && (
+                        <InfoCard
+                          title="Agency"
+                          items={[
+                            { label: "Actor", value: p.agency.actor.keyId },
+                            { label: "Provider", value: p.agency.actor.provider },
+                            { label: "Algorithm", value: p.agency.actor.algorithm },
+                            { label: "Purpose", value: p.agency.authorization.purpose },
+                          ]}
+                        />
+                      )}
+                      {p.attribution && (
+                        <InfoCard
+                          title="Attribution"
+                          items={[
+                            ...(p.attribution.name ? [{ label: "Name", value: p.attribution.name }] : []),
+                            ...(p.attribution.title ? [{ label: "Title", value: p.attribution.title }] : []),
+                            ...(p.attribution.message ? [{ label: "Message", value: p.attribution.message }] : []),
+                          ]}
+                        />
+                      )}
+                    </div>
+                  </>
                 )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
