@@ -29,7 +29,7 @@ export default function Home() {
             No blockchain. No ledgers. WTF?
           </p>
           <p className="mt-4 text-lg text-text-tertiary tracking-tight text-balance">
-            Proof should be a property of creation, not verification.
+            Establish provable control over any digital artifact — photos, videos, songs, documents, medical records, datasets, AI outputs, code, designs, and more.
           </p>
           <div className="mt-10 flex flex-wrap justify-center gap-4">
             <Link
