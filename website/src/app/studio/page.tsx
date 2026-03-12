@@ -689,10 +689,18 @@ Learn more: https://proofstudio.wtf
   const allPass = verifyResults?.every((r) => r.status === "pass" || r.status === "info");
   const anyFail = verifyResults?.some((r) => r.status === "fail");
 
+  // Tab state for mobile
+  const [activeTab, setActiveTab] = useState<"create" | "verify">("create");
+
+  // Step progress for proof creation
+  const allSteps: { key: CreateStatus; label: string }[] = authorshipMode === "passkey"
+    ? [{ key: "hashing", label: "Hash" }, { key: "challenging", label: "Challenge" }, { key: "authorizing", label: "Authorize" }, { key: "signing", label: "Sign" }]
+    : [{ key: "hashing", label: "Hash" }, { key: "signing", label: "Sign" }];
+
   return (
-    <div className="mx-auto max-w-7xl px-6 py-16">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-16">
       {/* Header */}
-      <div className="mb-12">
+      <div className="mb-8 sm:mb-12">
         <h1 className="text-3xl font-semibold tracking-tight mb-3">
           Studio
         </h1>
@@ -702,14 +710,45 @@ Learn more: https://proofstudio.wtf
         </p>
       </div>
 
+      {/* ── Tab bar (mobile: toggle, desktop: hidden) ── */}
+      <div className="lg:hidden sticky top-14 z-40 bg-bg/80 backdrop-blur-xl py-3 -mx-4 px-4 sm:-mx-6 sm:px-6 mb-6">
+        <div className="flex gap-1 p-1 rounded-xl bg-bg-elevated border border-border-subtle">
+          <button
+            onClick={() => setActiveTab("create")}
+            className={`flex-1 h-10 rounded-lg text-sm font-semibold transition-all duration-200 cursor-pointer ${
+              activeTab === "create"
+                ? "bg-bg text-text shadow-sm"
+                : "text-text-tertiary hover:text-text-secondary"
+            }`}
+          >
+            Create
+          </button>
+          <button
+            onClick={() => setActiveTab("verify")}
+            className={`flex-1 h-10 rounded-lg text-sm font-semibold transition-all duration-200 cursor-pointer ${
+              activeTab === "verify"
+                ? "bg-bg text-text shadow-sm"
+                : "text-text-tertiary hover:text-text-secondary"
+            }`}
+          >
+            Verify
+          </button>
+        </div>
+      </div>
+
       {/* Two-column input panels */}
       <div className="grid lg:grid-cols-2 gap-8">
         {/* ── Create ── */}
-        <div className="flex flex-col">
-          <h2 className="text-xl font-semibold tracking-tight mb-2">
-            Make a proof.
-          </h2>
-          <p className="text-text-secondary text-sm mb-6 lg:min-h-[40px]">
+        <div className={`flex flex-col ${activeTab !== "create" ? "hidden lg:flex" : ""}`}>
+          <div className="flex items-center gap-3 mb-2">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-text-tertiary shrink-0">
+              <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
+            </svg>
+            <h2 className="text-xl font-semibold tracking-tight">
+              Make a proof.
+            </h2>
+          </div>
+          <p className="text-text-secondary text-sm mb-6 lg:min-h-[40px] ml-[36px]">
             Drop any file. Your browser hashes it locally, sends only the digest
             to an AWS Nitro Enclave, and returns a signed proof.
           </p>
@@ -728,7 +767,7 @@ Learn more: https://proofstudio.wtf
 
             {/* ── Proof Authorship toggle ── */}
             {passkeyAvailable && (
-              <div className="rounded-lg border border-border-subtle bg-bg-elevated p-4">
+              <div className="rounded-xl border border-border-subtle bg-bg-elevated p-4">
                 <div className="text-[11px] font-medium uppercase tracking-[0.12em] text-text-tertiary mb-3">
                   Device Authorization
                 </div>
@@ -742,7 +781,7 @@ Learn more: https://proofstudio.wtf
                       className="mt-0.5 accent-text"
                     />
                     <div>
-                      <div className="text-sm font-medium text-text group-hover:text-text/80">None</div>
+                      <div className="text-sm font-medium text-text group-hover:text-text/80 transition-colors">None</div>
                       <div className="text-xs text-text-tertiary">Proof attests the commit boundary only</div>
                     </div>
                   </label>
@@ -755,7 +794,7 @@ Learn more: https://proofstudio.wtf
                       className="mt-0.5 accent-text"
                     />
                     <div>
-                      <div className="text-sm font-medium text-text group-hover:text-text/80">Authorize with device biometrics</div>
+                      <div className="text-sm font-medium text-text group-hover:text-text/80 transition-colors">Authorize with device biometrics</div>
                       <div className="text-xs text-text-tertiary">A device key, unlocked by biometrics, authorizes proof creation</div>
                     </div>
                   </label>
@@ -765,7 +804,7 @@ Learn more: https://proofstudio.wtf
                   <button
                     onClick={handleRegisterPasskey}
                     disabled={registering}
-                    className="mt-3 w-full h-9 rounded-md border border-border text-xs font-semibold text-text-secondary hover:text-text hover:border-text-tertiary transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="mt-3 w-full h-9 rounded-lg border border-border text-xs font-semibold text-text-secondary hover:text-text hover:border-text-tertiary transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {registering ? "Registering…" : "Register Passkey"}
                   </button>
@@ -786,48 +825,42 @@ Learn more: https://proofstudio.wtf
               </div>
             )}
 
-            {/* ── Attribution fields ── */}
-            <div className="rounded-lg border border-border-subtle bg-bg-elevated p-4">
+            {/* ── Attribution fields (connected group) ── */}
+            <div className="rounded-xl border border-border-subtle bg-bg-elevated p-4">
               <div className="text-[11px] font-medium uppercase tracking-[0.12em] text-text-tertiary mb-3">
                 Attribution
               </div>
-              <div className="space-y-3">
-                <div>
-                  <input
-                    type="text"
-                    placeholder="Name"
-                    value={attrName}
-                    onChange={(e) => setAttrName(e.target.value)}
-                    className="w-full h-9 rounded-md border border-border-subtle bg-bg px-3 text-base sm:text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:border-text-tertiary transition-colors"
-                  />
-                </div>
-                <div>
-                  <input
-                    type="text"
-                    placeholder="Title"
-                    value={attrTitle}
-                    onChange={(e) => setAttrTitle(e.target.value)}
-                    className="w-full h-9 rounded-md border border-border-subtle bg-bg px-3 text-base sm:text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:border-text-tertiary transition-colors"
-                  />
-                </div>
-                <div>
-                  <textarea
-                    placeholder="Message"
-                    value={attrMessage}
-                    onChange={(e) => setAttrMessage(e.target.value)}
-                    rows={2}
-                    className="w-full rounded-md border border-border-subtle bg-bg px-3 py-2 text-base sm:text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:border-text-tertiary transition-colors resize-none"
-                  />
-                </div>
+              <div className="rounded-lg border border-border-subtle overflow-hidden divide-y divide-border-subtle">
+                <input
+                  type="text"
+                  placeholder="Name"
+                  value={attrName}
+                  onChange={(e) => setAttrName(e.target.value)}
+                  className="w-full h-10 bg-bg px-3 text-base sm:text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:bg-bg-elevated transition-colors"
+                />
+                <input
+                  type="text"
+                  placeholder="Title"
+                  value={attrTitle}
+                  onChange={(e) => setAttrTitle(e.target.value)}
+                  className="w-full h-10 bg-bg px-3 text-base sm:text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:bg-bg-elevated transition-colors"
+                />
+                <textarea
+                  placeholder="Message"
+                  value={attrMessage}
+                  onChange={(e) => setAttrMessage(e.target.value)}
+                  rows={2}
+                  className="w-full bg-bg px-3 py-2.5 text-base sm:text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:bg-bg-elevated transition-colors resize-none"
+                />
               </div>
               <p className="text-[11px] text-text-tertiary mt-2">
-                This text will be sealed into the proof and travel with the artifact.
+                Sealed into the proof and travels with the artifact.
               </p>
             </div>
 
             {/* ── Destination folder ── */}
             {fsDirSupported && (
-              <div className="rounded-lg border border-border-subtle bg-bg-elevated p-4">
+              <div className="rounded-xl border border-border-subtle bg-bg-elevated p-4">
                 <div className="text-[11px] font-medium uppercase tracking-[0.12em] text-text-tertiary mb-3">
                   Save To
                 </div>
@@ -857,7 +890,7 @@ Learn more: https://proofstudio.wtf
                 ) : (
                   <button
                     onClick={handlePickDestination}
-                    className="w-full h-9 rounded-md border border-border-subtle text-xs font-medium text-text-secondary hover:text-text hover:border-text-tertiary transition-colors cursor-pointer"
+                    className="w-full h-9 rounded-lg border border-border-subtle text-xs font-medium text-text-secondary hover:text-text hover:border-text-tertiary transition-colors cursor-pointer"
                   >
                     Choose folder…
                   </button>
@@ -872,28 +905,41 @@ Learn more: https://proofstudio.wtf
 
             <button
               onClick={handleGenerate}
-              disabled={files.length === 0 || busy || (authorshipMode === "passkey" && !storedCredential)}
+              disabled={files.length === 0 || busy || proofs.length > 0 || (authorshipMode === "passkey" && !storedCredential)}
               className={`
-                w-full h-11 rounded-lg text-sm font-semibold uppercase tracking-wider transition-all shrink-0
-                ${files.length === 0 || busy || (authorshipMode === "passkey" && !storedCredential)
-                  ? "bg-bg-subtle text-text-tertiary cursor-not-allowed"
-                  : "bg-text text-bg hover:opacity-85 cursor-pointer"
+                relative w-full h-12 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 shrink-0 overflow-hidden
+                ${busy
+                  ? "bg-bg-subtle text-text cursor-not-allowed border border-border-subtle"
+                  : proofs.length > 0
+                  ? "bg-success/10 text-success cursor-not-allowed border border-success/20"
+                  : files.length === 0 || (authorshipMode === "passkey" && !storedCredential)
+                  ? "bg-bg-subtle text-text-tertiary/50 cursor-not-allowed border border-border-subtle"
+                  : "bg-text text-bg hover:opacity-90 active:scale-[0.98] cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]"
                 }
               `}
             >
-              {createStatus === "hashing"
-                ? "Hashing…"
-                : createStatus === "challenging"
-                ? "Requesting authorization challenge…"
-                : createStatus === "authorizing"
-                ? "Waiting for device authorization…"
-                : createStatus === "signing"
-                ? "Committing in enclave…"
-                : files.length > 1 ? `Make ${files.length} Proofs` : "Make a Proof"}
+              {busy && (
+                <div className="absolute inset-0 overflow-hidden rounded-xl">
+                  <div className="h-full bg-text/10 animate-progress-fill" />
+                </div>
+              )}
+              <span className="relative z-10">
+                {createStatus === "hashing"
+                  ? "Hashing…"
+                  : createStatus === "challenging"
+                  ? "Requesting challenge…"
+                  : createStatus === "authorizing"
+                  ? "Waiting for authorization…"
+                  : createStatus === "signing"
+                  ? "Committing in enclave…"
+                  : proofs.length > 0
+                  ? (proofs.length > 1 ? `${proofs.length} Proofs Created ✓` : "Proof Created ✓")
+                  : files.length > 1 ? `Make ${files.length} Proofs` : "Make a Proof"}
+              </span>
             </button>
 
             {createError && (
-              <div className="rounded-lg border border-error/30 bg-error/5 p-4">
+              <div className="rounded-xl border border-error/30 bg-error/5 p-4">
                 <div className="text-sm text-error font-medium mb-1">Error</div>
                 <div className="text-sm text-text-secondary">{createError}</div>
               </div>
@@ -902,12 +948,18 @@ Learn more: https://proofstudio.wtf
         </div>
 
         {/* ── Verify ── */}
-        <div className="flex flex-col">
-          <h2 className="text-xl font-semibold tracking-tight mb-2">
-            Verify a proof.
-          </h2>
-          <p className="text-text-secondary text-sm mb-6 lg:min-h-[40px]">
-            Drop a <code className="text-xs bg-bg-subtle px-1.5 py-0.5 rounded border border-border-subtle font-mono">proof.zip</code> to
+        <div className={`flex flex-col ${activeTab !== "verify" ? "hidden lg:flex" : ""}`}>
+          <div className="flex items-center gap-3 mb-2">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-text-tertiary shrink-0">
+              <path d="M12 2L4 6v5c0 5.5 3.4 8.7 8 10.5 4.6-1.8 8-5 8-10.5V6L12 2z" />
+              <path d="M8.5 12l2.5 2.5 4.5-5" />
+            </svg>
+            <h2 className="text-xl font-semibold tracking-tight">
+              Verify a proof.
+            </h2>
+          </div>
+          <p className="text-text-secondary text-sm mb-6 lg:min-h-[40px] ml-[36px]">
+            Drop a <span className="font-mono text-text">proof.zip</span> to
             extract, re-hash, and check the digest against the proof.
           </p>
 
@@ -922,8 +974,13 @@ Learn more: https://proofstudio.wtf
               }}
               onClick={() => !zipFile && zipInputRef.current?.click()}
               className={`
-                flex-1 relative rounded-lg border-2 border-dashed transition-all cursor-pointer min-h-[160px] flex items-center
-                ${dragover ? "border-text/30 bg-text/5" : zipFile ? "border-border bg-bg-elevated" : "border-border-subtle hover:border-border bg-bg-elevated/50 hover:bg-bg-elevated"}
+                flex-1 relative rounded-xl border transition-all duration-300 cursor-pointer min-h-[160px] flex items-center
+                ${dragover
+                  ? "border-text/40 bg-text/5 ring-2 ring-text/10 ring-offset-2 ring-offset-bg scale-[1.01]"
+                  : zipFile
+                  ? "border-border bg-bg-elevated"
+                  : "border-border-subtle bg-bg-elevated/50 hover:border-border hover:bg-bg-elevated hover:shadow-[0_0_24px_rgba(255,255,255,0.03)]"
+                }
               `}
             >
               <input
@@ -958,14 +1015,14 @@ Learn more: https://proofstudio.wtf
                 </div>
               ) : (
                 <div className="flex flex-col items-center py-12 px-6 w-full">
-                  <div className="w-10 h-10 rounded-lg border border-border-subtle bg-bg-subtle flex items-center justify-center mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-bg-subtle/80 border border-border-subtle flex items-center justify-center mb-4">
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-text-tertiary">
                       <path d="M10 2L3 5.5v4.5c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V5.5L10 2z" />
                       <path d="M7 10l2.5 2.5L13 8" />
                     </svg>
                   </div>
                   <div className="text-sm text-text-secondary">
-                    Drop <code className="text-xs bg-bg-subtle px-1 py-0.5 rounded border border-border-subtle font-mono">proof.zip</code> files
+                    Drop <span className="font-mono text-text">proof.zip</span> files
                     here, or <span className="text-text font-medium">click to select</span>
                   </div>
                   <div className="text-xs text-text-tertiary mt-1">
@@ -979,10 +1036,10 @@ Learn more: https://proofstudio.wtf
               onClick={handleVerify}
               disabled={!zipFile || verifying}
               className={`
-                w-full h-11 rounded-lg text-sm font-semibold uppercase tracking-wider transition-all shrink-0
+                w-full h-12 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 shrink-0
                 ${!zipFile || verifying
-                  ? "bg-bg-subtle text-text-tertiary cursor-not-allowed"
-                  : "bg-text text-bg hover:opacity-85 cursor-pointer"
+                  ? "bg-bg-subtle text-text-tertiary/50 cursor-not-allowed border border-border-subtle"
+                  : "bg-text text-bg hover:opacity-90 active:scale-[0.98] cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]"
                 }
               `}
             >
@@ -994,10 +1051,10 @@ Learn more: https://proofstudio.wtf
 
       {/* ── Create Results (full width) ── */}
       {proofs.length > 0 && (
-        <div className="mt-10 pt-8 border-t border-border-subtle space-y-4">
-          <div className="flex items-center justify-between">
+        <div className="mt-10 pt-8 border-t border-border-subtle space-y-4 animate-slide-up">
+          <div className="flex items-center justify-between flex-wrap gap-3">
             <div className="flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-success" />
+              <div className="w-2.5 h-2.5 rounded-full bg-success animate-success-pulse" />
               <span className="text-sm font-medium text-success">
                 {proofs.length === 1 ? "Proof generated" : `${proofs.length} proofs generated`}
               </span>
@@ -1011,7 +1068,7 @@ Learn more: https://proofstudio.wtf
               {proofs.length > 1 && (
                 <button
                   onClick={handleDownloadAll}
-                  className="inline-flex items-center gap-2 rounded-md bg-success px-4 py-2 text-xs font-semibold text-bg hover:bg-success/85 transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-2 rounded-lg bg-success px-4 py-2 text-xs font-semibold text-bg hover:bg-success/85 transition-colors cursor-pointer"
                 >
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
                     <path d="M7 2v7M4 6l3 3 3-3" />
@@ -1023,7 +1080,7 @@ Learn more: https://proofstudio.wtf
               {proofs.length === 1 && (
                 <button
                   onClick={() => handleDownloadZip(0)}
-                  className="inline-flex items-center gap-2 rounded-md bg-success px-4 py-2 text-xs font-semibold text-bg hover:bg-success/85 transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-2 rounded-lg bg-success px-4 py-2 text-xs font-semibold text-bg hover:bg-success/85 transition-colors cursor-pointer"
                 >
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
                     <path d="M7 2v7M4 6l3 3 3-3" />
@@ -1048,88 +1105,128 @@ Learn more: https://proofstudio.wtf
             };
 
             return (
-              <div key={idx} className={isBatch ? "rounded-lg border border-border-subtle p-4 space-y-3" : "space-y-4"}>
+              <div key={idx} className={isBatch ? "rounded-xl border border-border-subtle overflow-hidden transition-colors hover:border-border" : "space-y-4"}>
                 {isBatch && (
-                  <div className="flex items-center justify-between">
-                    <button
-                      onClick={toggleExpand}
-                      className="flex items-center gap-2 text-sm font-medium text-text hover:text-text/80 transition-colors"
-                    >
+                  <div
+                    onClick={toggleExpand}
+                    className="flex items-center justify-between p-4 cursor-pointer select-none group transition-colors hover:bg-bg-subtle/30"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
                       <svg
-                        width="10" height="10" viewBox="0 0 10 10" fill="currentColor"
-                        className={`transition-transform ${isExpanded ? "rotate-90" : ""}`}
+                        width="16" height="16" viewBox="0 0 16 16" fill="currentColor"
+                        className={`shrink-0 text-text-secondary group-hover:text-text transition-all duration-200 ${
+                          isExpanded ? "rotate-90" : ""
+                        }`}
                       >
-                        <path d="M3 1l4 4-4 4" />
+                        <path d="M5.5 2l6 6-6 6" />
                       </svg>
-                      {files[idx]?.name || `Proof ${idx + 1}`}
-                    </button>
+                      <span className="text-sm font-medium text-text truncate">
+                        {files[idx]?.name || `Proof ${idx + 1}`}
+                      </span>
+                    </div>
                     <button
-                      onClick={() => handleDownloadZip(idx)}
-                      className="text-xs text-text-secondary hover:text-text transition-colors"
+                      onClick={(e) => { e.stopPropagation(); handleDownloadZip(idx); }}
+                      className="text-xs text-text-tertiary hover:text-text transition-colors shrink-0 ml-4"
                     >
                       Download
                     </button>
                   </div>
                 )}
+                {/* Collapsed summary */}
                 {isBatch && !isExpanded && (
-                  <ProofMeta proof={p} fileName={files[idx]?.name} fileSize={files[idx]?.size} />
+                  <div className="px-4 pb-3 -mt-1">
+                    <ProofMeta proof={p} fileName={files[idx]?.name} fileSize={files[idx]?.size} />
+                  </div>
                 )}
-                {isExpanded && (
+                {/* Animated expand/collapse for batch */}
+                {isBatch && (
+                  <div
+                    className={`grid transition-all duration-300 ease-in-out ${
+                      isExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                    }`}
+                  >
+                    <div className="overflow-hidden">
+                      <div className="p-4 pt-0 space-y-3">
+                        <ProofMeta proof={p} fileName={files[idx]?.name} fileSize={files[idx]?.size} />
+                        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                          <InfoCard title="Artifact" items={[
+                            { label: "Hash Algorithm", value: p.artifact.hashAlg },
+                            { label: "Digest", value: p.artifact.digestB64 },
+                          ]} />
+                          <InfoCard title="Commit" items={[
+                            { label: "Nonce", value: p.commit.nonceB64 },
+                            ...(p.commit.counter ? [{ label: "Counter", value: p.commit.counter }] : []),
+                            ...(p.commit.epochId ? [{ label: "Epoch", value: p.commit.epochId }] : []),
+                            ...(p.commit.prevB64 ? [{ label: "Chain Link", value: p.commit.prevB64 }] : []),
+                          ]} />
+                          <InfoCard title="Environment" items={[
+                            { label: "Enforcement", value: p.environment.enforcement },
+                            { label: "Measurement", value: p.environment.measurement },
+                            ...(p.environment.attestation ? [{ label: "Attestation", value: p.environment.attestation.format }] : []),
+                          ]} />
+                          <InfoCard title="Signer" items={[
+                            { label: "Public Key", value: p.signer.publicKeyB64 },
+                            { label: "Signature", value: p.signer.signatureB64 },
+                          ]} />
+                          {p.agency && (
+                            <InfoCard title="Agency" items={[
+                              { label: "Actor", value: p.agency.actor.keyId },
+                              { label: "Provider", value: p.agency.actor.provider },
+                              { label: "Algorithm", value: p.agency.actor.algorithm },
+                              { label: "Purpose", value: p.agency.authorization.purpose },
+                            ]} />
+                          )}
+                          {p.attribution && (
+                            <InfoCard title="Attribution" items={[
+                              ...(p.attribution.name ? [{ label: "Name", value: p.attribution.name }] : []),
+                              ...(p.attribution.title ? [{ label: "Title", value: p.attribution.title }] : []),
+                              ...(p.attribution.message ? [{ label: "Message", value: p.attribution.message }] : []),
+                            ]} />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {/* Single proof (non-batch) — always expanded */}
+                {!isBatch && isExpanded && (
                   <>
                     <ProofMeta proof={p} fileName={files[idx]?.name} fileSize={files[idx]?.size} />
-                    {!isBatch && <ProofViewer proof={p} />}
-                    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-2">
-                      <InfoCard
-                        title="Artifact"
-                        items={[
-                          { label: "Hash Algorithm", value: p.artifact.hashAlg },
-                          { label: "Digest", value: p.artifact.digestB64 },
-                        ]}
-                      />
-                      <InfoCard
-                        title="Commit"
-                        items={[
-                          { label: "Nonce", value: p.commit.nonceB64 },
-                          ...(p.commit.counter ? [{ label: "Counter", value: p.commit.counter }] : []),
-                          ...(p.commit.epochId ? [{ label: "Epoch", value: p.commit.epochId }] : []),
-                          ...(p.commit.prevB64 ? [{ label: "Chain Link", value: p.commit.prevB64 }] : []),
-                        ]}
-                      />
-                      <InfoCard
-                        title="Environment"
-                        items={[
-                          { label: "Enforcement", value: p.environment.enforcement },
-                          { label: "Measurement", value: p.environment.measurement },
-                          ...(p.environment.attestation ? [{ label: "Attestation", value: p.environment.attestation.format }] : []),
-                        ]}
-                      />
-                      <InfoCard
-                        title="Signer"
-                        items={[
-                          { label: "Public Key", value: p.signer.publicKeyB64 },
-                          { label: "Signature", value: p.signer.signatureB64 },
-                        ]}
-                      />
+                    <ProofViewer proof={p} />
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-2">
+                      <InfoCard title="Artifact" items={[
+                        { label: "Hash Algorithm", value: p.artifact.hashAlg },
+                        { label: "Digest", value: p.artifact.digestB64 },
+                      ]} />
+                      <InfoCard title="Commit" items={[
+                        { label: "Nonce", value: p.commit.nonceB64 },
+                        ...(p.commit.counter ? [{ label: "Counter", value: p.commit.counter }] : []),
+                        ...(p.commit.epochId ? [{ label: "Epoch", value: p.commit.epochId }] : []),
+                        ...(p.commit.prevB64 ? [{ label: "Chain Link", value: p.commit.prevB64 }] : []),
+                      ]} />
+                      <InfoCard title="Environment" items={[
+                        { label: "Enforcement", value: p.environment.enforcement },
+                        { label: "Measurement", value: p.environment.measurement },
+                        ...(p.environment.attestation ? [{ label: "Attestation", value: p.environment.attestation.format }] : []),
+                      ]} />
+                      <InfoCard title="Signer" items={[
+                        { label: "Public Key", value: p.signer.publicKeyB64 },
+                        { label: "Signature", value: p.signer.signatureB64 },
+                      ]} />
                       {p.agency && (
-                        <InfoCard
-                          title="Agency"
-                          items={[
-                            { label: "Actor", value: p.agency.actor.keyId },
-                            { label: "Provider", value: p.agency.actor.provider },
-                            { label: "Algorithm", value: p.agency.actor.algorithm },
-                            { label: "Purpose", value: p.agency.authorization.purpose },
-                          ]}
-                        />
+                        <InfoCard title="Agency" items={[
+                          { label: "Actor", value: p.agency.actor.keyId },
+                          { label: "Provider", value: p.agency.actor.provider },
+                          { label: "Algorithm", value: p.agency.actor.algorithm },
+                          { label: "Purpose", value: p.agency.authorization.purpose },
+                        ]} />
                       )}
                       {p.attribution && (
-                        <InfoCard
-                          title="Attribution"
-                          items={[
-                            ...(p.attribution.name ? [{ label: "Name", value: p.attribution.name }] : []),
-                            ...(p.attribution.title ? [{ label: "Title", value: p.attribution.title }] : []),
-                            ...(p.attribution.message ? [{ label: "Message", value: p.attribution.message }] : []),
-                          ]}
-                        />
+                        <InfoCard title="Attribution" items={[
+                          ...(p.attribution.name ? [{ label: "Name", value: p.attribution.name }] : []),
+                          ...(p.attribution.title ? [{ label: "Title", value: p.attribution.title }] : []),
+                          ...(p.attribution.message ? [{ label: "Message", value: p.attribution.message }] : []),
+                        ]} />
                       )}
                     </div>
                   </>
@@ -1142,37 +1239,61 @@ Learn more: https://proofstudio.wtf
 
       {/* ── Verify Results (full width) ── */}
       {verifyResults && (
-        <div className="mt-10 pt-8 border-t border-border-subtle space-y-4">
-          <div className={`rounded-lg border p-4 ${
+        <div className="mt-10 pt-8 border-t border-border-subtle space-y-4 animate-slide-up">
+          <div className={`rounded-xl border p-5 flex items-start gap-4 ${
             anyFail ? "border-error/30 bg-error/5" :
             allPass ? "border-success/30 bg-success/5" :
             "border-warning/30 bg-warning/5"
           }`}>
-            <div className={`text-sm font-semibold ${
-              anyFail ? "text-error" : allPass ? "text-success" : "text-warning"
-            }`}>
-              {anyFail ? "Verification Failed" : allPass ? "Verification Passed" : "Passed with Warnings"}
+            <div className="shrink-0 mt-0.5">
+              {anyFail && (
+                <svg width="20" height="20" viewBox="0 0 20 20" className="text-error">
+                  <circle cx="10" cy="10" r="10" fill="currentColor" opacity="0.15" />
+                  <path d="M7 7l6 6M13 7l-6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                </svg>
+              )}
+              {!anyFail && allPass && (
+                <svg width="20" height="20" viewBox="0 0 20 20" className="text-success">
+                  <circle cx="10" cy="10" r="10" fill="currentColor" opacity="0.15" />
+                  <path d="M6 10.5l2.5 2.5L14 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                </svg>
+              )}
+              {!anyFail && !allPass && (
+                <svg width="20" height="20" viewBox="0 0 20 20" className="text-warning">
+                  <circle cx="10" cy="10" r="10" fill="currentColor" opacity="0.15" />
+                  <path d="M10 6v5M10 13.5h.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                </svg>
+              )}
             </div>
-            <p className="text-xs text-text-secondary mt-1">
-              {anyFail
-                ? "One or more checks failed. This proof may not be valid for the provided file."
-                : allPass
-                ? "All checks passed. The artifact digest matches and the proof structure is valid."
-                : "Core checks passed, but some optional fields are missing or could not be fully verified."}
-            </p>
+            <div>
+              <div className={`text-sm font-semibold ${
+                anyFail ? "text-error" : allPass ? "text-success" : "text-warning"
+              }`}>
+                {anyFail ? "Verification Failed" : allPass ? "Verification Passed" : "Passed with Warnings"}
+              </div>
+              <p className="text-xs text-text-secondary mt-1">
+                {anyFail
+                  ? "One or more checks failed. This proof may not be valid for the provided file."
+                  : allPass
+                  ? "All checks passed. The artifact digest matches and the proof structure is valid."
+                  : "Core checks passed, but some optional fields are missing or could not be fully verified."}
+              </p>
+            </div>
           </div>
 
-          <div className="rounded-lg border border-border-subtle overflow-hidden">
+          <div className="rounded-xl border border-border-subtle overflow-hidden">
             {verifyResults.map((check, i) => (
               <div
                 key={i}
-                className={`flex items-start gap-3 px-4 py-3 ${i > 0 ? "border-t border-border-subtle" : ""}`}
+                className={`flex items-start gap-3 px-4 py-3.5 transition-colors ${
+                  i > 0 ? "border-t border-border-subtle" : ""
+                } ${i % 2 === 1 ? "bg-bg-elevated/50" : ""}`}
               >
                 <div className="mt-0.5 shrink-0">
-                  {check.status === "pass" && <span className="inline-flex w-4 h-4 items-center justify-center rounded-full bg-success/20 text-success text-[10px]">✓</span>}
-                  {check.status === "fail" && <span className="inline-flex w-4 h-4 items-center justify-center rounded-full bg-error/20 text-error text-[10px]">✕</span>}
-                  {check.status === "warn" && <span className="inline-flex w-4 h-4 items-center justify-center rounded-full bg-warning/20 text-warning text-[10px]">!</span>}
-                  {check.status === "info" && <span className="inline-flex w-4 h-4 items-center justify-center rounded-full bg-info/20 text-info text-[10px]">i</span>}
+                  {check.status === "pass" && <span className="inline-flex w-5 h-5 items-center justify-center rounded-full bg-success/20 text-success text-[11px]">✓</span>}
+                  {check.status === "fail" && <span className="inline-flex w-5 h-5 items-center justify-center rounded-full bg-error/20 text-error text-[11px]">✕</span>}
+                  {check.status === "warn" && <span className="inline-flex w-5 h-5 items-center justify-center rounded-full bg-warning/20 text-warning text-[11px]">!</span>}
+                  {check.status === "info" && <span className="inline-flex w-5 h-5 items-center justify-center rounded-full bg-info/20 text-info text-[11px]">i</span>}
                 </div>
                 <div>
                   <div className="text-sm font-medium text-text">{check.label}</div>
@@ -1191,13 +1312,13 @@ Learn more: https://proofstudio.wtf
 
 function InfoCard({ title, items }: { title: string; items: { label: string; value: string }[] }) {
   return (
-    <div className="rounded-lg border border-border-subtle bg-bg-elevated p-4 min-w-0 overflow-hidden">
-      <div className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-3">{title}</div>
-      <div className="space-y-2">
+    <div className="rounded-xl border border-border-subtle bg-bg-elevated p-4 min-w-0 overflow-hidden">
+      <div className="text-[10px] font-semibold uppercase tracking-widest text-text-tertiary mb-3 pb-2 border-b border-border-subtle">{title}</div>
+      <div className="space-y-2.5">
         {items.map((item) => (
           <div key={item.label}>
-            <span className="text-[10px] text-text-tertiary">{item.label}</span>
-            <div className="text-xs font-mono text-text-secondary break-all">{item.value}</div>
+            <span className="text-[10px] text-text-tertiary uppercase tracking-wide">{item.label}</span>
+            <div className="text-xs font-mono text-text-secondary break-all mt-0.5 leading-relaxed">{item.value}</div>
           </div>
         ))}
       </div>

@@ -29,21 +29,21 @@ export function ProofViewer({ proof }: ProofViewerProps) {
   };
 
   return (
-    <div className="rounded-lg border border-border-subtle bg-bg-elevated overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-2 border-b border-border-subtle">
+    <div className="rounded-xl border border-border-subtle bg-bg-elevated overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border-subtle">
         <button
           onClick={() => setExpanded(!expanded)}
-          className="text-xs font-mono text-text-tertiary hover:text-text transition-colors flex items-center gap-1.5"
+          className="text-xs font-mono text-text-tertiary hover:text-text transition-colors flex items-center gap-2"
         >
           <svg
-            width="10" height="10" viewBox="0 0 10 10" fill="currentColor"
-            className={`transition-transform ${expanded ? "rotate-90" : ""}`}
+            width="14" height="14" viewBox="0 0 14 14" fill="currentColor"
+            className={`transition-transform duration-200 ${expanded ? "rotate-90" : ""}`}
           >
-            <path d="M3 1l4 4-4 4" />
+            <path d="M4 1.5l5.5 5.5-5.5 5.5" />
           </svg>
           proof.json
         </button>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <button
             onClick={handleDownload}
             className="text-xs text-text-tertiary hover:text-text transition-colors"
@@ -58,13 +58,19 @@ export function ProofViewer({ proof }: ProofViewerProps) {
           </button>
         </div>
       </div>
-      {expanded && (
-        <pre className="p-4 overflow-x-auto text-xs leading-relaxed font-mono max-w-full">
-          <code className="break-all">
-            {highlightJson(json)}
-          </code>
-        </pre>
-      )}
+      <div
+        className={`grid transition-all duration-300 ease-in-out ${
+          expanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+        }`}
+      >
+        <div className="overflow-hidden">
+          <pre className="p-4 overflow-x-auto text-xs leading-relaxed font-mono max-w-full">
+            <code className="break-all">
+              {highlightJson(json)}
+            </code>
+          </pre>
+        </div>
+      </div>
     </div>
   );
 }

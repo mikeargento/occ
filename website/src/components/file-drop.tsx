@@ -75,9 +75,14 @@ export function FileDrop({
       onDrop={handleDrop}
       onClick={() => !disabled && !hasFiles && inputRef.current?.click()}
       className={`
-        h-full relative rounded-lg border-2 border-dashed transition-all cursor-pointer min-h-[160px] flex items-center
+        h-full relative rounded-xl border transition-all duration-300 cursor-pointer min-h-[160px] flex items-center
         ${disabled ? "opacity-50 cursor-not-allowed" : ""}
-        ${dragover ? "border-text/30 bg-text/5" : hasFiles ? "border-border bg-bg-elevated" : "border-border-subtle hover:border-border bg-bg-elevated/50 hover:bg-bg-elevated"}
+        ${dragover
+          ? "border-text/40 bg-text/5 ring-2 ring-text/10 ring-offset-2 ring-offset-bg scale-[1.01]"
+          : hasFiles
+          ? "border-border bg-bg-elevated"
+          : "border-border-subtle bg-bg-elevated/50 hover:border-border hover:bg-bg-elevated hover:shadow-[0_0_24px_rgba(255,255,255,0.03)]"
+        }
       `}
     >
       <input
@@ -116,9 +121,9 @@ export function FileDrop({
               )}
             </div>
           </div>
-          <div className="space-y-1 max-h-[200px] overflow-y-auto">
+          <div className="space-y-0.5 max-h-[200px] overflow-y-auto">
             {files.map((f, i) => (
-              <div key={`${f.name}-${i}`} className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-bg-subtle/50 group">
+              <div key={`${f.name}-${i}`} className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-bg-subtle/50 group transition-colors">
                 <div className="min-w-0 flex-1">
                   <span className="text-sm text-text truncate block">{f.name}</span>
                   <span className="text-xs text-text-tertiary">{formatFileSize(f.size)}</span>
@@ -158,7 +163,7 @@ export function FileDrop({
         </div>
       ) : (
         <div className="flex flex-col items-center py-12 px-6 w-full">
-          <div className="w-10 h-10 rounded-lg border border-border-subtle bg-bg-subtle flex items-center justify-center mb-4">
+          <div className="w-12 h-12 rounded-xl bg-bg-subtle/80 border border-border-subtle flex items-center justify-center mb-4">
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-text-tertiary">
               <path d="M10 3v10M6 7l4-4 4 4" />
               <path d="M3 14v2a1 1 0 001 1h12a1 1 0 001-1v-2" />
