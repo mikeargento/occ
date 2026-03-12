@@ -479,7 +479,7 @@ function verifyAgency(proof: OCCProof): string | null {
   //    batch. batchContext (set by the enclave) lists all digests so we can
   //    verify this proof's digest is part of the authorized batch.
   if (authorization.artifactHash !== proof.artifact.digestB64) {
-    const bc = (agency as Record<string, unknown>).batchContext as
+    const bc = (agency as unknown as Record<string, unknown>).batchContext as
       | { batchDigests: string[] }
       | undefined;
     if (
