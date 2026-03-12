@@ -17,6 +17,11 @@ export interface AgencyEnvelope {
     timestamp: number;
     signatureB64: string;
   };
+  batchContext?: {
+    batchSize: number;
+    batchIndex: number;
+    batchDigests: string[];
+  };
 }
 
 export interface OCCProof {

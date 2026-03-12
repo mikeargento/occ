@@ -520,6 +520,15 @@ export interface AgencyEnvelope {
      */
     signatureB64: string;
   }) | WebAuthnAuthorization;
+  /**
+   * Present on batch proofs. The P-256 signature binds to the first digest;
+   * batchContext maps every proof in the batch back to that authorization.
+   */
+  batchContext?: {
+    batchSize: number;
+    batchIndex: number;
+    batchDigests: string[];
+  };
 }
 
 // ---------------------------------------------------------------------------

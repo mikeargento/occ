@@ -545,9 +545,7 @@ Learn more: https://proofstudio.wtf
 
         // Artifact hash binding (batch-aware: agency binds to first digest,
         // batchContext.batchDigests lists all authorized digests)
-        const bc = (vProof.agency as Record<string, unknown>).batchContext as
-          | { batchSize: number; batchIndex: number; batchDigests: string[] }
-          | undefined;
+        const bc = vProof.agency.batchContext;
         const artifactBindingOk =
           authorization.artifactHash === vProof.artifact.digestB64 ||
           (bc &&
