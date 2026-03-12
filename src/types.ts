@@ -243,6 +243,20 @@ export interface OCCProof {
   agency?: AgencyEnvelope;
 
   /**
+   * Optional human-readable attribution claim.
+   *
+   * A free-form human claim associated with the artifact and commit event.
+   * INCLUDED in the Ed25519 signed body — cryptographically sealed and
+   * tamper-evident. Cannot be modified after the proof is created.
+   *
+   * This is a claim, not a guaranteed identity. It complements (does not
+   * replace) the cryptographic actor key in agency.
+   *
+   * All fields are optional. If no fields are provided, omit the object.
+   */
+  attribution?: Attribution;
+
+  /**
    * Caller-supplied metadata key/value pairs.
    * NOT included in the signed body. Treat as advisory only.
    */
@@ -368,6 +382,28 @@ export interface VerificationPolicy {
    * e.g. ["apple-secure-enclave", "android-strongbox", "webauthn"]
    */
   allowedActorProviders?: string[];
+}
+
+// ---------------------------------------------------------------------------
+// Attribution — human-readable claim sealed into the proof
+// ---------------------------------------------------------------------------
+
+/**
+ * Human-readable attribution claim associated with the artifact.
+ *
+ * All fields are optional. Included in the Ed25519 signed body so that
+ * the text is cryptographically sealed and tamper-evident.
+ *
+ * This is a claim, not a guaranteed identity. It complements the
+ * cryptographic actor key in agency.
+ */
+export interface Attribution {
+  /** Human name of the person or entity making the claim. */
+  name?: string;
+  /** Short description of the claim (e.g. "Original capture"). */
+  title?: string;
+  /** Free-form message associated with the artifact (e.g. "Shot at sunset in Buffalo."). */
+  message?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -501,7 +537,8 @@ export interface AgencyEnvelope {
  * Signed fields:
  *   version, artifact, commit, publicKeyB64,
  *   enforcement, measurement, attestationFormat (when present),
- *   actor (when agency is present)
+ *   actor (when agency is present),
+ *   attribution (when provided)
  */
 export interface SignedBody {
   version: "occ/1";
@@ -534,4 +571,11 @@ export interface SignedBody {
    * actor authorized this specific commitment.
    */
   actor?: ActorIdentity;
+
+  /**
+   * Human-readable attribution claim — sealed into the signed body.
+   * Present only when the user provided attribution fields at commit time.
+   * Canonical serialization includes this when present.
+   */
+  attribution?: Attribution;
 }

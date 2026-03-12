@@ -122,6 +122,7 @@ async function handleCommit(req: IncomingMessage, res: ServerResponse): Promise<
     metadata?: Record<string, unknown>;
     prevProofId?: string;
     agency?: AgencyEnvelope;
+    attribution?: { name?: string; title?: string; message?: string };
   };
 
   try {
@@ -150,6 +151,7 @@ async function handleCommit(req: IncomingMessage, res: ServerResponse): Promise<
       metadata: body.metadata,
       prevProofId: body.prevProofId,
       agency: body.agency,
+      attribution: body.attribution,
     }),
     Promise.all(
       body.digests.map((d) => requestTimestamp(d.digestB64).catch(() => null))

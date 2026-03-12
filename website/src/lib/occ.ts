@@ -49,6 +49,11 @@ export interface OCCProof {
     proof?: TsaToken;
   };
   agency?: AgencyEnvelope;
+  attribution?: {
+    name?: string;
+    title?: string;
+    message?: string;
+  };
   metadata?: Record<string, unknown>;
   claims?: Record<string, unknown>;
 }
@@ -75,13 +80,15 @@ export async function hashBytes(bytes: Uint8Array): Promise<string> {
 export async function commitDigest(
   digestB64: string,
   metadata?: Record<string, unknown>,
-  agency?: AgencyEnvelope
+  agency?: AgencyEnvelope,
+  attribution?: { name?: string; title?: string; message?: string }
 ): Promise<OCCProof> {
   const body: Record<string, unknown> = {
     digests: [{ digestB64, hashAlg: "sha256" }],
     metadata,
   };
   if (agency) body.agency = agency;
+  if (attribution) body.attribution = attribution;
 
   const resp = await fetch(`${OCC_ENDPOINT}/commit`, {
     method: "POST",
@@ -106,6 +113,7 @@ export async function commitDigest(
     environment: raw.environment,
     timestamps: raw.timestamps,
     agency: raw.agency,
+    attribution: raw.attribution,
     metadata: raw.metadata,
     claims: raw.claims,
   };
@@ -116,6 +124,59 @@ export async function commitDigest(
   }
 
   return proof;
+}
+
+/**
+ * Commit multiple digests in a single enclave request (batch mode).
+ * Agency is verified once against the first digest.
+ * Returns one OCCProof per digest, in order.
+ */
+export async function commitBatch(
+  digests: Array<{ digestB64: string; hashAlg: "sha256" }>,
+  metadata?: Record<string, unknown>,
+  agency?: AgencyEnvelope,
+  attribution?: { name?: string; title?: string; message?: string }
+): Promise<OCCProof[]> {
+  const body: Record<string, unknown> = { digests, metadata };
+  if (agency) body.agency = agency;
+  if (attribution) body.attribution = attribution;
+
+  const resp = await fetch(`${OCC_ENDPOINT}/commit`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({ error: resp.statusText }));
+    throw new Error(err.error || `Enclave returned ${resp.status}`);
+  }
+
+  const raw = await resp.json();
+  const rawProofs = Array.isArray(raw) ? raw : [raw];
+
+  return rawProofs.map((r: Record<string, unknown>) => {
+    const proof: OCCProof = {
+      version: "occ/1",
+      artifact: r.artifact as OCCProof["artifact"],
+      commit: r.commit as OCCProof["commit"],
+      signer: r.signer as OCCProof["signer"],
+      environment: r.environment as OCCProof["environment"],
+      timestamps: r.timestamps as OCCProof["timestamps"],
+      agency: r.agency as OCCProof["agency"],
+      attribution: r.attribution as OCCProof["attribution"],
+      metadata: r.metadata as OCCProof["metadata"],
+      claims: r.claims as OCCProof["claims"],
+    };
+
+    // Promote legacy tsa from metadata
+    const meta = r.metadata as Record<string, unknown> | undefined;
+    if (!proof.timestamps && meta?.tsa) {
+      proof.timestamps = { artifact: meta.tsa as TsaToken };
+    }
+
+    return proof;
+  });
 }
 
 export async function getEnclaveInfo(): Promise<{

@@ -122,6 +122,11 @@ export async function verify(opts: {
     signedBody.actor = proof.agency.actor;
   }
 
+  // Include attribution in signed body when present
+  if (proof.attribution !== undefined) {
+    signedBody.attribution = proof.attribution;
+  }
+
   const canonicalBytes = canonicalize(signedBody);
 
   // ------------------------------------------------------------------

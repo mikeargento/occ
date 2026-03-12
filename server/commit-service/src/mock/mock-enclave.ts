@@ -239,6 +239,17 @@ export class MockEnclave implements EnclaveClient {
         signedBody.actor = req.agency.actor;
       }
 
+      // Include attribution in signed body when present
+      if (req.attribution) {
+        const attr: Record<string, string> = {};
+        if (req.attribution.name) attr.name = req.attribution.name;
+        if (req.attribution.title) attr.title = req.attribution.title;
+        if (req.attribution.message) attr.message = req.attribution.message;
+        if (Object.keys(attr).length > 0) {
+          signedBody.attribution = attr as SignedBody["attribution"];
+        }
+      }
+
       const canonicalBytes = canonicalize(signedBody);
       const signatureBytes = await this.#stub.host.sign(canonicalBytes);
 
@@ -257,6 +268,7 @@ export class MockEnclave implements EnclaveClient {
       };
 
       if (req.agency) proof.agency = req.agency;
+      if (signedBody.attribution) proof.attribution = signedBody.attribution;
       if (req.metadata !== undefined) proof.metadata = req.metadata;
       proofs.push(proof);
     }

@@ -11,6 +11,8 @@ export interface CommitRequest {
   prevProofId?: string;
   /** Optional agency envelope — actor identity + signed authorization. */
   agency?: AgencyEnvelope;
+  /** Optional attribution — human-readable claim sealed into the proof. */
+  attribution?: { name?: string; title?: string; message?: string };
 }
 
 export interface KeyRequest {

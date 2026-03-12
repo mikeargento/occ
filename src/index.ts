@@ -15,6 +15,7 @@ export type {
   VerificationPolicy,
   SignedBody,
   EnforcementTier,
+  Attribution,
   ActorIdentity,
   AuthorizationPayload,
   WebAuthnAuthorization,

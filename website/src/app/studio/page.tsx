@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { FileDrop } from "@/components/file-drop";
 import { ProofViewer } from "@/components/proof-viewer";
 import { ProofMeta } from "@/components/proof-meta";
-import { hashFile, hashBytes, commitDigest, requestChallenge, formatFileSize, type OCCProof } from "@/lib/occ";
+import { hashFile, hashBytes, commitDigest, commitBatch, requestChallenge, formatFileSize, type OCCProof } from "@/lib/occ";
 import {
   isWebAuthnAvailable,
   isPlatformAuthenticatorAvailable,
@@ -93,10 +93,26 @@ function sortKeys(value: unknown): unknown {
 
 export default function StudioPage() {
   // Create state
-  const [file, setFile] = useState<File | null>(null);
-  const [proof, setProof] = useState<OCCProof | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const [proofs, setProofs] = useState<OCCProof[]>([]);
   const [createStatus, setCreateStatus] = useState<CreateStatus>("idle");
   const [createError, setCreateError] = useState<string | null>(null);
+
+  // Attribution state
+  const [attrName, setAttrName] = useState("");
+  const [attrTitle, setAttrTitle] = useState("");
+  const [attrMessage, setAttrMessage] = useState("");
+
+  // Destination folder state (File System Access API)
+  const [destDir, setDestDir] = useState<FileSystemDirectoryHandle | null>(null);
+  const [destDirName, setDestDirName] = useState<string | null>(null);
+  const [fsDirSupported, setFsDirSupported] = useState(false);
+  const [savedCount, setSavedCount] = useState(0);
+
+  // Check File System Access API support on mount
+  useEffect(() => {
+    setFsDirSupported(typeof window !== "undefined" && typeof (window as unknown as Record<string, unknown>).showDirectoryPicker === "function");
+  }, []);
 
   // Authorship state
   const [authorshipMode, setAuthorshipMode] = useState<AuthorshipMode>("none");
@@ -120,18 +136,40 @@ export default function StudioPage() {
 
   // ── Create handlers ──
 
-  const handleFile = useCallback((f: File) => {
-    setFile(f);
-    setProof(null);
+  const handleFiles = useCallback((newFiles: File[]) => {
+    setFiles(prev => [...prev, ...newFiles]);
+    setProofs([]);
     setCreateError(null);
     setCreateStatus("idle");
   }, []);
 
-  const handleClearFile = useCallback(() => {
-    setFile(null);
-    setProof(null);
+  const handleRemoveFile = useCallback((index: number) => {
+    setFiles(prev => prev.filter((_, i) => i !== index));
+    setProofs([]);
     setCreateError(null);
     setCreateStatus("idle");
+  }, []);
+
+  const handleClearFiles = useCallback(() => {
+    setFiles([]);
+    setProofs([]);
+    setCreateError(null);
+    setCreateStatus("idle");
+  }, []);
+
+  const handlePickDestination = async () => {
+    try {
+      const dirHandle = await (window as unknown as { showDirectoryPicker: (opts?: { mode?: string }) => Promise<FileSystemDirectoryHandle> }).showDirectoryPicker({ mode: "readwrite" });
+      setDestDir(dirHandle);
+      setDestDirName(dirHandle.name);
+    } catch {
+      // User cancelled the picker
+    }
+  };
+
+  const handleClearDestination = useCallback(() => {
+    setDestDir(null);
+    setDestDirName(null);
   }, []);
 
   const handleRegisterPasskey = async () => {
@@ -147,45 +185,108 @@ export default function StudioPage() {
   };
 
   const handleGenerate = async () => {
-    if (!file) return;
+    if (files.length === 0) return;
     setCreateError(null);
     setVerifyResults(null);
 
-    try {
-      setCreateStatus("hashing");
-      const digestB64 = await hashFile(file);
+    const isBatch = files.length > 1;
 
+    try {
+      // Step 1: Hash all files
+      setCreateStatus("hashing");
+      const fileDigests: Array<{ digestB64: string; hashAlg: "sha256" }> = [];
+      for (const f of files) {
+        const digestB64 = await hashFile(f);
+        fileDigests.push({ digestB64, hashAlg: "sha256" });
+      }
+
+      // Step 2: Biometric authorization (once for entire batch)
       let agency: ReturnType<typeof buildAgencyEnvelope> | undefined;
 
       if (authorshipMode === "passkey" && storedCredential) {
-        // Step 1: Get challenge from enclave
         setCreateStatus("challenging");
         const challengeB64 = await requestChallenge();
 
-        // Step 2: Biometric authorization
         setCreateStatus("authorizing");
         const assertion = await requestAssertion(
           challengeB64,
           storedCredential.credentialIdB64
         );
 
-        // Step 3: Build agency envelope
+        // Agency bound to first file's digest
         agency = buildAgencyEnvelope(
           storedCredential,
           assertion,
-          digestB64,
+          fileDigests[0].digestB64,
           challengeB64
         );
       }
 
-      setCreateStatus("signing");
-      const result = await commitDigest(
-        digestB64,
-        { source: "occ-studio", fileName: file.name },
-        agency
-      );
+      // Build attribution object (only if any field is non-empty)
+      const attrObj: { name?: string; title?: string; message?: string } = {};
+      if (attrName.trim()) attrObj.name = attrName.trim();
+      if (attrTitle.trim()) attrObj.title = attrTitle.trim();
+      if (attrMessage.trim()) attrObj.message = attrMessage.trim();
+      const attribution = Object.keys(attrObj).length > 0 ? attrObj : undefined;
 
-      setProof(result);
+      // Build metadata with verification details
+      const metadata: Record<string, unknown> = {
+        source: "occ-studio",
+      };
+      if (authorshipMode === "passkey" && storedCredential) {
+        metadata.userVerified = true;
+        metadata.authMethod = "platform-biometric";
+        metadata.deviceKey = storedCredential.keyId;
+      }
+
+      setCreateStatus("signing");
+
+      let generatedProofs: OCCProof[];
+
+      if (isBatch) {
+        // Batch mode: one commit request, multiple digests
+        const batchId = crypto.randomUUID();
+        metadata.authorizationMode = "batch";
+        metadata.batchId = batchId;
+        metadata.batchSize = files.length;
+        metadata.fileNames = files.map(f => f.name);
+
+        generatedProofs = await commitBatch(fileDigests, metadata, agency, attribution);
+      } else {
+        // Single file mode
+        metadata.fileName = files[0].name;
+        const result = await commitDigest(
+          fileDigests[0].digestB64,
+          metadata,
+          agency,
+          attribution
+        );
+        generatedProofs = [result];
+      }
+
+      setProofs(generatedProofs);
+
+      // Auto-save to destination folder if set
+      if (destDir) {
+        let saved = 0;
+        for (let i = 0; i < files.length; i++) {
+          if (files[i] && generatedProofs[i]) {
+            try {
+              const zipped = await buildProofZip(files[i], generatedProofs[i]);
+              const fileName = `${files[i].name}.proof.zip`.replace(/^\./, "");
+              const fileHandle = await destDir.getFileHandle(fileName, { create: true });
+              const writable = await fileHandle.createWritable();
+              await writable.write(zipped.buffer.slice(zipped.byteOffset, zipped.byteOffset + zipped.byteLength) as ArrayBuffer);
+              await writable.close();
+              saved++;
+            } catch {
+              // If folder write fails, user can still download manually
+            }
+          }
+        }
+        setSavedCount(saved);
+      }
+
       setCreateStatus("done");
     } catch (err) {
       setCreateError(err instanceof Error ? err.message : "Unknown error");
@@ -193,11 +294,10 @@ export default function StudioPage() {
     }
   };
 
-  const handleDownloadZip = async () => {
-    if (!file || !proof) return;
-
-    const originalData = new Uint8Array(await file.arrayBuffer());
-    const proofJson = JSON.stringify(proof, null, 2);
+  /** Build a proof.zip for a single file+proof pair */
+  const buildProofZip = async (f: File, p: OCCProof): Promise<Uint8Array> => {
+    const originalData = new Uint8Array(await f.arrayBuffer());
+    const proofJson = JSON.stringify(p, null, 2);
 
     const verifyTxt = `VERIFICATION INSTRUCTIONS
 ========================
@@ -205,14 +305,14 @@ export default function StudioPage() {
 This proof.zip was created by ProofStudio (https://proofstudio.wtf).
 
 It contains:
-  - ${file.name}  (the original file)
+  - ${f.name}  (the original file)
   - proof.json           (the cryptographic proof)
   - VERIFY.txt           (this file)
 
-The proof demonstrates that "${file.name}" existed in its current form
-at the time the proof was created. The file was hashed locally — it was
-never uploaded to any server. Only the SHA-256 digest was sent to a
-Trusted Execution Environment (TEE) for signing.
+The proof demonstrates that "${f.name}" existed in its current form
+at the time the proof was created. The file was hashed locally in your
+browser. Only the SHA-256 digest of the file was sent to the commit
+service. The original file was never uploaded.
 
 To verify this proof:
   1. Visit https://proofstudio.wtf/studio
@@ -220,30 +320,53 @@ To verify this proof:
   3. The verifier checks the SHA-256 hash and Ed25519 signature
 
 Proof details:
-  Version:     ${proof.version}
-  Digest:      ${proof.artifact.digestB64}
-  Algorithm:   ${proof.artifact.hashAlg}
-  Public Key:  ${proof.signer.publicKeyB64}
-
+  Version:     ${p.version}
+  Digest:      ${p.artifact.digestB64}
+  Algorithm:   ${p.artifact.hashAlg}
+  Public Key:  ${p.signer.publicKeyB64}
+${p.attribution ? `
+Attribution (sealed into proof):${p.attribution.name ? `\n  Name:        ${p.attribution.name}` : ""}${p.attribution.title ? `\n  Title:       ${p.attribution.title}` : ""}${p.attribution.message ? `\n  Message:     ${p.attribution.message}` : ""}
+` : ""}
 Powered by OCC (Origin Controlled Computing)
 Learn more: https://proofstudio.wtf
 `;
 
-    const zipped = zipSync({
-      [file.name]: originalData,
+    return zipSync({
+      [f.name]: originalData,
       "proof.json": new TextEncoder().encode(proofJson),
       "VERIFY.txt": new TextEncoder().encode(verifyTxt),
     });
+  };
 
-    const blob = new Blob([zipped.buffer as ArrayBuffer], { type: "application/zip" });
+  const downloadBlob = (data: Uint8Array, filename: string) => {
+    const blob = new Blob([data.buffer as ArrayBuffer], { type: "application/zip" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${file.name}.proof.zip`.replace(/^\./, "");
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  /** Download proof.zip for a specific file index */
+  const handleDownloadZip = async (index: number) => {
+    const f = files[index];
+    const p = proofs[index];
+    if (!f || !p) return;
+    const zipped = await buildProofZip(f, p);
+    downloadBlob(zipped, `${f.name}.proof.zip`.replace(/^\./, ""));
+  };
+
+  /** Download all proof.zips (one per file) */
+  const handleDownloadAll = async () => {
+    for (let i = 0; i < files.length; i++) {
+      if (files[i] && proofs[i]) {
+        const zipped = await buildProofZip(files[i], proofs[i]);
+        downloadBlob(zipped, `${files[i].name}.proof.zip`.replace(/^\./, ""));
+      }
+    }
   };
 
   // ── Verify handlers ──
@@ -264,7 +387,7 @@ Learn more: https://proofstudio.wtf
     if (!zipFile) return;
     setVerifying(true);
     setVerifyResults(null);
-    setProof(null);
+    setProofs([]);
 
     const checks: CheckResult[] = [];
 
@@ -371,6 +494,10 @@ Learn more: https://proofstudio.wtf
           // Include actor in signed body when agency is present
           if (vProof.agency) {
             signedBody.actor = vProof.agency.actor;
+          }
+          // Include attribution in signed body when present
+          if (vProof.attribution) {
+            signedBody.attribution = vProof.attribution;
           }
 
           const canonicalBytes = canonicalize(signedBody);
@@ -522,6 +649,19 @@ Learn more: https://proofstudio.wtf
         checks.push({ label: "Agency", status: "info", detail: "No actor identity. Proof does not identify WHO authorized the commitment." });
       }
 
+      // Attribution
+      if (vProof.attribution) {
+        const parts: string[] = [];
+        if (vProof.attribution.name) parts.push(vProof.attribution.name);
+        if (vProof.attribution.title) parts.push(vProof.attribution.title);
+        if (vProof.attribution.message) parts.push(`"${vProof.attribution.message}"`);
+        checks.push({
+          label: "Attribution",
+          status: "pass",
+          detail: `Sealed claim: ${parts.join(" — ")}`,
+        });
+      }
+
     } catch (err) {
       checks.push({ label: "Verification error", status: "fail", detail: err instanceof Error ? err.message : "Unknown error" });
     }
@@ -562,9 +702,11 @@ Learn more: https://proofstudio.wtf
           <div className="flex-1 flex flex-col gap-4">
             <div className="flex-1">
               <FileDrop
-                onFile={handleFile}
-                file={file}
-                onClear={handleClearFile}
+                multiple
+                onFiles={handleFiles}
+                files={files}
+                onRemoveFile={handleRemoveFile}
+                onClearAll={handleClearFiles}
                 disabled={busy}
               />
             </div>
@@ -615,21 +757,110 @@ Learn more: https://proofstudio.wtf
                 )}
 
                 {authorshipMode === "passkey" && storedCredential && (
-                  <div className="mt-3 flex items-center gap-2 text-xs text-success">
-                    <span className="inline-flex w-4 h-4 items-center justify-center rounded-full bg-success/20 text-[10px]">✓</span>
-                    <span>Passkey registered</span>
-                    <span className="text-text-tertiary font-mono ml-1">{storedCredential.keyId.slice(0, 12)}…</span>
+                  <div className="mt-3">
+                    <div className="flex items-center gap-2 text-xs text-success">
+                      <span className="inline-flex w-4 h-4 items-center justify-center rounded-full bg-success/20 text-[10px]">✓</span>
+                      <span>Device identity registered</span>
+                      <span className="text-text-tertiary font-mono ml-1">{storedCredential.keyId.slice(0, 12)}…</span>
+                    </div>
+                    <div className="text-[11px] text-text-tertiary mt-1 ml-6">
+                      Biometric verification required when creating proofs.
+                    </div>
                   </div>
                 )}
               </div>
             )}
 
+            {/* ── Attribution fields ── */}
+            <div className="rounded-lg border border-border-subtle bg-bg-elevated p-4">
+              <div className="text-[11px] font-medium uppercase tracking-[0.12em] text-text-tertiary mb-3">
+                Attribution
+              </div>
+              <div className="space-y-3">
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Name"
+                    value={attrName}
+                    onChange={(e) => setAttrName(e.target.value)}
+                    className="w-full h-9 rounded-md border border-border-subtle bg-bg px-3 text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:border-text-tertiary transition-colors"
+                  />
+                </div>
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Title"
+                    value={attrTitle}
+                    onChange={(e) => setAttrTitle(e.target.value)}
+                    className="w-full h-9 rounded-md border border-border-subtle bg-bg px-3 text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:border-text-tertiary transition-colors"
+                  />
+                </div>
+                <div>
+                  <textarea
+                    placeholder="Message"
+                    value={attrMessage}
+                    onChange={(e) => setAttrMessage(e.target.value)}
+                    rows={2}
+                    className="w-full rounded-md border border-border-subtle bg-bg px-3 py-2 text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:border-text-tertiary transition-colors resize-none"
+                  />
+                </div>
+              </div>
+              <p className="text-[11px] text-text-tertiary mt-2">
+                This text will be sealed into the proof and travel with the artifact.
+              </p>
+            </div>
+
+            {/* ── Destination folder ── */}
+            {fsDirSupported && (
+              <div className="rounded-lg border border-border-subtle bg-bg-elevated p-4">
+                <div className="text-[11px] font-medium uppercase tracking-[0.12em] text-text-tertiary mb-3">
+                  Save To
+                </div>
+                {destDir ? (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-text-tertiary shrink-0">
+                        <path d="M2 4.5V12a1 1 0 001 1h10a1 1 0 001-1V6.5a1 1 0 00-1-1H8.5L7 4H3a1 1 0 00-1 .5z" />
+                      </svg>
+                      <span className="text-sm text-text truncate">{destDirName}</span>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0 ml-2">
+                      <button
+                        onClick={handlePickDestination}
+                        className="text-xs text-text-secondary hover:text-text transition-colors"
+                      >
+                        Change
+                      </button>
+                      <button
+                        onClick={handleClearDestination}
+                        className="text-xs text-text-tertiary hover:text-text transition-colors"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={handlePickDestination}
+                    className="w-full h-9 rounded-md border border-border-subtle text-xs font-medium text-text-secondary hover:text-text hover:border-text-tertiary transition-colors cursor-pointer"
+                  >
+                    Choose folder…
+                  </button>
+                )}
+                <p className="text-[11px] text-text-tertiary mt-2">
+                  {destDir
+                    ? "Proof files will be saved here automatically."
+                    : "Pick a folder to auto-save proof.zip files. Otherwise they download to your default location."}
+                </p>
+              </div>
+            )}
+
             <button
               onClick={handleGenerate}
-              disabled={!file || busy || (authorshipMode === "passkey" && !storedCredential)}
+              disabled={files.length === 0 || busy || (authorshipMode === "passkey" && !storedCredential)}
               className={`
                 w-full h-11 rounded-lg text-sm font-semibold uppercase tracking-wider transition-all shrink-0
-                ${!file || busy || (authorshipMode === "passkey" && !storedCredential)
+                ${files.length === 0 || busy || (authorshipMode === "passkey" && !storedCredential)
                   ? "bg-bg-subtle text-text-tertiary cursor-not-allowed"
                   : "bg-text text-bg hover:opacity-85 cursor-pointer"
                 }
@@ -643,7 +874,7 @@ Learn more: https://proofstudio.wtf
                 ? "Waiting for device authorization…"
                 : createStatus === "signing"
                 ? "Committing in enclave…"
-                : "Make a Proof"}
+                : files.length > 1 ? `Make ${files.length} Proofs` : "Make a Proof"}
             </button>
 
             {createError && (
@@ -747,70 +978,119 @@ Learn more: https://proofstudio.wtf
       </div>
 
       {/* ── Create Results (full width) ── */}
-      {proof && (
+      {proofs.length > 0 && (
         <div className="mt-10 pt-8 border-t border-border-subtle space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-2 h-2 rounded-full bg-success" />
-              <span className="text-sm font-medium text-success">Proof generated</span>
+              <span className="text-sm font-medium text-success">
+                {proofs.length === 1 ? "Proof generated" : `${proofs.length} proofs generated`}
+              </span>
+              {savedCount > 0 && destDirName && (
+                <span className="text-xs text-text-tertiary">
+                  · Saved {savedCount === 1 ? "1 file" : `${savedCount} files`} to {destDirName}
+                </span>
+              )}
             </div>
-            <button
-              onClick={handleDownloadZip}
-              className="inline-flex items-center gap-2 rounded-md bg-success px-4 py-2 text-xs font-semibold text-bg hover:bg-success/85 transition-colors cursor-pointer"
-            >
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M7 2v7M4 6l3 3 3-3" />
-                <path d="M2 10v1.5a.5.5 0 00.5.5h9a.5.5 0 00.5-.5V10" />
-              </svg>
-              Download proof.zip
-            </button>
+            <div className="flex items-center gap-2">
+              {proofs.length > 1 && (
+                <button
+                  onClick={handleDownloadAll}
+                  className="inline-flex items-center gap-2 rounded-md bg-success px-4 py-2 text-xs font-semibold text-bg hover:bg-success/85 transition-colors cursor-pointer"
+                >
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path d="M7 2v7M4 6l3 3 3-3" />
+                    <path d="M2 10v1.5a.5.5 0 00.5.5h9a.5.5 0 00.5-.5V10" />
+                  </svg>
+                  Download all
+                </button>
+              )}
+              {proofs.length === 1 && (
+                <button
+                  onClick={() => handleDownloadZip(0)}
+                  className="inline-flex items-center gap-2 rounded-md bg-success px-4 py-2 text-xs font-semibold text-bg hover:bg-success/85 transition-colors cursor-pointer"
+                >
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path d="M7 2v7M4 6l3 3 3-3" />
+                    <path d="M2 10v1.5a.5.5 0 00.5.5h9a.5.5 0 00.5-.5V10" />
+                  </svg>
+                  Download proof.zip
+                </button>
+              )}
+            </div>
           </div>
-          <ProofMeta proof={proof} fileName={file?.name} fileSize={file?.size} />
-          <ProofViewer proof={proof} />
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-2">
-            <InfoCard
-              title="Artifact"
-              items={[
-                { label: "Hash Algorithm", value: proof.artifact.hashAlg },
-                { label: "Digest", value: proof.artifact.digestB64 },
-              ]}
-            />
-            <InfoCard
-              title="Commit"
-              items={[
-                { label: "Nonce", value: proof.commit.nonceB64 },
-                ...(proof.commit.counter ? [{ label: "Counter", value: proof.commit.counter }] : []),
-                ...(proof.commit.epochId ? [{ label: "Epoch", value: proof.commit.epochId }] : []),
-                ...(proof.commit.prevB64 ? [{ label: "Chain Link", value: proof.commit.prevB64 }] : []),
-              ]}
-            />
-            <InfoCard
-              title="Environment"
-              items={[
-                { label: "Enforcement", value: proof.environment.enforcement },
-                { label: "Measurement", value: proof.environment.measurement },
-                ...(proof.environment.attestation ? [{ label: "Attestation", value: proof.environment.attestation.format }] : []),
-              ]}
-            />
-            <InfoCard
-              title="Signer"
-              items={[
-                { label: "Public Key", value: proof.signer.publicKeyB64 },
-                { label: "Signature", value: proof.signer.signatureB64 },
-              ]}
-            />
-            {proof.agency && (
-              <InfoCard
-                title="Agency"
-                items={[
-                  { label: "Actor", value: proof.agency.actor.keyId },
-                  { label: "Provider", value: proof.agency.actor.provider },
-                  { label: "Algorithm", value: proof.agency.actor.algorithm },
-                  { label: "Purpose", value: proof.agency.authorization.purpose },
-                ]}
-              />
-            )}
-          </div>
+
+          {proofs.map((p, idx) => (
+            <div key={idx} className={proofs.length > 1 ? "rounded-lg border border-border-subtle p-4 space-y-4" : "space-y-4"}>
+              {proofs.length > 1 && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-text">{files[idx]?.name || `Proof ${idx + 1}`}</span>
+                  <button
+                    onClick={() => handleDownloadZip(idx)}
+                    className="text-xs text-text-secondary hover:text-text transition-colors"
+                  >
+                    Download
+                  </button>
+                </div>
+              )}
+              <ProofMeta proof={p} fileName={files[idx]?.name} fileSize={files[idx]?.size} />
+              {proofs.length === 1 && <ProofViewer proof={p} />}
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-2">
+                <InfoCard
+                  title="Artifact"
+                  items={[
+                    { label: "Hash Algorithm", value: p.artifact.hashAlg },
+                    { label: "Digest", value: p.artifact.digestB64 },
+                  ]}
+                />
+                <InfoCard
+                  title="Commit"
+                  items={[
+                    { label: "Nonce", value: p.commit.nonceB64 },
+                    ...(p.commit.counter ? [{ label: "Counter", value: p.commit.counter }] : []),
+                    ...(p.commit.epochId ? [{ label: "Epoch", value: p.commit.epochId }] : []),
+                    ...(p.commit.prevB64 ? [{ label: "Chain Link", value: p.commit.prevB64 }] : []),
+                  ]}
+                />
+                <InfoCard
+                  title="Environment"
+                  items={[
+                    { label: "Enforcement", value: p.environment.enforcement },
+                    { label: "Measurement", value: p.environment.measurement },
+                    ...(p.environment.attestation ? [{ label: "Attestation", value: p.environment.attestation.format }] : []),
+                  ]}
+                />
+                <InfoCard
+                  title="Signer"
+                  items={[
+                    { label: "Public Key", value: p.signer.publicKeyB64 },
+                    { label: "Signature", value: p.signer.signatureB64 },
+                  ]}
+                />
+                {p.agency && (
+                  <InfoCard
+                    title="Agency"
+                    items={[
+                      { label: "Actor", value: p.agency.actor.keyId },
+                      { label: "Provider", value: p.agency.actor.provider },
+                      { label: "Algorithm", value: p.agency.actor.algorithm },
+                      { label: "Purpose", value: p.agency.authorization.purpose },
+                    ]}
+                  />
+                )}
+                {p.attribution && (
+                  <InfoCard
+                    title="Attribution"
+                    items={[
+                      ...(p.attribution.name ? [{ label: "Name", value: p.attribution.name }] : []),
+                      ...(p.attribution.title ? [{ label: "Title", value: p.attribution.title }] : []),
+                      ...(p.attribution.message ? [{ label: "Message", value: p.attribution.message }] : []),
+                    ]}
+                  />
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       )}
 

@@ -310,6 +310,7 @@ async function handleCommit(req: {
   metadata?: Record<string, unknown>;
   prevProofId?: string;
   agency?: AgencyEnvelope;
+  attribution?: { name?: string; title?: string; message?: string };
 }): Promise<OCCProof[]> {
   const proofs: OCCProof[] = [];
 
@@ -377,6 +378,18 @@ async function handleCommit(req: {
       signedBody.actor = verifiedActor;
     }
 
+    // Include attribution in the signed body (cryptographically sealed)
+    if (req.attribution) {
+      // Only include non-empty attribution with at least one field
+      const attr: Record<string, string> = {};
+      if (req.attribution.name) attr.name = req.attribution.name;
+      if (req.attribution.title) attr.title = req.attribution.title;
+      if (req.attribution.message) attr.message = req.attribution.message;
+      if (Object.keys(attr).length > 0) {
+        signedBody.attribution = attr as SignedBody["attribution"];
+      }
+    }
+
     // Step 7: Canonicalize
     const canonicalBytes = canonicalize(signedBody);
 
@@ -414,6 +427,11 @@ async function handleCommit(req: {
     // Include full agency envelope in the proof (independently verifiable)
     if (req.agency) {
       proof.agency = req.agency;
+    }
+
+    // Include attribution in the proof (sealed in signed body)
+    if (signedBody.attribution) {
+      proof.attribution = signedBody.attribution;
     }
 
     if (req.metadata !== undefined) {
@@ -477,9 +495,11 @@ async function handleRequest(req: Record<string, unknown>): Promise<unknown> {
     case "commitDigest": {
       const digestB64 = (req as { digestB64: string }).digestB64;
       const agency = (req as { agency?: AgencyEnvelope }).agency;
+      const attribution = (req as { attribution?: { name?: string; title?: string; message?: string } }).attribution;
       const proofs = await handleCommit({
         digests: [{ digestB64, hashAlg: "sha256" }],
         agency,
+        attribution,
       });
       return { proof: proofs[0] };
     }
@@ -496,14 +516,16 @@ async function handleRequest(req: Record<string, unknown>): Promise<unknown> {
         });
         return { proof: proofs[0] };
       }
-      // Batch digest mode: { action: "commit", digests: [...], agency? }
+      // Batch digest mode: { action: "commit", digests: [...], agency?, attribution? }
       const agency = (req as { agency?: AgencyEnvelope }).agency;
+      const batchAttribution = (req as { attribution?: { name?: string; title?: string; message?: string } }).attribution;
       const proofs = await handleCommit({
         ...(req as {
           digests: Array<{ digestB64: string; hashAlg: "sha256" }>;
           metadata?: Record<string, unknown>;
         }),
         agency,
+        attribution: batchAttribution,
       });
       return { ok: true, data: proofs };
     }
