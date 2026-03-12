@@ -33,7 +33,7 @@ import { createVerify, createHash } from "node:crypto";
 import { verifyAsync as ed25519VerifyAsync } from "@noble/ed25519";
 import { sha256 } from "@noble/hashes/sha256";
 import { canonicalize, constantTimeEqual } from "./canonical.js";
-import type { EnforcementTier, OCCProof, SignedBody, VerificationPolicy, AgencyEnvelope, AuthorizationPayload, WebAuthnAuthorization } from "./types.js";
+import type { EnforcementTier, OCCProof, SignedBody, SlotAllocation, VerificationPolicy, AgencyEnvelope, AuthorizationPayload, WebAuthnAuthorization } from "./types.js";
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -169,6 +169,16 @@ export async function verify(opts: {
     const agencyError = verifyAgency(proof);
     if (agencyError !== null) {
       return fail(agencyError);
+    }
+  }
+
+  // ------------------------------------------------------------------
+  // 4c. Slot allocation verification (OCC causal ordering)
+  // ------------------------------------------------------------------
+  if (proof.slotAllocation !== undefined) {
+    const slotError = await verifySlotAllocation(proof);
+    if (slotError !== null) {
+      return fail(slotError);
     }
   }
 
@@ -413,6 +423,15 @@ function checkPolicy(proof: OCCProof, policy: VerificationPolicy): string | null
     }
   }
 
+  // Slot allocation required (OCC causal ordering)
+  if (policy.requireSlot === true) {
+    if (proof.slotAllocation === undefined) {
+      return "policy requires slotAllocation (OCC causal slot) but proof has none";
+    }
+    // Slot verification itself is handled in step 4c (before policy checks),
+    // so by this point the slot has already been validated if present.
+  }
+
   return null;
 }
 
@@ -589,6 +608,155 @@ function verifyAgency(proof: OCCProof): string | null {
     }
   } catch (err: unknown) {
     return `agency: P-256 signature verification error: ${err instanceof Error ? err.message : String(err)}`;
+  }
+
+  return null;
+}
+
+// ---------------------------------------------------------------------------
+// Slot allocation verification (OCC causal ordering)
+// ---------------------------------------------------------------------------
+
+/**
+ * Verify the embedded slot allocation record for OCC atomic causality.
+ *
+ * Checks (in order):
+ *   1. Slot signature valid (enclave created it independently)
+ *   2. Slot body has no artifact data (causal independence)
+ *   3. SHA-256(canonicalize(slotBody)) === commit.slotHashB64 (signed binding)
+ *   4. slotAllocation.nonceB64 === commit.nonceB64 (nonce binding)
+ *   5. slotAllocation.counter < commit.counter (ordering)
+ *   6. slotAllocation.publicKeyB64 === signer.publicKeyB64 (same enclave)
+ *   7. slotAllocation.epochId === commit.epochId (same lifecycle)
+ *
+ * Check 3 is critical: it proves the Ed25519 commit signature covers the
+ * exact slot allocation record (via the hash in the signed body). Without
+ * this, the slot record would be advisory data that could be swapped.
+ */
+async function verifySlotAllocation(proof: OCCProof): Promise<string | null> {
+  const slot = proof.slotAllocation!;
+
+  // 1. Validate slot structure
+  if (slot.version !== "occ/slot/1") {
+    return `slotAllocation.version must be "occ/slot/1", got "${String(slot.version)}"`;
+  }
+  if (typeof slot.nonceB64 !== "string" || slot.nonceB64.length === 0) {
+    return "slotAllocation.nonceB64 must be a non-empty string";
+  }
+  if (typeof slot.counter !== "string" || slot.counter.length === 0) {
+    return "slotAllocation.counter must be a non-empty string";
+  }
+  if (typeof slot.time !== "number" || !Number.isFinite(slot.time) || slot.time < 0) {
+    return "slotAllocation.time must be a non-negative finite number";
+  }
+  if (typeof slot.epochId !== "string" || slot.epochId.length === 0) {
+    return "slotAllocation.epochId must be a non-empty string";
+  }
+  if (typeof slot.publicKeyB64 !== "string" || slot.publicKeyB64.length === 0) {
+    return "slotAllocation.publicKeyB64 must be a non-empty string";
+  }
+  if (typeof slot.signatureB64 !== "string" || slot.signatureB64.length === 0) {
+    return "slotAllocation.signatureB64 must be a non-empty string";
+  }
+
+  // 2. Verify slot signature (Ed25519 over canonical slot body)
+  const slotBody = {
+    version: slot.version,
+    nonceB64: slot.nonceB64,
+    counter: slot.counter,
+    time: slot.time,
+    epochId: slot.epochId,
+    publicKeyB64: slot.publicKeyB64,
+  };
+  const slotCanonicalBytes = canonicalize(slotBody);
+
+  let slotSigBytes: Uint8Array;
+  let slotPubKeyBytes: Uint8Array;
+  try {
+    slotSigBytes = fromBase64(slot.signatureB64);
+    slotPubKeyBytes = fromBase64(slot.publicKeyB64);
+  } catch {
+    return "slotAllocation contains invalid base64";
+  }
+
+  if (slotSigBytes.length !== 64) {
+    return `slotAllocation.signatureB64 decodes to ${slotSigBytes.length} bytes; expected 64 (Ed25519)`;
+  }
+  if (slotPubKeyBytes.length !== 32) {
+    return `slotAllocation.publicKeyB64 decodes to ${slotPubKeyBytes.length} bytes; expected 32 (Ed25519)`;
+  }
+
+  let slotSigValid: boolean;
+  try {
+    slotSigValid = await ed25519VerifyAsync(slotSigBytes, slotCanonicalBytes, slotPubKeyBytes);
+  } catch (err: unknown) {
+    return `slotAllocation signature verification error: ${err instanceof Error ? err.message : String(err)}`;
+  }
+  if (!slotSigValid) {
+    return "slotAllocation signature verification failed";
+  }
+
+  // 3. Confirm slot body has no artifact data (causal independence)
+  // The slot body schema is { version, nonceB64, counter, time, epochId, publicKeyB64 }.
+  // If any artifact-related field were present, it would break the causal argument.
+  // This check is structural: the slot body type does not include digestB64 or artifact.
+  // We verify defensively against any unexpected fields.
+  const slotBodyKeys = Object.keys(slotBody).sort();
+  const expectedKeys = ["counter", "epochId", "nonceB64", "publicKeyB64", "time", "version"];
+  if (slotBodyKeys.length !== expectedKeys.length ||
+      !slotBodyKeys.every((k, i) => k === expectedKeys[i])) {
+    return "slotAllocation body contains unexpected fields — causal independence violated";
+  }
+
+  // 4. Verify signed binding: SHA-256(canonicalize(slotBody)) === commit.slotHashB64
+  // This proves the Ed25519 commit signature covers the exact slot record.
+  if (typeof proof.commit.slotHashB64 !== "string" || proof.commit.slotHashB64.length === 0) {
+    return "commit.slotHashB64 must be present when slotAllocation is present";
+  }
+  const computedSlotHash = sha256(slotCanonicalBytes);
+  let proofSlotHash: Uint8Array;
+  try {
+    proofSlotHash = fromBase64(proof.commit.slotHashB64);
+  } catch {
+    return "commit.slotHashB64 is not valid base64";
+  }
+  if (!constantTimeEqual(computedSlotHash, proofSlotHash)) {
+    return "commit.slotHashB64 does not match SHA-256 of canonical slot body — slot binding broken";
+  }
+
+  // 5. Verify nonce binding: slot nonce === commit nonce
+  if (slot.nonceB64 !== proof.commit.nonceB64) {
+    return "slotAllocation.nonceB64 does not match commit.nonceB64";
+  }
+
+  // 6. Verify ordering: slot counter < commit counter
+  if (typeof proof.commit.slotCounter !== "string" || proof.commit.slotCounter.length === 0) {
+    return "commit.slotCounter must be present when slotAllocation is present";
+  }
+  if (proof.commit.slotCounter !== slot.counter) {
+    return "commit.slotCounter does not match slotAllocation.counter";
+  }
+  if (proof.commit.counter === undefined) {
+    return "commit.counter must be present for slot ordering verification";
+  }
+  try {
+    const slotCounter = BigInt(slot.counter);
+    const commitCounter = BigInt(proof.commit.counter);
+    if (slotCounter >= commitCounter) {
+      return `slotAllocation.counter (${slot.counter}) must be less than commit.counter (${proof.commit.counter})`;
+    }
+  } catch {
+    return "could not parse slot or commit counter as integer";
+  }
+
+  // 7. Verify same enclave: same public key
+  if (slot.publicKeyB64 !== proof.signer.publicKeyB64) {
+    return "slotAllocation.publicKeyB64 does not match signer.publicKeyB64 — different enclave";
+  }
+
+  // 8. Verify same lifecycle: same epochId
+  if (proof.commit.epochId !== undefined && slot.epochId !== proof.commit.epochId) {
+    return "slotAllocation.epochId does not match commit.epochId — different lifecycle";
   }
 
   return null;

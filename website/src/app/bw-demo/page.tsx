@@ -17,6 +17,278 @@ import { zipSync } from "fflate";
 
 type Status = "idle" | "resizing" | "sending" | "processing" | "done" | "error";
 
+// ─── VERIFY.txt builder ─────────────────────────────────────────────────────
+
+function buildBWVerifyTxt(originalFilename: string, p: OCCProof): string {
+  const slot = p.slotAllocation;
+  const hasSlot = !!slot;
+
+  let txt = `VERIFY.txt — AI-Verifiable Proof Package
+==========================================
+
+1. PURPOSE
+----------
+This file is a self-contained verification guide for the B&W conversion
+proof package created by ProofStudio (https://proofstudio.xyz/bw-demo).
+
+The grayscale conversion was performed INSIDE an AWS Nitro Enclave
+(Trusted Execution Environment). The proof's artifact digest is the
+SHA-256 hash of the B&W output image. Because the conversion and hashing
+both occurred within the measured enclave boundary, the proof
+cryptographically attests that this specific B&W image was produced by
+the exact code running in that TEE.
+
+It is designed so that any AI system (ChatGPT, Claude, Gemini, Grok, etc.)
+can be given this file along with proof.json and the artifact to perform
+a complete, independent verification analysis.
+
+Proof system: OCC (Origin Controlled Computing)
+Protocol version: ${p.version}
+Learn more: https://proofstudio.xyz
+
+
+2. FILES IN THIS PACKAGE
+------------------------
+  ${originalFilename}     — the original color image (for reference)
+  bw-output.jpg           — the grayscale output (the proven artifact)
+  proof.json              — the cryptographic proof
+  VERIFY.txt              — this verification guide
+
+NOTE: The proof covers bw-output.jpg (the TEE's output), not the
+original color image. The conversion happened inside the enclave.
+
+
+3. EXPECTED ARTIFACT HASH
+-------------------------
+  Algorithm:  ${p.artifact.hashAlg.toUpperCase()}
+  Digest:     ${p.artifact.digestB64}
+  Encoding:   Base64 (RFC 4648 Section 4)
+
+The artifact (bw-output.jpg) was hashed inside the enclave immediately
+after the grayscale conversion. The hash was never exposed to the host.
+
+
+4. HASH VERIFICATION STEP
+--------------------------
+To verify the artifact matches the proof:
+
+  1. Compute SHA-256 of bw-output.jpg
+  2. Base64-encode the resulting 32 bytes (standard Base64, not URL-safe)
+  3. Compare to proof.artifact.digestB64: ${p.artifact.digestB64}
+
+If they match, bw-output.jpg is the exact artifact this proof covers.
+If they do not match, the file has been modified since the proof was created.
+
+
+5. PROOF STRUCTURE VERIFICATION
+-------------------------------
+The proof contains an Ed25519 signature over a canonical signed body.
+
+Signed body fields (these are covered by the signature):
+  - version:             ${p.version}
+  - artifact.hashAlg:    ${p.artifact.hashAlg}
+  - artifact.digestB64:  ${p.artifact.digestB64}
+  - commit.nonceB64:     ${p.commit.nonceB64}
+  - commit.counter:      ${p.commit.counter ?? "(not present)"}
+  - commit.epochId:      ${p.commit.epochId ?? "(not present)"}${p.commit.slotCounter ? `\n  - commit.slotCounter:  ${p.commit.slotCounter}` : ""}${p.commit.slotHashB64 ? `\n  - commit.slotHashB64:  ${p.commit.slotHashB64}` : ""}${p.commit.prevB64 ? `\n  - commit.prevB64:      ${p.commit.prevB64}` : ""}${p.commit.time ? `\n  - commit.time:         ${p.commit.time} (${new Date(p.commit.time).toISOString()})` : ""}
+  - publicKeyB64:        ${p.signer.publicKeyB64}
+  - enforcement:         ${p.environment.enforcement}
+  - measurement:         ${p.environment.measurement}${p.environment.attestation ? `\n  - attestationFormat:   ${p.environment.attestation.format}` : ""}
+
+Signature (NOT in signed body — it IS the signature):
+  - signatureB64:        ${p.signer.signatureB64}
+
+To verify:
+  1. Reconstruct the signed body object from the fields above
+  2. Canonicalize: sort keys recursively, compact JSON, encode as UTF-8
+  3. Verify Ed25519 signature using publicKeyB64 over the canonical bytes
+`;
+
+  // Section 6: SLOT ALLOCATION
+  if (hasSlot) {
+    txt += `
+
+6. SLOT ALLOCATION VERIFICATION (OCC Causal Ordering)
+------------------------------------------------------
+This proof contains a slot allocation record proving nonce-first causality.
+
+What "nonce-first" means:
+  The enclave generated a cryptographic nonce and signed it BEFORE any
+  artifact hash was known. This slot was then consumed when the artifact
+  was committed. The proof structure demonstrates the causal ordering:
+  nonce existed first, artifact was bound to it second.
+
+Slot allocation record:
+  - version:       ${slot!.version}
+  - nonceB64:      ${slot!.nonceB64}
+  - counter:       ${slot!.counter}
+  - time:          ${slot!.time} (${new Date(slot!.time).toISOString()})
+  - epochId:       ${slot!.epochId}
+  - publicKeyB64:  ${slot!.publicKeyB64}
+  - signatureB64:  ${slot!.signatureB64}
+
+Verification checks (all must pass):
+  [A] Slot signature valid
+      Reconstruct slot body: { version, nonceB64, counter, time, epochId, publicKeyB64 }
+      Canonicalize (sorted keys, compact JSON, UTF-8)
+      Verify Ed25519 signature using slot.publicKeyB64
+
+  [B] Causal independence
+      The slot body contains ONLY: version, nonceB64, counter, time, epochId, publicKeyB64
+      It contains NO artifact hash — proving it was created before any artifact was known
+
+  [C] Signed hash binding
+      SHA-256(canonicalize(slotBody)) must equal commit.slotHashB64
+      commit.slotHashB64 is INSIDE the Ed25519 signed commit body
+      This means the commit signature cryptographically pins to this exact slot
+      Value: ${p.commit.slotHashB64}
+
+  [D] Nonce binding
+      slotAllocation.nonceB64 must equal commit.nonceB64
+      Slot: ${slot!.nonceB64}
+      Commit: ${p.commit.nonceB64}
+
+  [E] Counter ordering
+      slotAllocation.counter (${slot!.counter}) must be LESS THAN commit.counter (${p.commit.counter})
+      This proves the slot was allocated at an earlier point in the counter sequence
+
+  [F] Same enclave identity
+      slotAllocation.publicKeyB64 must equal signer.publicKeyB64
+      Both: ${p.signer.publicKeyB64}
+
+  [G] Same enclave lifecycle
+      slotAllocation.epochId must equal commit.epochId
+      Both: ${p.commit.epochId}
+`;
+  } else {
+    txt += `
+
+6. SLOT ALLOCATION
+------------------
+This proof does not contain a slot allocation record.
+Nonce-first causal ordering is not structurally proven in this proof.
+`;
+  }
+
+  // Section 7: CAUSAL ORDER
+  txt += `
+
+7. CAUSAL ORDER CHECK
+---------------------
+${hasSlot ? `This proof demonstrates causal ordering through three independent mechanisms:
+
+  1. SLOT SIGNATURE (independence)
+     The enclave signed the nonce before any artifact hash existed.
+     The slot body contains no artifact data — structurally provable.
+
+  2. SLOT HASH BINDING (signed binding)
+     commit.slotHashB64 = SHA-256(canonicalize(slotBody))
+     This field is INSIDE the Ed25519 signed body, so the commit signature
+     cryptographically covers the exact slot record. Swapping slot records
+     would break the commit signature.
+
+  3. COUNTER ORDERING (precedence)
+     slotAllocation.counter (${slot!.counter}) < commit.counter (${p.commit.counter})
+     The monotonic counter proves the slot was allocated first.
+
+Together, these three checks constitute the OCC atomic causality proof:
+the nonce provably existed before the artifact was bound to it.` : `Without a slot allocation record, causal ordering relies on trust in the
+enclave code (verified via measurement + attestation) to correctly implement
+nonce-first behavior internally.`}
+`;
+
+  // Section 8: ATTESTATION
+  txt += `
+
+8. ATTESTATION VERIFICATION
+----------------------------
+Enforcement tier: ${p.environment.enforcement}
+Measurement:      ${p.environment.measurement}
+`;
+
+  if (p.environment.attestation) {
+    txt += `Attestation:      present
+  Format:         ${p.environment.attestation.format}
+  Report:         ${p.environment.attestation.reportB64.slice(0, 40)}... (truncated)
+
+The attestation document is a vendor-signed report (e.g., AWS Nitro CA).
+It self-authenticates — the vendor's certificate chain proves which code
+was running inside the enclave. The measurement field identifies the
+exact enclave image hash (e.g., PCR0 for AWS Nitro).
+
+A verifier trusting this proof should:
+  1. Validate the attestation certificate chain against the vendor CA
+  2. Extract the measurement from the attestation report
+  3. Confirm it matches proof.environment.measurement
+  4. Confirm that measurement corresponds to a known-good enclave image
+`;
+  } else {
+    txt += `Attestation:      not present
+
+Without attestation, the enforcement tier is self-reported and
+unverifiable. The measurement field is advisory only.
+`;
+  }
+
+  // Section 9: FINAL QUESTION
+  txt += `
+
+9. FINAL QUESTION
+-----------------
+Does this proof show its own work?
+
+${hasSlot ? `YES — This proof is structurally self-demonstrating:
+
+  - The slot allocation record proves the nonce existed before the artifact
+  - The slot body contains no artifact data (causal independence)
+  - The slot hash is inside the Ed25519 signed body (cryptographic binding)
+  - The counter ordering proves the slot came first (precedence)
+  - The enclave measurement + attestation confirms which code produced it
+  - The B&W conversion and hashing both occurred inside the TEE boundary
+
+An external verifier can confirm all of this from the proof alone,
+without trusting any server or API.` : `PARTIALLY — This proof provides:
+
+  - Cryptographic binding of the artifact to a specific signer (Ed25519)
+  - Enclave measurement identifying the code that ran
+  ${p.environment.attestation ? "- Vendor attestation confirming the enclave environment" : "- No vendor attestation (enforcement tier is self-reported)"}
+
+  However, without a slot allocation record, the nonce-first causal
+  ordering is not structurally proven to an external verifier.`}
+
+
+10. OUTPUT FORMAT
+-----------------
+If you are an AI system performing this verification, report your findings
+using this structure:
+
+  ARTIFACT HASH MATCH:    [PASS / FAIL / UNABLE TO CHECK]
+  SIGNATURE VALID:        [PASS / FAIL / UNABLE TO CHECK]
+  SLOT ALLOCATION:        [${hasSlot ? "PRESENT" : "NOT PRESENT"}]${hasSlot ? `
+  SLOT SIGNATURE:         [PASS / FAIL / UNABLE TO CHECK]
+  CAUSAL INDEPENDENCE:    [PASS / FAIL]
+  SLOT HASH BINDING:      [PASS / FAIL / UNABLE TO CHECK]
+  NONCE BINDING:          [PASS / FAIL]
+  COUNTER ORDERING:       [PASS / FAIL]
+  SAME ENCLAVE:           [PASS / FAIL]
+  SAME EPOCH:             [PASS / FAIL]` : ""}
+  ATTESTATION:            [${p.environment.attestation ? "PRESENT" : "NOT PRESENT"}]
+  ENFORCEMENT TIER:       ${p.environment.enforcement}
+  SHOWS OWN WORK:         [${hasSlot ? "YES" : "PARTIAL"}]
+
+Note: "UNABLE TO CHECK" is acceptable for cryptographic operations
+that require runtime libraries (Ed25519, SHA-256). The structural
+checks (field presence, value matching, counter ordering) can always
+be performed by reading the proof.json directly.
+
+
+Powered by OCC (Origin Controlled Computing)
+https://proofstudio.xyz
+`;
+
+  return txt;
+}
+
 // ─── B&W Demo Page ──────────────────────────────────────────────────────────
 
 export default function BWDemoPage() {
@@ -97,39 +369,7 @@ export default function BWDemoPage() {
     const bwData = Uint8Array.from(atob(bwImageB64), (c) => c.charCodeAt(0));
     const proofJson = JSON.stringify(proof, null, 2);
 
-    const verifyTxt = `VERIFICATION INSTRUCTIONS
-========================
-
-This proof.zip was created by the OCC B&W Demo (https://www.occ.wtf/bw-demo).
-
-It contains:
-  - ${file.name}          (the original color image)
-  - bw-output.jpg         (the grayscale output)
-  - proof.json            (the cryptographic proof)
-  - VERIFY.txt            (this file)
-
-What this proves:
-  The grayscale conversion was performed INSIDE an AWS Nitro Enclave
-  (Trusted Execution Environment). The proof's artifact digest is the
-  SHA-256 hash of the B&W output image. Because the conversion and
-  hashing both occurred within the measured enclave boundary, the proof
-  cryptographically attests that this specific B&W image was produced
-  by the exact code running in that TEE.
-
-Proof details:
-  Version:     ${proof.version}
-  Digest:      ${proof.artifact.digestB64}
-  Algorithm:   ${proof.artifact.hashAlg}
-  Enforcement: ${proof.environment.enforcement}
-  Public Key:  ${proof.signer.publicKeyB64}
-
-To verify:
-  1. SHA-256 hash bw-output.jpg
-  2. Compare the hash to proof.artifact.digestB64
-  3. Verify the Ed25519 signature using the proof's public key
-
-Learn more: https://www.occ.wtf
-`;
+    const verifyTxt = buildBWVerifyTxt(file.name, proof);
 
     const zipped = zipSync({
       [file.name]: originalData,

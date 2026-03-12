@@ -16,6 +16,7 @@ export type {
   SignedBody,
   EnforcementTier,
   Attribution,
+  SlotAllocation,
   ActorIdentity,
   AuthorizationPayload,
   WebAuthnAuthorization,

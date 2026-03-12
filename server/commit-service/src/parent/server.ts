@@ -5,12 +5,18 @@
  * Parent EC2 instance — HTTPS API server
  *
  * Endpoints:
- *   POST /commit      — { digests: [{ digestB64, hashAlg }], metadata?, agency? }  (requires API key)
- *   POST /challenge   — {} → { challenge }  (public — issues enclave nonce for agency signing)
- *   POST /convert-bw  — { imageB64 }  (public demo — grayscale conversion inside TEE)
- *   GET  /key          — { publicKeyB64, measurement, enforcement }
- *   POST /verify       — { proof, policy? }
- *   GET  /health       — { ok: true }
+ *   POST /commit         — { digests: [{ digestB64, hashAlg }], metadata?, agency? }  (requires API key)
+ *   POST /allocate-slot  — {} → { slotId, slot }  (public — pre-allocates causal slot)
+ *   POST /challenge      — {} → { challenge }  (public — issues enclave nonce for agency signing)
+ *   POST /convert-bw     — { imageB64 }  (public demo — grayscale conversion inside TEE)
+ *   GET  /key             — { publicKeyB64, measurement, enforcement }
+ *   POST /verify          — { proof, policy? }
+ *   GET  /health          — { ok: true }
+ *
+ * OCC Causal Commit Model:
+ *   The parent internally handles the 2-RTT protocol (allocateSlot → commit)
+ *   so clients can still use the single POST /commit API. Clients that want
+ *   direct control over slot allocation can use POST /allocate-slot.
  */
 
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
@@ -144,33 +150,44 @@ async function handleCommit(req: IncomingMessage, res: ServerResponse): Promise<
     }
   }
 
-  const [enclaveResult, tsaResults] = await Promise.all([
-    enclaveClient.send({
-      type: "commit",
-      digests: body.digests,
-      metadata: body.metadata,
-      prevProofId: body.prevProofId,
+  // OCC 2-RTT protocol: one slot → one artifact → one proof
+  // For each digest, allocate a slot then commit with the slotId.
+  // The parent handles the round-trips so clients keep a single POST /commit API.
+  const proofs: OCCProof[] = [];
+
+  for (const d of body.digests) {
+    // Step 1: Allocate a causal slot (nonce-first)
+    const slotResult = await enclaveClient.send({ type: "allocateSlot" });
+    if (!slotResult.ok || !slotResult.data) {
+      sendError(res, 500, slotResult.error ?? "slot allocation failed");
+      return;
+    }
+    const { slotId } = slotResult.data as { slotId: string };
+
+    // Step 2: Commit the digest with the allocated slot
+    const commitResult = await enclaveClient.send({
+      type: "commitDigest",
+      slotId,
+      digestB64: d.digestB64,
       agency: body.agency,
       attribution: body.attribution,
-    }),
-    Promise.all(
-      body.digests.map((d) => requestTimestamp(d.digestB64).catch(() => null))
-    ),
-  ]);
+      metadata: body.metadata,
+    });
 
-  if (!enclaveResult.ok) {
-    sendError(res, 500, enclaveResult.error ?? "commit failed");
-    return;
-  }
-
-  const proofs = enclaveResult.data as OCCProof[];
-  if (Array.isArray(proofs)) {
-    for (let i = 0; i < proofs.length; i++) {
-      const tsa = tsaResults[i];
-      if (tsa && proofs[i]) {
-        proofs[i]!.timestamps = { artifact: tsa };
-      }
+    if (!commitResult.ok || !commitResult.data) {
+      sendError(res, 500, commitResult.error ?? "commit failed");
+      return;
     }
+
+    const { proof } = commitResult.data as { proof: OCCProof };
+
+    // Best-effort TSA timestamp
+    const tsa = await requestTimestamp(d.digestB64).catch(() => null);
+    if (tsa && proof) {
+      proof.timestamps = { artifact: tsa };
+    }
+
+    proofs.push(proof);
   }
 
   sendJson(res, 200, proofs);
@@ -223,6 +240,22 @@ async function handleChallenge(_req: IncomingMessage, res: ServerResponse): Prom
     sendJson(res, 200, result.data);
   } catch (err) {
     sendError(res, 500, `Failed to get challenge: ${err instanceof Error ? err.message : String(err)}`);
+  }
+}
+
+async function handleAllocateSlot(_req: IncomingMessage, res: ServerResponse): Promise<void> {
+  // Public endpoint — no API key required.
+  // Pre-allocates a causal slot (nonce-first) for the OCC commit model.
+  // Returns { slotId, slot } where slot is the signed SlotAllocation record.
+  try {
+    const result = await enclaveClient.send({ type: "allocateSlot" });
+    if (!result.ok || !result.data) {
+      sendError(res, 500, result.error ?? "allocateSlot failed");
+      return;
+    }
+    sendJson(res, 200, result.data);
+  } catch (err) {
+    sendError(res, 500, `Failed to allocate slot: ${err instanceof Error ? err.message : String(err)}`);
   }
 }
 
@@ -301,6 +334,8 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
 
     if (method === "POST" && url.pathname === "/commit") {
       await handleCommit(req, res);
+    } else if (method === "POST" && url.pathname === "/allocate-slot") {
+      await handleAllocateSlot(req, res);
     } else if (method === "POST" && url.pathname === "/challenge") {
       await handleChallenge(req, res);
     } else if (method === "POST" && url.pathname === "/convert-bw") {
@@ -322,11 +357,12 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
 
 server.listen(PORT, () => {
   console.log(`[parent] listening on http://localhost:${PORT}`);
-  console.log(`  POST /commit      (Content-Type: application/json, Authorization: Bearer <key>)`);
-  console.log(`  POST /challenge   (public — issues enclave nonce for agency signing)`);
-  console.log(`  POST /convert-bw  (Content-Type: application/json — public demo)`);
+  console.log(`  POST /commit         (Content-Type: application/json, Authorization: Bearer <key>)`);
+  console.log(`  POST /allocate-slot  (public — pre-allocates causal slot)`);
+  console.log(`  POST /challenge      (public — issues enclave nonce for agency signing)`);
+  console.log(`  POST /convert-bw     (Content-Type: application/json — public demo)`);
   console.log(`  GET  /key`);
-  console.log(`  POST /verify      (Content-Type: application/json)`);
+  console.log(`  POST /verify         (Content-Type: application/json)`);
   console.log(`  GET  /health`);
 });
 

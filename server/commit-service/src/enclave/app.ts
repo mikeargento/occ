@@ -24,8 +24,14 @@
  *
  * Vsock wire format: [4 bytes big-endian length][JSON payload]
  *
+ * OCC causal commit protocol (2-RTT):
+ *   1. Client calls allocateSlot() → enclave returns signed slot record
+ *   2. Client calls commit(slotId, digests) → enclave consumes slot, returns proof
+ *   The slot record is embedded in the proof for self-contained verification.
+ *
  * Supported request types:
- *   { type: "commit", digests: [{ digestB64, hashAlg }], metadata?, prevProofId?, agency? }
+ *   { type: "allocateSlot" }  — pre-allocate a causal slot (nonce-first)
+ *   { type: "commit", slotId, digests: [{ digestB64, hashAlg }], metadata?, agency? }
  *   { type: "challenge" }  — issue a fresh nonce for agency signing
  *   { type: "key" }
  *   { type: "convertBW", imageB64: "<base64 JPEG>" }  — grayscale conversion + proof
@@ -37,7 +43,7 @@ import { sha256 } from "@noble/hashes/sha256";
 import { getPublicKeyAsync, signAsync, utils } from "@noble/ed25519";
 import { canonicalize, canonicalizeToString } from "occproof";
 import { Constructor } from "occproof";
-import type { HostCapabilities, OCCProof, SignedBody, ActorIdentity, AgencyEnvelope, AuthorizationPayload, WebAuthnAuthorization } from "occproof";
+import type { HostCapabilities, OCCProof, SignedBody, SlotAllocation, ActorIdentity, AgencyEnvelope, AuthorizationPayload, WebAuthnAuthorization } from "occproof";
 import type { EnclaveRequest, EnclaveResponse } from "../parent/vsock-client.js";
 
 // ---------------------------------------------------------------------------
@@ -138,6 +144,84 @@ async function handleChallenge(): Promise<{ challenge: string }> {
 
   console.log(`[enclave] challenge issued (${pendingChallenges.size} pending)`);
   return { challenge };
+}
+
+// ---------------------------------------------------------------------------
+// Causal slot state — pending slots for OCC atomic causality
+// Each slot is a pre-allocated nonce signed by the enclave BEFORE any
+// artifact hash is known. Consuming a slot is required to produce a proof.
+// ---------------------------------------------------------------------------
+
+const SLOT_TTL_MS = 120_000; // 2 minutes
+
+interface SlotEntry {
+  record: SlotAllocation;
+  expiresAt: number;
+}
+
+const pendingSlots = new Map<string, SlotEntry>(); // nonceB64 → SlotEntry
+
+function cleanExpiredSlots(): void {
+  const now = Date.now();
+  for (const [slotId, entry] of pendingSlots) {
+    if (now >= entry.expiresAt) {
+      pendingSlots.delete(slotId);
+    }
+  }
+}
+
+/**
+ * Allocate a causal slot.
+ *
+ * Generates a fresh nonce from the NSM hardware RNG, signs a slot record
+ * that deliberately contains NO artifact data, and stores the nonce as a
+ * single-use resource. A subsequent commit must reference this slotId to
+ * produce a proof.
+ *
+ * This is the OCC nonce-first causal ordering primitive:
+ *   allocateSlot() → slot exists → commit(slotId, digest) → slot consumed
+ *
+ * The signed slot record is embedded in the resulting proof so that any
+ * verifier can confirm the nonce existed before the artifact was bound.
+ */
+async function handleAllocateSlot(): Promise<{ slotId: string; slot: SlotAllocation }> {
+  cleanExpiredSlots();
+
+  // 1. Increment counter — the slot itself occupies a counter position,
+  //    guaranteeing slotCounter < commitCounter for any later commit.
+  counter += 1n;
+
+  // 2. Generate fresh nonce from NSM hardware RNG
+  const nonceBytes = await nitroHost.getFreshNonce();
+  const nonceB64 = Buffer.from(nonceBytes).toString("base64");
+
+  // 3. Capture advisory time
+  const time = Date.now();
+
+  // 4. Build slot body — deliberately NO artifact hash
+  const slotBody = {
+    version: "occ/slot/1" as const,
+    nonceB64,
+    counter: String(counter),
+    time,
+    epochId,
+    publicKeyB64,
+  };
+
+  // 5. Sign the slot body (proves enclave created this independently)
+  const slotCanonicalBytes = canonicalize(slotBody);
+  const signatureBytes = await signAsync(slotCanonicalBytes, privateKey);
+
+  const record: SlotAllocation = {
+    ...slotBody,
+    signatureB64: Buffer.from(signatureBytes).toString("base64"),
+  };
+
+  // 6. Store as single-use resource
+  pendingSlots.set(nonceB64, { record, expiresAt: Date.now() + SLOT_TTL_MS });
+
+  console.log(`[enclave] slot allocated: counter=${record.counter} (${pendingSlots.size} pending)`);
+  return { slotId: nonceB64, slot: record };
 }
 
 // ---------------------------------------------------------------------------
@@ -305,161 +389,175 @@ function verifyAgencyEnvelope(
 // Commit handler — produces OCC proofs for pre-computed digests
 // ---------------------------------------------------------------------------
 
+/**
+ * Commit a single artifact hash by consuming a pre-allocated causal slot.
+ *
+ * OCC causal invariant: one slot → one artifact → one proof.
+ * The slot MUST exist before the artifact hash can be committed.
+ * The slot's nonce becomes the proof's nonce (binding).
+ * The slot's counter must be less than the commit's counter (ordering).
+ * The SHA-256 of the canonical slot body is included in the signed
+ * commit body via slotHashB64 (cryptographic binding).
+ */
 async function handleCommit(req: {
-  digests: Array<{ digestB64: string; hashAlg: "sha256" }>;
+  slotId: string;
+  digestB64: string;
   metadata?: Record<string, unknown>;
-  prevProofId?: string;
   agency?: AgencyEnvelope;
   attribution?: { name?: string; title?: string; message?: string };
-}): Promise<OCCProof[]> {
-  const proofs: OCCProof[] = [];
+}): Promise<OCCProof> {
+  // ── Slot consumption — OCC causal gate ──
+  // The slot MUST exist before any artifact can be committed.
+  // This is the enforcement point for nonce-first atomic causality.
+  cleanExpiredSlots();
+  const slotEntry = pendingSlots.get(req.slotId);
+  if (!slotEntry) {
+    throw new Error("Slot not found or expired — call allocateSlot before committing");
+  }
+  const slotRecord = slotEntry.record;
+  pendingSlots.delete(req.slotId); // single-use consumption
 
-  // If agency is provided, verify it ONCE against the first digest.
-  // (Batch commits with agency apply the actor to all proofs in the batch.)
+  console.log(`[enclave] slot consumed: counter=${slotRecord.counter} slotId=${req.slotId.slice(0, 12)}... (${pendingSlots.size} remaining)`);
+
+  // Validate digest
+  const digestB64 = req.digestB64;
+  const digestBytes = Buffer.from(digestB64, "base64");
+  if (digestBytes.length !== 32) {
+    throw new Error(`Invalid SHA-256 digest length: ${digestBytes.length}`);
+  }
+
+  // Verify agency if provided (single artifact, no batch)
   let verifiedActor: ActorIdentity | undefined;
   if (req.agency) {
-    // Agency verification uses the first digest's artifactHash
-    const firstDigest = req.digests[0]?.digestB64;
-    if (!firstDigest) {
-      throw new Error("Agency provided but no digests to commit");
-    }
-    verifyAgencyEnvelope(req.agency, firstDigest);
+    verifyAgencyEnvelope(req.agency, digestB64);
     verifiedActor = req.agency.actor;
   }
 
-  for (const { digestB64 } of req.digests) {
-    // Decode the digest to verify it's valid base64
-    const digestBytes = Buffer.from(digestB64, "base64");
-    if (digestBytes.length !== 32) {
-      throw new Error(`Invalid SHA-256 digest length: ${digestBytes.length}`);
-    }
+  // ── OCC causal commit flow ──
+  // The slot has been consumed. This commit is causally bound to
+  // the pre-existing slot allocation.
 
-    // Build the proof manually using the same 10-step atomic flow.
-    // (We don't delegate to Constructor.commitDigest() here because the
-    // enclave manages its own counter, epoch, and chain state directly.)
+  // Step 1: Counter (commit counter, guaranteed > slot counter)
+  counter += 1n;
+  const counterStr = String(counter);
 
-    // Step 1: Counter
-    counter += 1n;
-    const counterStr = String(counter);
+  // Step 2: Nonce — use the slot's nonce (causal binding)
+  // No new nonce generated here. The nonce was pre-allocated in the slot.
 
-    // Step 2: Nonce
-    const nonceBytes = await nitroHost.getFreshNonce();
+  // Step 3: Time (advisory)
+  const time = Date.now();
 
-    // Step 3: Time (advisory)
-    const time = Date.now();
+  // Compute slotHashB64: SHA-256 of canonical slot body.
+  // This hash is included in the signed commit body, so the Ed25519
+  // signature cryptographically binds this commit to the exact slot.
+  const slotBody = {
+    version: slotRecord.version,
+    nonceB64: slotRecord.nonceB64,
+    counter: slotRecord.counter,
+    time: slotRecord.time,
+    epochId: slotRecord.epochId,
+    publicKeyB64: slotRecord.publicKeyB64,
+  };
+  const slotHashB64 = Buffer.from(sha256(canonicalize(slotBody))).toString("base64");
 
-    // Step 5: Identity (publicKeyB64 computed at module level)
+  // Step 6: Build signed body
+  const commitFields: OCCProof["commit"] = {
+    nonceB64: slotRecord.nonceB64,  // bound to the pre-allocated slot
+    counter: counterStr,
+    slotCounter: slotRecord.counter, // proves slot preceded commit
+    slotHashB64,                     // signed binding to exact slot record
+    time,
+    epochId,
+  };
 
-    // Step 6: Build signed body
-    const commitFields: OCCProof["commit"] = {
-      nonceB64: Buffer.from(nonceBytes).toString("base64"),
-      counter: counterStr,
-      time,
-      epochId,
-    };
-
-    // Proof chaining: include prevB64 if we have a previous proof
-    if (lastProofHashB64 !== undefined) {
-      commitFields.prevB64 = lastProofHashB64;
-    }
-
-    const signedBody: SignedBody = {
-      version: "occ/1",
-      artifact: { hashAlg: "sha256", digestB64 },
-      commit: commitFields,
-      publicKeyB64,
-      enforcement: "measured-tee",
-      measurement,
-    };
-
-    // Include verified actor identity in the signed body
-    // (TEE has verified the P-256 signature, so actor is trusted)
-    if (verifiedActor) {
-      signedBody.actor = verifiedActor;
-    }
-
-    // Include attribution in the signed body (cryptographically sealed)
-    if (req.attribution) {
-      // Only include non-empty attribution with at least one field
-      const attr: Record<string, string> = {};
-      if (req.attribution.name) attr.name = req.attribution.name;
-      if (req.attribution.title) attr.title = req.attribution.title;
-      if (req.attribution.message) attr.message = req.attribution.message;
-      if (Object.keys(attr).length > 0) {
-        signedBody.attribution = attr as SignedBody["attribution"];
-      }
-    }
-
-    // Step 7: Canonicalize
-    const canonicalBytes = canonicalize(signedBody);
-
-    // Step 8: Sign
-    const signatureBytes = await signAsync(canonicalBytes, privateKey);
-
-    // Step 9: Attestation
-    const bodyHash = sha256(canonicalBytes);
-    const attestation = await nitroHost.getAttestation(bodyHash);
-
-    // Re-sign with attestationFormat included
-    signedBody.attestationFormat = attestation.format;
-    const canonicalBytesWithAttest = canonicalize(signedBody);
-    const signatureBytesWithAttest = await signAsync(canonicalBytesWithAttest, privateKey);
-
-    // Step 10: Assemble proof
-    const proof: OCCProof = {
-      version: "occ/1",
-      artifact: signedBody.artifact,
-      commit: signedBody.commit,
-      signer: {
-        publicKeyB64,
-        signatureB64: Buffer.from(signatureBytesWithAttest).toString("base64"),
-      },
-      environment: {
-        enforcement: "measured-tee",
-        measurement,
-        attestation: {
-          format: attestation.format,
-          reportB64: Buffer.from(attestation.report).toString("base64"),
-        },
-      },
-    };
-
-    // Include full agency envelope in the proof (independently verifiable)
-    if (req.agency) {
-      // For batch proofs, add batchContext so verifiers can check that this
-      // proof's digest is part of the authorized batch (the P-256 signature
-      // binds to the first digest; batchContext maps the rest).
-      if (req.digests.length > 1) {
-        proof.agency = {
-          ...req.agency,
-          batchContext: {
-            batchSize: req.digests.length,
-            batchIndex: proofs.length,  // 0-based index of this proof
-            batchDigests: req.digests.map((d) => d.digestB64),
-          },
-        };
-      } else {
-        proof.agency = req.agency;
-      }
-    }
-
-    // Include attribution in the proof (sealed in signed body)
-    if (signedBody.attribution) {
-      proof.attribution = signedBody.attribution;
-    }
-
-    if (req.metadata !== undefined) {
-      proof.metadata = req.metadata;
-    }
-
-    // Update proof chain state: hash this proof for the next proof's prevB64
-    const proofCanonicalBytes = canonicalize(proof);
-    lastProofHashB64 = Buffer.from(sha256(proofCanonicalBytes)).toString("base64");
-
-    proofs.push(proof);
+  // Proof chaining: include prevB64 if we have a previous proof
+  if (lastProofHashB64 !== undefined) {
+    commitFields.prevB64 = lastProofHashB64;
   }
 
-  return proofs;
+  const signedBody: SignedBody = {
+    version: "occ/1",
+    artifact: { hashAlg: "sha256", digestB64 },
+    commit: commitFields,
+    publicKeyB64,
+    enforcement: "measured-tee",
+    measurement,
+  };
+
+  // Include verified actor identity in the signed body
+  if (verifiedActor) {
+    signedBody.actor = verifiedActor;
+  }
+
+  // Include attribution in the signed body (cryptographically sealed)
+  if (req.attribution) {
+    const attr: Record<string, string> = {};
+    if (req.attribution.name) attr.name = req.attribution.name;
+    if (req.attribution.title) attr.title = req.attribution.title;
+    if (req.attribution.message) attr.message = req.attribution.message;
+    if (Object.keys(attr).length > 0) {
+      signedBody.attribution = attr as SignedBody["attribution"];
+    }
+  }
+
+  // Step 7: Canonicalize
+  const canonicalBytes = canonicalize(signedBody);
+
+  // Step 8: Sign
+  const signatureBytes = await signAsync(canonicalBytes, privateKey);
+
+  // Step 9: Attestation
+  const bodyHash = sha256(canonicalBytes);
+  const attestation = await nitroHost.getAttestation(bodyHash);
+
+  // Re-sign with attestationFormat included
+  signedBody.attestationFormat = attestation.format;
+  const canonicalBytesWithAttest = canonicalize(signedBody);
+  const signatureBytesWithAttest = await signAsync(canonicalBytesWithAttest, privateKey);
+
+  // Step 10: Assemble proof
+  const proof: OCCProof = {
+    version: "occ/1",
+    artifact: signedBody.artifact,
+    commit: signedBody.commit,
+    signer: {
+      publicKeyB64,
+      signatureB64: Buffer.from(signatureBytesWithAttest).toString("base64"),
+    },
+    environment: {
+      enforcement: "measured-tee",
+      measurement,
+      attestation: {
+        format: attestation.format,
+        reportB64: Buffer.from(attestation.report).toString("base64"),
+      },
+    },
+    // ── OCC causal evidence ──
+    // Embed the full signed slot allocation record. The commit signature
+    // binds to this via slotHashB64 (preventing slot swapping), and the
+    // slot's own signature proves the enclave created it independently.
+    slotAllocation: slotRecord,
+  };
+
+  // Include full agency envelope (independently verifiable)
+  if (req.agency) {
+    proof.agency = req.agency;
+  }
+
+  // Include attribution (sealed in signed body)
+  if (signedBody.attribution) {
+    proof.attribution = signedBody.attribution;
+  }
+
+  if (req.metadata !== undefined) {
+    proof.metadata = req.metadata;
+  }
+
+  // Update proof chain state: hash this proof for the next proof's prevB64
+  const proofCanonicalBytes = canonicalize(proof);
+  lastProofHashB64 = Buffer.from(sha256(proofCanonicalBytes)).toString("base64");
+
+  return proof;
 }
 
 // ---------------------------------------------------------------------------
@@ -495,6 +593,9 @@ async function handleRequest(req: Record<string, unknown>): Promise<unknown> {
         epochId,
       };
     }
+    case "allocateSlot": {
+      return await handleAllocateSlot();
+    }
     case "challenge": {
       return await handleChallenge();
     }
@@ -507,17 +608,20 @@ async function handleRequest(req: Record<string, unknown>): Promise<unknown> {
       };
     }
     case "commitDigest": {
+      // One slot → one artifact → one proof (OCC causal unit)
+      const slotId = (req as { slotId: string }).slotId;
+      if (!slotId) throw new Error("commitDigest requires slotId — call allocateSlot first");
       const digestB64 = (req as { digestB64: string }).digestB64;
       const agency = (req as { agency?: AgencyEnvelope }).agency;
       const attribution = (req as { attribution?: { name?: string; title?: string; message?: string } }).attribution;
-      const proofs = await handleCommit({
-        digests: [{ digestB64, hashAlg: "sha256" }],
-        agency,
-        attribution,
-      });
-      return { proof: proofs[0] };
+      const proof = await handleCommit({ slotId, digestB64, agency, attribution });
+      return { proof };
     }
     case "commit": {
+      // One slot → one artifact → one proof (OCC causal unit)
+      const slotId = (req as { slotId: string }).slotId;
+      if (!slotId) throw new Error("commit requires slotId — call allocateSlot first");
+
       // Raw bytes mode: parent sends { action: "commit", bytesB64: "..." }
       // We SHA-256 hash the bytes to get the digest, then create the proof.
       const bytesB64 = (req as { bytesB64?: string }).bytesB64;
@@ -525,32 +629,33 @@ async function handleRequest(req: Record<string, unknown>): Promise<unknown> {
         const rawBytes = Buffer.from(bytesB64, "base64");
         const digest = sha256(rawBytes);
         const digestB64 = Buffer.from(digest).toString("base64");
-        const proofs = await handleCommit({
-          digests: [{ digestB64, hashAlg: "sha256" }],
-        });
-        return { proof: proofs[0] };
+        const proof = await handleCommit({ slotId, digestB64 });
+        return { proof };
       }
-      // Batch digest mode: { action: "commit", digests: [...], agency?, attribution? }
+      // Single digest mode: { action: "commit", slotId, digestB64, agency?, attribution? }
+      const digestB64 = (req as { digestB64: string }).digestB64;
       const agency = (req as { agency?: AgencyEnvelope }).agency;
-      const batchAttribution = (req as { attribution?: { name?: string; title?: string; message?: string } }).attribution;
-      const proofs = await handleCommit({
-        ...(req as {
-          digests: Array<{ digestB64: string; hashAlg: "sha256" }>;
-          metadata?: Record<string, unknown>;
-        }),
-        agency,
-        attribution: batchAttribution,
-      });
-      return { ok: true, data: proofs };
+      const attribution = (req as { attribution?: { name?: string; title?: string; message?: string } }).attribution;
+      const metadata = (req as { metadata?: Record<string, unknown> }).metadata;
+      const proof = await handleCommit({ slotId, digestB64, agency, attribution, metadata });
+      return { proof };
     }
     case "convertBW": {
       // Grayscale conversion — happens entirely inside the enclave.
       // The proof's artifact digest covers the B&W output, proving
       // the state change (color → grayscale) occurred within the TEE.
+      //
+      // For convertBW, the enclave auto-allocates a slot internally
+      // because both the transformation and the commitment happen
+      // within the same TEE boundary in a single atomic operation.
+      // The causal slot still exists in the proof for verifier consistency.
       const imageB64 = (req as { imageB64?: string }).imageB64;
       if (!imageB64) {
         return { error: "convertBW requires imageB64 field" };
       }
+
+      // Auto-allocate a slot (enclave-internal, no external round-trip)
+      const { slotId } = await handleAllocateSlot();
 
       const sharp = (await import("sharp") as any).default;
       const inputBuffer = Buffer.from(imageB64, "base64");
@@ -566,14 +671,15 @@ async function handleRequest(req: Record<string, unknown>): Promise<unknown> {
       const digestB64 = Buffer.from(digest).toString("base64");
 
       // Generate OCC proof for this digest
-      const proofs = await handleCommit({
-        digests: [{ digestB64, hashAlg: "sha256" }],
+      const proof = await handleCommit({
+        slotId,
+        digestB64,
         metadata: { source: "occ-bw-demo", operation: "grayscale" },
       });
 
       return {
         imageB64: Buffer.from(bwBuffer).toString("base64"),
-        proof: proofs[0],
+        proof,
         digestB64,
       };
     }

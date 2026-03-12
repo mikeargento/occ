@@ -36,6 +36,8 @@ export interface OCCProof {
     time?: number;
     prevB64?: string;
     epochId?: string;
+    slotCounter?: string;
+    slotHashB64?: string;
   };
   signer: {
     publicKeyB64: string;
@@ -58,6 +60,15 @@ export interface OCCProof {
     name?: string;
     title?: string;
     message?: string;
+  };
+  slotAllocation?: {
+    version: string;
+    nonceB64: string;
+    counter: string;
+    time: number;
+    epochId: string;
+    publicKeyB64: string;
+    signatureB64: string;
   };
   metadata?: Record<string, unknown>;
   claims?: Record<string, unknown>;
@@ -119,6 +130,7 @@ export async function commitDigest(
     timestamps: raw.timestamps,
     agency: raw.agency,
     attribution: raw.attribution,
+    slotAllocation: raw.slotAllocation,
     metadata: raw.metadata,
     claims: raw.claims,
   };
@@ -170,6 +182,7 @@ export async function commitBatch(
       timestamps: r.timestamps as OCCProof["timestamps"],
       agency: r.agency as OCCProof["agency"],
       attribution: r.attribution as OCCProof["attribution"],
+      slotAllocation: r.slotAllocation as OCCProof["slotAllocation"],
       metadata: r.metadata as OCCProof["metadata"],
       claims: r.claims as OCCProof["claims"],
     };
@@ -256,6 +269,7 @@ export async function convertToBW(imageB64: string): Promise<BWConversionResult>
     signer: result.proof.signer,
     environment: result.proof.environment,
     timestamps: result.proof.timestamps,
+    slotAllocation: result.proof.slotAllocation,
     metadata: result.proof.metadata,
     claims: result.proof.claims,
   };

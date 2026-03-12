@@ -129,6 +129,31 @@ export interface OCCProof {
      * Included in the signed body (via commit) — tamper-evident.
      */
     epochId?: string;
+    /**
+     * Counter value of the consumed slot allocation.
+     *
+     * When present, proves causal ordering: slotCounter < counter means
+     * the slot was allocated before the commit occurred. Combined with
+     * slotHashB64 and the embedded slotAllocation record, this provides
+     * structural evidence of nonce-first causality.
+     *
+     * Decimal string, compared as BigInt by the verifier.
+     */
+    slotCounter?: string;
+    /**
+     * SHA-256 hash of the canonical slot allocation body (Base64-encoded).
+     *
+     * Cryptographically binds the commit to the exact slot allocation record.
+     * The slot body is canonicalized (sorted keys, compact JSON, UTF-8) and
+     * hashed. This field is SIGNED (included in the signed body), so the
+     * Ed25519 commit signature covers the binding.
+     *
+     * A verifier reconstructs the slot body from slotAllocation, canonicalizes,
+     * hashes, and checks: SHA-256(canonicalize(slotBody)) === slotHashB64.
+     * This prevents slot swapping — any change to the slot record would
+     * break the commit signature.
+     */
+    slotHashB64?: string;
   };
 
   /**
@@ -241,6 +266,23 @@ export interface OCCProof {
    * NOT included in the Ed25519 signed body (independently verifiable).
    */
   agency?: AgencyEnvelope;
+
+  /**
+   * Embedded slot allocation record proving nonce-first causality.
+   *
+   * When present, this is a self-contained signed record that the enclave
+   * created BEFORE any artifact hash was known. The verifier checks:
+   *   1. Slot signature valid (enclave created it)
+   *   2. Slot body has no artifact hash (causal independence)
+   *   3. Slot nonce == commit nonce (binding)
+   *   4. Slot counter < commit counter (ordering)
+   *   5. Same key and epoch (same enclave)
+   *
+   * NOT included in the Ed25519 signed commit body — independently
+   * verifiable via its own Ed25519 signature (same pattern as
+   * attestation.reportB64 and agency.authorization).
+   */
+  slotAllocation?: SlotAllocation;
 
   /**
    * Optional human-readable attribution claim.
@@ -382,6 +424,23 @@ export interface VerificationPolicy {
    * e.g. ["apple-secure-enclave", "android-strongbox", "webauthn"]
    */
   allowedActorProviders?: string[];
+
+  /**
+   * If true, proof must contain a valid slotAllocation proving
+   * nonce-first atomic causality (OCC causal commit model).
+   *
+   * When enabled, the verifier checks:
+   *   - slotAllocation is present with valid Ed25519 signature
+   *   - slotAllocation contains no artifact data (causal independence)
+   *   - slotAllocation.nonceB64 === commit.nonceB64 (binding)
+   *   - slotAllocation.counter < commit.counter (ordering)
+   *   - slotAllocation.publicKeyB64 === signer.publicKeyB64 (same enclave)
+   *   - slotAllocation.epochId === commit.epochId (same lifecycle)
+   *
+   * Required for verifiers that need to confirm true OCC causality,
+   * not just TEE-enforced signing with freshness.
+   */
+  requireSlot?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -529,6 +588,49 @@ export interface AgencyEnvelope {
     batchIndex: number;
     batchDigests: string[];
   };
+}
+
+// ---------------------------------------------------------------------------
+// Slot allocation — causal slot proving nonce-first ordering
+// ---------------------------------------------------------------------------
+
+/**
+ * Signed slot allocation record.
+ *
+ * Created by the enclave's allocateSlot endpoint BEFORE any artifact hash
+ * is known. The slot body deliberately contains NO artifact data — this is
+ * the structural proof of causal independence.
+ *
+ * The enclave signs this record at allocation time and stores the nonce as
+ * a single-use resource in pendingSlots. When a client later calls commit
+ * with the slotId, the enclave consumes the slot and embeds this record in
+ * the proof. A verifier can then confirm:
+ *
+ *   1. The slot signature is valid (enclave created it)
+ *   2. The slot body contains no artifact hash (causal independence)
+ *   3. SHA-256(canonicalize(slotBody)) === commit.slotHashB64 (signed binding)
+ *   4. slotAllocation.nonceB64 === commit.nonceB64 (nonce binding)
+ *   5. slotAllocation.counter < commit.counter (ordering)
+ *   6. Same publicKeyB64 and epochId (same enclave lifecycle)
+ *
+ * Together these checks prove the nonce existed before the artifact was
+ * bound to it — the OCC atomic causality invariant.
+ */
+export interface SlotAllocation {
+  /** Schema version for slot records. Domain separation from proof bodies. */
+  version: "occ/slot/1";
+  /** NSM-generated nonce. Becomes commit.nonceB64 when consumed. */
+  nonceB64: string;
+  /** Monotonic counter at allocation time. Must be < commit counter. */
+  counter: string;
+  /** Advisory timestamp (Unix epoch ms) at allocation time. */
+  time: number;
+  /** Enclave lifecycle identifier. Must match commit.epochId. */
+  epochId: string;
+  /** Enclave Ed25519 public key. Must match signer.publicKeyB64. */
+  publicKeyB64: string;
+  /** Ed25519 signature over canonical slot body (all fields above). */
+  signatureB64: string;
 }
 
 // ---------------------------------------------------------------------------

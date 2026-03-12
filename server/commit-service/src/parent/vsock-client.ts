@@ -15,6 +15,21 @@ export interface CommitRequest {
   attribution?: { name?: string; title?: string; message?: string };
 }
 
+/** OCC 2-RTT: single-artifact commit with pre-allocated slot. */
+export interface CommitDigestRequest {
+  type: "commitDigest";
+  slotId: string;
+  digestB64: string;
+  metadata?: Record<string, unknown>;
+  agency?: AgencyEnvelope;
+  attribution?: { name?: string; title?: string; message?: string };
+}
+
+/** Pre-allocate a causal slot (nonce-first). */
+export interface AllocateSlotRequest {
+  type: "allocateSlot";
+}
+
 export interface KeyRequest {
   type: "key";
 }
@@ -28,7 +43,13 @@ export interface ConvertBWRequest {
   imageB64: string;
 }
 
-export type EnclaveRequest = CommitRequest | KeyRequest | ChallengeRequest | ConvertBWRequest;
+export type EnclaveRequest =
+  | CommitRequest
+  | CommitDigestRequest
+  | AllocateSlotRequest
+  | KeyRequest
+  | ChallengeRequest
+  | ConvertBWRequest;
 
 export interface EnclaveResponse {
   ok: boolean;
