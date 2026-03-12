@@ -1159,13 +1159,13 @@ Learn more: https://proofstudio.wtf
 
 function InfoCard({ title, items }: { title: string; items: { label: string; value: string }[] }) {
   return (
-    <div className="rounded-lg border border-border-subtle bg-bg-elevated p-4">
+    <div className="rounded-lg border border-border-subtle bg-bg-elevated p-4 min-w-0 overflow-hidden">
       <div className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-3">{title}</div>
       <div className="space-y-2">
         {items.map((item) => (
-          <div key={item.label} className="flex justify-between gap-4">
-            <span className="text-xs text-text-tertiary shrink-0">{item.label}</span>
-            <span className="text-xs font-mono text-text-secondary truncate">{item.value}</span>
+          <div key={item.label}>
+            <span className="text-[10px] text-text-tertiary">{item.label}</span>
+            <div className="text-xs font-mono text-text-secondary break-all">{item.value}</div>
           </div>
         ))}
       </div>

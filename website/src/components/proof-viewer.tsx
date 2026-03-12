@@ -9,6 +9,7 @@ interface ProofViewerProps {
 
 export function ProofViewer({ proof }: ProofViewerProps) {
   const [copied, setCopied] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const json = JSON.stringify(proof, null, 2);
 
   const handleCopy = async () => {
@@ -30,7 +31,18 @@ export function ProofViewer({ proof }: ProofViewerProps) {
   return (
     <div className="rounded-lg border border-border-subtle bg-bg-elevated overflow-hidden">
       <div className="flex items-center justify-between px-4 py-2 border-b border-border-subtle">
-        <span className="text-xs font-mono text-text-tertiary">occ/1 proof</span>
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="text-xs font-mono text-text-tertiary hover:text-text transition-colors flex items-center gap-1.5"
+        >
+          <svg
+            width="10" height="10" viewBox="0 0 10 10" fill="currentColor"
+            className={`transition-transform ${expanded ? "rotate-90" : ""}`}
+          >
+            <path d="M3 1l4 4-4 4" />
+          </svg>
+          proof.json
+        </button>
         <div className="flex items-center gap-2">
           <button
             onClick={handleDownload}
@@ -46,11 +58,13 @@ export function ProofViewer({ proof }: ProofViewerProps) {
           </button>
         </div>
       </div>
-      <pre className="p-4 overflow-x-auto text-xs leading-relaxed font-mono">
-        <code>
-          {highlightJson(json)}
-        </code>
-      </pre>
+      {expanded && (
+        <pre className="p-4 overflow-x-auto text-xs leading-relaxed font-mono max-w-full">
+          <code className="break-all">
+            {highlightJson(json)}
+          </code>
+        </pre>
+      )}
     </div>
   );
 }
