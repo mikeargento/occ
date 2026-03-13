@@ -85,14 +85,14 @@ export default function Home() {
 
         <div className="mx-auto max-w-5xl px-6 text-center">
           <h1
-            className="hero-animate text-[clamp(2rem,6.5vw,4.5rem)] font-bold tracking-[-0.04em] leading-[1.08] sm:whitespace-nowrap text-text/90"
+            className="hero-animate text-[clamp(1.8rem,6.5vw,4.5rem)] font-bold tracking-[-0.04em] leading-[1.08] whitespace-nowrap text-text"
             style={{ animationDelay: "0ms" }}
           >
             Proof for anything digital
           </h1>
 
           <p
-            className="hero-animate mt-7 sm:mt-8 text-[clamp(1.375rem,3.2vw,2.25rem)] font-bold tracking-[-0.02em] leading-[1.3] text-text"
+            className="hero-animate mt-7 sm:mt-8 text-[clamp(1.125rem,3.2vw,2.25rem)] font-medium tracking-[-0.02em] leading-[1.3] whitespace-nowrap text-text-secondary"
             style={{ animationDelay: "120ms" }}
           >
             No blockchain. No ledgers. Just proof.
@@ -104,13 +104,13 @@ export default function Home() {
           >
             <Link
               href="/studio"
-              className="inline-flex h-12 items-center justify-center rounded-xl bg-emerald-600 px-8 text-sm font-semibold text-white transition-all hover:bg-emerald-500 active:scale-[0.98]"
+              className="inline-flex h-12 w-full sm:w-auto items-center justify-center rounded-xl bg-emerald-600 px-8 text-sm font-semibold text-white transition-all hover:bg-emerald-500 active:scale-[0.98]"
             >
               Try ProofStudio
             </Link>
             <Link
               href="/docs"
-              className="inline-flex h-12 items-center justify-center rounded-xl border border-border px-8 text-sm font-semibold text-text-secondary transition-all hover:text-text hover:border-text-tertiary active:scale-[0.98]"
+              className="inline-flex h-12 w-full sm:w-auto items-center justify-center rounded-xl border border-border px-8 text-sm font-semibold text-text-secondary transition-all hover:text-text hover:border-text-tertiary active:scale-[0.98]"
             >
               Documentation
             </Link>
@@ -124,9 +124,10 @@ export default function Home() {
       <Section className="!pt-16 sm:!pt-20">
         <ScrollReveal>
           <div className="text-center mb-16">
-            <h2 className="text-2xl sm:text-3xl font-semibold tracking-[-0.03em] text-text-secondary max-w-3xl mx-auto text-balance">
-              ProofStudio creates a cryptographic container that holds exactly
-              one digital artifact or process.
+            <h2 className="text-base sm:text-3xl font-semibold tracking-[-0.03em] text-text-secondary max-w-3xl mx-auto sm:text-balance">
+              ProofStudio creates a cryptographic{" "}
+              <br className="sm:hidden" />container that holds exactly one{" "}
+              <br className="sm:hidden" />digital artifact or process.
             </h2>
           </div>
         </ScrollReveal>
@@ -387,13 +388,13 @@ export default function Home() {
             <div className="mt-10 sm:mt-12 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
               <Link
                 href="/studio"
-                className="inline-flex h-12 items-center justify-center rounded-xl bg-emerald-600 px-8 w-auto text-sm font-semibold text-white transition-all hover:bg-emerald-500 active:scale-[0.98]"
+                className="inline-flex h-12 w-full sm:w-auto items-center justify-center rounded-xl bg-emerald-600 px-8 text-sm font-semibold text-white transition-all hover:bg-emerald-500 active:scale-[0.98]"
               >
                 Open Studio
               </Link>
               <Link
                 href="/api-reference"
-                className="inline-flex h-12 items-center justify-center rounded-xl border border-border px-8 w-auto text-sm font-semibold text-text-secondary transition-all hover:text-text hover:border-text-tertiary active:scale-[0.98]"
+                className="inline-flex h-12 w-full sm:w-auto items-center justify-center rounded-xl border border-border px-8 text-sm font-semibold text-text-secondary transition-all hover:text-text hover:border-text-tertiary active:scale-[0.98]"
               >
                 API Reference
               </Link>
@@ -401,7 +402,7 @@ export default function Home() {
                 href="https://github.com/mikeargento/occ"
                 target="_blank"
                 rel="noopener"
-                className="inline-flex h-12 items-center justify-center rounded-xl border border-border px-8 w-auto text-sm font-semibold text-text-secondary transition-all hover:text-text hover:border-text-tertiary active:scale-[0.98]"
+                className="inline-flex h-12 w-full sm:w-auto items-center justify-center rounded-xl border border-border px-8 text-sm font-semibold text-text-secondary transition-all hover:text-text hover:border-text-tertiary active:scale-[0.98]"
               >
                 GitHub
               </a>
