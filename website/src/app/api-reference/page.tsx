@@ -97,7 +97,7 @@ export default function APIReferencePage() {
         <Endpoint
           method="POST"
           path="/commit"
-          description="Commit one or more artifact digests. The enclave generates a fresh nonce, increments its monotonic counter, signs with Ed25519, and returns a complete OCC proof for each digest."
+          description="Commit one or more artifact digests. For each digest, the enclave allocates a causal slot (nonce + counter), then commits the artifact against that slot. Returns a complete OCC proof for each digest. Requires API key if configured."
         >
           <h4 className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-2">
             Request body
@@ -110,7 +110,13 @@ export default function APIReferencePage() {
       "hashAlg": "sha256"
     }
   ],
-  "metadata": {                      // optional, advisory
+  "agency": { ... },                 // optional - actor-bound proof (passkey/WebAuthn)
+  "attribution": {                   // optional - signed creator metadata
+    "name": "Jane Doe",
+    "title": "Sunset at Malibu",
+    "message": "Original RAW capture"
+  },
+  "metadata": {                      // optional, advisory (NOT signed)
     "source": "my-app",
     "fileName": "document.pdf"
   }
@@ -131,6 +137,8 @@ export default function APIReferencePage() {
     "commit": {
       "nonceB64": "gTME79qH3fXQ5qXX0JxX6T5oGhFRLLw2BIUoeQai9Z8=",
       "counter": "278",
+      "slotCounter": "277",
+      "slotHashB64": "...",
       "time": 1741496392841,
       "epochId": "a1b2c3d4e5f6..."
     },
@@ -145,6 +153,15 @@ export default function APIReferencePage() {
         "format": "aws-nitro",
         "reportB64": "..."
       }
+    },
+    "slotAllocation": {
+      "version": "occ/slot/1",
+      "nonceB64": "gTME79qH3fXQ5qXX0JxX6T5oGhFRLLw2BIUoeQai9Z8=",
+      "counter": "277",
+      "time": 1741496392800,
+      "epochId": "a1b2c3d4e5f6...",
+      "publicKeyB64": "...",
+      "signatureB64": "..."
     },
     "timestamps": {
       "artifact": {
@@ -193,6 +210,87 @@ const resp = await fetch("https://nitro.occproof.com/commit", {
 
 const proofs = await resp.json();
 // proofs[0] is a complete OCCProof`}
+          />
+        </Endpoint>
+
+        {/* POST /allocate-slot */}
+        <Endpoint
+          method="POST"
+          path="/allocate-slot"
+          description="Pre-allocate a causal slot before committing an artifact. The slot reserves a nonce and counter position, proving the enclave committed to a sequence position independently of any artifact content. Public endpoint."
+        >
+          <h4 className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-2">
+            Request body
+          </h4>
+          <CodeBlock code={`{}`} />
+
+          <h4 className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-2 mt-6">
+            Response (200)
+          </h4>
+          <CodeBlock
+            code={`{
+  "slotId": "gTME79qH3fXQ5qXX0JxX6T5oGhFRLLw2BIUoeQai9Z8=",
+  "slot": {
+    "version": "occ/slot/1",
+    "nonceB64": "gTME79qH3fXQ5qXX0JxX6T5oGhFRLLw2BIUoeQai9Z8=",
+    "counter": "277",
+    "time": 1741496392800,
+    "epochId": "a1b2c3d4e5f6...",
+    "publicKeyB64": "...",
+    "signatureB64": "..."
+  }
+}`}
+          />
+          <p className="text-xs text-text-tertiary mt-3">
+            Note: POST /commit handles slot allocation internally. This endpoint is for clients that want direct control over the 2-RTT protocol.
+          </p>
+        </Endpoint>
+
+        {/* POST /challenge */}
+        <Endpoint
+          method="POST"
+          path="/challenge"
+          description="Request a fresh challenge nonce from the enclave for actor-bound proofs (passkey/WebAuthn). The challenge must be signed by the device key and included in the agency envelope of a commit request. Public endpoint."
+        >
+          <h4 className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-2">
+            Request body
+          </h4>
+          <CodeBlock code={`{}`} />
+
+          <h4 className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-2 mt-6">
+            Response (200)
+          </h4>
+          <CodeBlock
+            code={`{
+  "challenge": "R2FtbWEgUmF5IEJ1cnN0..."   // base64, 60s TTL, single-use
+}`}
+          />
+        </Endpoint>
+
+        {/* POST /convert-bw */}
+        <Endpoint
+          method="POST"
+          path="/convert-bw"
+          description="Demo endpoint: send a base64-encoded image to the enclave for grayscale conversion. The enclave converts the image, hashes the output, and returns the converted image with an OCC proof. Public endpoint."
+        >
+          <h4 className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-2">
+            Request body
+          </h4>
+          <CodeBlock
+            code={`{
+  "imageB64": "<base64-encoded image>"    // max 2 MB
+}`}
+          />
+
+          <h4 className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-2 mt-6">
+            Response (200)
+          </h4>
+          <CodeBlock
+            code={`{
+  "imageB64": "<base64-encoded grayscale image>",
+  "proof": { ... },                       // complete OCCProof
+  "digestB64": "..."                      // SHA-256 of the output image
+}`}
           />
         </Endpoint>
 
@@ -276,6 +374,8 @@ const proofs = await resp.json();
   commit: {
     nonceB64: string;
     counter?: string;          // decimal, monotonic
+    slotCounter?: string;      // slot's counter (< commit counter)
+    slotHashB64?: string;      // SHA-256 of canonical slot body
     time?: number;             // Unix ms
     prevB64?: string;          // chain link
     epochId?: string;          // hex SHA-256
@@ -292,12 +392,21 @@ const proofs = await resp.json();
       reportB64: string;
     };
   };
+  slotAllocation?: {                 // causal slot record
+    version: string;                 // "occ/slot/1"
+    nonceB64: string;
+    counter: string;
+    time: number;
+    epochId: string;
+    publicKeyB64: string;            // same enclave key
+    signatureB64: string;            // Ed25519 over canonical slot body
+  };
   agency?: {                         // actor-bound proof
     actor: {
       keyId: string;
       publicKeyB64: string;
       algorithm: "ES256";
-      provider: string;              // e.g. "apple-secure-enclave"
+      provider: string;              // e.g. "passkey"
     };
     authorization: {
       purpose: "occ/commit-authorize/v1";
@@ -307,12 +416,23 @@ const proofs = await resp.json();
       timestamp: number;
       signatureB64: string;          // P-256 ECDSA
     };
+    batchContext?: {                  // present on batch proofs
+      batchSize: number;
+      batchIndex: number;
+      batchDigests: string[];
+    };
+  };
+  attribution?: {                    // signed creator metadata
+    name?: string;
+    title?: string;
+    message?: string;
   };
   timestamps?: {
     artifact?: TsaToken;
     proof?: TsaToken;
   };
   metadata?: Record<string, unknown>;
+  claims?: Record<string, unknown>;
 }`}
         />
 
@@ -373,6 +493,11 @@ const proofs = await resp.json();
                 <td className="py-2 pr-4">401</td>
                 <td className="py-2 pr-4">Missing or invalid API key</td>
                 <td className="py-2"><code className="text-xs font-mono">{`{ "error": "unauthorized" }`}</code></td>
+              </tr>
+              <tr className="border-b border-border-subtle">
+                <td className="py-2 pr-4">413</td>
+                <td className="py-2 pr-4">Payload too large (convert-bw: 2 MB max)</td>
+                <td className="py-2"><code className="text-xs font-mono">{`{ "error": "Image too large. Max 2 MB." }`}</code></td>
               </tr>
               <tr>
                 <td className="py-2 pr-4">500</td>

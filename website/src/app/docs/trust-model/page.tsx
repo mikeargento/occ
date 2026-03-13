@@ -47,6 +47,10 @@ export default function TrustModelPage() {
               <td className="py-2 pr-4">Monotonic counter durability - survives restarts</td>
               <td className="py-2">Anti-rollback degrades to single session</td>
             </tr>
+            <tr className="border-b border-border-subtle">
+              <td className="py-2 pr-4">Causal slot integrity - slot allocated before artifact hash known</td>
+              <td className="py-2">Without pre-allocation, commit order could be forged</td>
+            </tr>
             <tr>
               <td className="py-2 pr-4">Strict verifier policy - caller pins measurements + counters</td>
               <td className="py-2">Weak policy accepts more than intended</td>
@@ -64,6 +68,8 @@ export default function TrustModelPage() {
           { threat: "Signature forgery", mitigation: "Ed25519 unforgeability" },
           { threat: "Downgrade attack", mitigation: "Enforcement tier is signed; requireEnforcement rejects weaker tiers" },
           { threat: "Chain gap insertion", mitigation: "prevB64 chaining: any removed link breaks hash continuity" },
+          { threat: "Counter position forgery", mitigation: "Causal slot pre-allocation: slotHashB64 binding + slotCounter < counter ordering proves pre-allocation" },
+          { threat: "Agency replay across batches", mitigation: "Single-use challenge consumed on first validation; batch context scoped to declared digests" },
         ].map((t) => (
           <div key={t.threat} className="flex gap-4 rounded-lg border border-border-subtle p-4">
             <div className="text-sm font-medium text-text shrink-0 w-44">{t.threat}</div>

@@ -48,7 +48,19 @@ const faqs = [
   },
   {
     q: "How is this different from just signing a file?",
-    a: "A standard digital signature proves someone with the private key signed the bytes. OCC additionally provides: a measured execution boundary (PCR0), a monotonic counter (ordering), a fresh nonce (non-replayability), proof chaining (sequence integrity), and hardware attestation (boundary evidence). The key never leaves the enclave.",
+    a: "A standard digital signature proves someone with the private key signed the bytes. OCC additionally provides: a measured execution boundary (PCR0), a monotonic counter (ordering), causal slot pre-allocation (proves commitment position was reserved before content was known), proof chaining (sequence integrity), hardware attestation (boundary evidence), actor-bound proofs (device biometric authorization), and signed attribution (creator metadata). The key never leaves the enclave.",
+  },
+  {
+    q: "What is a causal slot?",
+    a: "A slot is a pre-allocated nonce and counter pair created inside the enclave before any artifact hash is known. This proves the enclave committed to a specific position in its sequence independently of the artifact content. The slot has its own Ed25519 signature and is cryptographically bound to the final proof via slotHashB64. Every proof includes its slot allocation record.",
+  },
+  {
+    q: "What is attribution?",
+    a: "Attribution is optional creator metadata (name, title, message) that is included in the Ed25519-signed body. Unlike metadata (which is unsigned and advisory), attribution is cryptographically sealed. Tampering with any attribution field invalidates the proof signature.",
+  },
+  {
+    q: "Can I batch multiple artifacts?",
+    a: "Yes. Send multiple digests in a single POST /commit request. The enclave allocates a slot and commits each digest sequentially. If using actor-bound proofs (passkey), all proofs in the batch receive actor identity via batchContext. Each proof is independently verifiable.",
   },
   {
     q: "What libraries does OCC use?",

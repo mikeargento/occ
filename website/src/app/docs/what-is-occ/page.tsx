@@ -45,19 +45,19 @@ export default function WhatIsOCCPage() {
       </p>
       <ol className="space-y-3 mb-6">
         <li className="text-text-secondary leading-relaxed">
-          <strong className="text-text">1. Authorize</strong> - Bytes enter a protected
-          boundary (e.g., an AWS Nitro Enclave) that controls the only path
-          to a valid proof.
+          <strong className="text-text">1. Allocate</strong> - The enclave pre-allocates a
+          causal slot (nonce + counter) before the artifact hash is known,
+          proving the commitment position was reserved independently.
         </li>
         <li className="text-text-secondary leading-relaxed">
-          <strong className="text-text">2. Bind</strong> - Inside the boundary, a SHA-256
-          content hash is combined with a fresh nonce, a monotonic counter,
-          and a signature.
+          <strong className="text-text">2. Bind</strong> - The artifact&apos;s SHA-256 digest is
+          bound to the pre-allocated slot, combined with the monotonic counter,
+          and signed with Ed25519 inside the TEE.
         </li>
         <li className="text-text-secondary leading-relaxed">
           <strong className="text-text">3. Commit</strong> - The artifact and its proof are
           produced together. Fail-closed: if any step fails, nothing is
-          produced.
+          produced. The proof includes the signed slot record as causal evidence.
         </li>
       </ol>
 
@@ -67,9 +67,12 @@ export default function WhatIsOCCPage() {
       </p>
       <ul className="space-y-2 mb-6">
         <li className="text-text-secondary"><strong className="text-text">artifact</strong> - SHA-256 digest of the committed bytes</li>
-        <li className="text-text-secondary"><strong className="text-text">commit</strong> - fresh nonce, monotonic counter, epoch identity, optional chain link</li>
+        <li className="text-text-secondary"><strong className="text-text">commit</strong> - fresh nonce, monotonic counter, slot binding (slotCounter, slotHashB64), epoch identity, optional chain link</li>
         <li className="text-text-secondary"><strong className="text-text">signer</strong> - Ed25519 public key and signature over the canonical signed body</li>
         <li className="text-text-secondary"><strong className="text-text">environment</strong> - enforcement tier, platform measurement (PCR0), hardware attestation</li>
+        <li className="text-text-secondary"><strong className="text-text">slotAllocation</strong> - the pre-allocated causal slot record, independently signed by the enclave</li>
+        <li className="text-text-secondary"><strong className="text-text">agency</strong> - optional actor-bound proof via device biometrics (passkey/WebAuthn), with batch support</li>
+        <li className="text-text-secondary"><strong className="text-text">attribution</strong> - optional signed creator metadata (name, title, message)</li>
         <li className="text-text-secondary"><strong className="text-text">timestamps</strong> - optional RFC 3161 TSA timestamps from an independent time authority</li>
       </ul>
 
@@ -78,7 +81,8 @@ export default function WhatIsOCCPage() {
         {[
           { title: "Portable", desc: "A proof is a self-contained JSON object. Any verifier can check it offline with only the public key and the original bytes." },
           { title: "Atomic", desc: "The commit is fail-closed. Either a complete, valid proof is produced, or nothing is. No partial proofs." },
-          { title: "Ordered", desc: "Each proof carries a monotonic counter within its epoch. Counter + epoch + chain link establish ordering." },
+          { title: "Causal", desc: "Every proof is bound to a pre-allocated slot created before the artifact hash was known. The slot proves the enclave committed to a sequence position independently of content." },
+          { title: "Ordered", desc: "Each proof carries a monotonic counter within its epoch. Counter + epoch + chain link + slot ordering establish sequencing." },
           { title: "Measured", desc: "The proof binds to a specific execution environment via measurement (PCR0 on Nitro, MRENCLAVE on SGX)." },
           { title: "Verifiable", desc: "Ed25519 signature, SHA-256 digest, and canonical serialization, all checkable with standard cryptographic primitives." },
         ].map((item) => (

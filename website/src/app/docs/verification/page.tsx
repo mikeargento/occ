@@ -33,7 +33,7 @@ export default function VerificationPage() {
           {
             step: "3",
             title: "Signed body reconstruction",
-            desc: "Build the SignedBody object from the proof fields (including actor identity from agency, when present). Canonicalize to sorted-key JSON, encode as UTF-8 bytes. This is what the signature covers.",
+            desc: "Build the SignedBody object from the proof fields (including actor identity from agency, attribution, and attestation format when present). Canonicalize to sorted-key JSON, encode as UTF-8 bytes. This is what the Ed25519 signature covers.",
           },
           {
             step: "4",
@@ -118,8 +118,16 @@ export default function VerificationPage() {
               <td className="py-2">Gap detection is application-layer logic</td>
             </tr>
             <tr className="border-b border-border-subtle">
+              <td className="py-2 pr-4">Slot allocation validity</td>
+              <td className="py-2">Slot signature and hash binding are structural checks; application can verify slotHashB64 matches canonicalized slot body</td>
+            </tr>
+            <tr className="border-b border-border-subtle">
               <td className="py-2 pr-4">Key provenance</td>
               <td className="py-2">Requires attestation verification</td>
+            </tr>
+            <tr className="border-b border-border-subtle">
+              <td className="py-2 pr-4">Batch context completeness</td>
+              <td className="py-2">Verifying all proofs in a batch is application-layer logic</td>
             </tr>
             <tr>
               <td className="py-2 pr-4">Timestamp validity</td>
