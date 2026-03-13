@@ -156,7 +156,12 @@ async function handleCommit(req: IncomingMessage, res: ServerResponse): Promise<
   //
   // Agency (passkey/WebAuthn) uses a single-use challenge. For batch commits,
   // we pass agency only on the FIRST digest (which validates + consumes the
-  // challenge), then copy the verified agency envelope onto all remaining proofs.
+  // challenge). We do NOT copy agency to subsequent proofs because the enclave's
+  // Ed25519 signature for proofs[1..N] was computed without the actor identity.
+  // Batch proofs are linked via metadata.batchId instead.
+  //
+  // Enclave commits are sequential (monotonic counter), but TSA timestamps
+  // are parallelized afterward to minimize latency on batch requests.
   const proofs: OCCProof[] = [];
 
   for (let i = 0; i < body.digests.length; i++) {
@@ -187,21 +192,19 @@ async function handleCommit(req: IncomingMessage, res: ServerResponse): Promise<
     }
 
     const { proof } = commitResult.data as { proof: OCCProof };
-
-    // Best-effort TSA timestamp
-    const tsa = await requestTimestamp(d.digestB64).catch(() => null);
-    if (tsa) {
-      proof.timestamps = { artifact: tsa };
-    }
-
     proofs.push(proof);
   }
 
-  // Note: agency is only on proofs[0] (the challenge was validated once).
-  // We do NOT copy agency to subsequent proofs because the enclave's Ed25519
-  // signature for proofs[1..N] was computed without the actor identity — adding
-  // agency after the fact would break signature verification. Batch proofs are
-  // linked via metadata.batchId instead.
+  // Best-effort TSA timestamps — all in parallel to minimize latency
+  await Promise.all(
+    proofs.map(async (proof, i) => {
+      const d = body.digests[i]!;
+      const tsa = await requestTimestamp(d.digestB64).catch(() => null);
+      if (tsa) {
+        proof.timestamps = { artifact: tsa };
+      }
+    })
+  );
 
   sendJson(res, 200, proofs);
 }
