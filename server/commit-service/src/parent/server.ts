@@ -153,9 +153,15 @@ async function handleCommit(req: IncomingMessage, res: ServerResponse): Promise<
   // OCC 2-RTT protocol: one slot → one artifact → one proof
   // For each digest, allocate a slot then commit with the slotId.
   // The parent handles the round-trips so clients keep a single POST /commit API.
+  //
+  // Agency (passkey/WebAuthn) uses a single-use challenge. For batch commits,
+  // we pass agency only on the FIRST digest (which validates + consumes the
+  // challenge), then copy the verified agency envelope onto all remaining proofs.
   const proofs: OCCProof[] = [];
 
-  for (const d of body.digests) {
+  for (let i = 0; i < body.digests.length; i++) {
+    const d = body.digests[i]!;
+
     // Step 1: Allocate a causal slot (nonce-first)
     const slotResult = await enclaveClient.send({ type: "allocateSlot" });
     if (!slotResult.ok || !slotResult.data) {
@@ -165,11 +171,12 @@ async function handleCommit(req: IncomingMessage, res: ServerResponse): Promise<
     const { slotId } = slotResult.data as { slotId: string };
 
     // Step 2: Commit the digest with the allocated slot
+    // Agency is only sent on the first digest (challenge is single-use).
     const commitResult = await enclaveClient.send({
       type: "commitDigest",
       slotId,
       digestB64: d.digestB64,
-      agency: body.agency,
+      agency: i === 0 ? body.agency : undefined,
       attribution: body.attribution,
       metadata: body.metadata,
     });
@@ -183,11 +190,20 @@ async function handleCommit(req: IncomingMessage, res: ServerResponse): Promise<
 
     // Best-effort TSA timestamp
     const tsa = await requestTimestamp(d.digestB64).catch(() => null);
-    if (tsa && proof) {
+    if (tsa) {
       proof.timestamps = { artifact: tsa };
     }
 
     proofs.push(proof);
+  }
+
+  // For batch mode with agency: copy the verified agency from the first proof
+  // onto all subsequent proofs so every proof in the batch carries the
+  // authorization envelope (the challenge was validated once on the first).
+  if (body.agency && proofs.length > 1 && proofs[0]?.agency) {
+    for (let i = 1; i < proofs.length; i++) {
+      proofs[i]!.agency = proofs[0].agency;
+    }
   }
 
   sendJson(res, 200, proofs);
