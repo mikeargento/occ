@@ -85,7 +85,7 @@ export default function Home() {
 
         <div className="mx-auto max-w-5xl px-6 text-center">
           <h1
-            className="hero-animate text-[clamp(2rem,5.5vw,3.75rem)] font-bold tracking-[-0.04em] leading-[1.08] sm:whitespace-nowrap text-text/90"
+            className="hero-animate text-[clamp(2rem,6.5vw,4.5rem)] font-bold tracking-[-0.04em] leading-[1.08] sm:whitespace-nowrap text-text/90"
             style={{ animationDelay: "0ms" }}
           >
             Proof for anything digital
