@@ -1081,10 +1081,10 @@ export default function StudioPage() {
               </button>
 
               {/* Proof details disclosure */}
-              <div className="pt-4 border-t border-border-subtle">
+              <div className="pt-4">
                 <button
                   onClick={() => setShowProofDetails(prev => !prev)}
-                  className="w-full flex items-center justify-between py-3 text-sm text-text-secondary hover:text-text transition-colors cursor-pointer"
+                  className="w-full flex items-center justify-between px-4 py-3 rounded-xl border border-border-subtle bg-bg-elevated text-sm text-text-secondary hover:text-text hover:border-border transition-colors cursor-pointer"
                 >
                   <span className="font-medium">Proof details</span>
                   <svg
