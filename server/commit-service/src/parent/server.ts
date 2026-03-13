@@ -154,15 +154,17 @@ async function handleCommit(req: IncomingMessage, res: ServerResponse): Promise<
   // For each digest, allocate a slot then commit with the slotId.
   // The parent handles the round-trips so clients keep a single POST /commit API.
   //
-  // Agency (passkey/WebAuthn) uses a single-use challenge. For batch commits,
-  // we pass agency only on the FIRST digest (which validates + consumes the
-  // challenge). We do NOT copy agency to subsequent proofs because the enclave's
-  // Ed25519 signature for proofs[1..N] was computed without the actor identity.
-  // Batch proofs are linked via metadata.batchId instead.
+  // Agency (passkey/WebAuthn) with batch support:
+  //   - The client's agency envelope includes batchContext with all digests.
+  //   - We pass agency to EVERY commitDigest call (with updated batchIndex).
+  //   - The enclave validates the challenge + P-256 signature on digest #0,
+  //     stores the validated batch, then looks it up for digests #1..N.
+  //   - All proofs get actor identity in their Ed25519-signed body.
   //
   // Enclave commits are sequential (monotonic counter), but TSA timestamps
   // are parallelized afterward to minimize latency on batch requests.
   const proofs: OCCProof[] = [];
+  const isBatch = body.digests.length > 1;
 
   for (let i = 0; i < body.digests.length; i++) {
     const d = body.digests[i]!;
@@ -176,12 +178,24 @@ async function handleCommit(req: IncomingMessage, res: ServerResponse): Promise<
     const { slotId } = slotResult.data as { slotId: string };
 
     // Step 2: Commit the digest with the allocated slot
-    // Agency is only sent on the first digest (challenge is single-use).
+    // For batch commits with agency, update batchIndex for each digest.
+    let agencyForDigest: AgencyEnvelope | undefined;
+    if (body.agency) {
+      if (isBatch && body.agency.batchContext) {
+        agencyForDigest = {
+          ...body.agency,
+          batchContext: { ...body.agency.batchContext, batchIndex: i },
+        };
+      } else {
+        agencyForDigest = i === 0 ? body.agency : undefined;
+      }
+    }
+
     const commitResult = await enclaveClient.send({
       type: "commitDigest",
       slotId,
       digestB64: d.digestB64,
-      agency: i === 0 ? body.agency : undefined,
+      agency: agencyForDigest,
       attribution: body.attribution,
       metadata: body.metadata,
     });

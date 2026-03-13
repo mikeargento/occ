@@ -249,6 +249,11 @@ export function buildAgencyEnvelope(
     clientDataJSON: string;
     signatureB64: string;
   };
+  batchContext?: {
+    batchSize: number;
+    batchIndex: number;
+    batchDigests: string[];
+  };
 } {
   return {
     actor: {

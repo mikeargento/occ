@@ -495,6 +495,16 @@ export default function StudioPage() {
           fileDigests[0].digestB64,
           challengeB64
         );
+
+        // For batch commits, include batchContext so the enclave can
+        // validate agency once and apply actor identity to all proofs.
+        if (isBatch) {
+          agency.batchContext = {
+            batchSize: fileDigests.length,
+            batchIndex: 0,
+            batchDigests: fileDigests.map(d => d.digestB64),
+          };
+        }
       }
 
       // Build attribution object (only if any field is non-empty)

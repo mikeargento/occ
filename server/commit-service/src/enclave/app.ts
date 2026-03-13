@@ -123,11 +123,28 @@ let lastProofHashB64: string | undefined;
 const CHALLENGE_TTL_MS = 60_000; // 60 seconds
 const pendingChallenges = new Map<string, number>(); // challenge → expiresAt
 
+// Validated batch agency — allows batch proofs 2..N to inherit actor identity.
+// Keyed by challenge string. Stored after first-digest validation, consumed
+// when all batch digests have been committed or on TTL expiry.
+interface ValidatedBatch {
+  actor: ActorIdentity;
+  batchDigests: string[];
+  remaining: Set<string>;   // digests not yet committed
+  expiresAt: number;
+}
+const validatedBatches = new Map<string, ValidatedBatch>();
+
 function cleanExpiredChallenges(): void {
   const now = Date.now();
   for (const [challenge, expiresAt] of pendingChallenges) {
     if (now >= expiresAt) {
       pendingChallenges.delete(challenge);
+    }
+  }
+  // Also clean expired batch entries
+  for (const [key, batch] of validatedBatches) {
+    if (now >= batch.expiresAt) {
+      validatedBatches.delete(key);
     }
   }
 }
@@ -426,11 +443,46 @@ async function handleCommit(req: {
     throw new Error(`Invalid SHA-256 digest length: ${digestBytes.length}`);
   }
 
-  // Verify agency if provided (single artifact, no batch)
+  // Verify agency — supports single artifact and batch modes.
+  // Batch mode: first digest validates fully (consumes challenge),
+  // subsequent digests look up the validated batch by challenge.
   let verifiedActor: ActorIdentity | undefined;
   if (req.agency) {
-    verifyAgencyEnvelope(req.agency, digestB64);
-    verifiedActor = req.agency.actor;
+    const bc = req.agency.batchContext;
+    if (bc && bc.batchIndex > 0) {
+      // Batch continuation: look up previously validated batch
+      const challenge = req.agency.authorization.challenge;
+      const batch = validatedBatches.get(challenge);
+      if (!batch) {
+        throw new Error("Agency: batch not found — first digest must be committed first");
+      }
+      if (!batch.remaining.has(digestB64)) {
+        throw new Error("Agency: digest not in authorized batch");
+      }
+      batch.remaining.delete(digestB64);
+      verifiedActor = batch.actor;
+      // Clean up when all digests consumed
+      if (batch.remaining.size === 0) {
+        validatedBatches.delete(challenge);
+        console.log(`[enclave] batch agency fully consumed: actor=${batch.actor.keyId.slice(0, 12)}...`);
+      }
+    } else {
+      // Single artifact or first digest of a batch
+      verifyAgencyEnvelope(req.agency, digestB64);
+      verifiedActor = req.agency.actor;
+
+      // If batch, store validated context for subsequent digests
+      if (bc && bc.batchDigests && bc.batchDigests.length > 1) {
+        const remaining = new Set(bc.batchDigests.filter((d: string) => d !== digestB64));
+        validatedBatches.set(req.agency.authorization.challenge, {
+          actor: req.agency.actor,
+          batchDigests: bc.batchDigests,
+          remaining,
+          expiresAt: Date.now() + CHALLENGE_TTL_MS,
+        });
+        console.log(`[enclave] batch agency validated: ${bc.batchDigests.length} digests, actor=${req.agency.actor.keyId.slice(0, 12)}...`);
+      }
+    }
   }
 
   // ── OCC causal commit flow ──
