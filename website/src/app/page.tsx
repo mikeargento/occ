@@ -55,7 +55,7 @@ export default function Home() {
             ProofStudio lets you prove anything digital.
           </h2>
           <p className="text-text-secondary max-w-xl mx-auto text-balance">
-            It works by creating a cryptographic container that can hold exactly one digital artifact or process.
+            It works by creating a cryptographic container that holds exactly one digital artifact or process.
           </p>
         </div>
         <div className="grid sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
