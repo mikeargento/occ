@@ -52,10 +52,10 @@ export default function Home() {
       <Section>
         <div className="text-center mb-16">
           <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-4">
-            How it works
+            ProofStudio lets you prove anything digital.
           </h2>
           <p className="text-text-secondary max-w-xl mx-auto text-balance">
-            Three steps, one proof. Your file never leaves your device.
+            It works by creating a cryptographic container that can hold exactly one digital artifact or process.
           </p>
         </div>
         <div className="grid sm:grid-cols-3 gap-6 max-w-4xl mx-auto">

@@ -380,6 +380,7 @@ export default function StudioPage() {
   const [savedCount, setSavedCount] = useState(0);
   const [expandedProofs, setExpandedProofs] = useState<Set<number>>(new Set());
   const [builtZips, setBuiltZips] = useState<Uint8Array[]>([]);
+  const [downloadProgress, setDownloadProgress] = useState<number | null>(null); // 0-100 or null
 
   // Check File System Access API support on mount
   useEffect(() => {
@@ -628,19 +629,24 @@ export default function StudioPage() {
 
   /** Download all proof.zips bundled into a single ZIP */
   const handleDownloadAll = async () => {
+    setDownloadProgress(0);
     const folder = `batch-${new Date().toISOString().slice(0, 10)}`;
     const entries: Record<string, Uint8Array> = {};
-    for (let i = 0; i < files.length; i++) {
+    const total = files.length;
+    for (let i = 0; i < total; i++) {
       if (files[i]) {
         const zipped = builtZips[i] ?? (proofs[i] ? await buildProofZip(files[i], proofs[i]) : null);
         if (zipped) {
           entries[`${folder}/${files[i].name}.proof.zip`.replace(/^\./, "")] = zipped;
         }
       }
+      setDownloadProgress(Math.round(((i + 1) / total) * 90));
     }
     // level 0 (store) — nested .proof.zips are already compressed
     const bundled = zipSync(entries, { level: 0 });
+    setDownloadProgress(100);
     downloadBlob(bundled, `${folder}.zip`);
+    setTimeout(() => setDownloadProgress(null), 1200);
   };
 
   // ── Verify handlers ──
@@ -1335,13 +1341,41 @@ export default function StudioPage() {
               {proofs.length > 1 && (
                 <button
                   onClick={handleDownloadAll}
-                  className="inline-flex items-center gap-2 rounded-lg bg-success px-4 py-2 text-xs font-semibold text-bg hover:bg-success/85 transition-colors cursor-pointer"
+                  disabled={downloadProgress !== null}
+                  className="relative inline-flex items-center gap-2 rounded-lg bg-success px-4 py-2 text-xs font-semibold text-bg hover:bg-success/85 transition-colors cursor-pointer overflow-hidden disabled:opacity-90 disabled:cursor-wait"
                 >
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
-                    <path d="M7 2v7M4 6l3 3 3-3" />
-                    <path d="M2 10v1.5a.5.5 0 00.5.5h9a.5.5 0 00.5-.5V10" />
-                  </svg>
-                  Download all
+                  {downloadProgress !== null && (
+                    <span
+                      className="absolute inset-0 bg-black/15 origin-left transition-transform duration-150 ease-linear"
+                      style={{ transform: `scaleX(${downloadProgress / 100})` }}
+                    />
+                  )}
+                  <span className="relative flex items-center gap-2">
+                    {downloadProgress !== null && downloadProgress < 100 ? (
+                      <>
+                        <svg className="animate-spin" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
+                          <circle cx="7" cy="7" r="5" strokeOpacity="0.3" />
+                          <path d="M12 7a5 5 0 00-5-5" />
+                        </svg>
+                        Bundling {downloadProgress}%
+                      </>
+                    ) : downloadProgress === 100 ? (
+                      <>
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
+                          <path d="M3 7.5l3 3 5-6" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        Done
+                      </>
+                    ) : (
+                      <>
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
+                          <path d="M7 2v7M4 6l3 3 3-3" />
+                          <path d="M2 10v1.5a.5.5 0 00.5.5h9a.5.5 0 00.5-.5V10" />
+                        </svg>
+                        Download all
+                      </>
+                    )}
+                  </span>
                 </button>
               )}
               {proofs.length === 1 && (
