@@ -197,14 +197,11 @@ async function handleCommit(req: IncomingMessage, res: ServerResponse): Promise<
     proofs.push(proof);
   }
 
-  // For batch mode with agency: copy the verified agency from the first proof
-  // onto all subsequent proofs so every proof in the batch carries the
-  // authorization envelope (the challenge was validated once on the first).
-  if (body.agency && proofs.length > 1 && proofs[0]?.agency) {
-    for (let i = 1; i < proofs.length; i++) {
-      proofs[i]!.agency = proofs[0].agency;
-    }
-  }
+  // Note: agency is only on proofs[0] (the challenge was validated once).
+  // We do NOT copy agency to subsequent proofs because the enclave's Ed25519
+  // signature for proofs[1..N] was computed without the actor identity — adding
+  // agency after the fact would break signature verification. Batch proofs are
+  // linked via metadata.batchId instead.
 
   sendJson(res, 200, proofs);
 }
