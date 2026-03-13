@@ -88,7 +88,7 @@ export default function Home() {
             className="hero-animate text-[clamp(2rem,5.5vw,3.75rem)] font-bold tracking-[-0.04em] leading-[1.08] sm:whitespace-nowrap text-text/90"
             style={{ animationDelay: "0ms" }}
           >
-            Cryptographic proof for anything digital
+            Proof for anything digital
           </h1>
 
           <p
