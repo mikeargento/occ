@@ -1,4 +1,19 @@
 import Link from "next/link";
+import { TerminalWindow } from "@/components/terminal-window";
+
+/* ── Syntax‐highlighted JSON helpers ── */
+const K = ({ children }: { children: string }) => (
+  <span className="text-syntax-key">{`"${children}"`}</span>
+);
+const S = ({ children }: { children: string }) => (
+  <span className="text-syntax-string">{`"${children}"`}</span>
+);
+const N = ({ children }: { children: string | number }) => (
+  <span className="text-syntax-number">{children}</span>
+);
+const C = ({ children }: { children: string }) => (
+  <span className="text-text-tertiary">{`// ${children}`}</span>
+);
 
 function Section({
   children,
@@ -121,33 +136,60 @@ export default function Home() {
               ))}
             </div>
           </div>
-          <div className="rounded-lg border border-border-subtle bg-bg-elevated p-6 overflow-x-auto">
+          <TerminalWindow title="proof.json">
             <pre className="text-xs leading-relaxed font-mono text-text-secondary">
-{`{
-  "version": "occ/1",
-  "artifact": {
-    "hashAlg": "sha256",
-    "digestB64": "u4eMAiu6Qg..."
-  },
-  "commit": {
-    "nonceB64": "gTME79qH3f...",
-    "counter": "277",
-    "time": 1741496392841,
-    "epochId": "a1b2c3d4..."
-  },
-  "signer": {
-    "publicKeyB64": "MFkwEwYH...",
-    "signatureB64": "MEUCIQD..."
-  },
-  "environment": {
-    "enforcement": "measured-tee",
-    "attestation": {
-      "format": "aws-nitro"
-    }
-  }
-}`}
+{`{`}
+{`\n  `}<K>version</K>{`: `}<S>occ/1</S>{`,`}
+{`\n  `}<K>artifact</K>{`: {`}
+{`\n    `}<K>hashAlg</K>{`: `}<S>sha256</S>{`,`}
+{`\n    `}<K>digestB64</K>{`: `}<S>VmSUR4azmbQ9WmWeajc10XLvcGMfHutn5Ikkx9fewHI=</S>
+{`\n  },`}
+{`\n  `}<K>commit</K>{`: {`}
+{`\n    `}<K>nonceB64</K>{`: `}<S>MFsVZDsJxC9LS0yTqiaU8QflQ97d9DcKuF8UVfD46S0=</S>{`,`}
+{`\n    `}<K>counter</K>{`: `}<S>98</S>{`,`}
+{`\n    `}<K>slotCounter</K>{`: `}<S>97</S>{`,`}
+{`\n    `}<K>slotHashB64</K>{`: `}<S>fu6nrfIuf/G/TDoFMGheS5eSleYsCQadNSezBdHzB48=</S>{`,`}
+{`\n    `}<K>time</K>{`: `}<N>1773368713218</N>{`,`}
+{`\n    `}<K>epochId</K>{`: `}<S>{"/qXZiO+PUKMAvVcoth+czcaid7wyoyU+AWjGWRHD4yo="}</S>{`,`}
+{`\n    `}<K>prevB64</K>{`: `}<S>73KJVymGT7I/EJWf5giBblJpdPGwVtXMW1jamUKWMWM=</S>
+{`\n  },`}
+{`\n  `}<K>signer</K>{`: {`}
+{`\n    `}<K>publicKeyB64</K>{`: `}<S>QQeecy4yv6dhExeBMVyevBpG2LOUpD6DS0wiEMa9EWE=</S>{`,`}
+{`\n    `}<K>signatureB64</K>{`: `}<S>p74Jjzk9B5ieSTqlf1DcCLKnBt/6jBkwVGTJCJ3Z4+PFu...==</S>
+{`\n  },`}
+{`\n  `}<K>environment</K>{`: {`}
+{`\n    `}<K>enforcement</K>{`: `}<S>measured-tee</S>{`,`}
+{`\n    `}<K>measurement</K>{`: `}<S>8db9ab687fd5f66d...c66cd19d</S>{`,`}
+{`\n    `}<K>attestation</K>{`: {`}
+{`\n      `}<K>format</K>{`: `}<S>aws-nitro</S>{`,`}
+{`\n      `}<K>reportB64</K>{`: `}<S>hEShATgioFkRJL9p...</S>{` `}<C>~4 KB</C>
+{`\n    }`}
+{`\n  },`}
+{`\n  `}<K>timestamps</K>{`: {`}
+{`\n    `}<K>artifact</K>{`: {`}
+{`\n      `}<K>authority</K>{`: `}<S>freetsa.org</S>{`,`}
+{`\n      `}<K>time</K>{`: `}<S>2026-03-13T02:25:13Z</S>{`,`}
+{`\n      `}<K>tokenB64</K>{`: `}<S>MIISCwYJKoZIhvc...</S>{` `}<C>~5 KB</C>
+{`\n    }`}
+{`\n  },`}
+{`\n  `}<K>agency</K>{`: {`}
+{`\n    `}<K>actor</K>{`: { `}<K>keyId</K>{`, `}<K>publicKeyB64</K>{`, `}<K>algorithm</K>{`: `}<S>ES256</S>{`, `}<K>provider</K>{`: `}<S>passkey</S>{` },`}
+{`\n    `}<K>authorization</K>{`: { `}<K>purpose</K>{`, `}<K>challenge</K>{`, `}<K>signatureB64</K>{`, ... }`}
+{`\n  },`}
+{`\n  `}<K>attribution</K>{`: {`}
+{`\n    `}<K>name</K>{`: `}<S>Mike Argento</S>{`,`}
+{`\n    `}<K>title</K>{`: `}<S>Photo taken with the Ricoh GR IIIx</S>{`,`}
+{`\n    `}<K>message</K>{`: `}<S>ProofStudio made this proof.</S>
+{`\n  },`}
+{`\n  `}<K>slotAllocation</K>{`: {`}
+{`\n    `}<K>version</K>{`: `}<S>occ/slot/1</S>{`,`}
+{`\n    `}<K>nonceB64</K>{`: `}<S>MFsVZDsJxC9LS0yTqiaU8QflQ97d9DcKuF8UVfD46S0=</S>{`,`}
+{`\n    `}<K>counter</K>{`: `}<S>97</S>{`,`}
+{`\n    `}<K>signatureB64</K>{`: `}<S>Nm01JmEJM6HO6ikVvRUXC9kjEREfPCtg4c2ydCv5+xS7...==</S>
+{`\n  }`}
+{`\n}`}
             </pre>
-          </div>
+          </TerminalWindow>
         </div>
       </Section>
 
