@@ -572,8 +572,11 @@ export default function StudioPage() {
 
     const verifyTxt = buildVerifyTxt(f.name, p);
 
+    // Use level 0 (store) for the original file — most artifacts (images,
+    // video, audio, DNG) are already compressed, so re-compressing just
+    // wastes CPU. Proof JSON and VERIFY.txt are tiny and compress fast.
     return zipSync({
-      [f.name]: originalData,
+      [f.name]: [originalData, { level: 0 }],
       "proof.json": new TextEncoder().encode(proofJson),
       "VERIFY.txt": new TextEncoder().encode(verifyTxt),
     });
@@ -610,7 +613,8 @@ export default function StudioPage() {
         entries[`${folder}/${files[i].name}.proof.zip`.replace(/^\./, "")] = zipped;
       }
     }
-    const bundled = zipSync(entries);
+    // level 0 (store) — nested .proof.zips are already compressed
+    const bundled = zipSync(entries, { level: 0 });
     downloadBlob(bundled, `${folder}.zip`);
   };
 
