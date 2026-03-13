@@ -379,6 +379,7 @@ export default function StudioPage() {
   const [fsDirSupported, setFsDirSupported] = useState(false);
   const [savedCount, setSavedCount] = useState(0);
   const [expandedProofs, setExpandedProofs] = useState<Set<number>>(new Set());
+  const [builtZips, setBuiltZips] = useState<Uint8Array[]>([]);
 
   // Check File System Access API support on mount
   useEffect(() => {
@@ -410,6 +411,7 @@ export default function StudioPage() {
   const handleFiles = useCallback((newFiles: File[]) => {
     setFiles(prev => [...prev, ...newFiles]);
     setProofs([]);
+    setBuiltZips([]);
     setCreateError(null);
     setCreateStatus("idle");
   }, []);
@@ -417,6 +419,7 @@ export default function StudioPage() {
   const handleRemoveFile = useCallback((index: number) => {
     setFiles(prev => prev.filter((_, i) => i !== index));
     setProofs([]);
+    setBuiltZips([]);
     setCreateError(null);
     setCreateStatus("idle");
   }, []);
@@ -424,6 +427,7 @@ export default function StudioPage() {
   const handleClearFiles = useCallback(() => {
     setFiles([]);
     setProofs([]);
+    setBuiltZips([]);
     setCreateError(null);
     setCreateStatus("idle");
   }, []);
@@ -537,17 +541,25 @@ export default function StudioPage() {
 
       setProofs(generatedProofs);
 
+      // Pre-build all zips so downloads are instant
+      const zips: Uint8Array[] = [];
+      for (let i = 0; i < files.length; i++) {
+        if (files[i] && generatedProofs[i]) {
+          zips[i] = await buildProofZip(files[i], generatedProofs[i]);
+        }
+      }
+      setBuiltZips(zips);
+
       // Auto-save to destination folder if set
       if (destDir) {
         let saved = 0;
         for (let i = 0; i < files.length; i++) {
-          if (files[i] && generatedProofs[i]) {
+          if (zips[i] && files[i]) {
             try {
-              const zipped = await buildProofZip(files[i], generatedProofs[i]);
               const fileName = `${files[i].name}.proof.zip`.replace(/^\./, "");
               const fileHandle = await destDir.getFileHandle(fileName, { create: true });
               const writable = await fileHandle.createWritable();
-              await writable.write(zipped.buffer.slice(zipped.byteOffset, zipped.byteOffset + zipped.byteLength) as ArrayBuffer);
+              await writable.write(zips[i].buffer.slice(zips[i].byteOffset, zips[i].byteOffset + zips[i].byteLength) as ArrayBuffer);
               await writable.close();
               saved++;
             } catch {
@@ -597,9 +609,10 @@ export default function StudioPage() {
   /** Download proof.zip for a specific file index */
   const handleDownloadZip = async (index: number) => {
     const f = files[index];
-    const p = proofs[index];
-    if (!f || !p) return;
-    const zipped = await buildProofZip(f, p);
+    if (!f) return;
+    // Use cached zip if available, otherwise build on demand
+    const zipped = builtZips[index] ?? (proofs[index] ? await buildProofZip(f, proofs[index]) : null);
+    if (!zipped) return;
     downloadBlob(zipped, `${f.name}.proof.zip`.replace(/^\./, ""));
   };
 
@@ -608,9 +621,11 @@ export default function StudioPage() {
     const folder = `batch-${new Date().toISOString().slice(0, 10)}`;
     const entries: Record<string, Uint8Array> = {};
     for (let i = 0; i < files.length; i++) {
-      if (files[i] && proofs[i]) {
-        const zipped = await buildProofZip(files[i], proofs[i]);
-        entries[`${folder}/${files[i].name}.proof.zip`.replace(/^\./, "")] = zipped;
+      if (files[i]) {
+        const zipped = builtZips[i] ?? (proofs[i] ? await buildProofZip(files[i], proofs[i]) : null);
+        if (zipped) {
+          entries[`${folder}/${files[i].name}.proof.zip`.replace(/^\./, "")] = zipped;
+        }
       }
     }
     // level 0 (store) — nested .proof.zips are already compressed
