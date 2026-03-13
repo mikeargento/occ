@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ScrollReveal } from "@/components/scroll-reveal";
 
 export const metadata: Metadata = {
   title: "Use Cases",
@@ -59,47 +60,47 @@ const useCases = [
 
 export default function UseCasesPage() {
   return (
-    <div className="mx-auto max-w-4xl px-6 py-16">
-      <div className="mb-16">
+    <div className="mx-auto max-w-5xl px-6 py-20 sm:py-24">
+      <div className="mb-20">
         <span className="inline-block text-[11px] font-medium uppercase tracking-[0.15em] text-text-tertiary mb-4">
           Use Cases
         </span>
-        <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight mb-6">
+        <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-6">
           Where it applies.
         </h1>
-        <p className="text-text-secondary max-w-2xl leading-relaxed">
+        <p className="text-text-secondary text-lg leading-relaxed max-w-2xl">
           OCC applies wherever artifacts need proof that they were committed
           through a specific boundary, not merely inspected after the fact.
           Each scenario below is a concrete application of the protocol.
         </p>
       </div>
 
-      <div className="space-y-8">
-        {useCases.map((uc) => (
-          <div
-            key={uc.title}
-            className="rounded-lg border border-border-subtle bg-bg-elevated p-8"
-          >
-            <div className="text-xs text-text-tertiary mb-2">{uc.subtitle}</div>
-            <h2 className="text-xl font-semibold mb-4">{uc.title}</h2>
-            <p className="text-sm text-text-secondary leading-relaxed mb-4">
-              {uc.description}
-            </p>
-            <div className="text-[11px] font-mono text-text-tertiary">
-              {uc.fields}
+      <div className="space-y-10">
+        {useCases.map((uc, i) => (
+          <ScrollReveal key={uc.title} delay={i * 80}>
+            <div className="rounded-xl border border-border-subtle bg-bg-elevated p-8 card-hover hover:border-border">
+              <div className="text-[11px] font-medium uppercase tracking-[0.15em] text-text-tertiary mb-3">{uc.subtitle}</div>
+              <h2 className="text-xl font-semibold tracking-[-0.02em] mb-4">{uc.title}</h2>
+              <p className="text-sm text-text-secondary leading-relaxed mb-4">
+                {uc.description}
+              </p>
+              <div className="mt-4 pt-4 border-t border-border-subtle text-[11px] font-mono text-text-tertiary">
+                {uc.fields}
+              </div>
             </div>
-          </div>
+          </ScrollReveal>
         ))}
       </div>
 
-      <div className="mt-16 border-t border-border-subtle pt-12">
-        <div className="rounded-lg border border-border-subtle bg-bg-elevated/50 p-8">
-          <h2 className="text-lg font-semibold mb-3">What OCC does not prove</h2>
+      <div className="section-divider mt-16 mb-16" />
+      <div>
+        <div className="rounded-xl border border-border-subtle border-l-2 border-l-warning bg-bg-elevated p-8">
+          <h2 className="text-xl font-semibold tracking-[-0.02em] mb-4">What OCC does not prove</h2>
           <p className="text-sm text-text-secondary leading-relaxed mb-4">
             OCC proves that specific bytes were committed through an authorized
             execution boundary during a single atomic event. It does not prove:
           </p>
-          <ul className="space-y-2 text-sm text-text-secondary">
+          <ul className="space-y-3 text-sm text-text-secondary">
             <li>• <strong className="text-text">Truth or accuracy</strong> - the content may be factually wrong</li>
             <li>• <strong className="text-text">Authorship</strong> - a base proof attests which boundary committed, not who created. Actor-bound proofs can additionally attest a specific person or device.</li>
             <li>• <strong className="text-text">First creation</strong> - the same bytes could have existed elsewhere before</li>
@@ -111,13 +112,13 @@ export default function UseCasesPage() {
       <div className="mt-12 flex flex-wrap gap-4">
         <Link
           href="/studio"
-          className="inline-flex h-11 items-center rounded-md bg-text px-6 text-sm font-medium text-bg transition-colors hover:opacity-85"
+          className="inline-flex h-12 items-center rounded-xl bg-text px-8 text-sm font-semibold text-bg transition-colors hover:opacity-85 active:scale-[0.98]"
         >
           Try the Studio
         </Link>
         <Link
           href="/docs"
-          className="inline-flex h-11 items-center rounded-md border border-border px-6 text-sm font-medium text-text-secondary transition-colors hover:text-text hover:border-text-tertiary"
+          className="inline-flex h-12 items-center rounded-xl border border-border px-8 text-sm font-semibold text-text-secondary transition-colors hover:text-text hover:border-text-tertiary active:scale-[0.98]"
         >
           Read the Docs
         </Link>

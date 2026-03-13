@@ -7,9 +7,9 @@ export const metadata: Metadata = {
 
 export default function WhatOCCIsNotPage() {
   return (
-    <article>
-      <h1 className="text-3xl font-semibold tracking-tight mb-4">What OCC is Not</h1>
-      <p className="text-text-secondary mb-8">
+    <article className="prose-doc">
+      <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-6">What OCC is Not</h1>
+      <p className="text-text-secondary mb-10">
         Precise distinctions matter for a protocol that makes specific
         cryptographic claims. Here is what OCC does not claim and does not do.
       </p>
@@ -49,7 +49,7 @@ export default function WhatOCCIsNotPage() {
             body: "Traditional notarization involves a trusted third party witnessing a signing event. OCC is a self-contained proof system. The proof is verifiable offline using only the public key and the original bytes. No trusted third party is required for core verification. TSA timestamps are optional, advisory evidence.",
           },
         ].map((item) => (
-          <div key={item.title} className="rounded-lg border border-border-subtle p-6">
+          <div key={item.title} className="rounded-xl border border-border-subtle border-l-2 border-l-text-tertiary p-6">
             <h2 className="text-base font-semibold mb-3">{item.title}</h2>
             <p className="text-sm text-text-secondary leading-relaxed">{item.body}</p>
           </div>

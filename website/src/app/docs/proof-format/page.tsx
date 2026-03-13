@@ -7,15 +7,16 @@ export const metadata: Metadata = {
 
 export default function ProofFormatPage() {
   return (
-    <article>
-      <h1 className="text-3xl font-semibold tracking-tight mb-4">Proof Format: occ/1</h1>
-      <p className="text-text-secondary mb-8">
+    <article className="prose-doc">
+      <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-6">Proof Format: occ/1</h1>
+      <p className="text-text-secondary mb-10">
         Normative specification for the <code className="text-xs font-mono bg-bg-subtle px-1.5 py-0.5 rounded">occ/1</code> proof format. Derived from the reference implementation.
       </p>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Proof JSON schema</h2>
-      <div className="rounded-lg border border-border-subtle bg-bg-elevated p-4 overflow-x-auto mb-8">
-        <pre className="text-xs font-mono leading-relaxed text-text-secondary">{`{
+      <div className="code-block mb-8">
+        <div className="code-block-header"><span>proof.json</span></div>
+        <pre className="text-text-secondary">{`{
   "version": "occ/1",                // REQUIRED - exact value
   "artifact": {
     "hashAlg": "sha256",             // REQUIRED - "sha256" only in v1
@@ -78,8 +79,9 @@ export default function ProofFormatPage() {
       <p className="text-text-secondary mb-4">
         The Ed25519 signature covers the canonical serialization of a <code className="text-xs font-mono bg-bg-subtle px-1.5 py-0.5 rounded">SignedBody</code> object:
       </p>
-      <div className="rounded-lg border border-border-subtle bg-bg-elevated p-4 overflow-x-auto mb-4">
-        <pre className="text-xs font-mono leading-relaxed text-text-secondary">{`{
+      <div className="code-block mb-4">
+        <div className="code-block-header"><span>SignedBody</span></div>
+        <pre className="text-text-secondary">{`{
   version:           proof.version,
   artifact:          proof.artifact,
   actor:             proof.agency?.actor,        // when present
@@ -180,10 +182,10 @@ export default function ProofFormatPage() {
         <li>3. Encode the resulting string as UTF-8 (no BOM)</li>
       </ol>
       <p className="text-text-secondary mb-4">Top-level key order after sort:</p>
-      <div className="rounded-lg border border-border-subtle bg-bg-elevated p-4 mb-8">
-        <code className="text-xs font-mono text-text-secondary">
+      <div className="code-block mb-8">
+        <pre className="text-text-secondary">
           actor? &rarr; artifact &rarr; attestationFormat? &rarr; attribution? &rarr; commit &rarr; enforcement &rarr; measurement &rarr; publicKeyB64 &rarr; version
-        </code>
+        </pre>
       </div>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Field classification</h2>

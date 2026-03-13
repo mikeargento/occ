@@ -70,16 +70,16 @@ const faqs = [
 
 export default function FAQPage() {
   return (
-    <article>
-      <h1 className="text-3xl font-semibold tracking-tight mb-4">FAQ</h1>
-      <p className="text-text-secondary mb-8">
+    <article className="prose-doc">
+      <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-6">FAQ</h1>
+      <p className="text-text-secondary mb-10">
         Common questions about the OCC Protocol.
       </p>
 
-      <div className="space-y-6">
+      <div className="space-y-8">
         {faqs.map((faq) => (
-          <div key={faq.q} className="border-b border-border-subtle pb-6">
-            <h2 className="text-base font-semibold mb-2">{faq.q}</h2>
+          <div key={faq.q} className="border-b border-border-subtle pb-8">
+            <h2 className="text-lg font-semibold mb-3">{faq.q}</h2>
             <p className="text-sm text-text-secondary leading-relaxed">{faq.a}</p>
           </div>
         ))}

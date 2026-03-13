@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { useTheme } from "@/components/theme-provider";
 
 const links: { href: string; label: string; external?: boolean }[] = [
   { href: "/studio", label: "Studio" },
@@ -15,29 +14,34 @@ const links: { href: string; label: string; external?: boolean }[] = [
 export function Nav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-  const { theme, toggle } = useTheme();
 
   return (
     <header className="sticky top-0 z-50 bg-bg/80 backdrop-blur-xl">
       <div className="mx-auto max-w-7xl px-6">
-        <nav className="flex h-14 items-center justify-between">
+        <nav className="flex h-16 items-center justify-between">
           <Link
             href="/"
             className="flex items-center gap-2 text-text"
           >
-            <span className="text-xl font-extrabold tracking-wide" style={{ fontFamily: '"acumin-variable", "acumin-pro", sans-serif' }}>ProofStudio</span>
+            <span className="text-xl font-extrabold tracking-[-0.01em]" style={{ fontFamily: '"acumin-variable", "acumin-pro", sans-serif' }}>ProofStudio</span>
           </Link>
 
           {/* Desktop */}
-          <div className="hidden flex-1 items-center justify-end gap-4 md:flex">
-            {links.map((l) =>
-              l.external ? (
+          <div className="hidden flex-1 items-center justify-end gap-1 md:flex">
+            {links.map((l, i) => {
+              const isExternal = l.external;
+              // Add separator before GitHub (external) link
+              const separator = isExternal ? (
+                <div key="sep" className="w-px h-4 bg-border-subtle mx-2" />
+              ) : null;
+
+              const linkEl = isExternal ? (
                 <a
                   key={l.href}
                   href={l.href}
                   target="_blank"
                   rel="noopener"
-                  className="text-[13px] font-semibold rounded-md px-3 py-1.5 transition-colors text-text-secondary hover:text-text hover:bg-bg-subtle/50"
+                  className="text-sm font-semibold px-3 py-1.5 transition-colors text-text-tertiary hover:text-text"
                 >
                   {l.label}
                 </a>
@@ -45,26 +49,25 @@ export function Nav() {
                 <Link
                   key={l.href}
                   href={l.href}
-                  className={`text-[13px] font-semibold rounded-md px-3 py-1.5 transition-colors ${
+                  className={`text-sm font-semibold px-3 py-1.5 transition-colors ${
                     pathname.startsWith(l.href)
-                      ? "text-text bg-bg-subtle/50"
-                      : "text-text-secondary hover:text-text hover:bg-bg-subtle/50"
+                      ? "text-text"
+                      : "text-text-tertiary hover:text-text"
                   }`}
                 >
                   {l.label}
                 </Link>
-              )
-            )}
-            {/* Theme toggle */}
-            <ThemeToggle theme={theme} toggle={toggle} />
+              );
+
+              return separator ? [separator, linkEl] : linkEl;
+            })}
           </div>
 
-          {/* Mobile: theme toggle + hamburger */}
-          <div className="flex items-center gap-1 md:hidden">
-            <ThemeToggle theme={theme} toggle={toggle} />
+          {/* Mobile hamburger */}
+          <div className="flex items-center md:hidden">
             <button
               onClick={() => setOpen(!open)}
-              className="flex h-8 w-8 items-center justify-center rounded-md hover:bg-bg-subtle"
+              className="flex h-9 w-9 items-center justify-center rounded-md hover:bg-bg-subtle"
               aria-label="Toggle menu"
             >
               <svg
@@ -95,7 +98,7 @@ export function Nav() {
 
       {/* Mobile menu */}
       {open && (
-        <div className="border-t border-border-subtle bg-bg px-6 py-4 md:hidden">
+        <div className="mobile-menu-enter border-t border-border-subtle bg-bg px-6 py-6 md:hidden">
           <div className="flex flex-col gap-1">
             {links.map((l) =>
               l.external ? (
@@ -105,7 +108,7 @@ export function Nav() {
                   target="_blank"
                   rel="noopener"
                   onClick={() => setOpen(false)}
-                  className="rounded-md px-3 py-2 text-sm font-semibold text-text-secondary hover:text-text"
+                  className="rounded-lg px-3 py-2.5 text-sm font-semibold text-text-secondary hover:text-text"
                 >
                   {l.label}
                 </a>
@@ -114,9 +117,9 @@ export function Nav() {
                   key={l.href}
                   href={l.href}
                   onClick={() => setOpen(false)}
-                  className={`rounded-md px-3 py-2 text-sm font-semibold ${
+                  className={`rounded-lg px-3 py-2.5 text-sm font-semibold ${
                     pathname.startsWith(l.href)
-                      ? "text-text bg-bg-subtle"
+                      ? "text-text"
                       : "text-text-secondary hover:text-text"
                   }`}
                 >
@@ -131,33 +134,3 @@ export function Nav() {
   );
 }
 
-function ThemeToggle({ theme, toggle }: { theme: string; toggle: () => void }) {
-  const isDark = theme === "dark";
-  return (
-    <button
-      onClick={toggle}
-      className="ml-2 flex h-8 w-8 items-center justify-center rounded-md text-text-secondary hover:text-text hover:bg-bg-subtle/50 transition-colors cursor-pointer"
-      aria-label={`Switch to ${isDark ? "light" : "dark"} mode`}
-    >
-      {isDark ? (
-        /* Sun - shown in dark mode, click to go light */
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="4" />
-          <path d="M12 2v2" />
-          <path d="M12 20v2" />
-          <path d="M4.93 4.93l1.41 1.41" />
-          <path d="M17.66 17.66l1.41 1.41" />
-          <path d="M2 12h2" />
-          <path d="M20 12h2" />
-          <path d="M6.34 17.66l-1.41 1.41" />
-          <path d="M19.07 4.93l-1.41 1.41" />
-        </svg>
-      ) : (
-        /* Moon - shown in light mode, click to go dark */
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
-        </svg>
-      )}
-    </button>
-  );
-}

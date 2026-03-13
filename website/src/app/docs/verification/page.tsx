@@ -7,9 +7,9 @@ export const metadata: Metadata = {
 
 export default function VerificationPage() {
   return (
-    <article>
-      <h1 className="text-3xl font-semibold tracking-tight mb-4">Verification</h1>
-      <p className="text-text-secondary mb-8">
+    <article className="prose-doc">
+      <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-6">Verification</h1>
+      <p className="text-text-secondary mb-10">
         OCC verification is deterministic and runs offline. No network calls, no API keys, no accounts.
       </p>
 
@@ -46,7 +46,7 @@ export default function VerificationPage() {
             desc: "If a VerificationPolicy is provided, enforce its constraints: enforcement tier, allowed measurements, allowed public keys, attestation requirements, counter range, time range, epoch requirements.",
           },
         ].map((item) => (
-          <div key={item.step} className="rounded-lg border border-border-subtle bg-bg-elevated p-6">
+          <div key={item.step} className="rounded-xl border border-border-subtle border-l-2 border-l-text-tertiary bg-bg-elevated p-6">
             <div className="flex items-center gap-3 mb-3">
               <span className="inline-flex w-7 h-7 items-center justify-center rounded-md bg-bg-subtle text-xs font-mono font-semibold">
                 {item.step}
@@ -59,8 +59,9 @@ export default function VerificationPage() {
       </div>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Verification policy</h2>
-      <div className="rounded-lg border border-border-subtle bg-bg-elevated p-4 overflow-x-auto mb-6">
-        <pre className="text-xs font-mono leading-relaxed text-text-secondary">{`interface VerificationPolicy {
+      <div className="code-block mb-6">
+        <div className="code-block-header"><span>VerificationPolicy</span></div>
+        <pre className="text-text-secondary">{`interface VerificationPolicy {
   requireEnforcement?: "stub" | "hw-key" | "measured-tee";
   allowedMeasurements?: string[];     // exact match
   allowedPublicKeys?: string[];       // exact match
@@ -81,15 +82,15 @@ export default function VerificationPage() {
 
       <h3 className="text-lg font-semibold mt-8 mb-4">Trust anchor hierarchy</h3>
       <div className="space-y-3 mb-8">
-        <div className="rounded-lg border border-border-subtle p-4">
+        <div className="rounded-xl border border-border-subtle border-l-2 border-l-text-tertiary p-4">
           <code className="text-xs font-mono text-warning">requireEnforcement</code>
           <span className="text-sm text-text-secondary ml-2">alone - prevents in-transit downgrade only</span>
         </div>
-        <div className="rounded-lg border border-border-subtle p-4">
+        <div className="rounded-xl border border-border-subtle border-l-2 border-l-text-tertiary p-4">
           <code className="text-xs font-mono text-info">requireEnforcement + allowedMeasurements</code>
           <span className="text-sm text-text-secondary ml-2">- pins to specific enclave image</span>
         </div>
-        <div className="rounded-lg border border-border-subtle p-4">
+        <div className="rounded-xl border border-border-subtle border-l-2 border-l-text-tertiary p-4">
           <code className="text-xs font-mono text-success">+ requireAttestation</code>
           <span className="text-sm text-text-secondary ml-2">- full trust (vendor-attested hardware boundary)</span>
         </div>

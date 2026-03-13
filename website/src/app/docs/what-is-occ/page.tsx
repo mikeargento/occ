@@ -9,9 +9,9 @@ export const metadata: Metadata = {
 export default function WhatIsOCCPage() {
   return (
     <article className="prose-doc">
-      <h1 className="text-3xl font-semibold tracking-tight mb-8">What is OCC</h1>
+      <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-6">What is OCC</h1>
 
-      <p className="text-text-secondary leading-relaxed mb-6">
+      <p className="text-text-secondary leading-relaxed mb-10">
         OCC (Origin Controlled Computing) is a protocol that produces portable
         cryptographic proof when bytes are committed through an authorized
         execution boundary. The proof attests that a specific digital state was
@@ -32,7 +32,7 @@ export default function WhatIsOCCPage() {
         authorized boundary.
       </p>
 
-      <div className="rounded-lg border border-border-subtle bg-bg-elevated p-6 my-8">
+      <div className="rounded-xl border border-border-subtle border-l-2 border-l-text-tertiary bg-bg-elevated p-6 my-8">
         <p className="text-sm text-text italic">
           If proof exists, the authorized commit path was traversed.
         </p>
@@ -86,7 +86,7 @@ export default function WhatIsOCCPage() {
           { title: "Measured", desc: "The proof binds to a specific execution environment via measurement (PCR0 on Nitro, MRENCLAVE on SGX)." },
           { title: "Verifiable", desc: "Ed25519 signature, SHA-256 digest, and canonical serialization, all checkable with standard cryptographic primitives." },
         ].map((item) => (
-          <div key={item.title} className="rounded-lg border border-border-subtle p-4">
+          <div key={item.title} className="rounded-xl border border-border-subtle border-l-2 border-l-text-tertiary p-4">
             <h3 className="text-sm font-semibold mb-1">{item.title}</h3>
             <p className="text-sm text-text-secondary">{item.desc}</p>
           </div>

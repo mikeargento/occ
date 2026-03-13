@@ -29,8 +29,8 @@ export function ProofViewer({ proof }: ProofViewerProps) {
   };
 
   return (
-    <div className="rounded-xl border border-border-subtle bg-bg-elevated overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border-subtle">
+    <div className="terminal-glow rounded-xl border border-border-subtle bg-bg-elevated overflow-hidden">
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-border-subtle">
         <button
           onClick={() => setExpanded(!expanded)}
           className="text-xs font-mono text-text-tertiary hover:text-text transition-colors flex items-center gap-2"
@@ -64,7 +64,7 @@ export function ProofViewer({ proof }: ProofViewerProps) {
         }`}
       >
         <div className="overflow-hidden">
-          <pre className="p-4 overflow-x-auto text-xs leading-relaxed font-mono max-w-full">
+          <pre className="p-5 overflow-x-auto text-xs leading-relaxed font-mono max-w-full">
             <code className="break-all">
               {highlightJson(json)}
             </code>

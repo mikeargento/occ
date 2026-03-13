@@ -964,8 +964,10 @@ export default function StudioPage() {
   const allPass = verifyResults?.every((r) => r.status === "pass" || r.status === "info");
   const anyFail = verifyResults?.some((r) => r.status === "fail");
 
-  // Tab state for mobile
+  // Tab state
   const [activeTab, setActiveTab] = useState<"create" | "verify">("create");
+
+  const [showProofDetails, setShowProofDetails] = useState(false);
 
   // Step progress for proof creation
   const allSteps: { key: CreateStatus; label: string }[] = authorshipMode === "passkey"
@@ -973,26 +975,25 @@ export default function StudioPage() {
     : [{ key: "hashing", label: "Hash" }, { key: "signing", label: "Sign" }];
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-16">
+    <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6 sm:py-16">
       {/* Header */}
-      <div className="mb-8 sm:mb-12">
-        <h1 className="text-3xl font-semibold tracking-tight mb-3">
+      <div className="mb-8">
+        <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-3">
           Studio
         </h1>
-        <p className="text-text-secondary max-w-2xl">
-          Generate cryptographic proof for any file, or verify existing proofs.
-          Everything runs locally in your browser. Files are never uploaded.
+        <p className="text-text-secondary text-[15px] leading-relaxed">
+          Drop one file or many. Get cryptographic proof, locally.
         </p>
       </div>
 
-      {/* ── Tab bar (mobile: toggle, desktop: hidden) ── */}
-      <div className="lg:hidden sticky top-14 z-40 bg-bg/80 backdrop-blur-xl py-3 -mx-4 px-4 sm:-mx-6 sm:px-6 mb-6">
+      {/* ── Tab bar (all screen sizes) ── */}
+      <div className="mb-8">
         <div className="flex gap-1 p-1 rounded-xl bg-bg-elevated border border-border-subtle">
           <button
             onClick={() => setActiveTab("create")}
-            className={`flex-1 h-10 rounded-lg text-sm font-semibold transition-all duration-200 cursor-pointer ${
+            className={`flex-1 h-11 rounded-lg text-sm font-sans font-semibold transition-all duration-200 cursor-pointer ${
               activeTab === "create"
-                ? "bg-bg text-text shadow-sm"
+                ? "bg-bg text-success shadow-sm"
                 : "text-text-tertiary hover:text-text-secondary"
             }`}
           >
@@ -1000,9 +1001,9 @@ export default function StudioPage() {
           </button>
           <button
             onClick={() => setActiveTab("verify")}
-            className={`flex-1 h-10 rounded-lg text-sm font-semibold transition-all duration-200 cursor-pointer ${
+            className={`flex-1 h-11 rounded-lg text-sm font-sans font-semibold transition-all duration-200 cursor-pointer ${
               activeTab === "verify"
-                ? "bg-bg text-text shadow-sm"
+                ? "bg-bg text-success shadow-sm"
                 : "text-text-tertiary hover:text-text-secondary"
             }`}
           >
@@ -1011,338 +1012,45 @@ export default function StudioPage() {
         </div>
       </div>
 
-      {/* Two-column input panels */}
-      <div className="grid lg:grid-cols-2 gap-8">
-        {/* ── Create ── */}
-        <div className={`flex flex-col ${activeTab !== "create" ? "hidden lg:flex" : ""}`}>
-          <div className="flex items-center gap-3 mb-2">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-text-tertiary shrink-0">
-              <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
-            </svg>
-            <h2 className="text-xl font-semibold tracking-tight">
-              Make a proof.
-            </h2>
-          </div>
-          <p className="text-text-secondary text-sm mb-6 lg:min-h-[40px] ml-[36px]">
-            Drop any file. Your browser hashes it locally, sends only the digest
-            to an AWS Nitro Enclave, and returns a signed proof.
-          </p>
-
-          <div className="flex-1 flex flex-col gap-4">
-            <div className="flex-1">
-              <FileDrop
-                multiple
-                onFiles={handleFiles}
-                files={files}
-                onRemoveFile={handleRemoveFile}
-                onClearAll={handleClearFiles}
-                disabled={busy}
-              />
-            </div>
-
-            {/* ── Device Authorization toggle ── */}
-              <div className="rounded-xl border border-border-subtle bg-bg-elevated p-4">
-                <div className="text-[11px] font-medium uppercase tracking-[0.12em] text-text-tertiary mb-3">
-                  Device Authorization
+      {/* ═══════════════════ CREATE TAB ═══════════════════ */}
+      {activeTab === "create" && (
+        <>
+          {/* ── State C: Proof generated → hero download ── */}
+          {createStatus === "done" && proofs.length > 0 ? (
+            <div className="space-y-6 animate-slide-up">
+              <div className="text-center py-8">
+                <div className="w-16 h-16 rounded-2xl bg-success/10 border border-success/20 flex items-center justify-center mx-auto mb-5 animate-success-pulse">
+                  <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-success">
+                    <path d="M7 14.5l5 5L21 9" />
+                  </svg>
                 </div>
-                <div className="space-y-2">
-                  <label className="flex items-start gap-3 cursor-pointer group">
-                    <input
-                      type="radio"
-                      name="authorship"
-                      checked={authorshipMode === "none"}
-                      onChange={() => setAuthorshipMode("none")}
-                      className="mt-0.5 accent-text"
-                    />
-                    <div>
-                      <div className="text-sm font-medium text-text group-hover:text-text/80 transition-colors">None</div>
-                      <div className="text-xs text-text-tertiary">Proof attests the commit boundary only</div>
-                    </div>
-                  </label>
-                  <label className="flex items-start gap-3 cursor-pointer group">
-                    <input
-                      type="radio"
-                      name="authorship"
-                      checked={authorshipMode === "passkey"}
-                      onChange={() => setAuthorshipMode("passkey")}
-                      className="mt-0.5 accent-text"
-                    />
-                    <div>
-                      <div className="text-sm font-medium text-text group-hover:text-text/80 transition-colors">Authorize with device biometrics</div>
-                      <div className="text-xs text-text-tertiary">A device key, unlocked by biometrics, authorizes proof creation</div>
-                    </div>
-                  </label>
+                <div className="text-lg font-semibold text-text mb-1">
+                  {proofs.length === 1 ? "Proof created" : `${proofs.length} proofs created`}
                 </div>
-
-                {authorshipMode === "passkey" && !storedCredential && (
-                  <button
-                    onClick={handleRegisterPasskey}
-                    disabled={registering}
-                    className="mt-3 w-full h-9 rounded-lg border border-border text-xs font-semibold text-text-secondary hover:text-text hover:border-text-tertiary transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {registering ? "Registering…" : "Register Passkey"}
-                  </button>
-                )}
-
-                {authorshipMode === "passkey" && storedCredential && (
-                  <div className="mt-3">
-                    <div className="flex items-center gap-2 text-xs text-success">
-                      <span className="inline-flex w-4 h-4 items-center justify-center rounded-full bg-success/20 text-[10px]">✓</span>
-                      <span>Device identity registered</span>
-                      <span className="text-text-tertiary font-mono ml-1">{storedCredential.keyId.slice(0, 12)}…</span>
-                    </div>
-                    <div className="text-[11px] text-text-tertiary mt-1 ml-6">
-                      Biometric verification required when creating proofs.
-                    </div>
-                  </div>
+                {savedCount > 0 && destDirName && (
+                  <p className="text-sm text-text-tertiary">
+                    Saved to {destDirName}
+                  </p>
                 )}
               </div>
 
-            {/* ── Attribution fields (connected group) ── */}
-            <div className="rounded-xl border border-border-subtle bg-bg-elevated p-4">
-              <div className="text-[11px] font-medium uppercase tracking-[0.12em] text-text-tertiary mb-3">
-                Attribution
-              </div>
-              <div className="rounded-lg border border-border-subtle overflow-hidden divide-y divide-border-subtle">
-                <input
-                  type="text"
-                  placeholder="Name"
-                  value={attrName}
-                  onChange={(e) => setAttrName(e.target.value)}
-                  className="w-full h-10 bg-bg px-3 text-base sm:text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:bg-bg-elevated transition-colors"
-                />
-                <input
-                  type="text"
-                  placeholder="Title"
-                  value={attrTitle}
-                  onChange={(e) => setAttrTitle(e.target.value)}
-                  className="w-full h-10 bg-bg px-3 text-base sm:text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:bg-bg-elevated transition-colors"
-                />
-                <textarea
-                  placeholder="Message"
-                  value={attrMessage}
-                  onChange={(e) => setAttrMessage(e.target.value)}
-                  rows={2}
-                  className="w-full bg-bg px-3 py-2.5 text-base sm:text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:bg-bg-elevated transition-colors resize-none"
-                />
-              </div>
-              <p className="text-[11px] text-text-tertiary mt-2">
-                Sealed into the proof and travels with the artifact.
-              </p>
-            </div>
-
-            {/* ── Destination folder ── */}
-            {fsDirSupported && (
-              <div className="rounded-xl border border-border-subtle bg-bg-elevated p-4">
-                <div className="text-[11px] font-medium uppercase tracking-[0.12em] text-text-tertiary mb-3">
-                  Save To
-                </div>
-                {destDir ? (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-text-tertiary shrink-0">
-                        <path d="M2 4.5V12a1 1 0 001 1h10a1 1 0 001-1V6.5a1 1 0 00-1-1H8.5L7 4H3a1 1 0 00-1 .5z" />
-                      </svg>
-                      <span className="text-sm text-text truncate">{destDirName}</span>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0 ml-2">
-                      <button
-                        onClick={handlePickDestination}
-                        className="text-xs text-text-secondary hover:text-text transition-colors"
-                      >
-                        Change
-                      </button>
-                      <button
-                        onClick={handleClearDestination}
-                        className="text-xs text-text-tertiary hover:text-text transition-colors"
-                      >
-                        Clear
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <button
-                    onClick={handlePickDestination}
-                    className="w-full h-9 rounded-lg border border-border-subtle text-xs font-medium text-text-secondary hover:text-text hover:border-text-tertiary transition-colors cursor-pointer"
-                  >
-                    Choose folder…
-                  </button>
-                )}
-                <p className="text-[11px] text-text-tertiary mt-2">
-                  {destDir
-                    ? "Proof files will be saved here automatically."
-                    : "Pick a folder to auto-save proof.zip files. Otherwise they download to your default location."}
-                </p>
-              </div>
-            )}
-
-            <button
-              onClick={handleGenerate}
-              disabled={files.length === 0 || busy || proofs.length > 0 || (authorshipMode === "passkey" && !storedCredential)}
-              className={`
-                relative w-full h-12 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 shrink-0 overflow-hidden
-                ${busy
-                  ? "bg-bg-subtle text-text cursor-not-allowed border border-border-subtle"
-                  : proofs.length > 0
-                  ? "bg-success/10 text-success cursor-not-allowed border border-success/20"
-                  : files.length === 0 || (authorshipMode === "passkey" && !storedCredential)
-                  ? "bg-bg-subtle text-text-tertiary/50 cursor-not-allowed border border-border-subtle"
-                  : "bg-text text-bg hover:opacity-90 active:scale-[0.98] cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]"
-                }
-              `}
-            >
-              {busy && (
-                <div className="absolute inset-0 overflow-hidden rounded-xl">
-                  <div className="h-full bg-text/10 animate-progress-fill" />
-                </div>
-              )}
-              <span className="relative z-10">
-                {createStatus === "hashing"
-                  ? "Hashing…"
-                  : createStatus === "challenging"
-                  ? "Requesting challenge…"
-                  : createStatus === "authorizing"
-                  ? "Waiting for authorization…"
-                  : createStatus === "signing"
-                  ? "Committing in enclave…"
-                  : proofs.length > 0
-                  ? (proofs.length > 1 ? `${proofs.length} Proofs Created ✓` : "Proof Created ✓")
-                  : files.length > 1 ? `Make ${files.length} Proofs` : "Make a Proof"}
-              </span>
-            </button>
-
-            {createError && (
-              <div className="rounded-xl border border-error/30 bg-error/5 p-4">
-                <div className="text-sm text-error font-medium mb-1">Error</div>
-                <div className="text-sm text-text-secondary">{createError}</div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* ── Verify ── */}
-        <div className={`flex flex-col ${activeTab !== "verify" ? "hidden lg:flex" : ""}`}>
-          <div className="flex items-center gap-3 mb-2">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-text-tertiary shrink-0">
-              <path d="M12 2L4 6v5c0 5.5 3.4 8.7 8 10.5 4.6-1.8 8-5 8-10.5V6L12 2z" />
-              <path d="M8.5 12l2.5 2.5 4.5-5" />
-            </svg>
-            <h2 className="text-xl font-semibold tracking-tight">
-              Verify a proof.
-            </h2>
-          </div>
-          <p className="text-text-secondary text-sm mb-6 lg:min-h-[40px] ml-[36px]">
-            Drop a <span className="font-mono text-text">proof.zip</span> to
-            extract, re-hash, and check the digest against the proof.
-          </p>
-
-          <div className="flex-1 flex flex-col gap-4">
-            <div
-              onDragOver={(e) => { e.preventDefault(); setDragover(true); }}
-              onDragLeave={() => setDragover(false)}
-              onDrop={(e) => {
-                e.preventDefault();
-                setDragover(false);
-                if (e.dataTransfer.files.length) handleZipFile(e.dataTransfer.files[0]);
-              }}
-              onClick={() => !zipFile && zipInputRef.current?.click()}
-              className={`
-                flex-1 relative rounded-xl border transition-all duration-300 cursor-pointer min-h-[160px] flex items-center
-                ${dragover
-                  ? "border-text/40 bg-text/5 ring-2 ring-text/10 ring-offset-2 ring-offset-bg scale-[1.01]"
-                  : zipFile
-                  ? "border-border bg-bg-elevated"
-                  : "border-border-subtle bg-bg-elevated/50 hover:border-border hover:bg-bg-elevated hover:shadow-[0_0_24px_rgba(255,255,255,0.03)]"
-                }
-              `}
-            >
-              <input
-                ref={zipInputRef}
-                type="file"
-                accept=".zip,.proof.zip"
-                className="hidden"
-                onChange={(e) => {
-                  if (e.target.files?.length) handleZipFile(e.target.files[0]);
-                }}
-              />
-
-              {zipFile ? (
-                <div className="flex items-center justify-between px-6 py-5 w-full">
-                  <div>
-                    <div className="text-sm font-medium text-text">{zipFile.name}</div>
-                    <div className="text-xs text-text-tertiary mt-0.5">
-                      {formatFileSize(zipFile.size)}
-                      {extractedName && (
-                        <span className="ml-2 text-text-secondary">
-                          → <span className="font-mono">{extractedName}</span>
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleClearZip(); }}
-                    className="text-xs text-text-tertiary hover:text-text transition-colors"
-                  >
-                    Remove
-                  </button>
-                </div>
+              {/* Hero download button */}
+              {proofs.length === 1 ? (
+                <button
+                  onClick={() => handleDownloadZip(0)}
+                  className="w-full h-14 rounded-xl bg-success text-bg text-base font-semibold hover:bg-success/85 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-3"
+                >
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M9 2v10M5.5 8.5L9 12l3.5-3.5" />
+                    <path d="M2.5 13v2a1 1 0 001 1h11a1 1 0 001-1v-2" />
+                  </svg>
+                  Download {files[0]?.name ? `${files[0].name}.proof.zip` : "proof.zip"}
+                </button>
               ) : (
-                <div className="flex flex-col items-center py-12 px-6 w-full">
-                  <div className="w-12 h-12 rounded-xl bg-bg-subtle/80 border border-border-subtle flex items-center justify-center mb-4">
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-text-tertiary">
-                      <path d="M10 2L3 5.5v4.5c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V5.5L10 2z" />
-                      <path d="M7 10l2.5 2.5L13 8" />
-                    </svg>
-                  </div>
-                  <div className="text-sm text-text-secondary">
-                    Drop <span className="font-mono text-text">proof.zip</span> files
-                    here, or <span className="text-text font-medium">click to select</span>
-                  </div>
-                  <div className="text-xs text-text-tertiary mt-1">
-                    Runs entirely in your browser
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <button
-              onClick={handleVerify}
-              disabled={!zipFile || verifying}
-              className={`
-                w-full h-12 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 shrink-0
-                ${!zipFile || verifying
-                  ? "bg-bg-subtle text-text-tertiary/50 cursor-not-allowed border border-border-subtle"
-                  : "bg-text text-bg hover:opacity-90 active:scale-[0.98] cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]"
-                }
-              `}
-            >
-              {verifying ? "Verifying…" : "Verify Proof"}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Create Results (full width) ── */}
-      {proofs.length > 0 && (
-        <div className="mt-10 pt-8 border-t border-border-subtle space-y-4 animate-slide-up">
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-2.5 h-2.5 rounded-full bg-success animate-success-pulse" />
-              <span className="text-sm font-medium text-success">
-                {proofs.length === 1 ? "Proof generated" : `${proofs.length} proofs generated`}
-              </span>
-              {savedCount > 0 && destDirName && (
-                <span className="text-xs text-text-tertiary">
-                  · Saved {savedCount === 1 ? "1 file" : `${savedCount} files`} to {destDirName}
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              {proofs.length > 1 && (
                 <button
                   onClick={handleDownloadAll}
                   disabled={downloadProgress !== null}
-                  className="relative inline-flex items-center gap-2 rounded-lg bg-success px-4 py-2 text-xs font-semibold text-bg hover:bg-success/85 transition-colors cursor-pointer overflow-hidden disabled:opacity-90 disabled:cursor-wait"
+                  className="relative w-full h-14 rounded-xl bg-success text-bg text-base font-semibold hover:bg-success/85 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-3 overflow-hidden disabled:opacity-90 disabled:cursor-wait"
                 >
                   {downloadProgress !== null && (
                     <span
@@ -1350,106 +1058,62 @@ export default function StudioPage() {
                       style={{ transform: `scaleX(${downloadProgress / 100})` }}
                     />
                   )}
-                  <span className="relative flex items-center gap-2">
-                    {downloadProgress !== null && downloadProgress < 100 ? (
-                      <>
-                        <svg className="animate-spin" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
-                          <circle cx="7" cy="7" r="5" strokeOpacity="0.3" />
-                          <path d="M12 7a5 5 0 00-5-5" />
-                        </svg>
-                        Bundling {downloadProgress}%
-                      </>
-                    ) : downloadProgress === 100 ? (
-                      <>
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
-                          <path d="M3 7.5l3 3 5-6" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                        Done
-                      </>
-                    ) : (
-                      <>
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
-                          <path d="M7 2v7M4 6l3 3 3-3" />
-                          <path d="M2 10v1.5a.5.5 0 00.5.5h9a.5.5 0 00.5-.5V10" />
-                        </svg>
-                        Download all
-                      </>
-                    )}
+                  <span className="relative flex items-center gap-3">
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M9 2v10M5.5 8.5L9 12l3.5-3.5" />
+                      <path d="M2.5 13v2a1 1 0 001 1h11a1 1 0 001-1v-2" />
+                    </svg>
+                    {downloadProgress !== null && downloadProgress < 100
+                      ? `Bundling ${downloadProgress}%`
+                      : downloadProgress === 100
+                      ? "Done"
+                      : `Download all ${proofs.length} proofs`}
                   </span>
                 </button>
               )}
-              {proofs.length === 1 && (
+
+              <button
+                onClick={() => { handleClearFiles(); setShowProofDetails(false); }}
+                className="w-full text-center text-sm text-text-tertiary hover:text-text-secondary transition-colors py-2 cursor-pointer"
+              >
+                Start over
+              </button>
+
+              {/* Proof details disclosure */}
+              <div className="pt-4 border-t border-border-subtle">
                 <button
-                  onClick={() => handleDownloadZip(0)}
-                  className="inline-flex items-center gap-2 rounded-lg bg-success px-4 py-2 text-xs font-semibold text-bg hover:bg-success/85 transition-colors cursor-pointer"
+                  onClick={() => setShowProofDetails(prev => !prev)}
+                  className="flex items-center gap-2 text-xs text-text-tertiary hover:text-text-secondary transition-colors cursor-pointer"
                 >
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
-                    <path d="M7 2v7M4 6l3 3 3-3" />
-                    <path d="M2 10v1.5a.5.5 0 00.5.5h9a.5.5 0 00.5-.5V10" />
+                  <svg
+                    width="12" height="12" viewBox="0 0 12 12" fill="currentColor"
+                    className={`transition-transform duration-200 ${showProofDetails ? "rotate-90" : ""}`}
+                  >
+                    <path d="M4.5 1.5l5 4.5-5 4.5" />
                   </svg>
-                  Download proof.zip
+                  Proof details
                 </button>
-              )}
-            </div>
-          </div>
 
-          {proofs.map((p, idx) => {
-            const isBatch = proofs.length > 1;
-            const isExpanded = !isBatch || expandedProofs.has(idx);
-            const toggleExpand = () => {
-              setExpandedProofs((prev) => {
-                const next = new Set(prev);
-                if (next.has(idx)) next.delete(idx);
-                else next.add(idx);
-                return next;
-              });
-            };
-
-            return (
-              <div key={idx} className={isBatch ? "rounded-xl border border-border-subtle overflow-hidden transition-colors hover:border-border" : "space-y-4"}>
-                {isBatch && (
-                  <div
-                    onClick={toggleExpand}
-                    className="flex items-center justify-between p-4 cursor-pointer select-none group transition-colors hover:bg-bg-subtle/30"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <svg
-                        width="16" height="16" viewBox="0 0 16 16" fill="currentColor"
-                        className={`shrink-0 text-text-secondary group-hover:text-text transition-all duration-200 ${
-                          isExpanded ? "rotate-90" : ""
-                        }`}
-                      >
-                        <path d="M5.5 2l6 6-6 6" />
-                      </svg>
-                      <span className="text-sm font-medium text-text truncate">
-                        {files[idx]?.name || `Proof ${idx + 1}`}
-                      </span>
-                    </div>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleDownloadZip(idx); }}
-                      className="text-xs text-text-tertiary hover:text-text transition-colors shrink-0 ml-4"
-                    >
-                      Download
-                    </button>
-                  </div>
-                )}
-                {/* Collapsed summary */}
-                {isBatch && !isExpanded && (
-                  <div className="px-4 pb-3 -mt-1">
-                    <ProofMeta proof={p} fileName={files[idx]?.name} fileSize={files[idx]?.size} />
-                  </div>
-                )}
-                {/* Animated expand/collapse for batch */}
-                {isBatch && (
-                  <div
-                    className={`grid transition-all duration-300 ease-in-out ${
-                      isExpanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
-                    }`}
-                  >
-                    <div className="overflow-hidden">
-                      <div className="p-4 pt-0 space-y-3">
+                <div className={`grid transition-all duration-300 ease-in-out ${
+                  showProofDetails ? "grid-rows-[1fr] opacity-100 mt-4" : "grid-rows-[0fr] opacity-0"
+                }`}>
+                  <div className="overflow-hidden space-y-4">
+                    {proofs.map((p, idx) => (
+                      <div key={idx} className="space-y-3">
+                        {proofs.length > 1 && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium text-text">{files[idx]?.name || `Proof ${idx + 1}`}</span>
+                            <button
+                              onClick={() => handleDownloadZip(idx)}
+                              className="text-xs text-text-tertiary hover:text-text transition-colors cursor-pointer"
+                            >
+                              Download
+                            </button>
+                          </div>
+                        )}
                         <ProofMeta proof={p} fileName={files[idx]?.name} fileSize={files[idx]?.size} />
-                        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                        {proofs.length === 1 && <ProofViewer proof={p} />}
+                        <div className="grid sm:grid-cols-2 gap-3">
                           <InfoCard title="Artifact" items={[
                             { label: "Hash Algorithm", value: p.artifact.hashAlg },
                             { label: "Digest", value: p.artifact.digestB64 },
@@ -1486,123 +1150,286 @@ export default function StudioPage() {
                           )}
                         </div>
                       </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* ── State A & B: File selection + generation ── */
+            <div className="space-y-4">
+              <FileDrop
+                multiple
+                onFiles={handleFiles}
+                files={files}
+                onRemoveFile={handleRemoveFile}
+                onClearAll={handleClearFiles}
+                disabled={busy}
+              />
+
+              {/* Options (visible when files selected) */}
+              {files.length > 0 && (
+                <div className="space-y-4">
+                  {/* Signing mode — segmented control */}
+                  <div>
+                    <div className="text-xs text-text-tertiary mb-2">Signing</div>
+                    <div className="flex gap-1 p-1 rounded-xl bg-bg-elevated border border-border-subtle">
+                      <button
+                        onClick={() => setAuthorshipMode("none")}
+                        className={`flex-1 h-9 rounded-lg text-xs font-sans font-semibold transition-all duration-200 cursor-pointer ${
+                          authorshipMode === "none"
+                            ? "bg-bg text-success shadow-sm"
+                            : "text-text-tertiary hover:text-text-secondary"
+                        }`}
+                      >
+                        Standard
+                      </button>
+                      <button
+                        onClick={() => setAuthorshipMode("passkey")}
+                        className={`flex-1 h-9 rounded-lg text-xs font-sans font-semibold transition-all duration-200 cursor-pointer ${
+                          authorshipMode === "passkey"
+                            ? "bg-bg text-success shadow-sm"
+                            : "text-text-tertiary hover:text-text-secondary"
+                        }`}
+                      >
+                        Biometric
+                      </button>
                     </div>
                   </div>
-                )}
-                {/* Single proof (non-batch) - always expanded */}
-                {!isBatch && isExpanded && (
-                  <>
-                    <ProofMeta proof={p} fileName={files[idx]?.name} fileSize={files[idx]?.size} />
-                    <ProofViewer proof={p} />
-                    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-2">
-                      <InfoCard title="Artifact" items={[
-                        { label: "Hash Algorithm", value: p.artifact.hashAlg },
-                        { label: "Digest", value: p.artifact.digestB64 },
-                      ]} />
-                      <InfoCard title="Commit" items={[
-                        { label: "Nonce", value: p.commit.nonceB64 },
-                        ...(p.commit.counter ? [{ label: "Counter", value: p.commit.counter }] : []),
-                        ...(p.commit.epochId ? [{ label: "Epoch", value: p.commit.epochId }] : []),
-                        ...(p.commit.prevB64 ? [{ label: "Chain Link", value: p.commit.prevB64 }] : []),
-                      ]} />
-                      <InfoCard title="Environment" items={[
-                        { label: "Enforcement", value: p.environment.enforcement },
-                        { label: "Measurement", value: p.environment.measurement },
-                        ...(p.environment.attestation ? [{ label: "Attestation", value: p.environment.attestation.format }] : []),
-                      ]} />
-                      <InfoCard title="Signer" items={[
-                        { label: "Public Key", value: p.signer.publicKeyB64 },
-                        { label: "Signature", value: p.signer.signatureB64 },
-                      ]} />
-                      {p.agency && (
-                        <InfoCard title="Agency" items={[
-                          { label: "Actor", value: p.agency.actor.keyId },
-                          { label: "Provider", value: p.agency.actor.provider },
-                          { label: "Algorithm", value: p.agency.actor.algorithm },
-                          { label: "Purpose", value: p.agency.authorization.purpose },
-                        ]} />
-                      )}
-                      {p.attribution && (
-                        <InfoCard title="Attribution" items={[
-                          ...(p.attribution.name ? [{ label: "Name", value: p.attribution.name }] : []),
-                          ...(p.attribution.title ? [{ label: "Title", value: p.attribution.title }] : []),
-                          ...(p.attribution.message ? [{ label: "Message", value: p.attribution.message }] : []),
-                        ]} />
-                      )}
+                  {authorshipMode === "passkey" && !storedCredential && (
+                    <button onClick={handleRegisterPasskey} disabled={registering} className="w-full h-10 rounded-xl border border-border text-xs font-semibold text-text-secondary hover:text-text hover:border-text-tertiary transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                      {registering ? "Registering…" : "Register Passkey"}
+                    </button>
+                  )}
+                  {authorshipMode === "passkey" && storedCredential && (
+                    <div className="flex items-center gap-2 text-xs text-success">
+                      <span className="inline-flex w-4 h-4 items-center justify-center rounded-full bg-success/20 text-[10px]">✓</span>
+                      <span>Device registered</span>
+                      <span className="text-text-tertiary font-mono ml-1">{storedCredential.keyId.slice(0, 12)}…</span>
                     </div>
-                  </>
-                )}
-              </div>
-            );
-          })}
-        </div>
+                  )}
+
+                  {/* Attribution */}
+                  <div className="rounded-xl border border-border-subtle bg-bg-elevated p-5">
+                    <div className="text-sm font-medium text-text mb-3">Attribution</div>
+                    <div className="rounded-lg border border-border-subtle overflow-hidden divide-y divide-border-subtle">
+                      <input type="text" placeholder="Name" value={attrName} onChange={(e) => setAttrName(e.target.value)} className="w-full h-11 bg-bg px-3 text-base sm:text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:bg-bg-elevated transition-colors" />
+                      <input type="text" placeholder="Title" value={attrTitle} onChange={(e) => setAttrTitle(e.target.value)} className="w-full h-11 bg-bg px-3 text-base sm:text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:bg-bg-elevated transition-colors" />
+                      <textarea placeholder="Message" value={attrMessage} onChange={(e) => setAttrMessage(e.target.value)} rows={2} className="w-full bg-bg px-3 py-2.5 text-base sm:text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:bg-bg-elevated transition-colors resize-none" />
+                    </div>
+                    <p className="text-[11px] text-text-tertiary mt-2 leading-relaxed">Sealed into the proof and travels with the artifact.</p>
+                  </div>
+
+                  {/* Save-to-folder */}
+                  {fsDirSupported && (
+                    <div className="rounded-xl border border-border-subtle bg-bg-elevated p-5">
+                      <div className="text-sm font-medium text-text mb-3">Save To</div>
+                      {destDir ? (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-text-tertiary shrink-0"><path d="M2 4.5V12a1 1 0 001 1h10a1 1 0 001-1V6.5a1 1 0 00-1-1H8.5L7 4H3a1 1 0 00-1 .5z" /></svg>
+                            <span className="text-sm text-text truncate">{destDirName}</span>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0 ml-2">
+                            <button onClick={handlePickDestination} className="text-xs text-text-secondary hover:text-text transition-colors cursor-pointer">Change</button>
+                            <button onClick={handleClearDestination} className="text-xs text-text-tertiary hover:text-text transition-colors cursor-pointer">Clear</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button onClick={handlePickDestination} className="w-full h-10 rounded-xl border border-border-subtle text-xs font-medium text-text-secondary hover:text-text hover:border-text-tertiary transition-colors cursor-pointer">Choose folder…</button>
+                      )}
+                      <p className="text-[11px] text-text-tertiary mt-2">{destDir ? "Proof files will be saved here automatically." : "Pick a folder to auto-save proof.zip files. Otherwise they download to your default location."}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Make a Proof button (only when files selected) */}
+              {files.length > 0 && (
+                <button
+                  onClick={handleGenerate}
+                  disabled={files.length === 0 || busy || proofs.length > 0 || (authorshipMode === "passkey" && !storedCredential)}
+                  className={`
+                    relative w-full h-12 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 shrink-0 overflow-hidden
+                    ${busy
+                      ? "bg-bg-subtle text-text cursor-not-allowed border border-border-subtle"
+                      : files.length === 0 || (authorshipMode === "passkey" && !storedCredential)
+                      ? "bg-bg-subtle text-text-tertiary/50 cursor-not-allowed border border-border-subtle"
+                      : "bg-text text-bg hover:opacity-90 active:scale-[0.98] cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]"
+                    }
+                  `}
+                >
+                  {busy && (
+                    <div className="absolute inset-0 overflow-hidden rounded-xl">
+                      <div className="h-full bg-text/10 animate-progress-fill" />
+                    </div>
+                  )}
+                  <span className="relative z-10">
+                    {createStatus === "hashing"
+                      ? "Hashing…"
+                      : createStatus === "challenging"
+                      ? "Requesting challenge…"
+                      : createStatus === "authorizing"
+                      ? "Waiting for authorization…"
+                      : createStatus === "signing"
+                      ? "Committing in enclave…"
+                      : files.length > 1 ? `Make ${files.length} Proofs` : "Make a Proof"}
+                  </span>
+                </button>
+              )}
+
+              {createError && (
+                <div className="rounded-xl border border-error/30 bg-error/5 p-4">
+                  <div className="text-sm text-error font-medium mb-1">Error</div>
+                  <div className="text-sm text-text-secondary">{createError}</div>
+                </div>
+              )}
+            </div>
+          )}
+        </>
       )}
 
-      {/* ── Verify Results (full width) ── */}
-      {verifyResults && (
-        <div className="mt-10 pt-8 border-t border-border-subtle space-y-4 animate-slide-up">
-          <div className={`rounded-xl border p-5 flex items-start gap-4 ${
-            anyFail ? "border-error/30 bg-error/5" :
-            allPass ? "border-success/30 bg-success/5" :
-            "border-warning/30 bg-warning/5"
-          }`}>
-            <div className="shrink-0 mt-0.5">
-              {anyFail && (
-                <svg width="20" height="20" viewBox="0 0 20 20" className="text-error">
-                  <circle cx="10" cy="10" r="10" fill="currentColor" opacity="0.15" />
-                  <path d="M7 7l6 6M13 7l-6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
-                </svg>
-              )}
-              {!anyFail && allPass && (
-                <svg width="20" height="20" viewBox="0 0 20 20" className="text-success">
-                  <circle cx="10" cy="10" r="10" fill="currentColor" opacity="0.15" />
-                  <path d="M6 10.5l2.5 2.5L14 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                </svg>
-              )}
-              {!anyFail && !allPass && (
-                <svg width="20" height="20" viewBox="0 0 20 20" className="text-warning">
-                  <circle cx="10" cy="10" r="10" fill="currentColor" opacity="0.15" />
-                  <path d="M10 6v5M10 13.5h.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
-                </svg>
-              )}
-            </div>
-            <div>
-              <div className={`text-sm font-semibold ${
-                anyFail ? "text-error" : allPass ? "text-success" : "text-warning"
-              }`}>
-                {anyFail ? "Verification Failed" : allPass ? "Verification Passed" : "Passed with Warnings"}
+      {/* ═══════════════════ VERIFY TAB ═══════════════════ */}
+      {activeTab === "verify" && (
+        <div className="space-y-4">
+          <div
+            onDragOver={(e) => { e.preventDefault(); setDragover(true); }}
+            onDragLeave={() => setDragover(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragover(false);
+              if (e.dataTransfer.files.length) handleZipFile(e.dataTransfer.files[0]);
+            }}
+            onClick={() => !zipFile && zipInputRef.current?.click()}
+            className={`
+              relative rounded-xl border transition-all duration-300 cursor-pointer min-h-[180px] flex items-center
+              ${dragover
+                ? "border-text/40 bg-text/5 ring-2 ring-text/10 ring-offset-2 ring-offset-bg scale-[1.01]"
+                : zipFile
+                ? "border-border bg-bg-elevated"
+                : "border-border-subtle bg-bg-elevated/50 hover:border-border hover:bg-bg-elevated hover:shadow-[0_0_30px_rgba(255,255,255,0.03)]"
+              }
+            `}
+          >
+            <input
+              ref={zipInputRef}
+              type="file"
+              accept=".zip,.proof.zip"
+              className="hidden"
+              onChange={(e) => {
+                if (e.target.files?.length) handleZipFile(e.target.files[0]);
+              }}
+            />
+            {zipFile ? (
+              <div className="flex items-center justify-between px-6 py-5 w-full">
+                <div>
+                  <div className="text-sm font-medium text-text">{zipFile.name}</div>
+                  <div className="text-xs text-text-tertiary mt-0.5">
+                    {formatFileSize(zipFile.size)}
+                    {extractedName && (
+                      <span className="ml-2 text-text-secondary">→ <span className="font-mono">{extractedName}</span></span>
+                    )}
+                  </div>
+                </div>
+                <button onClick={(e) => { e.stopPropagation(); handleClearZip(); }} className="text-xs text-text-tertiary hover:text-text transition-colors cursor-pointer">Remove</button>
               </div>
-              <p className="text-xs text-text-secondary mt-1">
-                {anyFail
-                  ? "One or more checks failed. This proof may not be valid for the provided file."
-                  : allPass
-                  ? "All checks passed. The artifact digest matches and the proof structure is valid."
-                  : "Core checks passed, but some optional fields are missing or could not be fully verified."}
-              </p>
-            </div>
+            ) : (
+              <div className="flex flex-col items-center py-14 px-6 w-full">
+                <div className="w-14 h-14 rounded-xl bg-bg-subtle/80 border border-border-subtle flex items-center justify-center mb-5">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-text-tertiary">
+                    <path d="M10 2L3 5.5v4.5c0 4.5 3 7.5 7 9 4-1.5 7-4.5 7-9V5.5L10 2z" />
+                    <path d="M7 10l2.5 2.5L13 8" />
+                  </svg>
+                </div>
+                <div className="text-[15px] text-text-secondary">
+                  Drop <span className="font-mono text-text">proof.zip</span> here, or <span className="text-text font-medium">click to select</span>
+                </div>
+                <div className="text-xs text-text-tertiary mt-1">Runs entirely in your browser</div>
+              </div>
+            )}
           </div>
 
-          <div className="rounded-xl border border-border-subtle overflow-hidden">
-            {verifyResults.map((check, i) => (
-              <div
-                key={i}
-                className={`flex items-start gap-3 px-4 py-3.5 transition-colors ${
-                  i > 0 ? "border-t border-border-subtle" : ""
-                } ${i % 2 === 1 ? "bg-bg-elevated/50" : ""}`}
-              >
-                <div className="mt-0.5 shrink-0">
-                  {check.status === "pass" && <span className="inline-flex w-5 h-5 items-center justify-center rounded-full bg-success/20 text-success text-[11px]">✓</span>}
-                  {check.status === "fail" && <span className="inline-flex w-5 h-5 items-center justify-center rounded-full bg-error/20 text-error text-[11px]">✕</span>}
-                  {check.status === "warn" && <span className="inline-flex w-5 h-5 items-center justify-center rounded-full bg-warning/20 text-warning text-[11px]">!</span>}
-                  {check.status === "info" && <span className="inline-flex w-5 h-5 items-center justify-center rounded-full bg-info/20 text-info text-[11px]">i</span>}
+          <button
+            onClick={handleVerify}
+            disabled={!zipFile || verifying}
+            className={`
+              w-full h-12 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 shrink-0
+              ${!zipFile || verifying
+                ? "bg-bg-subtle text-text-tertiary/50 cursor-not-allowed border border-border-subtle"
+                : "bg-text text-bg hover:opacity-90 active:scale-[0.98] cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]"
+              }
+            `}
+          >
+            {verifying ? "Verifying…" : "Verify Proof"}
+          </button>
+
+          {/* Verify results inline */}
+          {verifyResults && (
+            <div className="space-y-4 animate-slide-up pt-4">
+              <div className={`rounded-xl border p-6 flex items-start gap-4 ${
+                anyFail ? "border-error/30 bg-error/5" :
+                allPass ? "border-success/30 bg-success/5" :
+                "border-warning/30 bg-warning/5"
+              }`}>
+                <div className="shrink-0 mt-0.5">
+                  {anyFail && (
+                    <svg width="20" height="20" viewBox="0 0 20 20" className="text-error">
+                      <circle cx="10" cy="10" r="10" fill="currentColor" opacity="0.15" />
+                      <path d="M7 7l6 6M13 7l-6 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                    </svg>
+                  )}
+                  {!anyFail && allPass && (
+                    <svg width="20" height="20" viewBox="0 0 20 20" className="text-success">
+                      <circle cx="10" cy="10" r="10" fill="currentColor" opacity="0.15" />
+                      <path d="M6 10.5l2.5 2.5L14 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                    </svg>
+                  )}
+                  {!anyFail && !allPass && (
+                    <svg width="20" height="20" viewBox="0 0 20 20" className="text-warning">
+                      <circle cx="10" cy="10" r="10" fill="currentColor" opacity="0.15" />
+                      <path d="M10 6v5M10 13.5h.01" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                    </svg>
+                  )}
                 </div>
                 <div>
-                  <div className="text-sm font-medium text-text">{check.label}</div>
-                  <div className="text-xs text-text-secondary mt-0.5">{check.detail}</div>
+                  <div className={`text-sm font-semibold ${
+                    anyFail ? "text-error" : allPass ? "text-success" : "text-warning"
+                  }`}>
+                    {anyFail ? "Verification Failed" : allPass ? "Verification Passed" : "Passed with Warnings"}
+                  </div>
+                  <p className="text-xs text-text-secondary mt-1">
+                    {anyFail
+                      ? "One or more checks failed. This proof may not be valid for the provided file."
+                      : allPass
+                      ? "All checks passed. The artifact digest matches and the proof structure is valid."
+                      : "Core checks passed, but some optional fields are missing or could not be fully verified."}
+                  </p>
                 </div>
               </div>
-            ))}
-          </div>
+
+              <div className="rounded-xl border border-border-subtle overflow-hidden">
+                {verifyResults.map((check, i) => (
+                  <div
+                    key={i}
+                    className={`flex items-start gap-3 px-4 py-3.5 transition-colors ${
+                      i > 0 ? "border-t border-border-subtle" : ""
+                    } ${i % 2 === 1 ? "bg-bg-elevated/50" : ""}`}
+                  >
+                    <div className="mt-0.5 shrink-0">
+                      {check.status === "pass" && <span className="inline-flex w-5 h-5 items-center justify-center rounded-full bg-success/20 text-success text-[11px]">✓</span>}
+                      {check.status === "fail" && <span className="inline-flex w-5 h-5 items-center justify-center rounded-full bg-error/20 text-error text-[11px]">✕</span>}
+                      {check.status === "warn" && <span className="inline-flex w-5 h-5 items-center justify-center rounded-full bg-warning/20 text-warning text-[11px]">!</span>}
+                      {check.status === "info" && <span className="inline-flex w-5 h-5 items-center justify-center rounded-full bg-info/20 text-info text-[11px]">i</span>}
+                    </div>
+                    <div>
+                      <div className="text-sm font-sans font-medium text-text">{check.label}</div>
+                      <div className="text-xs text-text-secondary mt-0.5">{check.detail}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -1613,8 +1440,8 @@ export default function StudioPage() {
 
 function InfoCard({ title, items }: { title: string; items: { label: string; value: string }[] }) {
   return (
-    <div className="rounded-xl border border-border-subtle bg-bg-elevated p-4 min-w-0 overflow-hidden">
-      <div className="text-[10px] font-semibold uppercase tracking-widest text-text-tertiary mb-3 pb-2 border-b border-border-subtle">{title}</div>
+    <div className="rounded-xl border border-border-subtle bg-bg-elevated p-4 min-w-0 overflow-hidden card-hover">
+      <div className="text-[11px] font-semibold uppercase tracking-[0.15em] text-text-tertiary mb-3 pb-2 border-b border-border-subtle">{title}</div>
       <div className="space-y-2.5">
         {items.map((item) => (
           <div key={item.label}>

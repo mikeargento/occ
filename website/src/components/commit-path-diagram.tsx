@@ -53,7 +53,7 @@ const equations = [
 
 export function CommitPathDiagram() {
   return (
-    <div className="mt-10 grid sm:grid-cols-2 gap-4">
+    <div className="mt-10 grid gap-4">
       {equations.map((eq) => (
         <div
           key={eq.label}

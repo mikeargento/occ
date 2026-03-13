@@ -10,7 +10,7 @@ export function ProofMeta({ proof, fileName, fileSize }: ProofMetaProps) {
   const tsa = proof.timestamps?.artifact || proof.timestamps?.proof;
 
   return (
-    <div className="flex flex-wrap gap-3 text-xs text-text-secondary">
+    <div className="flex flex-wrap gap-4 text-xs text-text-secondary">
       {fileName && (
         <span>{fileName}{fileSize ? ` (${formatSize(fileSize)})` : ""}</span>
       )}

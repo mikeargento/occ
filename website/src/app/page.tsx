@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { TerminalWindow } from "@/components/terminal-window";
+import { ScrollReveal } from "@/components/scroll-reveal";
 
 /* ── Syntax-highlighted JSON helpers ── */
 const K = ({ children }: { children: string }) => (
@@ -23,121 +24,190 @@ function Section({
   className?: string;
 }) {
   return (
-    <section className={`py-24 ${className}`}>
-      <div className="mx-auto max-w-7xl px-6">
+    <section className={`py-28 sm:py-32 ${className}`}>
+      <div className="mx-auto max-w-6xl px-6">
         {children}
       </div>
     </section>
   );
 }
 
+/* ── Use Case Icons (24x24, stroke-based) ── */
+const icons = {
+  sparkles: (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3l1.5 5.5L19 10l-5.5 1.5L12 17l-1.5-5.5L5 10l5.5-1.5L12 3z" />
+      <path d="M19 15l.5 2 2 .5-2 .5-.5 2-.5-2-2-.5 2-.5.5-2z" />
+    </svg>
+  ),
+  terminal: (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="4 17 10 11 4 5" />
+      <line x1="12" y1="19" x2="20" y2="19" />
+    </svg>
+  ),
+  image: (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+      <circle cx="8.5" cy="8.5" r="1.5" />
+      <polyline points="21 15 16 10 5 21" />
+    </svg>
+  ),
+  beaker: (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 3h6v7l5 8a1 1 0 01-.9 1.5H4.9A1 1 0 014 18l5-8V3z" />
+      <line x1="9" y1="3" x2="15" y2="3" />
+      <path d="M7 15h10" />
+    </svg>
+  ),
+  shield: (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      <polyline points="9 12 11 14 15 10" />
+    </svg>
+  ),
+  arrows: (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="17 1 21 5 17 9" />
+      <line x1="3" y1="5" x2="21" y2="5" />
+      <polyline points="7 23 3 19 7 15" />
+      <line x1="21" y1="19" x2="3" y2="19" />
+    </svg>
+  ),
+};
+
 export default function Home() {
   return (
     <>
       {/* ── Hero ── */}
-      <Section className="pt-32 pb-20">
-        <div className="max-w-5xl mx-auto text-center">
-          <h1 className="text-[clamp(1.75rem,3.8vw,3.5rem)] font-semibold tracking-tight leading-[1.15] whitespace-nowrap">
-            Cryptographic proof for digital artifacts
+      <section className="relative flex items-center justify-center overflow-hidden pt-28 sm:pt-32 pb-12 sm:pb-16">
+{/* clean background — no gradient */}
+
+        <div className="mx-auto max-w-5xl px-6 text-center">
+          <h1
+            className="hero-animate text-[clamp(2rem,5.5vw,3.75rem)] font-bold tracking-[-0.04em] leading-[1.08] sm:whitespace-nowrap text-text/90"
+            style={{ animationDelay: "0ms" }}
+          >
+            Cryptographic proof for anything digital
           </h1>
-          <p className="mt-6 text-[clamp(1.75rem,3.8vw,3.5rem)] font-semibold tracking-tight text-text-secondary leading-[1.2]">
+
+          <p
+            className="hero-animate mt-7 sm:mt-8 text-[clamp(1.375rem,3.2vw,2.25rem)] font-bold tracking-[-0.02em] leading-[1.3] text-text"
+            style={{ animationDelay: "120ms" }}
+          >
             No blockchain. No ledgers. Just proof.
           </p>
-          <p className="mt-4 text-lg text-text-tertiary tracking-tight text-balance">
-            Establish provable control over any digital artifact: photos, videos, songs, documents, medical records, datasets, AI outputs, code, designs, and more.
-          </p>
-          <div className="mt-10 flex flex-wrap justify-center gap-4">
+
+          <div
+            className="hero-animate mt-10 sm:mt-12 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4"
+            style={{ animationDelay: "240ms" }}
+          >
             <Link
               href="/studio"
-              className="inline-flex h-11 items-center rounded-md bg-emerald-600 px-6 text-sm font-semibold text-white transition-colors hover:bg-emerald-500"
+              className="inline-flex h-12 items-center justify-center rounded-xl bg-emerald-600 px-8 text-sm font-semibold text-white transition-all hover:bg-emerald-500 active:scale-[0.98]"
             >
               Try ProofStudio
             </Link>
             <Link
               href="/docs"
-              className="inline-flex h-11 items-center rounded-md border border-border px-6 text-sm font-semibold text-text-secondary transition-colors hover:text-text hover:border-text-tertiary"
+              className="inline-flex h-12 items-center justify-center rounded-xl border border-border px-8 text-sm font-semibold text-text-secondary transition-all hover:text-text hover:border-text-tertiary active:scale-[0.98]"
             >
               Documentation
             </Link>
           </div>
+
         </div>
-      </Section>
+      </section>
+
 
       {/* ── How It Works ── */}
-      <Section>
-        <div className="text-center mb-16">
-          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-4">
-            ProofStudio lets you prove anything digital.
-          </h2>
-          <p className="text-text-secondary max-w-xl mx-auto text-balance">
-            It works by creating a cryptographic container that holds exactly one digital artifact or process.
-          </p>
-        </div>
-        <div className="grid sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
+      <Section className="!pt-16 sm:!pt-20">
+        <ScrollReveal>
+          <div className="text-center mb-16">
+            <h2 className="text-2xl sm:text-3xl font-semibold tracking-[-0.03em] text-text-secondary max-w-3xl mx-auto text-balance">
+              ProofStudio creates a cryptographic container that holds exactly
+              one digital artifact or process.
+            </h2>
+          </div>
+        </ScrollReveal>
+
+        <div className="grid sm:grid-cols-3 gap-8 max-w-5xl mx-auto">
+
           {[
             {
               step: "01",
               title: "Drop your artifact",
-              desc: "Drag any file into ProofStudio. It's hashed locally in your browser. Nothing is uploaded.",
+              desc: "Drag any file into ProofStudio. It\u2019s hashed locally in your browser. Nothing is uploaded.",
             },
             {
               step: "02",
               title: "Commit",
-              desc: "Your artifact's fingerprint is sent to a secure environment and locked to a unique, unrepeatable commit event.",
+              desc: "Your artifact\u2019s fingerprint is sent to a secure environment and locked to a unique, unrepeatable commit event.",
             },
             {
               step: "03",
               title: "Receive proof",
-              desc: "You get back a portable proof file: signed evidence that this exact artifact existed in this exact form, in your possession, at that moment.",
+              desc: "You get back a portable proof file: signed evidence that this exact artifact existed in this exact form, at that moment.",
             },
-          ].map((item) => (
-            <div
-              key={item.step}
-              className="rounded-lg border border-border-subtle bg-bg-elevated p-6"
-            >
-              <div className="text-xs font-mono text-text-tertiary mb-3">
-                {item.step}
+          ].map((item, i) => (
+            <ScrollReveal key={item.step} delay={i * 100}>
+              <div className="relative rounded-xl border border-border-subtle bg-bg-elevated p-8">
+                <div className="text-2xl font-mono font-light text-text-tertiary mb-4">
+                  {item.step}
+                </div>
+                <h3 className="text-lg font-semibold mb-3">{item.title}</h3>
+                <p className="text-sm text-text-secondary leading-relaxed">
+                  {item.desc}
+                </p>
               </div>
-              <h3 className="text-base font-semibold mb-2">{item.title}</h3>
-              <p className="text-sm text-text-secondary leading-relaxed">
-                {item.desc}
-              </p>
-            </div>
+            </ScrollReveal>
           ))}
         </div>
       </Section>
+
 
       {/* ── What You Get ── */}
       <Section>
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           <div>
-            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-6">
-              Portable, verifiable proof
-            </h2>
-            <p className="text-text-secondary leading-relaxed">
-              Every proof is a self-contained JSON object. It includes a content
-              hash, commit metadata, a cryptographic signature, and an optional
-              hardware attestation report. Anyone can verify it independently.
-            </p>
-            <div className="mt-8 space-y-4">
-              {[
-                { title: "Content-addressed", desc: "SHA-256 hash binds the proof to specific bytes." },
-                { title: "Timestamped", desc: "Independent RFC 3161 timestamps from trusted authorities." },
-                { title: "Hardware-attested", desc: "AWS Nitro Enclave attestation proves the execution environment." },
-                { title: "Device-authorized", desc: "Optional biometric authorization ties proof to a specific device key." },
-              ].map((item) => (
-                <div key={item.title} className="flex gap-3">
-                  <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-text-tertiary shrink-0" />
-                  <div>
-                    <span className="text-sm font-medium text-text">{item.title}</span>
-                    <span className="text-sm text-text-secondary ml-1">- {item.desc}</span>
+            <ScrollReveal>
+              <h2 className="text-2xl sm:text-3xl font-semibold tracking-[-0.03em] mb-6">
+                Portable, verifiable proof
+              </h2>
+            </ScrollReveal>
+            <ScrollReveal delay={100}>
+              <p className="text-text-secondary leading-relaxed text-lg">
+                Every proof is a self-contained JSON object. Content hash,
+                commit metadata, cryptographic signature, and hardware
+                attestation. Anyone can verify it independently.
+              </p>
+            </ScrollReveal>
+            <ScrollReveal delay={200}>
+              <div className="mt-10 space-y-5">
+                {[
+                  { title: "Content-addressed", desc: "SHA-256 hash binds the proof to specific bytes." },
+                  { title: "Timestamped", desc: "Independent RFC 3161 timestamps from trusted authorities." },
+                  { title: "Hardware-attested", desc: "AWS Nitro Enclave attestation proves the execution environment." },
+                  { title: "Device-authorized", desc: "Biometric authorization ties proof to a specific device key." },
+                ].map((item) => (
+                  <div key={item.title} className="flex gap-4 items-start">
+                    <div className="mt-2 w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                    <div>
+                      <span className="text-sm font-semibold text-text">{item.title}</span>
+                      <span className="text-sm text-text-secondary ml-1.5">
+                        — {item.desc}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </ScrollReveal>
           </div>
-          <TerminalWindow title="Actual occ/1 generated proof">
-            <pre className="text-[10px] sm:text-[11px] leading-snug font-mono whitespace-pre-wrap break-all max-h-[600px] overflow-y-auto">
+
+          <ScrollReveal delay={150}>
+            <div className="terminal-glow">
+              <TerminalWindow title="Actual occ/1 generated proof">
+                <pre className="text-[10px] sm:text-[11px] leading-snug font-mono whitespace-pre-wrap break-all max-h-[600px] overflow-y-auto">
               <P>{"{"}</P>{"\n"}
               {"  "}<K>version</K><P>: </P><S>occ/1</S><P>,</P>{"\n"}
               {"  "}<K>artifact</K><P>: {"{"}</P>{"\n"}
@@ -208,93 +278,136 @@ export default function Home() {
               {"    "}<K>signatureB64</K><P>: </P><S>Nm01JmEJM6HO6ikVvRUXC9kjEREfPCtg4c2ydCv5+xS73WBL/1MOhYDJAChXYClsB2oUJMDyT6XBRMZyIfFmAQ==</S>{"\n"}
               {"  "}<P>{"}"}</P>{"\n"}
               <P>{"}"}</P>
-            </pre>
-          </TerminalWindow>
+                </pre>
+              </TerminalWindow>
+            </div>
+          </ScrollReveal>
         </div>
       </Section>
 
+
       {/* ── Use Cases ── */}
       <Section>
-        <div className="text-center mb-12">
-          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-4">
-            What can you prove?
-          </h2>
-          <p className="text-2xl sm:text-3xl font-semibold tracking-tight text-text-secondary">
-            Everything.
-          </p>
-        </div>
+        <ScrollReveal>
+          <div className="text-center mb-16">
+            <h2 className="text-2xl sm:text-3xl font-semibold tracking-[-0.03em]">
+              What can you prove?
+            </h2>
+            <p className="mt-3 text-2xl sm:text-3xl font-semibold tracking-[-0.03em] text-text-secondary">
+              Everything.
+            </p>
+          </div>
+        </ScrollReveal>
+
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {[
-            { title: "AI Outputs", desc: "Prove model responses, generated images, and predictions came from a specific boundary at a specific time." },
-            { title: "Software Builds", desc: "Prove a build artifact was produced by a specific CI/CD pipeline inside a measured environment." },
-            { title: "Media & Journalism", desc: "Prove a photo or document existed in its current form at a specific moment, before edits, before distribution." },
-            { title: "Scientific Data", desc: "Prove sensor readings and instrument output existed at capture time with sequence integrity." },
-            { title: "Compliance & Audit", desc: "Produce tamper-evident records where any modification breaks the proof chain." },
-            { title: "Agent-to-Agent", desc: "Pass proofs between systems so each can verify data integrity without trusting the transport." },
-          ].map((item) => (
-            <div key={item.title} className="group rounded-lg border border-border-subtle bg-bg-elevated p-6 transition-colors hover:border-border">
-              <h3 className="text-base font-semibold mb-2">{item.title}</h3>
-              <p className="text-sm text-text-secondary leading-relaxed">{item.desc}</p>
-            </div>
+            {
+              title: "AI Outputs",
+              desc: "Prove model responses, generated images, and predictions came from a specific boundary at a specific time.",
+              icon: icons.sparkles,
+            },
+            {
+              title: "Software Builds",
+              desc: "Prove a build artifact was produced by a specific CI/CD pipeline inside a measured environment.",
+              icon: icons.terminal,
+            },
+            {
+              title: "Media & Journalism",
+              desc: "Prove a photo or document existed in its current form at a specific moment, before edits, before distribution.",
+              icon: icons.image,
+            },
+            {
+              title: "Scientific & Medical Data",
+              desc: "Prove sensor readings, laboratory results, or medical records existed at capture time with sequence integrity.",
+              icon: icons.beaker,
+            },
+            {
+              title: "Security, Compliance & Audit",
+              desc: "Produce tamper-evident security logs and audit records where any modification breaks the proof chain.",
+              icon: icons.shield,
+            },
+            {
+              title: "Agent-to-Agent",
+              desc: "Pass proofs between systems so each can verify data integrity without trusting the transport.",
+              icon: icons.arrows,
+            },
+          ].map((item, i) => (
+            <ScrollReveal key={item.title} delay={i * 80}>
+              <div className="card-hover group rounded-xl border border-border-subtle bg-bg-elevated p-8 hover:border-border h-full">
+                <div className="mb-4 text-text-tertiary group-hover:text-text-secondary transition-colors">
+                  {item.icon}
+                </div>
+                <h3 className="text-base font-semibold mb-2">{item.title}</h3>
+                <p className="text-sm text-text-secondary leading-relaxed">{item.desc}</p>
+              </div>
+            </ScrollReveal>
           ))}
         </div>
       </Section>
 
+
       {/* ── Powered by OCC ── */}
       <Section>
-        <div className="rounded-lg border border-border-subtle bg-bg-elevated p-8 sm:p-12 text-center">
-          <div className="text-[11px] font-medium uppercase tracking-[0.15em] text-text-tertiary mb-4">
-            Powered by
+        <ScrollReveal>
+          <div className="max-w-2xl mx-auto text-center">
+            <div className="text-[11px] font-medium uppercase tracking-[0.2em] text-text-tertiary mb-6">
+              Powered by
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-semibold tracking-[-0.02em] mb-6">
+              Origin Controlled Computing
+            </h2>
+            <p className="text-text-secondary leading-relaxed text-balance">
+              ProofStudio is built on the OCC protocol. Proof is produced by
+              the commit event itself. If the proof exists, the commit happened.
+              If it doesn&apos;t, it didn&apos;t.
+            </p>
+            <div className="mt-8">
+              <Link
+                href="/docs"
+                className="text-sm font-medium text-text-secondary hover:text-text transition-colors"
+              >
+                Read the protocol documentation →
+              </Link>
+            </div>
           </div>
-          <h2 className="text-xl sm:text-2xl font-semibold tracking-tight mb-4">
-            OCC: Origin Controlled Computing
-          </h2>
-          <p className="text-text-secondary max-w-2xl mx-auto leading-relaxed mb-6 text-balance">
-            ProofStudio is built on the OCC protocol, a cryptographic proof system
-            where proof is produced by the commit event itself. If the proof exists,
-            the commit happened. If it doesn&apos;t, it didn&apos;t.
-          </p>
-          <Link
-            href="/docs"
-            className="text-sm font-medium text-text hover:text-text/70 transition-colors"
-          >
-            Read the protocol documentation →
-          </Link>
-        </div>
+        </ScrollReveal>
       </Section>
 
+
       {/* ── CTA ── */}
-      <Section className="pb-32">
-        <div className="text-center">
-          <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-4">
-            Try it now
-          </h2>
-          <p className="text-text-secondary mb-8 max-w-lg mx-auto text-balance">
-            Drop a file, get a proof. Runs in your browser, verifiable by anyone.
-          </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <Link
-              href="/studio"
-              className="inline-flex h-11 items-center rounded-md bg-emerald-600 px-6 text-sm font-semibold text-white transition-colors hover:bg-emerald-500"
-            >
-              Open Studio
-            </Link>
-            <Link
-              href="/api-reference"
-              className="inline-flex h-11 items-center rounded-md border border-border px-6 text-sm font-semibold text-text-secondary transition-colors hover:text-text hover:border-text-tertiary"
-            >
-              API Reference
-            </Link>
-            <a
-              href="https://github.com/mikeargento/occ"
-              target="_blank"
-              rel="noopener"
-              className="inline-flex h-11 items-center rounded-md border border-border px-6 text-sm font-semibold text-text-secondary transition-colors hover:text-text hover:border-text-tertiary"
-            >
-              GitHub
-            </a>
+      <Section className="pb-40">
+        <ScrollReveal>
+          <div className="text-center">
+            <h2 className="text-2xl sm:text-3xl font-semibold tracking-[-0.03em]">
+              Try it now
+            </h2>
+            <p className="mt-4 text-text-secondary max-w-lg mx-auto text-balance text-lg">
+              Drop a file, get a proof. Runs in your browser, verifiable by anyone.
+            </p>
+            <div className="mt-10 sm:mt-12 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+              <Link
+                href="/studio"
+                className="inline-flex h-12 items-center justify-center rounded-xl bg-emerald-600 px-8 w-auto text-sm font-semibold text-white transition-all hover:bg-emerald-500 active:scale-[0.98]"
+              >
+                Open Studio
+              </Link>
+              <Link
+                href="/api-reference"
+                className="inline-flex h-12 items-center justify-center rounded-xl border border-border px-8 w-auto text-sm font-semibold text-text-secondary transition-all hover:text-text hover:border-text-tertiary active:scale-[0.98]"
+              >
+                API Reference
+              </Link>
+              <a
+                href="https://github.com/mikeargento/occ"
+                target="_blank"
+                rel="noopener"
+                className="inline-flex h-12 items-center justify-center rounded-xl border border-border px-8 w-auto text-sm font-semibold text-text-secondary transition-all hover:text-text hover:border-text-tertiary active:scale-[0.98]"
+              >
+                GitHub
+              </a>
+            </div>
           </div>
-        </div>
+        </ScrollReveal>
       </Section>
     </>
   );

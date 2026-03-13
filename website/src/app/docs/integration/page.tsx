@@ -7,9 +7,9 @@ export const metadata: Metadata = {
 
 export default function IntegrationPage() {
   return (
-    <article>
-      <h1 className="text-3xl font-semibold tracking-tight mb-4">Integration Guide</h1>
-      <p className="text-text-secondary mb-8">
+    <article className="prose-doc">
+      <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-6">Integration Guide</h1>
+      <p className="text-text-secondary mb-10">
         How to commit artifacts, verify proofs, and integrate OCC into your application.
       </p>
 
@@ -17,8 +17,9 @@ export default function IntegrationPage() {
       <p className="text-text-secondary mb-4">
         Hash your artifact locally, then send only the digest to the OCC endpoint:
       </p>
-      <div className="rounded-lg border border-border-subtle bg-bg-elevated p-4 overflow-x-auto mb-8">
-        <pre className="text-xs font-mono leading-relaxed text-text-secondary">{`# 1. Hash your file
+      <div className="code-block">
+        <div className="code-block-header"><span>Shell</span></div>
+        <pre className="text-xs font-mono leading-relaxed text-text-secondary overflow-x-auto">{`# 1. Hash your file
 DIGEST=$(openssl dgst -sha256 -binary myfile.pdf | base64)
 
 # 2. Send to OCC endpoint
@@ -36,8 +37,9 @@ curl -X POST https://nitro.occproof.com/commit \\
       </div>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">TypeScript / JavaScript</h2>
-      <div className="rounded-lg border border-border-subtle bg-bg-elevated p-4 overflow-x-auto mb-8">
-        <pre className="text-xs font-mono leading-relaxed text-text-secondary">{`// Hash locally
+      <div className="code-block">
+        <div className="code-block-header"><span>TypeScript</span></div>
+        <pre className="text-xs font-mono leading-relaxed text-text-secondary overflow-x-auto">{`// Hash locally
 const bytes = new Uint8Array(await file.arrayBuffer());
 const hashBuf = await crypto.subtle.digest("SHA-256", bytes);
 const digestB64 = btoa(String.fromCharCode(...new Uint8Array(hashBuf)));
@@ -64,8 +66,9 @@ console.log(proof.attribution);      // signed creator metadata`}</pre>
       <p className="text-text-secondary mb-4">
         Send multiple digests in one request. The enclave allocates a slot and commits each digest sequentially. If using actor-bound proofs (passkey), all proofs in the batch receive actor identity.
       </p>
-      <div className="rounded-lg border border-border-subtle bg-bg-elevated p-4 overflow-x-auto mb-8">
-        <pre className="text-xs font-mono leading-relaxed text-text-secondary">{`const resp = await fetch("https://nitro.occproof.com/commit", {
+      <div className="code-block">
+        <div className="code-block-header"><span>TypeScript</span></div>
+        <pre className="text-xs font-mono leading-relaxed text-text-secondary overflow-x-auto">{`const resp = await fetch("https://nitro.occproof.com/commit", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
@@ -84,8 +87,9 @@ const proofs = await resp.json();
       </div>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Verify a proof</h2>
-      <div className="rounded-lg border border-border-subtle bg-bg-elevated p-4 overflow-x-auto mb-8">
-        <pre className="text-xs font-mono leading-relaxed text-text-secondary">{`import { verify } from "occproof";
+      <div className="code-block">
+        <div className="code-block-header"><span>TypeScript</span></div>
+        <pre className="text-xs font-mono leading-relaxed text-text-secondary overflow-x-auto">{`import { verify } from "occproof";
 
 const result = await verify({
   proof: myProof,
@@ -106,8 +110,9 @@ if (result.valid) {
       </div>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Enclave info</h2>
-      <div className="rounded-lg border border-border-subtle bg-bg-elevated p-4 overflow-x-auto mb-8">
-        <pre className="text-xs font-mono leading-relaxed text-text-secondary">{`# Get enclave public key and measurement
+      <div className="code-block">
+        <div className="code-block-header"><span>Shell</span></div>
+        <pre className="text-xs font-mono leading-relaxed text-text-secondary overflow-x-auto">{`# Get enclave public key and measurement
 curl https://nitro.occproof.com/key
 
 # Response:

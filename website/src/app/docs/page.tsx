@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ScrollReveal } from "@/components/scroll-reveal";
 
 export const metadata: Metadata = {
   title: "Documentation",
@@ -19,22 +20,30 @@ const pages = [
 export default function DocsPage() {
   return (
     <div>
-      <h1 className="text-3xl font-semibold tracking-tight mb-4">Documentation</h1>
-      <p className="text-text-secondary mb-12 max-w-xl">
+      <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-5">Documentation</h1>
+      <p className="text-text-secondary text-lg leading-relaxed mb-14 max-w-xl">
         Technical documentation for the OCC Protocol. Start with the concepts
         or jump directly to integration.
       </p>
 
-      <div className="space-y-4">
-        {pages.map((p) => (
-          <Link
-            key={p.href}
-            href={p.href}
-            className="block rounded-lg border border-border-subtle bg-bg-elevated p-6 transition-colors hover:border-border"
-          >
-            <h2 className="text-base font-semibold mb-1">{p.title}</h2>
-            <p className="text-sm text-text-secondary">{p.desc}</p>
-          </Link>
+      <div className="space-y-5">
+        {pages.map((p, i) => (
+          <ScrollReveal key={p.href} delay={i * 60}>
+            <Link
+              href={p.href}
+              className="group block rounded-xl border border-border-subtle bg-bg-elevated p-8 card-hover hover:border-border relative"
+            >
+              <div className="flex items-start gap-5">
+                <span className="text-xs font-mono text-text-tertiary mt-1 shrink-0">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <div>
+                  <h2 className="text-lg font-semibold mb-2">{p.title}</h2>
+                  <p className="text-sm text-text-secondary leading-relaxed">{p.desc}</p>
+                </div>
+              </div>
+            </Link>
+          </ScrollReveal>
         ))}
       </div>
     </div>

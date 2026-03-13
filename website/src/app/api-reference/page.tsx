@@ -16,16 +16,15 @@ function Endpoint({
   description: string;
   children: React.ReactNode;
 }) {
-  const color = method === "POST" ? "text-info" : "text-success";
   return (
-    <div className="rounded-lg border border-border-subtle overflow-hidden">
-      <div className="flex items-center gap-3 px-6 py-4 border-b border-border-subtle bg-bg-elevated">
-        <span className={`text-xs font-mono font-bold uppercase ${color}`}>
+    <div className="rounded-xl card-hover border border-border-subtle overflow-hidden">
+      <div className="flex items-center gap-3 px-6 py-5 border-b border-border-subtle bg-bg-elevated">
+        <span className={`method-badge ${method === "POST" ? "bg-info/10 text-info" : "bg-success/10 text-success"}`}>
           {method}
         </span>
         <code className="text-sm font-mono text-text">{path}</code>
       </div>
-      <div className="px-6 py-4">
+      <div className="px-6 py-6">
         <p className="text-sm text-text-secondary mb-4">{description}</p>
         {children}
       </div>
@@ -35,13 +34,13 @@ function Endpoint({
 
 function CodeBlock({ title, code }: { title?: string; code: string }) {
   return (
-    <div className="rounded-lg border border-border-subtle bg-bg-elevated overflow-hidden mb-4">
+    <div className="rounded-xl terminal-glow border border-border-subtle bg-bg-elevated overflow-hidden mb-4">
       {title && (
-        <div className="px-4 py-2 border-b border-border-subtle">
+        <div className="px-4 py-3 border-b border-border-subtle">
           <span className="text-xs font-mono text-text-tertiary">{title}</span>
         </div>
       )}
-      <pre className="p-4 overflow-x-auto text-xs font-mono leading-relaxed text-text-secondary">
+      <pre className="p-5 overflow-x-auto text-xs font-mono leading-relaxed text-text-secondary">
         {code}
       </pre>
     </div>
@@ -50,20 +49,20 @@ function CodeBlock({ title, code }: { title?: string; code: string }) {
 
 export default function APIReferencePage() {
   return (
-    <div className="mx-auto max-w-4xl px-6 py-16">
-      <div className="mb-12">
+    <div className="mx-auto max-w-5xl px-6 py-20 sm:py-24">
+      <div className="mb-16">
         <span className="inline-block text-[11px] font-medium uppercase tracking-[0.15em] text-text-tertiary mb-4">
           API Reference
         </span>
-        <h1 className="text-3xl font-semibold tracking-tight mb-4">
+        <h1 className="text-3xl font-semibold tracking-[-0.03em] mb-4">
           OCC Protocol API
         </h1>
-        <p className="text-text-secondary max-w-xl">
+        <p className="text-lg leading-relaxed text-text-secondary max-w-xl">
           REST API for committing artifacts and verifying proofs. The commit
           endpoint runs inside an AWS Nitro Enclave.
         </p>
-        <div className="mt-6 rounded-lg border border-border-subtle bg-bg-elevated p-4">
-          <div className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-2">
+        <div className="mt-6 rounded-xl terminal-glow border border-border-subtle bg-bg-elevated p-4">
+          <div className="text-[11px] font-medium uppercase tracking-[0.15em] text-text-tertiary mb-2">
             Base URL
           </div>
           <code className="text-sm font-mono text-text">
@@ -90,7 +89,7 @@ export default function APIReferencePage() {
       </div>
 
       {/* Endpoints */}
-      <div className="space-y-8">
+      <div className="space-y-10">
         <h2 className="text-xl font-semibold mb-4">Endpoints</h2>
 
         {/* POST /commit */}
@@ -99,7 +98,7 @@ export default function APIReferencePage() {
           path="/commit"
           description="Commit one or more artifact digests. For each digest, the enclave allocates a causal slot (nonce + counter), then commits the artifact against that slot. Returns a complete OCC proof for each digest. Requires API key if configured."
         >
-          <h4 className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-2">
+          <h4 className="text-[11px] font-medium uppercase tracking-[0.15em] text-text-tertiary mb-2">
             Request body
           </h4>
           <CodeBlock
@@ -123,7 +122,7 @@ export default function APIReferencePage() {
 }`}
           />
 
-          <h4 className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-2 mt-6">
+          <h4 className="text-[11px] font-medium uppercase tracking-[0.15em] text-text-tertiary mb-2 mt-6">
             Response (200)
           </h4>
           <CodeBlock
@@ -176,7 +175,7 @@ export default function APIReferencePage() {
 ]`}
           />
 
-          <h4 className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-2 mt-6">
+          <h4 className="text-[11px] font-medium uppercase tracking-[0.15em] text-text-tertiary mb-2 mt-6">
             Example: curl
           </h4>
           <CodeBlock
@@ -192,7 +191,7 @@ curl -X POST https://nitro.occproof.com/commit \\
   }'`}
           />
 
-          <h4 className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-2 mt-6">
+          <h4 className="text-[11px] font-medium uppercase tracking-[0.15em] text-text-tertiary mb-2 mt-6">
             Example: TypeScript
           </h4>
           <CodeBlock
@@ -219,12 +218,12 @@ const proofs = await resp.json();
           path="/allocate-slot"
           description="Pre-allocate a causal slot before committing an artifact. The slot reserves a nonce and counter position, proving the enclave committed to a sequence position independently of any artifact content. Public endpoint."
         >
-          <h4 className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-2">
+          <h4 className="text-[11px] font-medium uppercase tracking-[0.15em] text-text-tertiary mb-2">
             Request body
           </h4>
           <CodeBlock code={`{}`} />
 
-          <h4 className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-2 mt-6">
+          <h4 className="text-[11px] font-medium uppercase tracking-[0.15em] text-text-tertiary mb-2 mt-6">
             Response (200)
           </h4>
           <CodeBlock
@@ -252,12 +251,12 @@ const proofs = await resp.json();
           path="/challenge"
           description="Request a fresh challenge nonce from the enclave for actor-bound proofs (passkey/WebAuthn). The challenge must be signed by the device key and included in the agency envelope of a commit request. Public endpoint."
         >
-          <h4 className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-2">
+          <h4 className="text-[11px] font-medium uppercase tracking-[0.15em] text-text-tertiary mb-2">
             Request body
           </h4>
           <CodeBlock code={`{}`} />
 
-          <h4 className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-2 mt-6">
+          <h4 className="text-[11px] font-medium uppercase tracking-[0.15em] text-text-tertiary mb-2 mt-6">
             Response (200)
           </h4>
           <CodeBlock
@@ -273,7 +272,7 @@ const proofs = await resp.json();
           path="/convert-bw"
           description="Demo endpoint: send a base64-encoded image to the enclave for grayscale conversion. The enclave converts the image, hashes the output, and returns the converted image with an OCC proof. Public endpoint."
         >
-          <h4 className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-2">
+          <h4 className="text-[11px] font-medium uppercase tracking-[0.15em] text-text-tertiary mb-2">
             Request body
           </h4>
           <CodeBlock
@@ -282,7 +281,7 @@ const proofs = await resp.json();
 }`}
           />
 
-          <h4 className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-2 mt-6">
+          <h4 className="text-[11px] font-medium uppercase tracking-[0.15em] text-text-tertiary mb-2 mt-6">
             Response (200)
           </h4>
           <CodeBlock
@@ -300,7 +299,7 @@ const proofs = await resp.json();
           path="/key"
           description="Returns the enclave's current Ed25519 public key, platform measurement, and enforcement tier. Useful for pinning allowedMeasurements and allowedPublicKeys in verification policy."
         >
-          <h4 className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-2">
+          <h4 className="text-[11px] font-medium uppercase tracking-[0.15em] text-text-tertiary mb-2">
             Response (200)
           </h4>
           <CodeBlock
@@ -318,7 +317,7 @@ const proofs = await resp.json();
           path="/verify"
           description="Server-side verification of a proof against an optional policy. Note: verification can also be done entirely client-side. No API call required."
         >
-          <h4 className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-2">
+          <h4 className="text-[11px] font-medium uppercase tracking-[0.15em] text-text-tertiary mb-2">
             Request body
           </h4>
           <CodeBlock
@@ -333,7 +332,7 @@ const proofs = await resp.json();
 }`}
           />
 
-          <h4 className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-2 mt-6">
+          <h4 className="text-[11px] font-medium uppercase tracking-[0.15em] text-text-tertiary mb-2 mt-6">
             Response (200)
           </h4>
           <CodeBlock
@@ -351,7 +350,7 @@ const proofs = await resp.json();
           path="/health"
           description="Health check. Returns 200 if the parent server is running and can communicate with the enclave."
         >
-          <h4 className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-2">
+          <h4 className="text-[11px] font-medium uppercase tracking-[0.15em] text-text-tertiary mb-2">
             Response (200)
           </h4>
           <CodeBlock code={`{ "ok": true }`} />
@@ -359,10 +358,11 @@ const proofs = await resp.json();
       </div>
 
       {/* Types */}
-      <div className="mt-16 border-t border-border-subtle pt-12">
+      <div className="section-divider mt-16 mb-16" />
+      <div className="pt-0">
         <h2 className="text-xl font-semibold mb-6">Type definitions</h2>
 
-        <h3 className="text-base font-semibold mb-3">OCCProof</h3>
+        <h3 className="text-lg font-semibold mb-3">OCCProof</h3>
         <CodeBlock
           title="TypeScript"
           code={`interface OCCProof {
@@ -436,7 +436,7 @@ const proofs = await resp.json();
 }`}
         />
 
-        <h3 className="text-base font-semibold mt-8 mb-3">VerificationPolicy</h3>
+        <h3 className="text-lg font-semibold mt-8 mb-3">VerificationPolicy</h3>
         <CodeBlock
           title="TypeScript"
           code={`interface VerificationPolicy {
@@ -458,7 +458,7 @@ const proofs = await resp.json();
 }`}
         />
 
-        <h3 className="text-base font-semibold mt-8 mb-3">TsaToken</h3>
+        <h3 className="text-lg font-semibold mt-8 mb-3">TsaToken</h3>
         <CodeBlock
           title="TypeScript"
           code={`interface TsaToken {
@@ -478,31 +478,31 @@ const proofs = await resp.json();
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border-subtle">
-                <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-text-tertiary">Status</th>
-                <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-text-tertiary">Cause</th>
-                <th className="text-left py-2 text-xs font-medium uppercase tracking-wider text-text-tertiary">Body</th>
+                <th className="text-left py-3 pr-4 text-[11px] font-medium uppercase tracking-[0.15em] text-text-tertiary">Status</th>
+                <th className="text-left py-3 pr-4 text-[11px] font-medium uppercase tracking-[0.15em] text-text-tertiary">Cause</th>
+                <th className="text-left py-3 text-[11px] font-medium uppercase tracking-[0.15em] text-text-tertiary">Body</th>
               </tr>
             </thead>
             <tbody className="text-text-secondary">
               <tr className="border-b border-border-subtle">
-                <td className="py-2 pr-4">400</td>
-                <td className="py-2 pr-4">Invalid request body</td>
-                <td className="py-2"><code className="text-xs font-mono">{`{ "error": "..." }`}</code></td>
+                <td className="py-3 pr-4">400</td>
+                <td className="py-3 pr-4">Invalid request body</td>
+                <td className="py-3"><code className="text-xs font-mono">{`{ "error": "..." }`}</code></td>
               </tr>
               <tr className="border-b border-border-subtle">
-                <td className="py-2 pr-4">401</td>
-                <td className="py-2 pr-4">Missing or invalid API key</td>
-                <td className="py-2"><code className="text-xs font-mono">{`{ "error": "unauthorized" }`}</code></td>
+                <td className="py-3 pr-4">401</td>
+                <td className="py-3 pr-4">Missing or invalid API key</td>
+                <td className="py-3"><code className="text-xs font-mono">{`{ "error": "unauthorized" }`}</code></td>
               </tr>
               <tr className="border-b border-border-subtle">
-                <td className="py-2 pr-4">413</td>
-                <td className="py-2 pr-4">Payload too large (convert-bw: 2 MB max)</td>
-                <td className="py-2"><code className="text-xs font-mono">{`{ "error": "Image too large. Max 2 MB." }`}</code></td>
+                <td className="py-3 pr-4">413</td>
+                <td className="py-3 pr-4">Payload too large (convert-bw: 2 MB max)</td>
+                <td className="py-3"><code className="text-xs font-mono">{`{ "error": "Image too large. Max 2 MB." }`}</code></td>
               </tr>
               <tr>
-                <td className="py-2 pr-4">500</td>
-                <td className="py-2 pr-4">Enclave / internal error</td>
-                <td className="py-2"><code className="text-xs font-mono">{`{ "error": "internal server error" }`}</code></td>
+                <td className="py-3 pr-4">500</td>
+                <td className="py-3 pr-4">Enclave / internal error</td>
+                <td className="py-3"><code className="text-xs font-mono">{`{ "error": "internal server error" }`}</code></td>
               </tr>
             </tbody>
           </table>
