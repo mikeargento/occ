@@ -38,6 +38,11 @@
   --c-syntax-key: #93c5fd;
   --c-syntax-string: #6ee7b7;
   --c-syntax-number: #fbbf24;
+  --globe-highlight: rgba(255, 255, 255, 0.25);
+  --globe-mid: rgba(255, 255, 255, 0.08);
+  --globe-shadow: rgba(0, 0, 0, 0.6);
+  --globe-atmo: rgba(100, 180, 255, 0.2);
+  --globe-ocean: #0a1628;
   color-scheme: dark;
 }
 
@@ -56,6 +61,11 @@
   --c-syntax-key: #2563eb;
   --c-syntax-string: #047857;
   --c-syntax-number: #b45309;
+  --globe-highlight: rgba(255, 255, 255, 0.3);
+  --globe-mid: rgba(255, 255, 255, 0.1);
+  --globe-shadow: rgba(0, 0, 0, 0.25);
+  --globe-atmo: rgba(37, 99, 235, 0.1);
+  --globe-ocean: #b8c8d8;
   color-scheme: light;
 }
 
@@ -201,8 +211,29 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .cf-card-5 { animation: proofCardAppear 14s linear 10s infinite; }
 .cf-card-6 { animation: proofCardAppear 14s linear 12s infinite; }
 
+/* ── ProofGlobe animations ── */
+@keyframes globeRotate {
+  from { transform: rotateY(0deg); }
+  to { transform: rotateY(360deg); }
+}
+.animate-globe-rotate {
+  animation: globeRotate 60s linear infinite;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+@keyframes atmospherePulse {
+  0%, 100% { opacity: 0.6; }
+  50%      { opacity: 1; }
+}
+.animate-atmosphere-pulse {
+  animation: atmospherePulse 8s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  [data-commit-flow] * {
+  [data-commit-flow] *,
+  .animate-globe-rotate,
+  .animate-atmosphere-pulse {
     animation-play-state: paused !important;
   }
 }
