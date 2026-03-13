@@ -582,6 +582,7 @@ export default function StudioPage() {
       }
 
       setCreateStatus("done");
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
       setCreateError(err instanceof Error ? err.message : "Unknown error");
       setCreateStatus("error");
@@ -1083,15 +1084,15 @@ export default function StudioPage() {
               <div className="pt-4 border-t border-border-subtle">
                 <button
                   onClick={() => setShowProofDetails(prev => !prev)}
-                  className="flex items-center gap-2 text-xs text-text-tertiary hover:text-text-secondary transition-colors cursor-pointer"
+                  className="w-full flex items-center justify-between py-3 text-sm text-text-secondary hover:text-text transition-colors cursor-pointer"
                 >
+                  <span className="font-medium">Proof details</span>
                   <svg
                     width="12" height="12" viewBox="0 0 12 12" fill="currentColor"
                     className={`transition-transform duration-200 ${showProofDetails ? "rotate-90" : ""}`}
                   >
                     <path d="M4.5 1.5l5 4.5-5 4.5" />
                   </svg>
-                  Proof details
                 </button>
 
                 <div className={`grid transition-all duration-300 ease-in-out ${
@@ -1441,12 +1442,12 @@ export default function StudioPage() {
 function InfoCard({ title, items }: { title: string; items: { label: string; value: string }[] }) {
   return (
     <div className="rounded-xl border border-border-subtle bg-bg-elevated p-4 min-w-0 overflow-hidden card-hover">
-      <div className="text-[11px] font-semibold uppercase tracking-[0.15em] text-text-tertiary mb-3 pb-2 border-b border-border-subtle">{title}</div>
+      <div className="text-xs font-semibold uppercase tracking-[0.15em] text-text-secondary mb-3 pb-2 border-b border-border-subtle">{title}</div>
       <div className="space-y-2.5">
         {items.map((item) => (
           <div key={item.label}>
-            <span className="text-[10px] text-text-tertiary uppercase tracking-wide">{item.label}</span>
-            <div className="text-xs font-mono text-text-secondary break-all mt-0.5 leading-relaxed">{item.value}</div>
+            <span className="text-[11px] text-text-tertiary uppercase tracking-wide">{item.label}</span>
+            <div className="text-sm font-mono text-text break-all mt-0.5 leading-relaxed">{item.value}</div>
           </div>
         ))}
       </div>
