@@ -82,7 +82,7 @@ export default function AgentPage() {
       {/* Content */}
       {activeTab === "execute" && (
         <div className="space-y-4 animate-slide-up">
-          <ToolRunner onResult={(r) => { setResult(r); setActiveTab("inspect"); }} />
+          <ToolRunner onResult={(r) => { setResult(r); setActiveTab("inspect"); window.scrollTo({ top: 0 }); }} />
         </div>
       )}
       {activeTab === "inspect" && (
