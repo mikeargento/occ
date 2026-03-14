@@ -16,9 +16,7 @@ export default function AgentSdkPage() {
       </p>
       <div className="mb-10">
         <a
-          href="https://agent.proofstudio.xyz"
-          target="_blank"
-          rel="noopener"
+          href="/agent"
           className="text-sm font-semibold text-accent underline underline-offset-4 hover:text-text transition-colors"
         >
           Try the live demo
@@ -286,7 +284,7 @@ v.checks.signatureValid;    // Ed25519 signature valid`}</pre>
           npm
         </a>
         {" · "}
-        <a href="https://agent.proofstudio.xyz" target="_blank" rel="noopener" className="text-text hover:text-accent transition-colors underline underline-offset-4">
+        <a href="/agent" className="text-text hover:text-accent transition-colors underline underline-offset-4">
           demo
         </a>
       </p>
