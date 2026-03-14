@@ -19,10 +19,9 @@ export default function AgentSdkPage() {
           href="https://agent.proofstudio.xyz"
           target="_blank"
           rel="noopener"
-          className="inline-flex items-center gap-2 text-sm font-semibold text-accent hover:underline underline-offset-4 transition-colors"
+          className="text-sm font-semibold text-accent underline underline-offset-4 hover:text-text transition-colors"
         >
           Try the live demo
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 3h6v6M11 3L3 11" /></svg>
         </a>
       </div>
 
