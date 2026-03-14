@@ -10,6 +10,7 @@ const sections = [
   { href: "/docs/verification", label: "Verification" },
   { href: "/docs/trust-model", label: "Trust Model" },
   { href: "/docs/integration", label: "Integration Guide" },
+  { href: "/docs/agent-sdk", label: "Agent SDK" },
   { href: "/docs/what-occ-is-not", label: "What OCC is Not" },
   { href: "/docs/faq", label: "FAQ" },
 ];
