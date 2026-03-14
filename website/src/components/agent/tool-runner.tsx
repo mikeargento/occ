@@ -191,7 +191,7 @@ export function ToolRunner({ onResult }: ToolRunnerProps) {
             : state.phase === "success"
               ? "bg-success/20 text-success border border-success/20"
               : canExecute
-                ? "bg-success text-bg hover:bg-success/85 active:scale-[0.98] shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]"
+                ? "bg-text text-bg hover:opacity-90 active:scale-[0.98] shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]"
                 : "bg-bg-subtle text-text-tertiary border border-border-subtle"
           }
         `}

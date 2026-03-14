@@ -351,7 +351,7 @@ export function ReceiptInspector({ result, onBack }: ReceiptInspectorProps) {
             URL.revokeObjectURL(url);
           }}
           disabled={!proof}
-          className="flex-1 h-12 rounded-xl font-semibold text-sm bg-success text-bg hover:bg-success/85 active:scale-[0.98] transition-all cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] disabled:opacity-40 disabled:cursor-not-allowed"
+          className="flex-1 h-12 rounded-xl font-semibold text-sm bg-text text-bg hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <span className="inline-flex items-center gap-2">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 14h10M8 3v8m0 0l-3-3m3 3l3-3" /></svg>
