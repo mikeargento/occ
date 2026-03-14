@@ -1035,7 +1035,7 @@ export default function StudioPage() {
                 ? "border-text/40 bg-text/5 ring-2 ring-text/10 ring-offset-2 ring-offset-bg scale-[1.01]"
                 : zipFile
                 ? "border-border bg-bg-elevated"
-                : "border-border-subtle bg-bg-elevated/50 hover:border-border hover:bg-bg-elevated hover:shadow-[0_0_30px_rgba(255,255,255,0.03)]"
+                : "border-border-subtle bg-bg-elevated/50 hover:border-border hover:bg-bg-elevated hover:shadow-[0_0_20px_rgba(255,255,255,0.015)]"
               }
             `}
           >
