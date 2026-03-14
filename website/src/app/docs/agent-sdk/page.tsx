@@ -14,14 +14,7 @@ export default function AgentSdkPage() {
         The SDK normalizes inputs and outputs, hashes them into a canonical envelope,
         and commits the digest through OCC. Raw data never leaves your runtime.
       </p>
-      <div className="mb-10">
-        <a
-          href="/agent"
-          className="text-sm font-semibold text-accent underline underline-offset-4 hover:text-text transition-colors"
-        >
-          Try the live demo
-        </a>
-      </div>
+      <div className="mb-10" />
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Install</h2>
       <div className="code-block">

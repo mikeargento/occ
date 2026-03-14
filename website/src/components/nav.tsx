@@ -6,7 +6,6 @@ import { useState } from "react";
 
 const links: { href: string; label: string; external?: boolean }[] = [
   { href: "/studio", label: "Studio" },
-  { href: "/agent", label: "Agent" },
   { href: "/docs", label: "Docs" },
   { href: "/api-reference", label: "API" },
   { href: "https://github.com/mikeargento/occ", label: "GitHub", external: true },
