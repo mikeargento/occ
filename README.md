@@ -7,8 +7,6 @@
 npm install occproof
 ```
 
-Documentation: [Proof as a Reachability Property](https://occproof.com/whitepaper.html)
-
 OCC is a TypeScript library for producing tamper-evident, process-bound commit proofs.  It enforces one invariant:
 
 > A specific trusted constructor finalized specific bytes at a specific authorization step — atomically, fail-closed.
@@ -97,7 +95,7 @@ const result = await verify({ proof, bytes });
 
 Drag-and-drop a file to commit and verify instantly, no install:
 
-**https://occproof.com/studio**
+**https://proofstudio.xyz/studio**
 
 ### Claude / MCP integration
 
@@ -116,16 +114,6 @@ Once installed, Claude can call `commit_text`, `commit_file`, and `verify_proof`
 ### OpenAPI spec
 
 Machine-readable API description for agent frameworks, code generators, and tool registries:
-
-**https://occproof.com/openapi.json**
-
-### Discovery endpoints (GitHub Pages)
-
-Agent frameworks that probe for capabilities will find:
-
-- `/.well-known/ai-plugin.json` — ChatGPT plugin / OpenAI tool format
-- `/.well-known/mcp.json` — MCP server install instructions
-- `/llms.txt` — plain-English summary for LLM crawlers
 
 ### Agent workflow example
 
@@ -293,7 +281,6 @@ Examples:
 Each file produces `<filename>.proof.zip` containing:
 - The original file
 - `proof.json` (OCC proof with TEE signature)
-- `VERIFY.txt` (verification instructions pointing to occproof.com)
 
 ---
 
