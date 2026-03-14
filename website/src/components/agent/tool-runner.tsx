@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import type { ExecutionResult } from "@/app/page";
+import type { ExecutionResult } from "@/app/agent/page";
 
 interface ToolRunnerProps {
   onResult: (result: ExecutionResult) => void;
@@ -50,7 +50,7 @@ export function ToolRunner({ onResult }: ToolRunnerProps) {
     setState({ phase: "executing", startedAt: Date.now() });
 
     try {
-      const response = await fetch("/api/execute", {
+      const response = await fetch("/api/agent/execute", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

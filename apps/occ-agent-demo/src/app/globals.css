@@ -126,7 +126,17 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   margin: 0 auto;
 }
 
+/* Progress fill for execute button */
+@keyframes progressFill {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+.animate-progress-fill {
+  animation: progressFill 25s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-slide-up { animation: none; opacity: 1; transform: none; }
   .animate-success-pulse { animation: none; }
+  .animate-progress-fill { animation: none; width: 100%; }
 }

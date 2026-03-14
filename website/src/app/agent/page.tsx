@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { ToolRunner } from "@/components/ToolRunner";
-import { ReceiptInspector } from "@/components/ReceiptInspector";
+import { ToolRunner } from "@/components/agent/tool-runner";
+import { ReceiptInspector } from "@/components/agent/receipt-inspector";
 
 export interface ExecutionResult {
   output: {
@@ -33,16 +33,16 @@ export interface ExecutionResult {
 
 type Tab = "execute" | "inspect";
 
-export default function Home() {
+export default function AgentPage() {
   const [result, setResult] = useState<ExecutionResult | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("execute");
 
   return (
-    <main className="mx-auto max-w-2xl px-6 py-12 sm:py-16">
+    <div className="mx-auto max-w-2xl px-6 py-12 sm:py-16">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-3">
-          OCC Agent
+          Agent
         </h1>
         <p className="text-text-secondary text-[15px] leading-relaxed max-w-lg">
           Run a tool. Get a portable cryptographic receipt.
@@ -122,7 +122,7 @@ export default function Home() {
           </div>
         </div>
       </div>
-    </main>
+    </div>
   );
 }
 

@@ -414,4 +414,16 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .mobile-menu-enter {
     animation: none;
   }
+  .animate-slide-up {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .animate-success-pulse {
+    animation: none;
+  }
+  .animate-progress-fill {
+    animation: none;
+    width: 100%;
+  }
 }

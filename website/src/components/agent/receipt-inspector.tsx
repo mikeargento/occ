@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { ExecutionResult } from "@/app/page";
+import type { ExecutionResult } from "@/app/agent/page";
 
 interface ReceiptInspectorProps {
   result: ExecutionResult | null;
