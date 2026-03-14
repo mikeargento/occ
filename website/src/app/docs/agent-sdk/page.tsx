@@ -9,11 +9,22 @@ export default function AgentSdkPage() {
   return (
     <article className="prose-doc">
       <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-6">Agent SDK</h1>
-      <p className="text-text-secondary mb-10">
+      <p className="text-text-secondary mb-6">
         Wrap any tool call with a portable, cryptographic execution receipt.
         The SDK normalizes inputs and outputs, hashes them into a canonical envelope,
         and commits the digest through OCC. Raw data never leaves your runtime.
       </p>
+      <div className="mb-10">
+        <a
+          href="https://agent.proofstudio.xyz"
+          target="_blank"
+          rel="noopener"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-accent hover:underline underline-offset-4 transition-colors"
+        >
+          Try the live demo
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 3h6v6M11 3L3 11" /></svg>
+        </a>
+      </div>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Install</h2>
       <div className="code-block">
@@ -274,6 +285,10 @@ v.checks.signatureValid;    // Ed25519 signature valid`}</pre>
         {" · "}
         <a href="https://www.npmjs.com/package/occ-agent" target="_blank" rel="noopener" className="text-text hover:text-accent transition-colors underline underline-offset-4">
           npm
+        </a>
+        {" · "}
+        <a href="https://agent.proofstudio.xyz" target="_blank" rel="noopener" className="text-text hover:text-accent transition-colors underline underline-offset-4">
+          demo
         </a>
       </p>
     </article>
