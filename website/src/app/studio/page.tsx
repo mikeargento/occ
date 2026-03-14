@@ -976,7 +976,7 @@ export default function StudioPage() {
     : [{ key: "hashing", label: "Hash" }, { key: "signing", label: "Sign" }];
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6 sm:py-16">
+    <div className="mx-auto max-w-2xl px-6 py-12 sm:py-16">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-3">
