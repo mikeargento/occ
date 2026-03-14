@@ -133,7 +133,7 @@ export function ReceiptInspector({ result, onBack }: ReceiptInspectorProps) {
               />
             </div>
 
-            {proof.commit && (
+            {!!proof.commit && (
               <div className="pt-4 border-t border-border-subtle space-y-2.5">
                 <div className="text-[11px] text-text-tertiary uppercase tracking-wide mb-2">Commit Context</div>
                 {Object.entries(proof.commit as Record<string, unknown>).map(([key, value]) => (
@@ -142,7 +142,7 @@ export function ReceiptInspector({ result, onBack }: ReceiptInspectorProps) {
               </div>
             )}
 
-            {proof.signer && (
+            {!!proof.signer && (
               <div className="pt-4 border-t border-border-subtle space-y-2.5">
                 <div className="text-[11px] text-text-tertiary uppercase tracking-wide mb-2">Signer</div>
                 <MetaRow
@@ -158,7 +158,7 @@ export function ReceiptInspector({ result, onBack }: ReceiptInspectorProps) {
               </div>
             )}
 
-            {proof.environment && (
+            {!!proof.environment && (
               <div className="pt-4 border-t border-border-subtle space-y-2.5">
                 <div className="text-[11px] text-text-tertiary uppercase tracking-wide mb-2">Environment</div>
                 <MetaRow
