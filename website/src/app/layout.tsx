@@ -4,7 +4,7 @@ import "./globals.css";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
 import { ThemeProvider } from "@/components/theme-provider";
-import { DotGrid } from "@/components/dot-grid";
+
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
@@ -58,14 +58,9 @@ export default function RootLayout({
       </head>
       <body className="font-serif antialiased">
         <ThemeProvider>
-          <div className="relative">
-            <DotGrid />
-            <div className="relative z-10">
-              <Nav />
-              <main className="min-h-screen">{children}</main>
-              <Footer />
-            </div>
-          </div>
+          <Nav />
+          <main className="min-h-screen">{children}</main>
+          <Footer />
         </ThemeProvider>
       </body>
     </html>
