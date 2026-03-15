@@ -16,6 +16,33 @@ import { EmptyState } from "@/components/agent/empty-state";
 import { formatNumber, formatCents } from "@/lib/agent/format";
 import { useProxy } from "@/lib/agent/use-proxy";
 
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+
+  return (
+    <button
+      onClick={() => {
+        navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }}
+      className="ml-auto pl-3 text-text-tertiary hover:text-text transition-colors flex-shrink-0"
+      title="Copy to clipboard"
+    >
+      {copied ? (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M20 6L9 17l-5-5" />
+        </svg>
+      ) : (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <rect x="9" y="9" width="13" height="13" rx="2" />
+          <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+        </svg>
+      )}
+    </button>
+  );
+}
+
 function OnboardingScreen() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
@@ -49,13 +76,15 @@ function OnboardingScreen() {
             </span>
           </div>
           <div className="px-5 py-4 space-y-3 font-mono text-sm">
-            <div>
+            <div className="flex items-center">
               <span className="text-text-tertiary select-none">$ </span>
               <span className="text-text">npm install occ-mcp-proxy</span>
+              <CopyButton text="npm install occ-mcp-proxy" />
             </div>
-            <div>
+            <div className="flex items-center">
               <span className="text-text-tertiary select-none">$ </span>
               <span className="text-text">npx occ-mcp-proxy</span>
+              <CopyButton text="npx occ-mcp-proxy" />
             </div>
           </div>
         </div>
