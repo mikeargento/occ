@@ -109,10 +109,10 @@ export default function Home() {
               Try ProofStudio
             </Link>
             <Link
-              href="/docs"
+              href="/agent"
               className="inline-flex h-12 w-full sm:w-auto items-center justify-center rounded-xl border border-border px-8 text-sm font-semibold text-text-secondary transition-all hover:text-text hover:border-text-tertiary active:scale-[0.98]"
             >
-              Documentation
+              Try OCC Agent
             </Link>
           </div>
 
