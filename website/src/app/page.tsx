@@ -81,9 +81,7 @@ export default function Home() {
     <>
       {/* ── Hero ── */}
       <section className="relative flex items-center justify-center overflow-hidden pt-28 sm:pt-32 pb-12 sm:pb-16">
-{/* clean background — no gradient */}
-
-        <div className="mx-auto max-w-5xl px-6 text-center">
+        <div className="relative z-10 mx-auto max-w-5xl px-6 text-center">
           <h1
             className="hero-animate text-[clamp(2rem,6.5vw,4.5rem)] font-bold tracking-[-0.04em] leading-[1.08] whitespace-nowrap text-text"
             style={{ animationDelay: "0ms" }}

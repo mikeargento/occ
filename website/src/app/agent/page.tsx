@@ -65,7 +65,7 @@ function OnboardingScreen() {
         <h1 className="text-2xl font-semibold tracking-[-0.02em] mb-3">
           Get started
         </h1>
-        <p className="text-sm text-text-secondary mb-8 leading-relaxed">
+        <p className="text-sm text-text-secondary mb-8 leading-relaxed max-w-xs mx-auto text-balance">
           OCC Agent runs on your machine. Start the proxy and this dashboard connects automatically.
         </p>
 
