@@ -1,8 +1,12 @@
 node_modules/
 dist/
 .next/
+out/
+dashboard/
 *.tsbuildinfo
 .DS_Store
 *.log
 .env
 .env.*
+.occ/
+.npmrc

@@ -1,0 +1,121 @@
+@import "tailwindcss";
+
+@theme {
+  /* Surfaces */
+  --color-bg: var(--bg);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-bg-subtle: var(--bg-subtle);
+  --color-bg-inset: var(--bg-inset);
+
+  /* Borders */
+  --color-border: var(--c-border);
+  --color-border-subtle: var(--c-border-subtle);
+
+  /* Text */
+  --color-text: var(--c-text);
+  --color-text-secondary: var(--c-text-secondary);
+  --color-text-tertiary: var(--c-text-tertiary);
+  --color-accent: var(--c-accent);
+  --color-accent-dim: var(--c-accent-dim);
+
+  /* Semantic */
+  --color-success: #34d399;
+  --color-warning: #fbbf24;
+  --color-error: #f87171;
+  --color-info: #60a5fa;
+
+  /* Typography */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-jetbrains), "SF Mono", ui-monospace, monospace;
+}
+
+:root {
+  --bg: #09090b;
+  --bg-elevated: #111113;
+  --bg-subtle: #19191d;
+  --bg-inset: #060608;
+  --c-border: #232429;
+  --c-border-subtle: #1c1d21;
+  --c-text: #ededef;
+  --c-text-secondary: #8b8d98;
+  --c-text-tertiary: #4e4f58;
+  --c-accent: #d4d4d8;
+  --c-accent-dim: #404046;
+  color-scheme: dark;
+}
+
+/* ── Base ── */
+
+html {
+  overflow-x: hidden;
+}
+
+body {
+  background: var(--bg);
+  color: var(--c-text);
+  font-family: var(--font-sans);
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: rgba(96, 165, 250, 0.2);
+}
+
+/* ── Scrollbar ── */
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--c-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--c-text-tertiary); }
+
+/* ── Focus ── */
+
+*:focus-visible {
+  outline: 1px solid var(--c-accent-dim);
+  outline-offset: 1px;
+}
+
+/* ── Animations ── */
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.2s ease-out;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.15s ease-out;
+}
+
+.animate-pulse-dot {
+  animation: pulseDot 2s ease-in-out infinite;
+}
+
+/* ── Skeleton loading ── */
+
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-subtle) 25%, var(--c-border) 50%, var(--bg-subtle) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 4px;
+}

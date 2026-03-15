@@ -1,7 +1,7 @@
 {
-  "name": "occ-stub",
+  "name": "occ-policy-sdk",
   "version": "1.0.0",
-  "description": "In-process stub adapter for OCC development and testing",
+  "description": "Policy definition and enforcement for OCC Agent",
   "author": "Mike Argento",
   "license": "Apache-2.0",
   "type": "module",
@@ -13,12 +13,29 @@
       "types": "./dist/index.d.ts"
     }
   },
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mikeargento/occ.git",
+    "directory": "packages/policy-sdk"
+  },
+  "keywords": [
+    "occ",
+    "policy",
+    "enforcement",
+    "occ-agent",
+    "agent",
+    "constraints"
+  ],
   "dependencies": {
-    "@noble/ed25519": "^2.1.0",
+    "@noble/hashes": "^1.4.0",
     "occproof": "^1.0.2"
   },
   "devDependencies": {

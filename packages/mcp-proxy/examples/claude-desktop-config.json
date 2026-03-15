@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "occ-agent": {
+      "command": "node",
+      "args": [
+        "/Users/argento/Desktop/Claude Code/occ/packages/mcp-proxy/dist/index.js",
+        "--config",
+        "/Users/argento/Desktop/Claude Code/occ/packages/mcp-proxy/examples/proxy-config.json"
+      ]
+    }
+  }
+}
