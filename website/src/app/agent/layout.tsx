@@ -102,16 +102,32 @@ function AgentMobileNav() {
   );
 }
 
+function AgentContent({ children }: { children: React.ReactNode }) {
+  const { isConnected } = useProxy();
+
+  if (!isConnected) {
+    return (
+      <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20">
+        <div className="flex justify-center">{children}</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20">
+      <AgentMobileNav />
+      <div className="flex gap-16">
+        <AgentSidebar />
+        <div className="min-w-0 flex-1">{children}</div>
+      </div>
+    </div>
+  );
+}
+
 export default function AgentLayout({ children }: { children: React.ReactNode }) {
   return (
     <ProxyProvider>
-      <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20">
-        <AgentMobileNav />
-        <div className="flex gap-16">
-          <AgentSidebar />
-          <div className="min-w-0 flex-1">{children}</div>
-        </div>
-      </div>
+      <AgentContent>{children}</AgentContent>
     </ProxyProvider>
   );
 }
