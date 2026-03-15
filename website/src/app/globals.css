@@ -52,18 +52,18 @@
 /* ── Light ── */
 .light {
   --bg: #ffffff;
-  --bg-elevated: #f5f5f5;
-  --bg-subtle: #ebebeb;
-  --c-border: #d4d4d4;
-  --c-border-subtle: #e5e5e5;
-  --c-text: #171717;
-  --c-text-secondary: #525252;
-  --c-text-tertiary: #a3a3a3;
-  --c-accent: #262626;
-  --c-accent-dim: #a3a3a3;
-  --c-syntax-key: #2563eb;
-  --c-syntax-string: #059669;
-  --c-syntax-number: #d97706;
+  --bg-elevated: #f0f0f0;
+  --bg-subtle: #e5e5e5;
+  --c-border: #c5c5c5;
+  --c-border-subtle: #d9d9d9;
+  --c-text: #111111;
+  --c-text-secondary: #444444;
+  --c-text-tertiary: #777777;
+  --c-accent: #1a1a1a;
+  --c-accent-dim: #888888;
+  --c-syntax-key: #1d4ed8;
+  --c-syntax-string: #047857;
+  --c-syntax-number: #b45309;
   --globe-highlight: rgba(0, 0, 0, 0.15);
   --globe-mid: rgba(0, 0, 0, 0.06);
   --globe-shadow: rgba(0, 0, 0, 0.2);
@@ -273,24 +273,23 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
 .terminal-glow {
   box-shadow:
-    0 0 30px 1px rgba(255, 255, 255, 0.015),
-    0 0 12px 1px rgba(255, 255, 255, 0.01);
+    0 2px 12px rgba(0, 0, 0, 0.06),
+    0 0 30px 1px rgba(0, 0, 0, 0.03);
   transform: translateZ(0);
 }
 
 /* Hero background glow — disabled, looked bad */
 
 .card-hover {
-  box-shadow: 0 0 20px 1px rgba(255, 255, 255, 0.01);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   transition: transform 0.25s ease-out, box-shadow 0.25s ease-out, border-color 0.25s ease-out;
   transform: translateZ(0);
 }
 .card-hover:hover {
   transform: translateY(-2px) translateZ(0);
   box-shadow:
-    0 0 24px 1px rgba(255, 255, 255, 0.02),
-    0 0 10px 1px rgba(255, 255, 255, 0.01),
-    0 8px 24px -8px rgba(0, 0, 0, 0.15);
+    0 4px 16px rgba(0, 0, 0, 0.08),
+    0 8px 24px -8px rgba(0, 0, 0, 0.12);
 }
 
 /* ── Site-wide utilities ── */
@@ -358,8 +357,8 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   overflow: hidden;
   margin-bottom: 1.5rem;
   box-shadow:
-    0 0 30px 1px rgba(255, 255, 255, 0.015),
-    0 0 12px 1px rgba(255, 255, 255, 0.01);
+    0 2px 12px rgba(0, 0, 0, 0.06),
+    0 0 30px 1px rgba(0, 0, 0, 0.03);
   transform: translateZ(0);
 }
 .code-block-header {
