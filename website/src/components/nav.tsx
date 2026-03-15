@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { useTheme } from "./theme-provider";
 
 const links: { href: string; label: string; external?: boolean }[] = [
   { href: "/studio", label: "Studio" },
@@ -15,6 +16,7 @@ const links: { href: string; label: string; external?: boolean }[] = [
 export function Nav() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const { theme, toggle } = useTheme();
 
   return (
     <header className="sticky top-0 z-50 bg-bg/80 backdrop-blur-xl">
@@ -62,10 +64,43 @@ export function Nav() {
 
               return separator ? [separator, linkEl] : linkEl;
             })}
+            <div className="w-px h-4 bg-border-subtle mx-2" />
+            <button
+              onClick={toggle}
+              className="flex h-8 w-8 items-center justify-center rounded-md text-text-tertiary hover:text-text hover:bg-bg-subtle transition-colors"
+              aria-label="Toggle theme"
+            >
+              {theme === "dark" ? (
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                  <circle cx="8" cy="8" r="3" />
+                  <path d="M8 2v1.5M8 12.5V14M2 8h1.5M12.5 8H14M3.75 3.75l1.06 1.06M11.19 11.19l1.06 1.06M3.75 12.25l1.06-1.06M11.19 4.81l1.06-1.06" />
+                </svg>
+              ) : (
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M13.5 9.5a5.5 5.5 0 0 1-7-7 5.5 5.5 0 1 0 7 7z" />
+                </svg>
+              )}
+            </button>
           </div>
 
-          {/* Mobile hamburger */}
-          <div className="flex items-center md:hidden">
+          {/* Mobile controls */}
+          <div className="flex items-center gap-1 md:hidden">
+            <button
+              onClick={toggle}
+              className="flex h-9 w-9 items-center justify-center rounded-md text-text-tertiary hover:text-text hover:bg-bg-subtle transition-colors"
+              aria-label="Toggle theme"
+            >
+              {theme === "dark" ? (
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                  <circle cx="8" cy="8" r="3" />
+                  <path d="M8 2v1.5M8 12.5V14M2 8h1.5M12.5 8H14M3.75 3.75l1.06 1.06M11.19 11.19l1.06 1.06M3.75 12.25l1.06-1.06M11.19 4.81l1.06-1.06" />
+                </svg>
+              ) : (
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M13.5 9.5a5.5 5.5 0 0 1-7-7 5.5 5.5 0 1 0 7 7z" />
+                </svg>
+              )}
+            </button>
             <button
               onClick={() => setOpen(!open)}
               className="flex h-9 w-9 items-center justify-center rounded-md hover:bg-bg-subtle"
