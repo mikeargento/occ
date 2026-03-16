@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import {
   getAgents,
+  getStatus,
   createAgent,
   deleteAgent,
   pauseAgent,
@@ -22,6 +23,7 @@ export default function AgentsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState("");
   const [creating, setCreating] = useState(false);
+  const [mode, setMode] = useState<"demo" | "live" | null>(null);
 
   const refresh = useCallback(() => {
     getAgents()
@@ -32,6 +34,7 @@ export default function AgentsPage() {
 
   useEffect(() => {
     refresh();
+    getStatus().then((s) => setMode(s.mode)).catch(() => {});
     const interval = setInterval(refresh, 3000);
     return () => clearInterval(interval);
   }, [refresh]);
@@ -83,20 +86,30 @@ export default function AgentsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-lg font-semibold tracking-[-0.01em]">Agents</h1>
+          <h1 className="text-2xl font-semibold tracking-[-0.02em]">Agents</h1>
           {!loading && agents.length > 0 && (
-            <p className="text-[13px] text-text-tertiary mt-0.5">
+            <p className="text-sm text-text-secondary mt-1">
               {agents.length} deployed &middot; {activeCount} active
             </p>
           )}
         </div>
         <button
           onClick={() => setShowCreate(!showCreate)}
-          className="px-3.5 py-[7px] text-[13px] font-medium rounded-lg bg-text text-bg hover:bg-accent transition-colors duration-100 active:scale-[0.98]"
+          className="px-4 py-2 text-sm font-semibold rounded-lg bg-text text-bg hover:opacity-90 transition-opacity"
         >
           New Agent
         </button>
       </div>
+
+      {/* Demo mode banner */}
+      {mode === "demo" && (
+        <div className="mb-6 px-4 py-3 rounded-lg bg-info/5 border border-info/20 flex items-center gap-2.5 animate-fade-in">
+          <div className="w-[5px] h-[5px] rounded-full bg-info flex-shrink-0" />
+          <p className="text-sm text-info/90">
+            Demo mode — using mock tools for testing. Connect downstream MCP servers for real tools.
+          </p>
+        </div>
+      )}
 
       {/* Create form */}
       {showCreate && (
@@ -109,13 +122,13 @@ export default function AgentsPage() {
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-                className="flex-1 px-3 py-2 text-[13px] rounded-lg bg-bg-inset border border-border focus:border-accent-dim outline-none transition-colors"
+                className="flex-1 px-3 py-2 text-sm rounded-lg bg-bg-inset border border-border focus:border-accent-dim outline-none transition-colors"
                 autoFocus
               />
               <button
                 onClick={handleCreate}
                 disabled={creating || !newName.trim()}
-                className="px-4 py-2 text-[13px] font-medium rounded-lg bg-text text-bg hover:bg-accent disabled:opacity-40 transition-all duration-100"
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-text text-bg hover:bg-accent disabled:opacity-40 transition-all duration-100"
               >
                 {creating ? "Creating..." : "Create"}
               </button>
@@ -124,7 +137,7 @@ export default function AgentsPage() {
                   setShowCreate(false);
                   setNewName("");
                 }}
-                className="px-3 py-2 text-[13px] text-text-tertiary hover:text-text-secondary transition-colors"
+                className="px-3 py-2 text-sm text-text-tertiary hover:text-text-secondary transition-colors"
               >
                 Cancel
               </button>
@@ -135,7 +148,7 @@ export default function AgentsPage() {
 
       {/* Error */}
       {error && (
-        <div className="mb-5 px-4 py-3 rounded-lg bg-error/5 border border-error/20 text-[13px] text-error">
+        <div className="mb-5 px-4 py-3 rounded-lg bg-error/5 border border-error/20 text-sm text-error">
           {error}
         </div>
       )}
@@ -205,7 +218,7 @@ export default function AgentsPage() {
                                 : "bg-success animate-pulse-dot"
                             }`}
                           />
-                          <span className="text-[13px] font-medium text-text group-hover:text-white transition-colors">
+                          <span className="text-sm font-medium text-text group-hover:text-white transition-colors">
                             {agent.name}
                           </span>
                         </div>
@@ -218,7 +231,7 @@ export default function AgentsPage() {
                     </td>
                     <td className="px-4 py-3.5 text-right">
                       <span
-                        className={`text-[13px] tabular-nums ${
+                        className={`text-sm tabular-nums ${
                           enabledCount === 0
                             ? "text-text-tertiary"
                             : "text-text-secondary"
@@ -228,12 +241,12 @@ export default function AgentsPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3.5 text-right">
-                      <span className="text-[13px] text-text-secondary tabular-nums">
+                      <span className="text-sm text-text-secondary tabular-nums">
                         {formatNumber(agent.totalCalls)}
                       </span>
                     </td>
                     <td className="px-4 py-3.5 text-right">
-                      <span className="text-[13px] text-text-secondary tabular-nums">
+                      <span className="text-sm text-text-secondary tabular-nums">
                         {formatCents(agent.totalSpendCents)}
                       </span>
                     </td>
@@ -241,22 +254,22 @@ export default function AgentsPage() {
                       <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-100">
                         <button
                           onClick={() => handleTogglePause(agent)}
-                          className="px-2 py-1 text-[12px] rounded-md text-text-secondary hover:text-text hover:bg-bg-subtle transition-colors"
+                          className="px-2 py-1 text-xs rounded-md text-text-secondary hover:text-text hover:bg-bg-subtle transition-colors"
                         >
                           {isPaused ? "Resume" : "Pause"}
                         </button>
                         {confirmingDelete === agent.id ? (
                           <>
-                            <span className="text-[12px] text-text-secondary">Sure?</span>
+                            <span className="text-xs text-text-secondary">Sure?</span>
                             <button
                               onClick={() => handleDelete(agent.id)}
-                              className="px-2 py-1 text-[12px] rounded-md text-error hover:bg-error/10 transition-colors font-medium"
+                              className="px-2 py-1 text-xs rounded-md text-error hover:bg-error/10 transition-colors font-medium"
                             >
                               Yes
                             </button>
                             <button
                               onClick={() => setConfirmingDelete(null)}
-                              className="px-2 py-1 text-[12px] rounded-md text-text-tertiary hover:text-text hover:bg-bg-subtle transition-colors"
+                              className="px-2 py-1 text-xs rounded-md text-text-tertiary hover:text-text hover:bg-bg-subtle transition-colors"
                             >
                               No
                             </button>
@@ -264,7 +277,7 @@ export default function AgentsPage() {
                         ) : (
                           <button
                             onClick={() => setConfirmingDelete(agent.id)}
-                            className="px-2 py-1 text-[12px] rounded-md text-text-tertiary hover:text-error hover:bg-error/5 transition-colors"
+                            className="px-2 py-1 text-xs rounded-md text-text-tertiary hover:text-error hover:bg-error/5 transition-colors"
                           >
                             Delete
                           </button>

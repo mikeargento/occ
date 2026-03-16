@@ -33,11 +33,11 @@ export default function AuditPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-lg font-semibold tracking-[-0.01em]">
+          <h1 className="text-2xl font-semibold tracking-[-0.02em]">
             Proof Log
           </h1>
           {total > 0 && (
-            <p className="text-[13px] text-text-tertiary mt-0.5">
+            <p className="text-sm text-text-secondary mt-1">
               {total} recorded event{total !== 1 ? "s" : ""}
             </p>
           )}
@@ -54,7 +54,7 @@ export default function AuditPage() {
       )}
 
       {error && (
-        <div className="px-4 py-3 rounded-lg bg-error/5 border border-error/20 text-[13px] text-error">
+        <div className="px-4 py-3 rounded-lg bg-error/5 border border-error/20 text-sm text-error">
           {error}
         </div>
       )}
@@ -92,11 +92,11 @@ export default function AuditPage() {
                   key={entry.id}
                   className="border-b border-border-subtle last:border-0 group hover:bg-bg-subtle/40 transition-colors duration-75"
                 >
-                  <td className="px-5 py-3 text-[12px] text-text-secondary tabular-nums whitespace-nowrap">
+                  <td className="px-5 py-3 text-xs text-text-secondary tabular-nums whitespace-nowrap">
                     {formatTimestamp(entry.timestamp)}
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-[12px] font-mono text-text">
+                    <span className="text-xs font-mono text-text">
                       {entry.tool}
                     </span>
                     {entry.skill && (
@@ -140,7 +140,7 @@ export default function AuditPage() {
               <button
                 onClick={() => setPage((p) => Math.max(0, p - 1))}
                 disabled={page === 0}
-                className="text-[12px] text-text-secondary hover:text-text disabled:text-text-tertiary disabled:cursor-not-allowed transition-colors"
+                className="text-xs text-text-secondary hover:text-text disabled:text-text-tertiary disabled:cursor-not-allowed transition-colors"
               >
                 Previous
               </button>
@@ -150,7 +150,7 @@ export default function AuditPage() {
               <button
                 onClick={() => setPage((p) => p + 1)}
                 disabled={(page + 1) * limit >= total}
-                className="text-[12px] text-text-secondary hover:text-text disabled:text-text-tertiary disabled:cursor-not-allowed transition-colors"
+                className="text-xs text-text-secondary hover:text-text disabled:text-text-tertiary disabled:cursor-not-allowed transition-colors"
               >
                 Next
               </button>

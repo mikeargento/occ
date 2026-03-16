@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "occ-agent": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["occ-mcp-proxy", "--mcp"]
+    }
+  }
+}

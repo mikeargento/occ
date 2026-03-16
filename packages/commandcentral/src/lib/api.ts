@@ -37,6 +37,18 @@ export async function getHealth(): Promise<{ ok: boolean; proxyId: string; times
   return apiFetch("/health");
 }
 
+// ── Status ──
+
+export async function getStatus(): Promise<{
+  ok: boolean;
+  proxyId: string;
+  mode: "demo" | "live";
+  toolCount: number;
+  timestamp: number;
+}> {
+  return apiFetch("/status");
+}
+
 // ── Policy ──
 
 export async function getPolicy(): Promise<{

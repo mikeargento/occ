@@ -11,8 +11,8 @@ export default function SettingsPage() {
   return (
     <div className="max-w-2xl mx-auto px-8 py-8">
       <div className="mb-8">
-        <h1 className="text-lg font-semibold tracking-[-0.01em]">Settings</h1>
-        <p className="text-[13px] text-text-tertiary mt-0.5">
+        <h1 className="text-2xl font-semibold tracking-[-0.02em]">Settings</h1>
+        <p className="text-sm text-text-secondary mt-1">
           Proxy connection and configuration
         </p>
       </div>
@@ -31,12 +31,12 @@ export default function SettingsPage() {
                     isConnected ? "bg-success" : "bg-error"
                   }`}
                 />
-                <span className="text-[13px] font-medium">
+                <span className="text-sm font-medium">
                   {isConnected ? "Connected" : "Disconnected"}
                 </span>
               </div>
               {proxyId && (
-                <p className="text-[12px] text-text-tertiary mt-1 font-mono">
+                <p className="text-xs text-text-tertiary mt-1 font-mono">
                   {proxyId}
                 </p>
               )}
@@ -54,12 +54,12 @@ export default function SettingsPage() {
               type="text"
               value={inputUrl}
               onChange={(e) => setInputUrl(e.target.value)}
-              className="flex-1 bg-bg-inset border border-border rounded-lg px-3 py-2 text-[13px] text-text placeholder:text-text-tertiary focus:border-accent-dim outline-none transition-colors"
+              className="flex-1 bg-bg-inset border border-border rounded-lg px-3 py-2 text-sm text-text placeholder:text-text-tertiary focus:border-accent-dim outline-none transition-colors"
               placeholder="http://localhost:9100"
             />
             <button
               onClick={() => setBaseUrl(inputUrl)}
-              className="px-4 py-2 bg-bg-subtle border border-border rounded-lg text-[13px] text-text hover:bg-bg-subtle/80 transition-colors active:scale-[0.98]"
+              className="px-4 py-2 bg-bg-subtle border border-border rounded-lg text-sm text-text hover:bg-bg-subtle/80 transition-colors active:scale-[0.98]"
             >
               Save
             </button>
@@ -71,19 +71,19 @@ export default function SettingsPage() {
           <p className="text-[11px] font-medium uppercase tracking-[0.05em] text-text-tertiary mb-3">
             Quick Start
           </p>
-          <div className="space-y-3 text-[12px]">
+          <div className="space-y-3 text-xs">
             <div>
               <p className="text-text-secondary mb-1.5">1. Start the proxy</p>
-              <code className="block bg-bg-inset border border-border-subtle rounded-lg px-3 py-2 font-mono text-[12px] text-text-secondary">
-                npx occ-proxy --management-only
+              <code className="block bg-bg-inset border border-border-subtle rounded-lg px-3 py-2 font-mono text-xs text-text-secondary">
+                npx occ-mcp-proxy --management-only
               </code>
             </div>
             <div>
               <p className="text-text-secondary mb-1.5">
                 2. Or with a config file
               </p>
-              <code className="block bg-bg-inset border border-border-subtle rounded-lg px-3 py-2 font-mono text-[12px] text-text-secondary">
-                npx occ-proxy --config proxy.json
+              <code className="block bg-bg-inset border border-border-subtle rounded-lg px-3 py-2 font-mono text-xs text-text-secondary">
+                npx occ-mcp-proxy --config proxy.json
               </code>
             </div>
           </div>

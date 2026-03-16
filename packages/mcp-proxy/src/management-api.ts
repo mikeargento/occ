@@ -164,6 +164,20 @@ export function startManagementApi(
           return;
         }
 
+        // ── Status (includes mode) ──
+        if (method === "GET" && route === "/status") {
+          const tools = registry.listTools();
+          const isDemo = tools.length > 0 && tools.every((t) => t.source === "demo");
+          sendJson(res, 200, {
+            ok: true,
+            proxyId: config.proxyId,
+            mode: isDemo ? "demo" : "live",
+            toolCount: tools.length,
+            timestamp: Date.now(),
+          });
+          return;
+        }
+
         // ── Tools ──
         if (method === "GET" && route === "/tools") {
           sendJson(res, 200, { tools: registry.listTools() });

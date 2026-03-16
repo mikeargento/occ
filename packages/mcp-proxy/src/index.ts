@@ -27,7 +27,6 @@ const configPath = (() => {
   return idx !== -1 ? process.argv[idx + 1] : undefined;
 })();
 const enableMcp = process.argv.includes("--mcp");
-const noOpen = process.argv.includes("--no-open");
 
 // ── Initialize ──
 const config = loadConfig(configPath);
@@ -109,8 +108,8 @@ async function main(): Promise<void> {
     console.error("");
   }
 
-  // Auto-open browser (default: yes, unless --no-open)
-  if (!noOpen) {
+  // Auto-open browser (only when --open flag is passed)
+  if (process.argv.includes("--open")) {
     try {
       const { exec } = await import("node:child_process");
       const cmd = process.platform === "darwin" ? "open" : process.platform === "win32" ? "start" : "xdg-open";

@@ -110,7 +110,7 @@ export default function AgentDetailPage() {
     <div className="max-w-6xl mx-auto px-8 py-8">
       {/* Breadcrumb + Header */}
       <div className="mb-8">
-        <div className="flex items-center gap-1.5 text-[12px] text-text-tertiary mb-3">
+        <div className="flex items-center gap-1.5 text-xs text-text-tertiary mb-3">
           <Link
             href="/agents"
             className="hover:text-text-secondary transition-colors"
@@ -132,7 +132,7 @@ export default function AgentDetailPage() {
                   : "bg-text-tertiary"
               }`}
             />
-            <h1 className="text-lg font-semibold tracking-[-0.01em]">
+            <h1 className="text-2xl font-semibold tracking-[-0.02em]">
               {agent?.name ?? agentId}
             </h1>
             <Badge
@@ -147,7 +147,7 @@ export default function AgentDetailPage() {
 
           <button
             onClick={handleTogglePause}
-            className={`px-4 py-[7px] text-[13px] font-medium rounded-lg border transition-all duration-100 active:scale-[0.98] ${
+            className={`px-4 py-[7px] text-sm font-medium rounded-lg border transition-all duration-100 active:scale-[0.98] ${
               isPaused
                 ? "border-success/30 text-success bg-success/5 hover:bg-success/10"
                 : "border-error/30 text-error bg-error/5 hover:bg-error/10"
@@ -162,7 +162,7 @@ export default function AgentDetailPage() {
       {isPaused && (
         <div className="mb-6 px-4 py-3 rounded-lg bg-warning/5 border border-warning/20 flex items-center gap-2.5 animate-fade-in">
           <div className="w-[5px] h-[5px] rounded-full bg-warning flex-shrink-0" />
-          <p className="text-[13px] text-warning/90">
+          <p className="text-sm text-warning/90">
             Agent paused — all tool access is suspended
           </p>
         </div>
@@ -180,7 +180,7 @@ export default function AgentDetailPage() {
             <Card padding={false}>
               {allTools.length === 0 ? (
                 <div className="px-5 py-8 text-center">
-                  <p className="text-[13px] text-text-tertiary">
+                  <p className="text-sm text-text-tertiary">
                     No tools discovered from downstream servers
                   </p>
                 </div>
@@ -220,14 +220,14 @@ export default function AgentDetailPage() {
                         </button>
                         <div className="min-w-0 flex-1">
                           <p
-                            className={`text-[13px] font-mono transition-colors ${
+                            className={`text-sm font-mono transition-colors ${
                               enabled ? "text-text" : "text-text-tertiary"
                             }`}
                           >
                             {tool.name}
                           </p>
                           {tool.description && (
-                            <p className="text-[12px] text-text-tertiary truncate mt-0.5">
+                            <p className="text-xs text-text-tertiary truncate mt-0.5">
                               {tool.description}
                             </p>
                           )}
@@ -268,7 +268,7 @@ export default function AgentDetailPage() {
               <div className="max-h-[360px] overflow-y-auto">
                 {agentEvents.length === 0 ? (
                   <div className="px-5 py-10 text-center">
-                    <p className="text-[13px] text-text-tertiary">
+                    <p className="text-sm text-text-tertiary">
                       Waiting for activity...
                     </p>
                   </div>
@@ -317,10 +317,10 @@ export default function AgentDetailPage() {
                             key={tool}
                             className="flex justify-between items-baseline"
                           >
-                            <span className="text-[12px] text-text-secondary font-mono truncate mr-2">
+                            <span className="text-xs text-text-secondary font-mono truncate mr-2">
                               {tool}
                             </span>
-                            <span className="text-[12px] text-text tabular-nums flex-shrink-0">
+                            <span className="text-xs text-text tabular-nums flex-shrink-0">
                               {count}
                             </span>
                           </div>
@@ -345,10 +345,10 @@ export default function AgentDetailPage() {
             {agent?.policy ? (
               <div className="space-y-3">
                 <div className="flex justify-between items-baseline">
-                  <span className="text-[12px] text-text-secondary">
+                  <span className="text-xs text-text-secondary">
                     Spend limit
                   </span>
-                  <span className="text-[13px] text-text tabular-nums">
+                  <span className="text-sm text-text tabular-nums">
                     {agent.policy.globalConstraints.maxSpendCents !== undefined
                       ? formatCents(
                           agent.policy.globalConstraints.maxSpendCents
@@ -357,26 +357,26 @@ export default function AgentDetailPage() {
                   </span>
                 </div>
                 <div className="flex justify-between items-baseline">
-                  <span className="text-[12px] text-text-secondary">
+                  <span className="text-xs text-text-secondary">
                     Rate limit
                   </span>
-                  <span className="text-[13px] text-text tabular-nums">
+                  <span className="text-sm text-text tabular-nums">
                     {agent.policy.globalConstraints.rateLimit
                       ? `${agent.policy.globalConstraints.rateLimit.maxCalls}/hr`
                       : "None"}
                   </span>
                 </div>
                 <div className="flex justify-between items-baseline">
-                  <span className="text-[12px] text-text-secondary">
+                  <span className="text-xs text-text-secondary">
                     Skills
                   </span>
-                  <span className="text-[13px] text-text">
+                  <span className="text-sm text-text">
                     {Object.keys(agent.policy.skills).length}
                   </span>
                 </div>
               </div>
             ) : (
-              <p className="text-[12px] text-text-tertiary">No policy</p>
+              <p className="text-xs text-text-tertiary">No policy</p>
             )}
           </Card>
 
@@ -387,13 +387,13 @@ export default function AgentDetailPage() {
             <div className="space-y-3">
               <div>
                 <p className="text-[11px] text-text-tertiary mb-0.5">ID</p>
-                <p className="text-[12px] font-mono text-text-secondary break-all">
+                <p className="text-xs font-mono text-text-secondary break-all">
                   {agentId}
                 </p>
               </div>
               <div>
                 <p className="text-[11px] text-text-tertiary mb-0.5">Status</p>
-                <p className="text-[12px] text-text-secondary capitalize">
+                <p className="text-xs text-text-secondary capitalize">
                   {agent?.status ?? "unknown"}
                 </p>
               </div>
@@ -402,7 +402,7 @@ export default function AgentDetailPage() {
                   <p className="text-[11px] text-text-tertiary mb-0.5">
                     Created
                   </p>
-                  <p className="text-[12px] text-text-secondary">
+                  <p className="text-xs text-text-secondary">
                     {formatRelativeTime(agent.createdAt)}
                   </p>
                 </div>
@@ -424,7 +424,7 @@ function SectionHeader({
 }) {
   return (
     <div className="flex items-baseline justify-between mb-3">
-      <h2 className="text-[13px] font-semibold text-text">{title}</h2>
+      <h2 className="text-sm font-semibold text-text">{title}</h2>
       {detail && (
         <span className="text-[11px] text-text-tertiary">{detail}</span>
       )}
@@ -448,7 +448,7 @@ function EventRow({ event }: { event: ProxyEvent }) {
     return (
       <div className="flex items-center gap-3 px-5 py-3 animate-slide-up">
         <span className="w-[6px] h-[6px] rounded-full bg-success flex-shrink-0" />
-        <span className="text-[12px] font-mono text-text-secondary flex-1 truncate">
+        <span className="text-xs font-mono text-text-secondary flex-1 truncate">
           {event.tool}
         </span>
         <Badge variant="success">Executed</Badge>
@@ -463,7 +463,7 @@ function EventRow({ event }: { event: ProxyEvent }) {
     return (
       <div className="flex items-center gap-3 px-5 py-3 animate-slide-up">
         <span className="w-[6px] h-[6px] rounded-full bg-error flex-shrink-0" />
-        <span className="text-[12px] font-mono text-text-tertiary flex-shrink-0">
+        <span className="text-xs font-mono text-text-tertiary flex-shrink-0">
           {event.tool}
         </span>
         <span className="text-[11px] text-error/70 truncate flex-1">
@@ -481,7 +481,7 @@ function EventRow({ event }: { event: ProxyEvent }) {
     return (
       <div className="flex items-center gap-3 px-5 py-3 animate-slide-up">
         <span className="w-[6px] h-[6px] rounded-full bg-info flex-shrink-0" />
-        <span className="text-[12px] text-text-secondary flex-1">
+        <span className="text-xs text-text-secondary flex-1">
           Policy loaded: {event.policyName}
         </span>
         <span className="text-[11px] text-text-tertiary tabular-nums flex-shrink-0">

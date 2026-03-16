@@ -32,18 +32,18 @@ export default function PoliciesPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-lg font-semibold tracking-[-0.01em]">
+          <h1 className="text-2xl font-semibold tracking-[-0.02em]">
             Policies
           </h1>
           {!loading && policy && (
-            <p className="text-[13px] text-text-tertiary mt-0.5">
+            <p className="text-sm text-text-secondary mt-1">
               1 active policy
             </p>
           )}
         </div>
         <Link
           href="/policies/new"
-          className="px-3.5 py-[7px] text-[13px] font-medium rounded-lg bg-text text-bg hover:bg-accent transition-colors duration-100 active:scale-[0.98]"
+          className="px-4 py-2 text-sm font-semibold rounded-lg bg-text text-bg hover:opacity-90 transition-opacity"
         >
           New Policy
         </Link>
@@ -52,9 +52,9 @@ export default function PoliciesPage() {
       {loading && <div className="skeleton h-[160px] rounded-xl" />}
 
       {error && (
-        <div className="px-4 py-3 rounded-lg bg-error/5 border border-error/20 text-[13px] text-error">
+        <div className="px-4 py-3 rounded-lg bg-error/5 border border-error/20 text-sm text-error">
           {error}
-          <p className="text-[12px] text-text-tertiary mt-1">
+          <p className="text-xs text-text-tertiary mt-1">
             Make sure the proxy is running and connected.
           </p>
         </div>
@@ -68,7 +68,7 @@ export default function PoliciesPage() {
           action={
             <Link
               href="/policies/new"
-              className="px-4 py-2 bg-bg-subtle border border-border rounded-lg text-[13px] text-text hover:bg-bg-subtle/80 transition-colors"
+              className="px-4 py-2 bg-bg-subtle border border-border rounded-lg text-sm text-text hover:bg-bg-subtle/80 transition-colors"
             >
               Create Policy
             </Link>
@@ -87,7 +87,7 @@ export default function PoliciesPage() {
                 </Badge>
               </div>
               {policy.description && (
-                <p className="text-[13px] text-text-secondary mt-1 leading-relaxed">
+                <p className="text-sm text-text-secondary mt-1 leading-relaxed">
                   {policy.description}
                 </p>
               )}
@@ -105,7 +105,7 @@ export default function PoliciesPage() {
             </div>
             <Link
               href="/policies/active"
-              className="text-[12px] text-text-secondary hover:text-text transition-colors flex-shrink-0 ml-4"
+              className="text-xs text-text-secondary hover:text-text transition-colors flex-shrink-0 ml-4"
             >
               View details
             </Link>
