@@ -71,9 +71,32 @@ export class ToolRegistry {
     console.error(`[proxy] Connected to "${config.name}" — ${tools.length} tool(s)`);
   }
 
+  /** Register demo tools for testing when no downstream servers are configured. */
+  registerDemoTools(): void {
+    const demoTools: DiscoveredTool[] = [
+      { name: "read-order", description: "Look up an order by ID", source: "demo" },
+      { name: "search-db", description: "Search the customer database", source: "demo" },
+      { name: "check-eligibility", description: "Check refund eligibility for an order", source: "demo" },
+      { name: "issue-refund", description: "Issue a refund to the customer", source: "demo" },
+      { name: "send-email", description: "Send an email to a customer", source: "demo" },
+      { name: "read-file", description: "Read a file from the filesystem", source: "demo" },
+      { name: "write-file", description: "Write content to a file", source: "demo" },
+      { name: "delete-user", description: "Permanently delete a user account", source: "demo" },
+      { name: "drop-table", description: "Drop a database table", source: "demo" },
+      { name: "deploy-service", description: "Deploy a service to production", source: "demo" },
+    ];
+    for (const tool of demoTools) {
+      this.#demoTools.push(tool);
+      this.#toolIndex.set(tool.name, "demo");
+    }
+    console.error(`[proxy] Registered ${demoTools.length} demo tools for testing`);
+  }
+
+  #demoTools: DiscoveredTool[] = [];
+
   /** Get the merged tool list from all downstream servers. */
   listTools(): DiscoveredTool[] {
-    const all: DiscoveredTool[] = [];
+    const all: DiscoveredTool[] = [...this.#demoTools];
     for (const server of this.#servers.values()) {
       all.push(...server.tools);
     }
@@ -90,6 +113,13 @@ export class ToolRegistry {
       return {
         content: [{ type: "text", text: `Unknown tool: ${name}` }],
         isError: true,
+      };
+    }
+
+    // Demo tools return mock responses
+    if (serverName === "demo") {
+      return {
+        content: [{ type: "text", text: `[demo] ${name} executed with args: ${JSON.stringify(args)}` }],
       };
     }
 

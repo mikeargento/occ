@@ -65,7 +65,9 @@ async function main(): Promise<void> {
     await registry.initialize(config.downstreamServers);
     console.error(`  Tools: ${registry.listTools().length} discovered`);
   } else {
-    console.error("  Tools: none (no downstream servers)");
+    // No downstream servers — register demo tools for testing
+    registry.registerDemoTools();
+    console.error(`  Tools: ${registry.listTools().length} (demo mode)`);
   }
 
   // Auto-create default agent (default-deny: no tools enabled)

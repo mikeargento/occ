@@ -57,12 +57,14 @@ function AgentSidebar() {
               }`}
             />
             <span className="text-[11px] text-text-tertiary truncate">
-              {isConnected ? proxyId ?? "Connected" : "No connection"}
+              {isConnected ? "Connected" : "No connection"}
             </span>
           </div>
-          <p className="px-4 mt-2 text-[11px] text-text-tertiary leading-relaxed">
-            Run <code className="text-[10px] font-mono bg-bg-subtle px-1 py-0.5 rounded">npx occ-mcp-proxy</code> to connect
-          </p>
+          {!isConnected && (
+            <p className="px-4 mt-2 text-[11px] text-text-tertiary leading-relaxed">
+              Run <code className="text-[10px] font-mono bg-bg-subtle px-1 py-0.5 rounded">npx occ-mcp-proxy</code> to connect
+            </p>
+          )}
         </div>
       </div>
     </aside>
