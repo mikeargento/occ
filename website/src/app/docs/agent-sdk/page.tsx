@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Agent SDK",
@@ -277,9 +278,9 @@ v.checks.signatureValid;    // Ed25519 signature valid`}</pre>
           npm
         </a>
         {" · "}
-        <a href="/agent" className="text-text hover:text-accent transition-colors underline underline-offset-4">
+        <Link href="/agent" className="text-text hover:text-accent transition-colors underline underline-offset-4">
           demo
-        </a>
+        </Link>
       </p>
     </article>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { ProxyEvent } from "./types";
 
 function getBaseUrl(): string {
@@ -20,43 +20,45 @@ export function useProxyEvents(maxEvents = 200) {
   const [events, setEvents] = useState<ProxyEvent[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
-
-  const connect = useCallback(() => {
-    const url = `${getBaseUrl()}/api/events`;
-    const es = new EventSource(url);
-    eventSourceRef.current = es;
-
-    es.onopen = () => {
-      setIsConnected(true);
-    };
-
-    es.onmessage = (msg) => {
-      try {
-        const event = JSON.parse(msg.data) as ProxyEvent;
-        setEvents((prev) => {
-          const next = [event, ...prev];
-          return next.slice(0, maxEvents);
-        });
-      } catch {
-        // Ignore non-JSON messages
-      }
-    };
-
-    es.onerror = () => {
-      setIsConnected(false);
-      es.close();
-      setTimeout(() => {
-        connect();
-      }, 3000);
-    };
-  }, [maxEvents]);
-
   useEffect(() => {
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+
+    function connect() {
+      const url = `${getBaseUrl()}/api/events`;
+      const es = new EventSource(url);
+      eventSourceRef.current = es;
+
+      es.onopen = () => {
+        setIsConnected(true);
+      };
+
+      es.onmessage = (msg) => {
+        try {
+          const event = JSON.parse(msg.data) as ProxyEvent;
+          setEvents((prev) => {
+            const next = [event, ...prev];
+            return next.slice(0, maxEvents);
+          });
+        } catch {
+          // Ignore non-JSON messages
+        }
+      };
+
+      es.onerror = () => {
+        setIsConnected(false);
+        es.close();
+        reconnectTimer = setTimeout(() => {
+          connect();
+        }, 3000);
+      };
+    }
+
     connect();
     return () => {
       eventSourceRef.current?.close();
+      if (reconnectTimer) clearTimeout(reconnectTimer);
     };
-  }, [connect]);
+  }, [maxEvents]);
 
   const clearEvents = useCallback(() => {
     setEvents([]);

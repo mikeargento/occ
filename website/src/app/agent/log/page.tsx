@@ -17,14 +17,21 @@ export default function ProofLogPage() {
   const limit = 25;
 
   useEffect(() => {
-    setLoading(true);
+    let cancelled = false;
     getAuditLog({ page, limit })
       .then((res) => {
-        setEntries(res.entries);
-        setTotal(res.total);
+        if (!cancelled) {
+          setEntries(res.entries);
+          setTotal(res.total);
+        }
       })
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
+      .catch((err) => {
+        if (!cancelled) setError(err.message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
   }, [page]);
 
   return (

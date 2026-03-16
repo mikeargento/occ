@@ -20,7 +20,13 @@ const ProxyContext = createContext<ProxyConnection>({
 export function ProxyProvider({ children }: { children: ReactNode }) {
   const [isConnected, setIsConnected] = useState(false);
   const [proxyId, setProxyId] = useState<string | null>(null);
-  const [baseUrl, setBaseUrlState] = useState("http://localhost:9100");
+  const [baseUrl, setBaseUrlState] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("occ-proxy-url");
+      if (saved) return saved;
+    }
+    return "http://localhost:9100";
+  });
 
   const setBaseUrl = (url: string) => {
     setBaseUrlState(url);
@@ -28,13 +34,6 @@ export function ProxyProvider({ children }: { children: ReactNode }) {
       localStorage.setItem("occ-proxy-url", url);
     }
   };
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("occ-proxy-url");
-      if (saved) setBaseUrlState(saved);
-    }
-  }, []);
 
   useEffect(() => {
     let mounted = true;

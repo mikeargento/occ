@@ -14,16 +14,14 @@ export function useTheme() {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("dark");
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    const stored = localStorage.getItem("occ-theme") as Theme | null;
-    if (stored === "light" || stored === "dark") {
-      setTheme(stored);
+  const [theme, setTheme] = useState<Theme>(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("occ-theme") as Theme | null;
+      if (stored === "light" || stored === "dark") return stored;
     }
-    setMounted(true);
-  }, []);
+    return "dark";
+  });
+  const [mounted] = useState(() => typeof window !== "undefined");
 
   useEffect(() => {
     if (!mounted) return;
