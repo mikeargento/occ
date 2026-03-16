@@ -10,7 +10,7 @@ export function EmptyState({
   icon?: "shield" | "agents" | "log" | "default";
 }) {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center lg:-ml-[152px]">
       <div className="w-11 h-11 rounded-xl bg-bg-subtle border border-border flex items-center justify-center mb-4">
         <IconForType type={icon ?? "default"} />
       </div>
