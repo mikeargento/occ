@@ -221,7 +221,7 @@ function TimelineEntry({
             )}
 
             {/* Output */}
-            {entry.output && (
+            {entry.output != null && (
               <details className="group">
                 <summary className="text-xs font-semibold text-text-secondary cursor-pointer hover:text-text transition-colors">
                   Output
