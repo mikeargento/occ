@@ -5,12 +5,12 @@ export function EmptyState({
   icon,
 }: {
   title: string;
-  description: string;
+  description: React.ReactNode;
   action?: React.ReactNode;
   icon?: "shield" | "agents" | "log" | "default";
 }) {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[40vh] text-center">
+    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
       <div className="w-11 h-11 rounded-xl bg-bg-subtle border border-border flex items-center justify-center mb-4">
         <IconForType type={icon ?? "default"} />
       </div>

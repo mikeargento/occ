@@ -108,9 +108,9 @@ function AgentMobileNav() {
 
 function AgentContent({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20">
+    <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20 min-h-[calc(100vh-4rem)]">
       <AgentMobileNav />
-      <div className="flex gap-16">
+      <div className="flex gap-16 h-full">
         <AgentSidebar />
         <div className="min-w-0 flex-1">{children}</div>
       </div>

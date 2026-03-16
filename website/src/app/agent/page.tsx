@@ -50,7 +50,7 @@ export default function AgentsPage() {
       <EmptyState
         icon="agents"
         title="Not connected"
-        description="Start the proxy to manage your agents. See Setup for instructions."
+        description={<>Start the proxy to manage your agents.<br />See Setup for instructions.</>}
       />
     );
   }

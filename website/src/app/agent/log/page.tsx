@@ -36,19 +36,21 @@ export default function ProofLogPage() {
 
   return (
     <>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-[-0.02em]">
-            Proof Log
-          </h1>
-          {total > 0 && (
-            <p className="text-sm text-text-secondary mt-1">
-              {total} recorded event{total !== 1 ? "s" : ""}
-            </p>
-          )}
+      {/* Header - hidden when empty */}
+      {!((!loading && !error && entries.length === 0)) && (
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-[-0.02em]">
+              Proof Log
+            </h1>
+            {total > 0 && (
+              <p className="text-sm text-text-secondary mt-1">
+                {total} recorded event{total !== 1 ? "s" : ""}
+              </p>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {loading && (
         <div className="space-y-0">
