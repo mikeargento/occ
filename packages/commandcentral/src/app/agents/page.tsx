@@ -51,9 +51,12 @@ export default function AgentsPage() {
     }
   }
 
+  const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
+
   async function handleDelete(agentId: string) {
     try {
       await deleteAgent(agentId);
+      setConfirmingDelete(null);
       refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete agent");
@@ -242,12 +245,30 @@ export default function AgentsPage() {
                         >
                           {isPaused ? "Resume" : "Pause"}
                         </button>
-                        <button
-                          onClick={() => handleDelete(agent.id)}
-                          className="px-2 py-1 text-[12px] rounded-md text-text-tertiary hover:text-error hover:bg-error/5 transition-colors"
-                        >
-                          Delete
-                        </button>
+                        {confirmingDelete === agent.id ? (
+                          <>
+                            <span className="text-[12px] text-text-secondary">Sure?</span>
+                            <button
+                              onClick={() => handleDelete(agent.id)}
+                              className="px-2 py-1 text-[12px] rounded-md text-error hover:bg-error/10 transition-colors font-medium"
+                            >
+                              Yes
+                            </button>
+                            <button
+                              onClick={() => setConfirmingDelete(null)}
+                              className="px-2 py-1 text-[12px] rounded-md text-text-tertiary hover:text-text hover:bg-bg-subtle transition-colors"
+                            >
+                              No
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            onClick={() => setConfirmingDelete(agent.id)}
+                            className="px-2 py-1 text-[12px] rounded-md text-text-tertiary hover:text-error hover:bg-error/5 transition-colors"
+                          >
+                            Delete
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
