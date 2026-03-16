@@ -1,0 +1,13 @@
+{
+  "name": "proofstudio",
+  "description": "OCC Agent — control plane for autonomous AI agents. Default-deny policy enforcement and cryptographic proof signing for every tool call.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Mike Argento",
+    "email": "mike@proofstudio.xyz"
+  },
+  "homepage": "https://proofstudio.xyz",
+  "repository": "https://github.com/mikeargento/occ",
+  "license": "Apache-2.0",
+  "keywords": ["occ", "agent", "mcp", "proxy", "policy", "cryptographic-proof", "default-deny", "proofstudio"]
+}

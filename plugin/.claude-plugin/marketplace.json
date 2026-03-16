@@ -1,0 +1,26 @@
+{
+  "name": "proofstudio-plugins",
+  "owner": {
+    "name": "Mike Argento",
+    "email": "mike@proofstudio.xyz"
+  },
+  "metadata": {
+    "description": "ProofStudio plugin marketplace — cryptographic proof and agent control tools",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "proofstudio",
+      "source": ".",
+      "description": "OCC Agent — control plane for autonomous AI agents with default-deny policy enforcement and cryptographic proof signing",
+      "version": "1.0.0",
+      "author": {
+        "name": "Mike Argento",
+        "email": "mike@proofstudio.xyz"
+      },
+      "homepage": "https://proofstudio.xyz",
+      "repository": "https://github.com/mikeargento/occ",
+      "license": "Apache-2.0"
+    }
+  ]
+}
