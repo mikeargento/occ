@@ -14,7 +14,7 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "ProofStudio - Proof for anything digital",
+    default: "ProofStudio - Prove anything digital",
     template: "%s | ProofStudio",
   },
   description:
@@ -33,14 +33,14 @@ export const metadata: Metadata = {
     "commit proof",
   ],
   openGraph: {
-    title: "ProofStudio - Proof for anything digital",
+    title: "ProofStudio - Prove anything digital",
     description: "Generate portable cryptographic proof for any file or computation. No blockchain required.",
     type: "website",
     siteName: "ProofStudio",
   },
   twitter: {
     card: "summary_large_image",
-    title: "ProofStudio - Proof for anything digital",
+    title: "ProofStudio - Prove anything digital",
     description: "Generate portable cryptographic proof for any file or computation. No blockchain required.",
   },
   robots: { index: true, follow: true },
