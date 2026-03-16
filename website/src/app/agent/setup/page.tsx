@@ -150,6 +150,9 @@ export default function AgentSetupPage() {
         <p className="text-sm text-text-secondary leading-relaxed">
           The proxy starts, the dashboard opens, and you can configure agent permissions immediately. Runs locally on your machine.
         </p>
+        <p className="text-sm text-text-tertiary leading-relaxed mt-2">
+          Use Chrome to access the dashboard. Safari and some browsers block connections to localhost from hosted sites.
+        </p>
       </div>
 
       {/* Claude Desktop integration */}
