@@ -22,7 +22,9 @@
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "repository": {
     "type": "git",
@@ -41,14 +43,15 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.27.1",
     "@noble/hashes": "^1.4.0",
+    "occ-agent": "^1.0.0",
     "occ-policy-sdk": "^1.0.0",
     "occ-stub": "^1.0.0",
-    "occ-agent": "^1.0.0",
     "occproof": "^1.0.2"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "typescript": "^5.4.0"
+    "typescript": "^5.4.0",
+    "vitest": "^4.1.0"
   },
   "engines": {
     "node": ">=20.0.0"
