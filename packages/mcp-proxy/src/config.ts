@@ -47,7 +47,7 @@ export interface DownstreamServer {
 const DEFAULT_CONFIG: ProxyConfig = {
   proxyId: "occ-agent-1",
   downstreamServers: [],
-  signerMode: "remote",
+  signerMode: "local",
   signerStatePath: resolve(process.cwd(), ".occ/signer-state.json"),
   occApiUrl: "https://nitro.occproof.com/commit",
   managementPort: 9100,

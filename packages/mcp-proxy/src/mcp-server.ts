@@ -8,6 +8,7 @@ import type { ToolRegistry } from "./tool-registry.js";
 import type { Interceptor } from "./interceptor.js";
 import type { ProxyEventBus } from "./events.js";
 import type { ProxyConfig } from "./config.js";
+import type { ProxyState } from "./state.js";
 
 /**
  * Convert a JSON Schema properties object to a Zod shape
@@ -55,6 +56,7 @@ export async function startMcpServer(
   registry: ToolRegistry,
   interceptor: Interceptor,
   events: ProxyEventBus,
+  state?: ProxyState,
 ): Promise<McpServer> {
   const server = new McpServer({
     name: "OCC Agent Proxy",
@@ -73,7 +75,7 @@ export async function startMcpServer(
         description,
         zodShape,
         async (params) => {
-          const agentId = "default-agent";
+          const agentId = state?.resolveAgentId("default-agent") ?? "default-agent";
           const args = (params ?? {}) as Record<string, unknown>;
           const result = await interceptor.handleToolCall(agentId, tool.name, args);
           return {
@@ -90,7 +92,7 @@ export async function startMcpServer(
         tool.name,
         description,
         async (params) => {
-          const agentId = "default-agent";
+          const agentId = state?.resolveAgentId("default-agent") ?? "default-agent";
           const args = (params ?? {}) as Record<string, unknown>;
           const result = await interceptor.handleToolCall(agentId, tool.name, args);
           return {

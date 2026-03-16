@@ -16,6 +16,7 @@ import {
 } from "@/lib/webauthn";
 import { zipSync, unzipSync, strFromU8 } from "fflate";
 import { verifyAsync as ed25519Verify } from "@noble/ed25519";
+import { b64ToBytes, canonicalize } from "@/lib/canonical";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -29,14 +30,6 @@ interface CheckResult {
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
-
-/** Decode standard base64 to Uint8Array */
-function b64ToBytes(b64: string): Uint8Array {
-  const binary = atob(b64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return bytes;
-}
 
 /**
  * Convert DER-encoded ECDSA signature to IEEE P1363 (raw r||s) format.
@@ -67,26 +60,6 @@ function derToP1363(der: Uint8Array, n: number = 32): Uint8Array {
   out.set(rTrimmed, n - rTrimmed.length);
   out.set(sTrimmed, n * 2 - sTrimmed.length);
   return out;
-}
-
-/**
- * Canonical JSON serialization matching occ-core/canonical.ts.
- * Sorts object keys lexicographically at every level, no whitespace.
- */
-function canonicalize(obj: unknown): Uint8Array {
-  return new TextEncoder().encode(JSON.stringify(sortKeys(obj)));
-}
-
-function sortKeys(value: unknown): unknown {
-  if (value === null || typeof value !== "object") return value;
-  if (Array.isArray(value)) return value.map(sortKeys);
-  const sorted: Record<string, unknown> = {};
-  for (const key of Object.keys(value as Record<string, unknown>).sort()) {
-    const child = (value as Record<string, unknown>)[key];
-    if (typeof child === "undefined") continue;
-    sorted[key] = sortKeys(child);
-  }
-  return sorted;
 }
 
 // ─── Studio Page ─────────────────────────────────────────────────────────────

@@ -234,6 +234,21 @@ export class ProxyState {
     return this.#receipts.get(auditId);
   }
 
+  /** Find an agent by name (returns first match). */
+  findAgentByName(name: string): AgentInstance | undefined {
+    for (const agent of this.#agents.values()) {
+      if (agent.name === name) return agent;
+    }
+    return undefined;
+  }
+
+  /** Resolve a name or ID to an agent ID. Returns the input if already an ID. */
+  resolveAgentId(nameOrId: string): string {
+    if (this.#agents.has(nameOrId)) return nameOrId;
+    const byName = this.findAgentByName(nameOrId);
+    return byName ? byName.id : nameOrId;
+  }
+
   getAgentIds(): string[] {
     return Array.from(this.#agents.keys());
   }

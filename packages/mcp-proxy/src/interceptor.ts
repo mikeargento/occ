@@ -18,7 +18,26 @@ import type { ProxyState } from "./state.js";
 import type { ProxyEventBus } from "./events.js";
 import type { InterceptResult } from "./types.js";
 import type { LocalSigner } from "./local-signer.js";
-import { forwardAuditToPrimary, isManagementPrimary } from "./management-api.js";
+
+/** Callback for writing proof entries (used in --wrap mode). */
+export type ProofWriterFn = (entry: {
+  timestamp: string;
+  tool: string;
+  args: Record<string, unknown>;
+  output: unknown;
+  receipt?: unknown | undefined;
+  proofDigestB64?: string | undefined;
+}) => void;
+
+/** Callback for forwarding audit entries (used in dashboard mode). */
+export type AuditForwarderFn = (entry: {
+  tool: string;
+  agentId: string;
+  decision: { allowed: boolean; reason?: string | undefined; constraint?: string | undefined };
+  timestamp: number;
+  receipt?: unknown | undefined;
+  proofDigestB64?: string | undefined;
+}) => void;
 
 /**
  * Core enforcement + receipt middleware.
@@ -30,14 +49,18 @@ export class Interceptor {
   #events: ProxyEventBus;
   #occConfig: OccAgentConfig | undefined;
   #localSigner: LocalSigner | undefined;
+  #proofWriter: ProofWriterFn | undefined;
+  #auditForwarder: AuditForwarderFn | undefined;
 
   constructor(
     registry: ToolRegistry,
     state: ProxyState,
     events: ProxyEventBus,
     opts: {
-      occConfig?: OccAgentConfig;
-      localSigner?: LocalSigner;
+      occConfig?: OccAgentConfig | undefined;
+      localSigner?: LocalSigner | undefined;
+      proofWriter?: ProofWriterFn | undefined;
+      auditForwarder?: AuditForwarderFn | undefined;
     },
   ) {
     this.#registry = registry;
@@ -45,6 +68,8 @@ export class Interceptor {
     this.#events = events;
     this.#occConfig = opts.occConfig;
     this.#localSigner = opts.localSigner;
+    this.#proofWriter = opts.proofWriter;
+    this.#auditForwarder = opts.auditForwarder;
   }
 
   async handleToolCall(
@@ -205,16 +230,28 @@ export class Interceptor {
       agentId,
     });
 
-    // Forward to primary instance if we're a follower
-    if (!isManagementPrimary()) {
-      forwardAuditToPrimary({
+    // Write to proof file (--wrap mode)
+    if (this.#proofWriter) {
+      this.#proofWriter({
+        timestamp: new Date(now).toISOString(),
+        tool: toolName,
+        args,
+        output: result.content,
+        receipt: receiptJson ? JSON.parse(receiptJson) : undefined,
+        proofDigestB64,
+      });
+    }
+
+    // Forward to primary instance if we're a follower (dashboard mode)
+    if (this.#auditForwarder) {
+      this.#auditForwarder({
         tool: toolName,
         agentId,
         decision,
         timestamp: now,
         receipt: receiptJson ? JSON.parse(receiptJson) : undefined,
         proofDigestB64,
-      }).catch(() => {});
+      });
     }
 
     return {

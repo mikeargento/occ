@@ -138,7 +138,7 @@ let primaryUrl = "";
 export async function forwardAuditToPrimary(entry: {
   tool: string;
   agentId: string;
-  decision: { allowed: boolean; reason?: string; constraint?: string };
+  decision: { allowed: boolean; reason?: string | undefined; constraint?: string | undefined };
   timestamp: number;
   receipt?: unknown;
   proofDigestB64?: string | undefined;
@@ -362,23 +362,58 @@ export function startManagementApi(
 
         // ── Audit ──
         if (method === "GET" && route === "/audit") {
-          const agentId = url.searchParams.get("agentId") ?? "default-agent";
+          const agentIdParam = url.searchParams.get("agentId");
           const page = Number(url.searchParams.get("page") ?? "0");
           const limit = Number(url.searchParams.get("limit") ?? "50");
-          const ctx = state.getContext(agentId);
-          const entries = ctx.getAuditLog({ offset: page * limit, limit });
-          sendJson(res, 200, { entries, total: ctx.auditCount, page, limit });
+
+          if (!agentIdParam) {
+            // Aggregate audit from all agents
+            const allEntries: Array<Record<string, unknown>> = [];
+            for (const agent of state.getAgents()) {
+              const ctx = state.getContext(agent.id);
+              const entries = ctx.getAuditLog({ offset: 0, limit: 1000 });
+              for (const e of entries) {
+                allEntries.push({ ...e, agentId: agent.id, agentName: agent.name });
+              }
+            }
+            allEntries.sort((a, b) => (b.timestamp as number) - (a.timestamp as number));
+            const paged = allEntries.slice(page * limit, page * limit + limit);
+            sendJson(res, 200, { entries: paged, total: allEntries.length, page, limit });
+          } else {
+            // Resolve name to ID if needed
+            let agentId = agentIdParam;
+            const byName = state.getAgents().find((a) => a.name === agentIdParam);
+            if (byName) agentId = byName.id;
+            const ctx = state.getContext(agentId);
+            const entries = ctx.getAuditLog({ offset: page * limit, limit });
+            sendJson(res, 200, { entries, total: ctx.auditCount, page, limit });
+          }
           return;
         }
 
         if (method === "GET" && route.startsWith("/audit/")) {
           const auditId = route.slice("/audit/".length);
-          const agentId = url.searchParams.get("agentId") ?? "default-agent";
-          const ctx = state.getContext(agentId);
-          const entry = ctx.getAuditEntry(auditId);
-          if (!entry) { sendError(res, 404, `Audit entry "${auditId}" not found`); return; }
+          const agentIdParam = url.searchParams.get("agentId");
+          // Search all agents for the audit entry
+          let foundEntry = null;
+          let foundAgentId = "";
+          if (agentIdParam) {
+            let agentId = agentIdParam;
+            const byName = state.getAgents().find((a) => a.name === agentIdParam);
+            if (byName) agentId = byName.id;
+            const ctx = state.getContext(agentId);
+            foundEntry = ctx.getAuditEntry(auditId);
+            foundAgentId = agentId;
+          } else {
+            for (const agent of state.getAgents()) {
+              const ctx = state.getContext(agent.id);
+              const entry = ctx.getAuditEntry(auditId);
+              if (entry) { foundEntry = entry; foundAgentId = agent.id; break; }
+            }
+          }
+          if (!foundEntry) { sendError(res, 404, `Audit entry "${auditId}" not found`); return; }
           const receipt = state.getReceipt(auditId);
-          sendJson(res, 200, { entry, receipt: receipt ?? null });
+          sendJson(res, 200, { entry: foundEntry, receipt: receipt ?? null, agentId: foundAgentId });
           return;
         }
 
