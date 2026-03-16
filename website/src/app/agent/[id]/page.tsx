@@ -163,7 +163,7 @@ export default function AgentDetailPage() {
         <div className="mb-6 px-4 py-3 rounded-lg bg-warning/5 border border-warning/20 flex items-center gap-2.5">
           <div className="w-[5px] h-[5px] rounded-full bg-warning flex-shrink-0" />
           <p className="text-sm text-warning/90">
-            Agent paused — all tool access is suspended
+            Agent paused - all tool access is suspended
           </p>
         </div>
       )}
@@ -248,7 +248,7 @@ export default function AgentDetailPage() {
                 <div className="px-5 py-3 border-t border-border bg-bg/50 rounded-b-xl">
                   <p className="text-[11px] text-text-tertiary flex items-center gap-1.5">
                     <LockIcon />
-                    Default-deny &mdash;{" "}
+                    Default-deny -{" "}
                     {allowedTools.size === 0
                       ? "all tools blocked"
                       : `${allTools.length - allowedTools.size} tool${allTools.length - allowedTools.size !== 1 ? "s" : ""} blocked`}

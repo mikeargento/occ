@@ -90,7 +90,7 @@ export default function Home() {
           </h1>
 
           <p
-            className="hero-animate mt-7 sm:mt-8 text-[clamp(1.125rem,3.2vw,2.25rem)] font-medium tracking-[-0.02em] leading-[1.3] whitespace-nowrap text-text-secondary"
+            className="hero-animate mt-7 sm:mt-8 text-[clamp(1.125rem,3.2vw,2.25rem)] font-bold tracking-[-0.02em] leading-[1.3] whitespace-nowrap text-text-secondary"
             style={{ animationDelay: "120ms" }}
           >
             No blockchain. No ledgers. Just proof.
@@ -194,7 +194,7 @@ export default function Home() {
                     <div>
                       <span className="text-sm font-semibold text-text">{item.title}</span>
                       <span className="text-sm text-text-secondary ml-1.5">
-                        — {item.desc}
+                        - {item.desc}
                       </span>
                     </div>
                   </div>

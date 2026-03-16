@@ -16,88 +16,6 @@ import { EmptyState } from "@/components/agent/empty-state";
 import { formatNumber, formatCents } from "@/lib/agent/format";
 import { useProxy } from "@/lib/agent/use-proxy";
 
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
-
-  return (
-    <button
-      onClick={() => {
-        navigator.clipboard.writeText(text);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      }}
-      className="ml-auto pl-3 text-text-tertiary hover:text-text transition-colors flex-shrink-0"
-      title="Copy to clipboard"
-    >
-      {copied ? (
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M20 6L9 17l-5-5" />
-        </svg>
-      ) : (
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <rect x="9" y="9" width="13" height="13" rx="2" />
-          <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-        </svg>
-      )}
-    </button>
-  );
-}
-
-function OnboardingScreen() {
-  return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-      <div className="max-w-md">
-        <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-bg-elevated border border-border-subtle flex items-center justify-center">
-          <svg
-            width="28"
-            height="28"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            className="text-text-tertiary"
-          >
-            <path d="M8 9l3 3-3 3" />
-            <rect x="2" y="4" width="20" height="16" rx="2" />
-          </svg>
-        </div>
-
-        <h1 className="text-2xl font-semibold tracking-[-0.02em] mb-3">
-          Get started
-        </h1>
-        <p className="text-sm text-text-secondary mb-8 leading-relaxed max-w-xs mx-auto text-balance">
-          OCC Agent runs on your machine. Start the proxy and this dashboard connects automatically.
-        </p>
-
-        <div className="rounded-xl bg-bg-elevated border border-border-subtle overflow-hidden text-left mb-8">
-          <div className="px-5 py-3 border-b border-border-subtle">
-            <span className="text-[11px] font-medium uppercase tracking-[0.1em] text-text-tertiary">
-              Terminal
-            </span>
-          </div>
-          <div className="px-5 py-4 space-y-3 font-mono text-sm">
-            <div className="flex items-center">
-              <span className="text-text-tertiary select-none">$ </span>
-              <span className="text-text">npm install occ-mcp-proxy</span>
-              <CopyButton text="npm install occ-mcp-proxy" />
-            </div>
-            <div className="flex items-center">
-              <span className="text-text-tertiary select-none">$ </span>
-              <span className="text-text">npx occ-mcp-proxy</span>
-              <CopyButton text="npx occ-mcp-proxy" />
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-center gap-2 text-sm text-text-tertiary">
-          <div className="w-2 h-2 rounded-full bg-text-tertiary animate-pulse" />
-          Waiting for connection...
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function AgentsPage() {
   const { isConnected } = useProxy();
   const [agents, setAgents] = useState<AgentSummary[]>([]);
@@ -106,6 +24,7 @@ export default function AgentsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState("");
   const [creating, setCreating] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
 
   const refresh = useCallback(() => {
     if (!isConnected) return;
@@ -126,9 +45,14 @@ export default function AgentsPage() {
     return () => clearInterval(interval);
   }, [refresh, isConnected]);
 
-  // Show onboarding when proxy isn't running
   if (!isConnected) {
-    return <OnboardingScreen />;
+    return (
+      <EmptyState
+        icon="agents"
+        title="Not connected"
+        description="Start the proxy to manage your agents. See Setup for instructions."
+      />
+    );
   }
 
   async function handleCreate() {
@@ -145,8 +69,6 @@ export default function AgentsPage() {
       setCreating(false);
     }
   }
-
-  const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
 
   async function handleDelete(agentId: string) {
     try {

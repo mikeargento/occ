@@ -23,7 +23,7 @@ function buildBWVerifyTxt(originalFilename: string, p: OCCProof): string {
   const slot = p.slotAllocation;
   const hasSlot = !!slot;
 
-  let txt = `VERIFY.txt — AI-Verifiable Proof Package
+  let txt = `VERIFY.txt - AI-Verifiable Proof Package
 ==========================================
 
 1. PURPOSE
@@ -49,10 +49,10 @@ Learn more: https://proofstudio.xyz
 
 2. FILES IN THIS PACKAGE
 ------------------------
-  ${originalFilename}     — the original color image (for reference)
-  bw-output.jpg           — the grayscale output (the proven artifact)
-  proof.json              — the cryptographic proof
-  VERIFY.txt              — this verification guide
+  ${originalFilename}     - the original color image (for reference)
+  bw-output.jpg           - the grayscale output (the proven artifact)
+  proof.json              - the cryptographic proof
+  VERIFY.txt              - this verification guide
 
 NOTE: The proof covers bw-output.jpg (the TEE's output), not the
 original color image. The conversion happened inside the enclave.
@@ -95,7 +95,7 @@ Signed body fields (these are covered by the signature):
   - enforcement:         ${p.environment.enforcement}
   - measurement:         ${p.environment.measurement}${p.environment.attestation ? `\n  - attestationFormat:   ${p.environment.attestation.format}` : ""}
 
-Signature (NOT in signed body — it IS the signature):
+Signature (NOT in signed body - it IS the signature):
   - signatureB64:        ${p.signer.signatureB64}
 
 To verify:
@@ -135,7 +135,7 @@ Verification checks (all must pass):
 
   [B] Causal independence
       The slot body contains ONLY: version, nonceB64, counter, time, epochId, publicKeyB64
-      It contains NO artifact hash — proving it was created before any artifact was known
+      It contains NO artifact hash, proving it was created before any artifact was known
 
   [C] Signed hash binding
       SHA-256(canonicalize(slotBody)) must equal commit.slotHashB64
@@ -179,7 +179,7 @@ ${hasSlot ? `This proof demonstrates causal ordering through three independent m
 
   1. SLOT SIGNATURE (independence)
      The enclave signed the nonce before any artifact hash existed.
-     The slot body contains no artifact data — structurally provable.
+     The slot body contains no artifact data (structurally provable).
 
   2. SLOT HASH BINDING (signed binding)
      commit.slotHashB64 = SHA-256(canonicalize(slotBody))
@@ -212,7 +212,7 @@ Measurement:      ${p.environment.measurement}
   Report:         ${p.environment.attestation.reportB64.slice(0, 40)}... (truncated)
 
 The attestation document is a vendor-signed report (e.g., AWS Nitro CA).
-It self-authenticates — the vendor's certificate chain proves which code
+It self-authenticates: the vendor's certificate chain proves which code
 was running inside the enclave. The measurement field identifies the
 exact enclave image hash (e.g., PCR0 for AWS Nitro).
 
@@ -237,7 +237,7 @@ unverifiable. The measurement field is advisory only.
 -----------------
 Does this proof show its own work?
 
-${hasSlot ? `YES — This proof is structurally self-demonstrating:
+${hasSlot ? `YES - This proof is structurally self-demonstrating:
 
   - The slot allocation record proves the nonce existed before the artifact
   - The slot body contains no artifact data (causal independence)
@@ -247,7 +247,7 @@ ${hasSlot ? `YES — This proof is structurally self-demonstrating:
   - The B&W conversion and hashing both occurred inside the TEE boundary
 
 An external verifier can confirm all of this from the proof alone,
-without trusting any server or API.` : `PARTIALLY — This proof provides:
+without trusting any server or API.` : `PARTIALLY - This proof provides:
 
   - Cryptographic binding of the artifact to a specific signer (Ed25519)
   - Enclave measurement identifying the code that ran

@@ -129,7 +129,7 @@ export default function ProofLogPage() {
                       </span>
                     ) : (
                       <span className="text-[11px] text-text-tertiary">
-                        &mdash;
+                        -
                       </span>
                     )}
                   </td>

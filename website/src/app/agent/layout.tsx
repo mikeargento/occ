@@ -7,6 +7,7 @@ import { ProxyProvider, useProxy } from "@/lib/agent/use-proxy";
 const sections = [
   { href: "/agent", label: "Agents", exact: true },
   { href: "/agent/log", label: "Proof Log" },
+  { href: "/agent/setup", label: "Setup" },
   { href: "/agent/settings", label: "Settings" },
 ];
 
@@ -23,6 +24,7 @@ function AgentSidebar() {
   const isAgentDetail = pathname.startsWith("/agent/") &&
     !pathname.startsWith("/agent/log") &&
     !pathname.startsWith("/agent/settings") &&
+    !pathname.startsWith("/agent/setup") &&
     pathname !== "/agent";
 
   return (
@@ -105,16 +107,6 @@ function AgentMobileNav() {
 }
 
 function AgentContent({ children }: { children: React.ReactNode }) {
-  const { isConnected } = useProxy();
-
-  if (!isConnected) {
-    return (
-      <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20">
-        <div className="flex justify-center">{children}</div>
-      </div>
-    );
-  }
-
   return (
     <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20">
       <AgentMobileNav />

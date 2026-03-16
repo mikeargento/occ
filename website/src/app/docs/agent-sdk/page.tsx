@@ -48,12 +48,12 @@ result.occProof;          // portable OCC proof`}</pre>
         Every call follows the same six-step pipeline:
       </p>
       <ol className="space-y-2 text-sm text-text-secondary mb-6">
-        <li><strong className="text-text">1. Normalize input</strong> — deterministic JSON representation of the tool input</li>
-        <li><strong className="text-text">2. Hash input</strong> — SHA-256 of the canonical input bytes</li>
-        <li><strong className="text-text">3. Execute</strong> — run the tool function</li>
-        <li><strong className="text-text">4. Normalize and hash output</strong> — same process for the response</li>
-        <li><strong className="text-text">5. Build envelope</strong> — canonical JSON with tool name, version, both hashes, timestamp</li>
-        <li><strong className="text-text">6. Commit</strong> — SHA-256 of the envelope is sent to OCC. The enclave signs it and returns a proof.</li>
+        <li><strong className="text-text">1. Normalize input</strong> - deterministic JSON representation of the tool input</li>
+        <li><strong className="text-text">2. Hash input</strong> - SHA-256 of the canonical input bytes</li>
+        <li><strong className="text-text">3. Execute</strong> - run the tool function</li>
+        <li><strong className="text-text">4. Normalize and hash output</strong> - same process for the response</li>
+        <li><strong className="text-text">5. Build envelope</strong> - canonical JSON with tool name, version, both hashes, timestamp</li>
+        <li><strong className="text-text">6. Commit</strong> - SHA-256 of the envelope is sent to OCC. The enclave signs it and returns a proof.</li>
       </ol>
       <div className="rounded-xl border border-border-subtle border-l-2 border-l-text-tertiary bg-bg-elevated p-6 mb-6">
         <p className="text-sm text-text italic">
@@ -64,7 +64,7 @@ result.occProof;          // portable OCC proof`}</pre>
       <h2 className="text-xl font-semibold mt-12 mb-4">Define a custom tool</h2>
       <p className="text-text-secondary mb-4">
         Any async function can become a verified tool. Define the execution logic
-        and normalization functions — the SDK handles the rest.
+        and normalization functions. The SDK handles the rest.
       </p>
       <div className="code-block">
         <div className="code-block-header"><span>TypeScript</span></div>
@@ -90,8 +90,8 @@ const verifiedSummarize = wrapTool(summarizeTool, {
 });
 
 const result = await verifiedSummarize({ text: "..." });
-// result.output.summary — the LLM response
-// result.occProof — cryptographic proof of execution`}</pre>
+// result.output.summary - the LLM response
+// result.occProof - cryptographic proof of execution`}</pre>
       </div>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">One-shot execution</h2>
@@ -112,7 +112,7 @@ const result = await runVerifiedTool(
       <h2 className="text-xl font-semibold mt-12 mb-4">Export a receipt</h2>
       <p className="text-text-secondary mb-4">
         Save the execution envelope and OCC proof as a portable JSON document.
-        Raw tool output is intentionally excluded — it stays in your runtime.
+        Raw tool output is intentionally excluded. It stays in your runtime.
       </p>
       <div className="code-block">
         <div className="code-block-header"><span>TypeScript</span></div>
@@ -124,12 +124,12 @@ await fs.writeFile("receipt.json", json);
 
 // Load it back
 const receipt = loadReceipt(await fs.readFile("receipt.json", "utf8"));
-// receipt.envelope — the execution envelope
-// receipt.proof    — the OCC proof`}</pre>
+// receipt.envelope - the execution envelope
+// receipt.proof    - the OCC proof`}</pre>
       </div>
       <div className="rounded-xl border border-border-subtle border-l-2 border-l-text-tertiary bg-bg-elevated p-6 mb-6">
         <p className="text-sm text-text italic">
-          The receipt format is <code className="text-xs font-mono bg-bg-subtle px-1.5 py-0.5 rounded">occ-agent/receipt/1</code>. It contains everything needed for offline verification — hand it to anyone and they can verify without contacting OCC.
+          The receipt format is <code className="text-xs font-mono bg-bg-subtle px-1.5 py-0.5 rounded">occ-agent/receipt/1</code>. It contains everything needed for offline verification. Hand it to anyone and they can verify without contacting OCC.
         </p>
       </div>
 

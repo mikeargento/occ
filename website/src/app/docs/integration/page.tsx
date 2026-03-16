@@ -83,7 +83,7 @@ console.log(proof.attribution);      // signed creator metadata`}</pre>
 });
 
 const proofs = await resp.json();
-// proofs[0], proofs[1], proofs[2] — one per digest`}</pre>
+// proofs[0], proofs[1], proofs[2] - one per digest`}</pre>
       </div>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Verify a proof</h2>
