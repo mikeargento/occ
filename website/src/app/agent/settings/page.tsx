@@ -11,7 +11,7 @@ export default function AgentSettingsPage() {
   return (
     <>
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold tracking-[-0.02em]">Settings</h1>
+        <h1 className="text-2xl font-semibold tracking-[-0.02em]">OCC Agent Control</h1>
         <p className="text-sm text-text-secondary mt-1">
           Proxy connection and configuration
         </p>

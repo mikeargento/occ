@@ -61,7 +61,7 @@ export default function AgentSetupPage() {
       {/* Header */}
       <div className="mb-12">
         <h1 className="text-3xl font-semibold tracking-[-0.03em] mb-4">
-          OCC Agent
+          OCC Agent Control
         </h1>
         <p className="text-lg text-text-secondary leading-relaxed">
           A control plane for AI agents that cryptographically proves every action they take.
