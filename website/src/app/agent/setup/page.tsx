@@ -150,7 +150,7 @@ export default function AgentSetupPage() {
         <p className="text-sm text-text-secondary leading-relaxed">
           The proxy starts, the dashboard opens, and you can configure agent permissions immediately. Runs locally on your machine.
         </p>
-        <p className="text-sm text-text-tertiary leading-relaxed mt-2">
+        <p className="text-sm text-red-400 leading-relaxed mt-2">
           Suggested browsers: Chrome or Firefox. Some browsers block connections to localhost from hosted sites.
         </p>
       </div>
