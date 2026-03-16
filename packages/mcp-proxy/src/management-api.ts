@@ -130,6 +130,39 @@ function stripApiPrefix(pathname: string): string {
   return pathname.slice(4) || "/"; // "/api/health" → "/health"
 }
 
+/** Whether this instance is the primary (owns the port) or a follower. */
+let isPrimary = false;
+let primaryUrl = "";
+
+/** Forward an audit entry + receipt to the primary instance. */
+export async function forwardAuditToPrimary(entry: {
+  tool: string;
+  agentId: string;
+  decision: { allowed: boolean; reason?: string; constraint?: string };
+  timestamp: number;
+  receipt?: unknown;
+  proofDigestB64?: string | undefined;
+}): Promise<void> {
+  if (isPrimary || !primaryUrl) return;
+  try {
+    const res = await fetch(`${primaryUrl}/api/audit/ingest`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(entry),
+    });
+    if (!res.ok) {
+      console.error(`[occ-agent] Failed to forward audit: ${res.status}`);
+    }
+  } catch {
+    // Best effort
+  }
+}
+
+/** Whether this proxy instance owns the management port. */
+export function isManagementPrimary(): boolean {
+  return isPrimary;
+}
+
 /**
  * Start the management HTTP API + dashboard for OCC Agent.
  */
@@ -140,6 +173,7 @@ export function startManagementApi(
   registry: ToolRegistry,
   localSigner?: LocalSigner,
 ): void {
+  primaryUrl = `http://localhost:${config.managementPort}`;
   const hasDashboard = existsSync(DASHBOARD_DIR);
 
   const server = createServer(async (req: IncomingMessage, res: ServerResponse) => {
@@ -348,6 +382,38 @@ export function startManagementApi(
           return;
         }
 
+        // ── Audit ingest (from follower instances) ──
+        if (method === "POST" && route === "/audit/ingest") {
+          const raw = await readBody(req);
+          try {
+            const data = JSON.parse(raw.toString("utf-8"));
+            // Use the primary's first agent (the one the dashboard shows)
+            const agents = state.getAgents();
+            const firstAgent = agents[0];
+            const agentId = firstAgent ? firstAgent.id : "default-agent";
+            const ctx = state.getContext(agentId);
+            const auditOpts: { proofDigestB64?: string } = {};
+            if (data.proofDigestB64) auditOpts.proofDigestB64 = data.proofDigestB64;
+            const auditId = ctx.addAudit(data.tool, data.decision ?? { allowed: true }, auditOpts);
+            if (data.receipt) {
+              state.storeReceipt(auditId, data.receipt);
+            }
+            ctx.recordCall(data.tool, undefined, 0, data.timestamp ?? Date.now());
+            events.emit({
+              type: "tool-executed",
+              timestamp: data.timestamp ?? Date.now(),
+              tool: data.tool,
+              agentId,
+              costCents: 0,
+              ...(data.proofDigestB64 ? { proofDigestB64: data.proofDigestB64 } : {}),
+            });
+            sendJson(res, 200, { ok: true, auditId });
+          } catch {
+            sendError(res, 400, "Invalid JSON body");
+          }
+          return;
+        }
+
         // ── SSE Events ──
         if (method === "GET" && route === "/events") {
           res.writeHead(200, {
@@ -383,13 +449,15 @@ export function startManagementApi(
 
   server.on("error", (err: NodeJS.ErrnoException) => {
     if (err.code === "EADDRINUSE") {
-      console.error(`[occ-agent] Port ${config.managementPort} already in use`);
+      isPrimary = false;
+      console.error(`[occ-agent] Port ${config.managementPort} in use — forwarding audit to primary`);
     } else {
       console.error(`[occ-agent] Server error:`, err);
     }
   });
 
   server.listen(config.managementPort, () => {
+    isPrimary = true;
     if (hasDashboard) {
       console.error(`[occ-agent] Dashboard → http://localhost:${config.managementPort}`);
     } else {

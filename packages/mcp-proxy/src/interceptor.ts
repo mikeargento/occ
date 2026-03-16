@@ -18,6 +18,7 @@ import type { ProxyState } from "./state.js";
 import type { ProxyEventBus } from "./events.js";
 import type { InterceptResult } from "./types.js";
 import type { LocalSigner } from "./local-signer.js";
+import { forwardAuditToPrimary, isManagementPrimary } from "./management-api.js";
 
 /**
  * Core enforcement + receipt middleware.
@@ -203,6 +204,18 @@ export class Interceptor {
       timestamp: now,
       agentId,
     });
+
+    // Forward to primary instance if we're a follower
+    if (!isManagementPrimary()) {
+      forwardAuditToPrimary({
+        tool: toolName,
+        agentId,
+        decision,
+        timestamp: now,
+        receipt: receiptJson ? JSON.parse(receiptJson) : undefined,
+        proofDigestB64,
+      }).catch(() => {});
+    }
 
     return {
       content: result.content,
