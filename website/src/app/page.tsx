@@ -113,7 +113,6 @@ export default function Home() {
               Try OCC Agent
             </Link>
           </div>
-
         </div>
       </section>
 

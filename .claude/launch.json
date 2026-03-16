@@ -1,0 +1,25 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "occ-docs",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "docs", "-l", "3000"],
+      "port": 3000
+    },
+    {
+      "name": "occ-website",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--", "--port", "3001"],
+      "port": 3001,
+      "cwd": "website"
+    },
+    {
+      "name": "occ-agent",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3002,
+      "cwd": "packages/commandcentral"
+    }
+  ]
+}
