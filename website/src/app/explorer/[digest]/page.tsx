@@ -96,7 +96,7 @@ export default function ProofDetailPage() {
   }
 
   const { proof } = results[0];
-  const proofAny = proof as Record<string, unknown>;
+  const proofAny = proof as unknown as Record<string, unknown>;
 
   // Ordered sections — render in this order, then any remaining keys
   const orderedKeys = [
@@ -201,8 +201,11 @@ function SectionCard({ title, children, sectionKey }: { title: string; children:
 
   return (
     <div className="rounded-xl border border-border-subtle bg-bg-elevated overflow-hidden">
-      <button
+      <div
+        role={isCollapsible ? "button" : undefined}
+        tabIndex={isCollapsible ? 0 : undefined}
         onClick={isCollapsible ? () => setOpen(!open) : undefined}
+        onKeyDown={isCollapsible ? (e) => e.key === "Enter" && setOpen(!open) : undefined}
         className={`w-full px-5 py-3.5 flex items-center justify-between ${isCollapsible ? "cursor-pointer hover:bg-bg-subtle/30 transition-colors" : ""} ${open ? "border-b border-border-subtle" : ""}`}
       >
         <h3 className="text-xs font-medium text-text-tertiary uppercase tracking-wider">{title}</h3>
@@ -214,7 +217,7 @@ function SectionCard({ title, children, sectionKey }: { title: string; children:
             <path d="M4 1.5l5.5 5.5-5.5 5.5" />
           </svg>
         )}
-      </button>
+      </div>
       {open && <div className="px-5 py-3">{children}</div>}
     </div>
   );

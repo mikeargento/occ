@@ -30,20 +30,24 @@ export function ProofViewer({ proof }: ProofViewerProps) {
 
   return (
     <div className="terminal-glow rounded-xl border border-border-subtle bg-bg-elevated overflow-hidden">
-      <div className="flex items-center justify-between px-5 py-3.5 border-b border-border-subtle">
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="text-xs font-mono text-text-tertiary hover:text-text transition-colors flex items-center gap-2"
-        >
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => setExpanded(!expanded)}
+        onKeyDown={(e) => e.key === "Enter" && setExpanded(!expanded)}
+        className="w-full flex items-center justify-between px-5 py-4 hover:bg-bg-subtle/30 transition-colors cursor-pointer"
+      >
+        <div className="flex items-center gap-2.5">
           <svg
             width="14" height="14" viewBox="0 0 14 14" fill="currentColor"
-            className={`transition-transform duration-200 ${expanded ? "rotate-90" : ""}`}
+            className={`text-emerald-400 transition-transform duration-200 ${expanded ? "rotate-90" : ""}`}
           >
             <path d="M4 1.5l5.5 5.5-5.5 5.5" />
           </svg>
-          proof.json
-        </button>
-        <div className="flex items-center gap-3">
+          <span className="text-sm font-medium text-text">Raw Proof JSON</span>
+          <span className="text-xs text-text-tertiary font-mono">{(json.length / 1024).toFixed(1)} KB</span>
+        </div>
+        <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={handleDownload}
             className="text-xs text-text-tertiary hover:text-text transition-colors"
