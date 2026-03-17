@@ -168,70 +168,32 @@ function EnclavePanel() {
         )}
       </div>
 
-      {/* Live identity */}
-      <div className="px-5 py-3 border-b border-border-subtle">
-        <div className="text-[10px] uppercase tracking-wider text-text-tertiary font-medium mb-2">Live Enclave Identity</div>
-        <EnclaveRow label="Public Key" value={keyInfo.publicKeyB64 ?? "Loading..."} mono />
-        <EnclaveRow label="Epoch ID" value={keyInfo.epochId ? `${keyInfo.epochId.slice(0, 24)}...` : "Loading..."} mono />
-        <EnclaveRow label="Proof Counter" value={keyInfo.counter ?? "..."} mono />
-      </div>
-
-      {/* Infrastructure */}
-      <div className="px-5 py-3 border-b border-border-subtle">
-        <div className="text-[10px] uppercase tracking-wider text-text-tertiary font-medium mb-2">Infrastructure</div>
+      {/* Info grid */}
+      <div className="px-5 py-3 grid grid-cols-2 gap-x-4 gap-y-2 border-b border-border-subtle">
         <EnclaveRow label="Environment" value="AWS Nitro Enclave" />
-        <EnclaveRow label="Region" value="us-east-2 (Ohio)" />
-        <EnclaveRow label="Enforcement" value="measured-tee" />
-        <EnclaveRow label="Endpoint" value="nitro.occproof.com" mono />
-      </div>
-
-      {/* Cryptography */}
-      <div className="px-5 py-3 border-b border-border-subtle">
-        <div className="text-[10px] uppercase tracking-wider text-text-tertiary font-medium mb-2">Cryptography</div>
-        <EnclaveRow label="Signing" value="Ed25519 (Curve25519)" />
+        <EnclaveRow label="Region" value="us-east-2" />
+        <EnclaveRow label="Signing" value="Ed25519" />
         <EnclaveRow label="Hash" value="SHA-256" />
-        <EnclaveRow label="Attestation" value="aws-nitro (COSE Sign1)" />
-        <EnclaveRow label="Nonce Source" value="NSM Hardware RNG" />
-        <EnclaveRow label="Library" value="@noble/ed25519" mono />
-      </div>
-
-      {/* Isolation */}
-      <div className="px-5 py-3 border-b border-border-subtle">
-        <div className="text-[10px] uppercase tracking-wider text-text-tertiary font-medium mb-2">Isolation Guarantees</div>
-        <div className="space-y-1.5">
-          {[
-            "No persistent storage — all state in memory only",
-            "No network access — vsock channel only",
-            "No interactive access — no SSH, console, or debugger",
-            "No key extraction — private key never leaves enclave RAM",
-            "Measured boot — image hashed by Nitro hypervisor",
-          ].map((item) => (
-            <div key={item} className="flex gap-2 items-start">
-              <div className="mt-1.5 w-1 h-1 rounded-full bg-emerald-500 shrink-0" />
-              <span className="text-[11px] text-text-secondary leading-relaxed">{item}</span>
-            </div>
-          ))}
-        </div>
+        <EnclaveRow label="Attestation" value="aws-nitro" />
+        <EnclaveRow label="Enforcement" value="measured-tee" />
+        <EnclaveRow label="Counter" value={keyInfo.counter ?? "..."} mono />
+        <EnclaveRow label="Endpoint" value="nitro.occproof.com" mono />
       </div>
 
       {/* PCR0 Measurement */}
       <div className="px-5 py-3 border-b border-border-subtle">
         <div className="text-[10px] uppercase tracking-wider text-text-tertiary font-medium mb-2">Enclave Measurement (PCR0)</div>
-        <code className="block text-[9px] font-mono text-emerald-400/90 leading-relaxed break-all bg-bg-subtle/50 rounded-lg p-2.5">
+        <code className="block text-[9px] font-mono text-emerald-400/90 leading-relaxed break-all bg-bg-subtle/50 rounded-lg p-2">
           {ENCLAVE_MEASUREMENT}
         </code>
         {keyInfo.measurement && (
-          <div className="mt-2 flex items-center gap-1.5">
+          <div className="mt-1.5 flex items-center gap-1.5">
             <div className={`w-1.5 h-1.5 rounded-full ${measurementMatch ? "bg-emerald-500" : "bg-red-500"}`} />
             <span className={`text-[10px] ${measurementMatch ? "text-emerald-400" : "text-red-400"}`}>
               {measurementMatch ? "Live measurement matches" : "Measurement mismatch"}
             </span>
           </div>
         )}
-        <p className="mt-2 text-[10px] text-text-tertiary leading-relaxed">
-          SHA-384 hash uniquely identifying the code running inside the enclave.
-          Included in every AWS Nitro attestation report for independent verification.
-        </p>
       </div>
 
       {/* Footer */}
