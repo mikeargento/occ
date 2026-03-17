@@ -307,6 +307,10 @@ export default function Home() {
       <Section>
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <ScrollReveal>
+            <EnclavePanel />
+          </ScrollReveal>
+
+          <ScrollReveal delay={150}>
             <div>
               <h2 className="text-2xl sm:text-3xl font-semibold tracking-[-0.03em] mb-4">
                 Portable, verifiable proof
@@ -333,10 +337,6 @@ export default function Home() {
                 ))}
               </div>
             </div>
-          </ScrollReveal>
-
-          <ScrollReveal delay={150}>
-            <EnclavePanel />
           </ScrollReveal>
         </div>
       </Section>
