@@ -205,12 +205,6 @@ export default function ExplorerPage() {
                           <div className="text-text">{new Date(proof.commit.time).toLocaleDateString()}</div>
                         </div>
                       )}
-                      {proof.attribution?.name && (
-                        <div>
-                          <div className="text-text-tertiary mb-0.5">By</div>
-                          <div className="text-text">{proof.attribution.name}</div>
-                        </div>
-                      )}
                       {proof.agency && (
                         <div>
                           <div className="text-text-tertiary mb-0.5">Device</div>
@@ -329,43 +323,39 @@ function ProofTable({ proofs, label }: { proofs: ProofSummary[]; label?: string 
           <Link
             key={p.id}
             href={`/explorer/${encodeURIComponent(toUrlSafeB64(p.digestB64))}`}
-            className="flex items-center justify-between px-5 py-4 hover:bg-bg-subtle/40 transition-colors"
+            className="flex items-center justify-between px-4 sm:px-5 py-3.5 hover:bg-bg-subtle/40 transition-colors"
           >
-            <div className="flex items-center gap-4 min-w-0">
-              <code className="text-sm font-mono text-text shrink-0">
-                {truncateHash(p.digestB64)}
+            <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
+              <code className="text-xs sm:text-sm font-mono text-text shrink-0">
+                {truncateHash(p.digestB64, 10)}
               </code>
-              <span className={`text-xs font-medium shrink-0 ${enforcementColor(p.enforcement)}`}>
-                {enforcementLabel(p.enforcement)}
+              <span className={`text-[10px] sm:text-xs font-medium shrink-0 ${enforcementColor(p.enforcement)}`}>
+                <span className="hidden sm:inline">{enforcementLabel(p.enforcement)}</span>
+                <span className="sm:hidden">{p.enforcement === "measured-tee" ? "TEE" : p.enforcement === "hw-key" ? "HW" : "SW"}</span>
               </span>
               {p.counter && (
-                <span className="text-xs font-mono text-text-tertiary shrink-0">
+                <span className="text-[10px] sm:text-xs font-mono text-text-tertiary shrink-0">
                   #{p.counter}
                 </span>
               )}
-              {p.attrName && (
-                <span className="text-xs text-text-secondary truncate hidden sm:block">
-                  {p.attrName}
-                </span>
-              )}
             </div>
-            <div className="flex items-center gap-3 shrink-0 ml-4">
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-2 sm:ml-4">
               {p.hasAgency && (
-                <span className="text-xs text-blue-400" title="Device-authorized">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <span className="text-blue-400" title="Device-authorized">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                   </svg>
                 </span>
               )}
               {p.hasTsa && (
-                <span className="text-xs text-purple-400" title="RFC 3161 timestamped">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <span className="text-purple-400" title="RFC 3161 timestamped">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <circle cx="12" cy="12" r="10" />
                     <path d="M12 6v6l4 2" />
                   </svg>
                 </span>
               )}
-              <span className="text-xs text-text-tertiary w-16 text-right">
+              <span className="text-[10px] sm:text-xs text-text-tertiary w-14 sm:w-16 text-right">
                 {p.commitTime ? relativeTime(p.commitTime) : "—"}
               </span>
             </div>
