@@ -153,7 +153,7 @@ function EnclavePanel() {
   return (
     <div className="rounded-xl border border-border-subtle bg-bg-elevated overflow-hidden">
       {/* Status header */}
-      <div className="px-5 py-4 flex items-center justify-between border-b border-border-subtle">
+      <div className="px-5 py-5 flex items-center justify-between border-b border-border-subtle">
         <div className="flex items-center gap-3">
           <div className="relative flex h-2.5 w-2.5">
             {health.status === "online" && (
@@ -169,7 +169,7 @@ function EnclavePanel() {
       </div>
 
       {/* Info grid */}
-      <div className="px-5 py-3 grid grid-cols-2 gap-x-4 gap-y-2 border-b border-border-subtle">
+      <div className="px-5 py-4 grid grid-cols-2 gap-x-4 gap-y-3 border-b border-border-subtle">
         <EnclaveRow label="Environment" value="AWS Nitro Enclave" />
         <EnclaveRow label="Region" value="us-east-2" />
         <EnclaveRow label="Signing" value="Ed25519" />
@@ -180,7 +180,7 @@ function EnclavePanel() {
       </div>
 
       {/* PCR0 Measurement */}
-      <div className="px-5 py-3 border-b border-border-subtle">
+      <div className="px-5 py-4 border-b border-border-subtle">
         <div className="text-[10px] uppercase tracking-wider text-text-tertiary font-medium mb-2">Enclave Measurement (PCR0)</div>
         <code className="block text-[9px] font-mono text-emerald-400/90 leading-relaxed break-all bg-bg-subtle/50 rounded-lg p-2">
           {ENCLAVE_MEASUREMENT}
@@ -196,7 +196,7 @@ function EnclavePanel() {
       </div>
 
       {/* Footer */}
-      <div className="px-5 py-3 flex items-center justify-between">
+      <div className="px-5 py-4 flex items-center justify-between">
         <span className="text-[10px] text-text-tertiary">
           {health.checkedAt
             ? `Checked ${health.checkedAt.toLocaleTimeString()}`
