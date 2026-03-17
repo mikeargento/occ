@@ -10,12 +10,15 @@ export interface ActorIdentity {
 export interface AgencyEnvelope {
   actor: ActorIdentity;
   authorization: {
+    format: string;
     purpose: "occ/commit-authorize/v1";
     actorKeyId: string;
     artifactHash: string;
     challenge: string;
     timestamp: number;
     signatureB64: string;
+    clientDataJSON?: string;
+    authenticatorDataB64?: string;
   };
   batchContext?: {
     batchSize: number;

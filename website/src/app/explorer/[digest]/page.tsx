@@ -11,8 +11,6 @@ import {
   relativeTime,
   enforcementLabel,
   enforcementColor,
-  b64ToHex,
-  truncateHash,
 } from "@/lib/explorer";
 
 /* ── Types ── */
@@ -21,6 +19,21 @@ interface LookupResult {
   proof: OCCProof;
   indexedAt: string;
 }
+
+/* ── Section display names ── */
+const sectionNames: Record<string, string> = {
+  version: "Version",
+  artifact: "Artifact",
+  commit: "Commit",
+  signer: "Signer",
+  environment: "Environment",
+  timestamps: "Timestamps (RFC 3161)",
+  agency: "Agency (Device Authorization)",
+  slotAllocation: "Slot Allocation (Causal Ordering)",
+  attribution: "Attribution",
+  metadata: "Metadata (Advisory)",
+  claims: "Claims",
+};
 
 /* ── Page ── */
 
@@ -81,8 +94,16 @@ export default function ProofDetailPage() {
     );
   }
 
-  // Show the first (most recent) proof, with links to others if multiple exist
   const { proof } = results[0];
+  const proofAny = proof as Record<string, unknown>;
+
+  // Ordered sections — render in this order, then any remaining keys
+  const orderedKeys = [
+    "version", "artifact", "commit", "signer", "environment",
+    "timestamps", "agency", "slotAllocation", "attribution", "metadata", "claims",
+  ];
+  const remainingKeys = Object.keys(proofAny).filter((k) => !orderedKeys.includes(k));
+  const allKeys = [...orderedKeys, ...remainingKeys].filter((k) => proofAny[k] !== undefined);
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-16 sm:py-24">
@@ -94,6 +115,9 @@ export default function ProofDetailPage() {
       {/* Hero */}
       <div className="mt-6">
         <div className="flex items-center gap-3 mb-3">
+          <span className="text-xs font-mono text-text-tertiary bg-bg-subtle/60 px-2 py-0.5 rounded">
+            {proof.version}
+          </span>
           <span className={`text-sm font-medium ${enforcementColor(proof.environment.enforcement)}`}>
             {enforcementLabel(proof.environment.enforcement)}
           </span>
@@ -120,114 +144,32 @@ export default function ProofDetailPage() {
         </div>
       )}
 
-      {/* ── Detail Cards ── */}
+      {/* ── Detail Cards — one per top-level key ── */}
       <div className="mt-8 space-y-4">
-        {/* Artifact */}
-        <DetailCard title="Artifact">
-          <Row label="Hash Algorithm" value={proof.artifact.hashAlg.toUpperCase()} />
-          <Row label="Digest (Base64)" value={proof.artifact.digestB64} mono copy />
-          <Row label="Digest (Hex)" value={b64ToHex(proof.artifact.digestB64)} mono copy />
-        </DetailCard>
+        {allKeys.map((key) => {
+          const value = proofAny[key];
+          const title = sectionNames[key] || key;
 
-        {/* Commit */}
-        <DetailCard title="Commit">
-          <Row label="Nonce" value={proof.commit.nonceB64} mono copy />
-          {proof.commit.counter && <Row label="Counter" value={proof.commit.counter} />}
-          {proof.commit.time && (
-            <Row
-              label="Time"
-              value={`${new Date(proof.commit.time).toISOString()} (${proof.commit.time})`}
-            />
-          )}
-          {proof.commit.epochId && <Row label="Epoch ID" value={proof.commit.epochId} mono copy />}
-          {proof.commit.prevB64 && (
-            <div className="flex items-start justify-between gap-3 py-2.5">
-              <span className="text-xs text-text-tertiary shrink-0">Previous Proof</span>
-              <Link
-                href={`/explorer/${encodeURIComponent(toUrlSafeB64(proof.commit.prevB64))}`}
-                className="text-xs font-mono text-emerald-400 hover:underline text-right break-all"
-              >
-                {truncateHash(proof.commit.prevB64, 24)}
-              </Link>
-            </div>
-          )}
-          {proof.commit.slotCounter && <Row label="Slot Counter" value={proof.commit.slotCounter} />}
-          {proof.commit.slotHashB64 && <Row label="Slot Hash" value={proof.commit.slotHashB64} mono copy />}
-        </DetailCard>
+          // Simple scalar — render inline
+          if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+            return (
+              <SectionCard key={key} title={title}>
+                <ValueRow label={key} value={value} />
+              </SectionCard>
+            );
+          }
 
-        {/* Signer */}
-        <DetailCard title="Signer">
-          <Row label="Public Key" value={proof.signer.publicKeyB64} mono copy />
-          <Row label="Signature" value={proof.signer.signatureB64} mono copy />
-        </DetailCard>
+          // Object or array — render recursively
+          if (typeof value === "object" && value !== null) {
+            return (
+              <SectionCard key={key} title={title}>
+                <ObjectRenderer data={value} />
+              </SectionCard>
+            );
+          }
 
-        {/* Environment */}
-        <DetailCard title="Environment">
-          <Row label="Enforcement" value={enforcementLabel(proof.environment.enforcement)} />
-          <Row label="Measurement" value={proof.environment.measurement || "—"} mono={!!proof.environment.measurement} copy={!!proof.environment.measurement} />
-          {proof.environment.attestation && (
-            <>
-              <Row label="Attestation Format" value={proof.environment.attestation.format} />
-              <Row label="Attestation Report" value={truncateHash(proof.environment.attestation.reportB64, 40)} mono />
-            </>
-          )}
-        </DetailCard>
-
-        {/* Timestamps (TSA) */}
-        {proof.timestamps && (
-          <DetailCard title="Timestamps (RFC 3161)">
-            {proof.timestamps.artifact && (
-              <>
-                <Row label="Artifact TSA" value={proof.timestamps.artifact.authority} />
-                <Row label="Artifact Time" value={proof.timestamps.artifact.time} />
-              </>
-            )}
-            {proof.timestamps.proof && (
-              <>
-                <Row label="Proof TSA" value={proof.timestamps.proof.authority} />
-                <Row label="Proof Time" value={proof.timestamps.proof.time} />
-              </>
-            )}
-          </DetailCard>
-        )}
-
-        {/* Agency */}
-        {proof.agency && (
-          <DetailCard title="Agency (Device Authorization)">
-            <Row label="Actor Key ID" value={proof.agency.actor.keyId} mono copy />
-            <Row label="Algorithm" value={proof.agency.actor.algorithm} />
-            <Row label="Provider" value={proof.agency.actor.provider} />
-            <Row label="Purpose" value={proof.agency.authorization.purpose} />
-          </DetailCard>
-        )}
-
-        {/* Slot Allocation */}
-        {proof.slotAllocation && (
-          <DetailCard title="Slot Allocation (Causal Ordering)">
-            <Row label="Nonce" value={proof.slotAllocation.nonceB64} mono copy />
-            <Row label="Counter" value={proof.slotAllocation.counter} />
-            <Row label="Time" value={new Date(proof.slotAllocation.time).toISOString()} />
-            <Row label="Epoch ID" value={proof.slotAllocation.epochId} mono copy />
-          </DetailCard>
-        )}
-
-        {/* Attribution */}
-        {proof.attribution && (
-          <DetailCard title="Attribution">
-            {proof.attribution.name && <Row label="Name" value={proof.attribution.name} />}
-            {proof.attribution.title && <Row label="Title" value={proof.attribution.title} />}
-            {proof.attribution.message && <Row label="Message" value={proof.attribution.message} />}
-          </DetailCard>
-        )}
-
-        {/* Metadata */}
-        {proof.metadata && Object.keys(proof.metadata).length > 0 && (
-          <DetailCard title="Metadata (Advisory)">
-            {Object.entries(proof.metadata).map(([k, v]) => (
-              <Row key={k} label={k} value={typeof v === "string" ? v : JSON.stringify(v)} />
-            ))}
-          </DetailCard>
-        )}
+          return null;
+        })}
 
         {/* Raw JSON */}
         <div className="mt-6">
@@ -238,52 +180,209 @@ export default function ProofDetailPage() {
   );
 }
 
-/* ── Detail Card ── */
+/* ── Section Card ── */
 
-function DetailCard({ title, children }: { title: string; children: React.ReactNode }) {
+function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="rounded-xl border border-border-subtle bg-bg-elevated overflow-hidden">
       <div className="px-5 py-3.5 border-b border-border-subtle">
         <h3 className="text-xs font-medium text-text-tertiary uppercase tracking-wider">{title}</h3>
       </div>
-      <div className="px-5 py-3 divide-y divide-border-subtle">{children}</div>
+      <div className="px-5 py-3">{children}</div>
     </div>
   );
 }
 
-/* ── Row ── */
+/* ── Human-readable field labels ── */
 
-function Row({
-  label,
-  value,
-  mono,
-  copy,
-}: {
-  label: string;
-  value: string;
-  mono?: boolean;
-  copy?: boolean;
-}) {
-  const [copied, setCopied] = useState(false);
+const fieldLabels: Record<string, string> = {
+  hashAlg: "Hash Algorithm",
+  digestB64: "Digest (Base64)",
+  nonceB64: "Nonce (Base64)",
+  prevB64: "Previous Hash (Base64)",
+  slotCounter: "Slot Counter",
+  slotHashB64: "Slot Hash (Base64)",
+  epochId: "Epoch ID",
+  publicKeyB64: "Public Key (Base64)",
+  signatureB64: "Signature (Base64)",
+  reportB64: "Attestation Report (Base64)",
+  tokenB64: "TSA Token (Base64)",
+  digestAlg: "Digest Algorithm",
+  actorKeyId: "Actor Key ID",
+  artifactHash: "Artifact Hash",
+  clientDataJSON: "Client Data (WebAuthn)",
+  authenticatorDataB64: "Authenticator Data (Base64)",
+  keyId: "Key ID",
+  commitTime: "Commit Time",
+  batchSize: "Batch Size",
+  batchIndex: "Batch Index",
+  batchDigests: "Batch Digests",
+};
 
-  const handleCopy = useCallback(() => {
-    navigator.clipboard.writeText(value);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  }, [value]);
+function humanLabel(key: string): string {
+  return fieldLabels[key] || key;
+}
+
+/* ── Detect epoch-ms timestamps ── */
+
+function isEpochMs(key: string, value: unknown): boolean {
+  if (typeof value !== "number") return false;
+  if (!["time", "timestamp", "commitTime"].includes(key)) return false;
+  return value > 1_000_000_000_000 && value < 2_000_000_000_000;
+}
+
+/* ── Recursive Object Renderer ── */
+
+function ObjectRenderer({ data, depth = 0 }: { data: unknown; depth?: number }) {
+  if (data === null || data === undefined) return null;
+
+  // Array
+  if (Array.isArray(data)) {
+    // Short arrays of primitives — show inline
+    if (data.length <= 5 && data.every((v) => typeof v === "string" || typeof v === "number")) {
+      return (
+        <div className="space-y-1">
+          {data.map((item, i) => (
+            <ValueRow key={i} label={`[${i}]`} value={item} />
+          ))}
+        </div>
+      );
+    }
+
+    // Long arrays — collapsible
+    return <CollapsibleArray items={data} />;
+  }
+
+  // Object
+  if (typeof data === "object") {
+    const entries = Object.entries(data as Record<string, unknown>);
+    return (
+      <div className={depth > 0 ? "pl-4 border-l border-border-subtle ml-1" : ""}>
+        {entries.map(([key, value]) => {
+          // Special: parse clientDataJSON as structured
+          if (key === "clientDataJSON" && typeof value === "string") {
+            try {
+              const parsed = JSON.parse(value);
+              return (
+                <div key={key} className="py-2">
+                  <div className="text-xs text-text-tertiary font-medium mb-1">{humanLabel(key)}</div>
+                  <ObjectRenderer data={parsed} depth={depth + 1} />
+                </div>
+              );
+            } catch {
+              // fall through to scalar
+            }
+          }
+
+          // Nested object — render with label + sub-renderer
+          if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+            return (
+              <div key={key} className="py-2">
+                <div className="text-xs text-text-tertiary font-medium mb-1">{humanLabel(key)}</div>
+                <ObjectRenderer data={value} depth={depth + 1} />
+              </div>
+            );
+          }
+
+          // Nested array
+          if (Array.isArray(value)) {
+            return (
+              <div key={key} className="py-2">
+                <div className="text-xs text-text-tertiary font-medium mb-1">
+                  {humanLabel(key)} ({value.length} items)
+                </div>
+                <ObjectRenderer data={value} depth={depth + 1} />
+              </div>
+            );
+          }
+
+          // Scalar
+          return <ValueRow key={key} label={humanLabel(key)} value={value} rawKey={key} />;
+        })}
+      </div>
+    );
+  }
+
+  // Scalar fallback
+  return <span className="text-xs font-mono text-text break-all">{String(data)}</span>;
+}
+
+/* ── Collapsible Array (for long arrays like batchDigests) ── */
+
+function CollapsibleArray({ items }: { items: unknown[] }) {
+  const [expanded, setExpanded] = useState(false);
+  const preview = items.slice(0, 3);
+  const hasMore = items.length > 3;
 
   return (
-    <div className="flex items-start justify-between gap-4 py-2.5 group">
+    <div className="space-y-1">
+      {(expanded ? items : preview).map((item, i) => (
+        <div key={i} className="flex items-start gap-3 py-1">
+          <span className="text-xs text-text-tertiary shrink-0 w-8 text-right">[{i}]</span>
+          <span className="text-xs font-mono text-text break-all">
+            {typeof item === "object" ? JSON.stringify(item) : String(item)}
+          </span>
+        </div>
+      ))}
+      {hasMore && (
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="text-xs text-text-tertiary hover:text-text transition-colors mt-1"
+        >
+          {expanded ? "Show less" : `Show all ${items.length} items...`}
+        </button>
+      )}
+    </div>
+  );
+}
+
+/* ── Value Row with copy ── */
+
+const BLOB_THRESHOLD = 200; // truncate values longer than this
+
+function ValueRow({ label, value, rawKey }: { label: string; value: unknown; rawKey?: string }) {
+  const [copied, setCopied] = useState(false);
+  const [blobExpanded, setBlobExpanded] = useState(false);
+  const strValue = typeof value === "object" ? JSON.stringify(value) : String(value);
+  const isLong = strValue.length > 20;
+  const isBlob = strValue.length > BLOB_THRESHOLD;
+  const isMono = isLong || typeof value === "number";
+  const showTimestamp = rawKey ? isEpochMs(rawKey, value) : false;
+  const displayValue = isBlob && !blobExpanded ? strValue.slice(0, 80) + "..." : strValue;
+
+  const handleCopy = useCallback(() => {
+    navigator.clipboard.writeText(strValue);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }, [strValue]);
+
+  return (
+    <div className="flex items-start justify-between gap-4 py-2 group">
       <span className="text-xs text-text-tertiary shrink-0 pt-0.5">{label}</span>
       <div className="flex items-start gap-2 min-w-0">
-        <span
-          className={`text-xs text-right break-all ${
-            mono ? "font-mono text-text" : "text-text-secondary"
-          }`}
-        >
-          {value}
-        </span>
-        {copy && (
+        <div className="text-right">
+          <span
+            className={`text-xs break-all ${
+              isMono ? "font-mono text-text" : "text-text-secondary"
+            }`}
+          >
+            {displayValue}
+          </span>
+          {isBlob && (
+            <button
+              onClick={() => setBlobExpanded(!blobExpanded)}
+              className="block text-[10px] text-text-tertiary hover:text-text transition-colors mt-0.5 ml-auto"
+            >
+              {blobExpanded ? "Collapse" : `Show all (${strValue.length} chars)`}
+            </button>
+          )}
+          {showTimestamp && (
+            <div className="text-[10px] text-text-tertiary mt-0.5">
+              {new Date(value as number).toLocaleString()}
+            </div>
+          )}
+        </div>
+        {isLong && (
           <button
             onClick={handleCopy}
             className="text-text-tertiary hover:text-text transition-colors opacity-0 group-hover:opacity-100 shrink-0 pt-0.5"
