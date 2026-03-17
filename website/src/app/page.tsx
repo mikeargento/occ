@@ -305,41 +305,35 @@ export default function Home() {
 
       {/* ── What You Get ── */}
       <Section>
-        <div className="grid lg:grid-cols-2 gap-16 items-start">
-          <div>
-            <ScrollReveal>
-              <h2 className="text-2xl sm:text-3xl font-semibold tracking-[-0.03em] mb-6">
+        <div className="grid lg:grid-cols-2 gap-12 items-start">
+          <ScrollReveal>
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-semibold tracking-[-0.03em] mb-4">
                 Portable, verifiable proof
               </h2>
-            </ScrollReveal>
-            <ScrollReveal delay={100}>
-              <p className="text-text-secondary leading-relaxed text-lg">
+              <p className="text-sm text-text-secondary leading-relaxed mb-6">
                 Every proof is a self-contained JSON object. Content hash,
                 commit metadata, cryptographic signature, and hardware
                 attestation. Anyone can verify it independently.
               </p>
-            </ScrollReveal>
-            <ScrollReveal delay={200}>
-              <div className="mt-10 space-y-5">
+              <div className="space-y-3">
                 {[
                   { title: "Content-addressed", desc: "SHA-256 hash binds the proof to specific bytes." },
-                  { title: "Timestamped", desc: "Independent RFC 3161 timestamps from trusted authorities." },
-                  { title: "Hardware-attested", desc: "AWS Nitro Enclave attestation proves the execution environment." },
-                  { title: "Device-authorized", desc: "Biometric authorization ties proof to a specific device key." },
+                  { title: "Timestamped", desc: "RFC 3161 timestamps from trusted authorities." },
+                  { title: "Hardware-attested", desc: "AWS Nitro Enclave attestation proves the environment." },
+                  { title: "Device-authorized", desc: "Biometric passkey ties proof to a specific device." },
                 ].map((item) => (
-                  <div key={item.title} className="flex gap-4 items-start">
-                    <div className="mt-2 w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                  <div key={item.title} className="flex gap-3 items-start">
+                    <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
                     <div>
                       <span className="text-sm font-semibold text-text">{item.title}</span>
-                      <span className="text-sm text-text-secondary ml-1.5">
-                        - {item.desc}
-                      </span>
+                      <span className="text-sm text-text-secondary ml-1">— {item.desc}</span>
                     </div>
                   </div>
                 ))}
               </div>
-            </ScrollReveal>
-          </div>
+            </div>
+          </ScrollReveal>
 
           <ScrollReveal delay={150}>
             <EnclavePanel />
