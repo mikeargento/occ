@@ -1,6 +1,20 @@
 import Link from "next/link";
+import { TerminalWindow } from "@/components/terminal-window";
 import { ScrollReveal } from "@/components/scroll-reveal";
-import { TeeStatus } from "@/components/tee-status";
+
+/* ── Syntax-highlighted JSON helpers ── */
+const K = ({ children }: { children: string }) => (
+  <span className="text-syntax-key">{`"${children}"`}</span>
+);
+const S = ({ children }: { children: string }) => (
+  <span className="text-syntax-string">{`"${children}"`}</span>
+);
+const N = ({ children }: { children: string | number }) => (
+  <span className="text-syntax-number">{children}</span>
+);
+const P = ({ children }: { children: React.ReactNode }) => (
+  <span className="text-text-tertiary">{children}</span>
+);
 
 function Section({
   children,
@@ -189,7 +203,59 @@ export default function Home() {
           </div>
 
           <ScrollReveal delay={150}>
-            <TeeStatus />
+            <div className="terminal-glow">
+              <TerminalWindow title="Actual occ/1 generated proof">
+                <pre className="text-[10px] sm:text-[11px] leading-snug font-mono whitespace-pre-wrap break-all max-h-[600px] overflow-y-auto">
+              <P>{"{"}</P>{"\n"}
+              {"  "}<K>version</K><P>: </P><S>occ/1</S><P>,</P>{"\n"}
+              {"  "}<K>artifact</K><P>: {"{"}</P>{"\n"}
+              {"    "}<K>hashAlg</K><P>: </P><S>sha256</S><P>,</P>{"\n"}
+              {"    "}<K>digestB64</K><P>: </P><S>gJzb/IOJxQSOcMHTuVQOeuWir5qVUxusmm//TYPhfhw=</S>{"\n"}
+              {"  "}<P>{"}"}</P><P>,</P>{"\n"}
+              {"  "}<K>commit</K><P>: {"{"}</P>{"\n"}
+              {"    "}<K>nonceB64</K><P>: </P><S>uOubfUo73V0NI0XRtftc4PBXEiJR7elrimsyliwR1Fo=</S><P>,</P>{"\n"}
+              {"    "}<K>counter</K><P>: </P><S>571</S><P>,</P>{"\n"}
+              {"    "}<K>slotCounter</K><P>: </P><S>570</S><P>,</P>{"\n"}
+              {"    "}<K>slotHashB64</K><P>: </P><S>wN7+7StkGTb8COhBvbXsCARvYtWqYMv4uardhiEzzo0=</S><P>,</P>{"\n"}
+              {"    "}<K>time</K><P>: </P><N>1773709206988</N><P>,</P>{"\n"}
+              {"    "}<K>epochId</K><P>: </P><S>/qXZiO+PUKMAvVcoth+czcaid7wyoyU+AWjGWRHD4yo=</S><P>,</P>{"\n"}
+              {"    "}<K>prevB64</K><P>: </P><S>sKCR/xeVqicBnt/wg/TUK+2eyyA2C5I718q1OejL+a0=</S>{"\n"}
+              {"  "}<P>{"}"}</P><P>,</P>{"\n"}
+              {"  "}<K>signer</K><P>: {"{"}</P>{"\n"}
+              {"    "}<K>publicKeyB64</K><P>: </P><S>QQeecy4yv6dhExeBMVyevBpG2LOUpD6DS0wiEMa9EWE=</S><P>,</P>{"\n"}
+              {"    "}<K>signatureB64</K><P>: </P><S>NvAe7Ubr3rZxONX7N6/+qfLz/L+B/yp/F6y9F4Tjpv...==</S>{"\n"}
+              {"  "}<P>{"}"}</P><P>,</P>{"\n"}
+              {"  "}<K>environment</K><P>: {"{"}</P>{"\n"}
+              {"    "}<K>enforcement</K><P>: </P><S>measured-tee</S><P>,</P>{"\n"}
+              {"    "}<K>measurement</K><P>: </P><S>8db9ab687fd5f66d...c66cd19d</S><P>,</P>{"\n"}
+              {"    "}<K>attestation</K><P>: {"{"}</P>{"\n"}
+              {"      "}<K>format</K><P>: </P><S>aws-nitro</S><P>,</P>{"\n"}
+              {"      "}<K>reportB64</K><P>: </P><S>hEShATgioFkRIL9p...dkG9Aw==</S>{"\n"}
+              {"    "}<P>{"}"}</P>{"\n"}
+              {"  "}<P>{"}"}</P><P>,</P>{"\n"}
+              {"  "}<K>timestamps</K><P>: {"{"}</P>{"\n"}
+              {"    "}<K>artifact</K><P>: {"{"}</P>{"\n"}
+              {"      "}<K>authority</K><P>: </P><S>freetsa.org</S><P>,</P>{"\n"}
+              {"      "}<K>time</K><P>: </P><S>2026-03-17T01:00:09Z</S>{"\n"}
+              {"    "}<P>{"}"}</P>{"\n"}
+              {"  "}<P>{"}"}</P><P>,</P>{"\n"}
+              {"  "}<K>agency</K><P>: {"{"}</P>{"\n"}
+              {"    "}<K>actor</K><P>: {"{"}</P>{"\n"}
+              {"      "}<K>algorithm</K><P>: </P><S>ES256</S><P>,</P>{"\n"}
+              {"      "}<K>provider</K><P>: </P><S>passkey</S>{"\n"}
+              {"    "}<P>{"}"}</P><P>,</P>{"\n"}
+              {"    "}<K>authorization</K><P>: {"{"}</P>{"\n"}
+              {"      "}<K>purpose</K><P>: </P><S>occ/commit-authorize/v1</S><P>,</P>{"\n"}
+              {"      "}<K>format</K><P>: </P><S>webauthn</S>{"\n"}
+              {"    "}<P>{"}"}</P>{"\n"}
+              {"  "}<P>{"}"}</P><P>,</P>{"\n"}
+              {"  "}<K>attribution</K><P>: {"{"}</P>{"\n"}
+              {"    "}<K>name</K><P>: </P><S>Mike Argento</S>{"\n"}
+              {"  "}<P>{"}"}</P>{"\n"}
+              <P>{"}"}</P>
+                </pre>
+              </TerminalWindow>
+            </div>
           </ScrollReveal>
         </div>
       </Section>

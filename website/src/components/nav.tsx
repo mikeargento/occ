@@ -5,11 +5,12 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useTheme } from "./theme-provider";
 
-const links: { href: string; label: string; external?: boolean }[] = [
+const links: { href: string; label: string; external?: boolean; indicator?: boolean }[] = [
   { href: "/studio", label: "Studio" },
   { href: "/agent", label: "Agent" },
   { href: "/docs", label: "Docs" },
   { href: "/api-reference", label: "API" },
+  { href: "/enclave", label: "Enclave", indicator: true },
   { href: "https://github.com/mikeargento/occ", label: "GitHub", external: true },
 ];
 
@@ -52,12 +53,18 @@ export function Nav() {
                 <Link
                   key={l.href}
                   href={l.href}
-                  className={`text-sm font-semibold px-3 py-1.5 transition-colors ${
+                  className={`text-sm font-semibold px-3 py-1.5 transition-colors inline-flex items-center gap-1.5 ${
                     pathname.startsWith(l.href)
                       ? "text-text"
                       : "text-text-tertiary hover:text-text"
                   }`}
                 >
+                  {l.indicator && (
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                    </span>
+                  )}
                   {l.label}
                 </Link>
               );
@@ -153,12 +160,18 @@ export function Nav() {
                   key={l.href}
                   href={l.href}
                   onClick={() => setOpen(false)}
-                  className={`rounded-lg px-3 py-2.5 text-sm font-semibold ${
+                  className={`rounded-lg px-3 py-2.5 text-sm font-semibold inline-flex items-center gap-1.5 ${
                     pathname.startsWith(l.href)
                       ? "text-text"
                       : "text-text-secondary hover:text-text"
                   }`}
                 >
+                  {l.indicator && (
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                    </span>
+                  )}
                   {l.label}
                 </Link>
               )
