@@ -164,43 +164,86 @@ export default function ExplorerPage() {
               </div>
             )}
 
-            {lookupResults !== null && lookupResults.length > 0 && (
-              <div className="mt-4 space-y-2">
-                <div className="text-xs text-text-tertiary">
-                  {lookupResults.length} proof{lookupResults.length !== 1 ? "s" : ""} found
-                </div>
-                {lookupResults.map((r, i) => (
-                  <Link
-                    key={i}
-                    href={`/explorer/${encodeURIComponent(toUrlSafeB64(r.proof.artifact.digestB64))}`}
-                    className="block rounded-lg border border-border-subtle bg-bg-subtle/30 p-4 hover:bg-bg-subtle/60 transition-colors"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <span className={`text-xs font-medium ${enforcementColor(r.proof.environment.enforcement)}`}>
-                          {enforcementLabel(r.proof.environment.enforcement)}
-                        </span>
-                        {r.proof.commit.counter && (
-                          <span className="text-xs font-mono text-text-tertiary">
-                            #{r.proof.commit.counter}
-                          </span>
-                        )}
+            {lookupResults !== null && lookupResults.length > 0 && (() => {
+              const r = lookupResults[0];
+              const proof = r.proof;
+              return (
+                <div className="mt-5 space-y-4 animate-in fade-in duration-500">
+                  {/* Verified banner */}
+                  <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-emerald-500/15">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-emerald-400">
+                          <path d="M20 6L9 17l-5-5" />
+                        </svg>
                       </div>
-                      {r.proof.commit.time && (
-                        <span className="text-xs text-text-tertiary">
-                          {relativeTime(r.proof.commit.time)}
-                        </span>
+                      <div>
+                        <div className="text-lg font-semibold text-emerald-400">Verified</div>
+                        <div className="text-xs text-text-tertiary">
+                          This file has a cryptographic proof on record
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Proof summary */}
+                    <div className="grid grid-cols-2 gap-3 text-xs">
+                      {proof.commit.counter && (
+                        <div>
+                          <div className="text-text-tertiary mb-0.5">Proof</div>
+                          <div className="font-mono text-text">#{proof.commit.counter}</div>
+                        </div>
+                      )}
+                      <div>
+                        <div className="text-text-tertiary mb-0.5">Enforcement</div>
+                        <div className={`font-medium ${enforcementColor(proof.environment.enforcement)}`}>
+                          {enforcementLabel(proof.environment.enforcement)}
+                        </div>
+                      </div>
+                      {proof.commit.time && (
+                        <div>
+                          <div className="text-text-tertiary mb-0.5">Committed</div>
+                          <div className="text-text">{new Date(proof.commit.time).toLocaleDateString()}</div>
+                        </div>
+                      )}
+                      {proof.attribution?.name && (
+                        <div>
+                          <div className="text-text-tertiary mb-0.5">By</div>
+                          <div className="text-text">{proof.attribution.name}</div>
+                        </div>
+                      )}
+                      {proof.agency && (
+                        <div>
+                          <div className="text-text-tertiary mb-0.5">Device</div>
+                          <div className="text-blue-400 font-medium">Passkey verified</div>
+                        </div>
+                      )}
+                      {proof.timestamps && (
+                        <div>
+                          <div className="text-text-tertiary mb-0.5">Timestamp</div>
+                          <div className="text-purple-400 font-medium">RFC 3161</div>
+                        </div>
                       )}
                     </div>
-                    {r.proof.attribution?.name && (
-                      <div className="mt-1 text-xs text-text-secondary">
-                        {r.proof.attribution.name}
-                      </div>
-                    )}
-                  </Link>
-                ))}
-              </div>
-            )}
+
+                    <Link
+                      href={`/explorer/${encodeURIComponent(toUrlSafeB64(proof.artifact.digestB64))}`}
+                      className="mt-5 flex items-center justify-center gap-2 w-full py-3 rounded-lg bg-emerald-500/15 text-sm font-medium text-emerald-400 hover:bg-emerald-500/25 transition-colors"
+                    >
+                      View full proof
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                      </svg>
+                    </Link>
+                  </div>
+
+                  {lookupResults.length > 1 && (
+                    <div className="text-xs text-text-tertiary text-center">
+                      +{lookupResults.length - 1} more proof{lookupResults.length > 2 ? "s" : ""} for this file
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
         )}
       </div>
