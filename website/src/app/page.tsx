@@ -1,20 +1,12 @@
-import Link from "next/link";
-import { TerminalWindow } from "@/components/terminal-window";
-import { ScrollReveal } from "@/components/scroll-reveal";
+"use client";
 
-/* ── Syntax-highlighted JSON helpers ── */
-const K = ({ children }: { children: string }) => (
-  <span className="text-syntax-key">{`"${children}"`}</span>
-);
-const S = ({ children }: { children: string }) => (
-  <span className="text-syntax-string">{`"${children}"`}</span>
-);
-const N = ({ children }: { children: string | number }) => (
-  <span className="text-syntax-number">{children}</span>
-);
-const P = ({ children }: { children: React.ReactNode }) => (
-  <span className="text-text-tertiary">{children}</span>
-);
+import Link from "next/link";
+import { ScrollReveal } from "@/components/scroll-reveal";
+import { useState, useEffect, useCallback } from "react";
+
+const TEE_ENDPOINT = "https://nitro.occproof.com";
+const ENCLAVE_MEASUREMENT =
+  "8db9ab687fd5f66d813cdcd813e09c7c88f10a9d729f012056bf9914df8975baa40f2a65009517c712241c2fc66cd19d";
 
 function Section({
   children,
@@ -75,6 +67,191 @@ const icons = {
     </svg>
   ),
 };
+
+/* ── Enclave info row ── */
+function EnclaveRow({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+  return (
+    <div className="flex items-start justify-between gap-3 py-2 border-b border-border-subtle last:border-0">
+      <span className="text-[11px] text-text-tertiary shrink-0">{label}</span>
+      <span className={`text-[11px] text-text text-right ${mono ? "font-mono" : "font-medium"}`}>{value}</span>
+    </div>
+  );
+}
+
+/* ── Live Enclave Panel ── */
+function EnclavePanel() {
+  const [health, setHealth] = useState<{
+    status: "checking" | "online" | "offline";
+    latencyMs: number | null;
+    checkedAt: Date | null;
+  }>({ status: "checking", latencyMs: null, checkedAt: null });
+
+  const [keyInfo, setKeyInfo] = useState<{
+    publicKeyB64: string | null;
+    epochId: string | null;
+    counter: string | null;
+    measurement: string | null;
+  }>({ publicKeyB64: null, epochId: null, counter: null, measurement: null });
+
+  const checkHealth = useCallback(async () => {
+    setHealth((h) => ({ ...h, status: "checking" }));
+    const start = performance.now();
+    try {
+      const res = await fetch(`${TEE_ENDPOINT}/health`, { cache: "no-store" });
+      const latency = Math.round(performance.now() - start);
+      if (res.ok) {
+        setHealth({ status: "online", latencyMs: latency, checkedAt: new Date() });
+      } else {
+        setHealth({ status: "offline", latencyMs: null, checkedAt: new Date() });
+      }
+    } catch {
+      setHealth({ status: "offline", latencyMs: null, checkedAt: new Date() });
+    }
+  }, []);
+
+  const fetchKeyInfo = useCallback(async () => {
+    try {
+      const res = await fetch(`${TEE_ENDPOINT}/key`, { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        setKeyInfo({
+          publicKeyB64: data.publicKeyB64 ?? null,
+          epochId: data.epochId ?? null,
+          counter: data.counter ?? null,
+          measurement: data.measurement ?? null,
+        });
+      }
+    } catch { /* health check covers status */ }
+  }, []);
+
+  useEffect(() => {
+    checkHealth();
+    fetchKeyInfo();
+    const interval = setInterval(() => {
+      checkHealth();
+      fetchKeyInfo();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [checkHealth, fetchKeyInfo]);
+
+  const statusColor =
+    health.status === "online"
+      ? "bg-emerald-500"
+      : health.status === "checking"
+        ? "bg-amber-400"
+        : "bg-red-500";
+
+  const statusLabel =
+    health.status === "online"
+      ? "Enclave Online"
+      : health.status === "checking"
+        ? "Checking..."
+        : "Enclave Offline";
+
+  const measurementMatch = keyInfo.measurement === ENCLAVE_MEASUREMENT;
+
+  return (
+    <div className="rounded-xl border border-border-subtle bg-bg-elevated overflow-hidden">
+      {/* Status header */}
+      <div className="px-5 py-4 flex items-center justify-between border-b border-border-subtle">
+        <div className="flex items-center gap-3">
+          <div className="relative flex h-2.5 w-2.5">
+            {health.status === "online" && (
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+            )}
+            <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${statusColor}`} />
+          </div>
+          <span className="text-sm font-semibold text-text">{statusLabel}</span>
+        </div>
+        {health.latencyMs !== null && (
+          <span className="text-[10px] font-mono text-text-tertiary">{health.latencyMs}ms</span>
+        )}
+      </div>
+
+      {/* Live identity */}
+      <div className="px-5 py-3 border-b border-border-subtle">
+        <div className="text-[10px] uppercase tracking-wider text-text-tertiary font-medium mb-2">Live Enclave Identity</div>
+        <EnclaveRow label="Public Key" value={keyInfo.publicKeyB64 ?? "Loading..."} mono />
+        <EnclaveRow label="Epoch ID" value={keyInfo.epochId ? `${keyInfo.epochId.slice(0, 24)}...` : "Loading..."} mono />
+        <EnclaveRow label="Proof Counter" value={keyInfo.counter ?? "..."} mono />
+      </div>
+
+      {/* Infrastructure */}
+      <div className="px-5 py-3 border-b border-border-subtle">
+        <div className="text-[10px] uppercase tracking-wider text-text-tertiary font-medium mb-2">Infrastructure</div>
+        <EnclaveRow label="Environment" value="AWS Nitro Enclave" />
+        <EnclaveRow label="Region" value="us-east-2 (Ohio)" />
+        <EnclaveRow label="Enforcement" value="measured-tee" />
+        <EnclaveRow label="Endpoint" value="nitro.occproof.com" mono />
+      </div>
+
+      {/* Cryptography */}
+      <div className="px-5 py-3 border-b border-border-subtle">
+        <div className="text-[10px] uppercase tracking-wider text-text-tertiary font-medium mb-2">Cryptography</div>
+        <EnclaveRow label="Signing" value="Ed25519 (Curve25519)" />
+        <EnclaveRow label="Hash" value="SHA-256" />
+        <EnclaveRow label="Attestation" value="aws-nitro (COSE Sign1)" />
+        <EnclaveRow label="Nonce Source" value="NSM Hardware RNG" />
+        <EnclaveRow label="Library" value="@noble/ed25519" mono />
+      </div>
+
+      {/* Isolation */}
+      <div className="px-5 py-3 border-b border-border-subtle">
+        <div className="text-[10px] uppercase tracking-wider text-text-tertiary font-medium mb-2">Isolation Guarantees</div>
+        <div className="space-y-1.5">
+          {[
+            "No persistent storage — all state in memory only",
+            "No network access — vsock channel only",
+            "No interactive access — no SSH, console, or debugger",
+            "No key extraction — private key never leaves enclave RAM",
+            "Measured boot — image hashed by Nitro hypervisor",
+          ].map((item) => (
+            <div key={item} className="flex gap-2 items-start">
+              <div className="mt-1.5 w-1 h-1 rounded-full bg-emerald-500 shrink-0" />
+              <span className="text-[11px] text-text-secondary leading-relaxed">{item}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* PCR0 Measurement */}
+      <div className="px-5 py-3 border-b border-border-subtle">
+        <div className="text-[10px] uppercase tracking-wider text-text-tertiary font-medium mb-2">Enclave Measurement (PCR0)</div>
+        <code className="block text-[9px] font-mono text-emerald-400/90 leading-relaxed break-all bg-bg-subtle/50 rounded-lg p-2.5">
+          {ENCLAVE_MEASUREMENT}
+        </code>
+        {keyInfo.measurement && (
+          <div className="mt-2 flex items-center gap-1.5">
+            <div className={`w-1.5 h-1.5 rounded-full ${measurementMatch ? "bg-emerald-500" : "bg-red-500"}`} />
+            <span className={`text-[10px] ${measurementMatch ? "text-emerald-400" : "text-red-400"}`}>
+              {measurementMatch ? "Live measurement matches" : "Measurement mismatch"}
+            </span>
+          </div>
+        )}
+        <p className="mt-2 text-[10px] text-text-tertiary leading-relaxed">
+          SHA-384 hash uniquely identifying the code running inside the enclave.
+          Included in every AWS Nitro attestation report for independent verification.
+        </p>
+      </div>
+
+      {/* Footer */}
+      <div className="px-5 py-3 flex items-center justify-between">
+        <span className="text-[10px] text-text-tertiary">
+          {health.checkedAt
+            ? `Checked ${health.checkedAt.toLocaleTimeString()}`
+            : "Checking..."}
+        </span>
+        <button
+          onClick={() => { checkHealth(); fetchKeyInfo(); }}
+          disabled={health.status === "checking"}
+          className="text-[10px] font-medium text-text-tertiary hover:text-text transition-colors disabled:opacity-50"
+        >
+          Refresh
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function Home() {
   return (
@@ -166,7 +343,7 @@ export default function Home() {
 
       {/* ── What You Get ── */}
       <Section>
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
+        <div className="grid lg:grid-cols-2 gap-16 items-start">
           <div>
             <ScrollReveal>
               <h2 className="text-2xl sm:text-3xl font-semibold tracking-[-0.03em] mb-6">
@@ -203,59 +380,7 @@ export default function Home() {
           </div>
 
           <ScrollReveal delay={150}>
-            <div className="terminal-glow">
-              <TerminalWindow title="Actual occ/1 generated proof">
-                <pre className="text-[10px] sm:text-[11px] leading-snug font-mono whitespace-pre-wrap break-all max-h-[600px] overflow-y-auto">
-              <P>{"{"}</P>{"\n"}
-              {"  "}<K>version</K><P>: </P><S>occ/1</S><P>,</P>{"\n"}
-              {"  "}<K>artifact</K><P>: {"{"}</P>{"\n"}
-              {"    "}<K>hashAlg</K><P>: </P><S>sha256</S><P>,</P>{"\n"}
-              {"    "}<K>digestB64</K><P>: </P><S>gJzb/IOJxQSOcMHTuVQOeuWir5qVUxusmm//TYPhfhw=</S>{"\n"}
-              {"  "}<P>{"}"}</P><P>,</P>{"\n"}
-              {"  "}<K>commit</K><P>: {"{"}</P>{"\n"}
-              {"    "}<K>nonceB64</K><P>: </P><S>uOubfUo73V0NI0XRtftc4PBXEiJR7elrimsyliwR1Fo=</S><P>,</P>{"\n"}
-              {"    "}<K>counter</K><P>: </P><S>571</S><P>,</P>{"\n"}
-              {"    "}<K>slotCounter</K><P>: </P><S>570</S><P>,</P>{"\n"}
-              {"    "}<K>slotHashB64</K><P>: </P><S>wN7+7StkGTb8COhBvbXsCARvYtWqYMv4uardhiEzzo0=</S><P>,</P>{"\n"}
-              {"    "}<K>time</K><P>: </P><N>1773709206988</N><P>,</P>{"\n"}
-              {"    "}<K>epochId</K><P>: </P><S>/qXZiO+PUKMAvVcoth+czcaid7wyoyU+AWjGWRHD4yo=</S><P>,</P>{"\n"}
-              {"    "}<K>prevB64</K><P>: </P><S>sKCR/xeVqicBnt/wg/TUK+2eyyA2C5I718q1OejL+a0=</S>{"\n"}
-              {"  "}<P>{"}"}</P><P>,</P>{"\n"}
-              {"  "}<K>signer</K><P>: {"{"}</P>{"\n"}
-              {"    "}<K>publicKeyB64</K><P>: </P><S>QQeecy4yv6dhExeBMVyevBpG2LOUpD6DS0wiEMa9EWE=</S><P>,</P>{"\n"}
-              {"    "}<K>signatureB64</K><P>: </P><S>NvAe7Ubr3rZxONX7N6/+qfLz/L+B/yp/F6y9F4Tjpv...==</S>{"\n"}
-              {"  "}<P>{"}"}</P><P>,</P>{"\n"}
-              {"  "}<K>environment</K><P>: {"{"}</P>{"\n"}
-              {"    "}<K>enforcement</K><P>: </P><S>measured-tee</S><P>,</P>{"\n"}
-              {"    "}<K>measurement</K><P>: </P><S>8db9ab687fd5f66d...c66cd19d</S><P>,</P>{"\n"}
-              {"    "}<K>attestation</K><P>: {"{"}</P>{"\n"}
-              {"      "}<K>format</K><P>: </P><S>aws-nitro</S><P>,</P>{"\n"}
-              {"      "}<K>reportB64</K><P>: </P><S>hEShATgioFkRIL9p...dkG9Aw==</S>{"\n"}
-              {"    "}<P>{"}"}</P>{"\n"}
-              {"  "}<P>{"}"}</P><P>,</P>{"\n"}
-              {"  "}<K>timestamps</K><P>: {"{"}</P>{"\n"}
-              {"    "}<K>artifact</K><P>: {"{"}</P>{"\n"}
-              {"      "}<K>authority</K><P>: </P><S>freetsa.org</S><P>,</P>{"\n"}
-              {"      "}<K>time</K><P>: </P><S>2026-03-17T01:00:09Z</S>{"\n"}
-              {"    "}<P>{"}"}</P>{"\n"}
-              {"  "}<P>{"}"}</P><P>,</P>{"\n"}
-              {"  "}<K>agency</K><P>: {"{"}</P>{"\n"}
-              {"    "}<K>actor</K><P>: {"{"}</P>{"\n"}
-              {"      "}<K>algorithm</K><P>: </P><S>ES256</S><P>,</P>{"\n"}
-              {"      "}<K>provider</K><P>: </P><S>passkey</S>{"\n"}
-              {"    "}<P>{"}"}</P><P>,</P>{"\n"}
-              {"    "}<K>authorization</K><P>: {"{"}</P>{"\n"}
-              {"      "}<K>purpose</K><P>: </P><S>occ/commit-authorize/v1</S><P>,</P>{"\n"}
-              {"      "}<K>format</K><P>: </P><S>webauthn</S>{"\n"}
-              {"    "}<P>{"}"}</P>{"\n"}
-              {"  "}<P>{"}"}</P><P>,</P>{"\n"}
-              {"  "}<K>attribution</K><P>: {"{"}</P>{"\n"}
-              {"    "}<K>name</K><P>: </P><S>Mike Argento</S>{"\n"}
-              {"  "}<P>{"}"}</P>{"\n"}
-              <P>{"}"}</P>
-                </pre>
-              </TerminalWindow>
-            </div>
+            <EnclavePanel />
           </ScrollReveal>
         </div>
       </Section>

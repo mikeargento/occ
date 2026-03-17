@@ -10,7 +10,6 @@ const links: { href: string; label: string; external?: boolean; indicator?: bool
   { href: "/agent", label: "Agent" },
   { href: "/docs", label: "Docs" },
   { href: "/api-reference", label: "API" },
-  { href: "/enclave", label: "Enclave" },
   { href: "https://github.com/mikeargento/occ", label: "GitHub", external: true },
 ];
 
