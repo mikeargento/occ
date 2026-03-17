@@ -579,7 +579,7 @@ export default function StudioPage() {
           let p256Valid: boolean;
           if (isWebAuthnFormat) {
             // WebAuthn: verify over authenticatorData || SHA-256(clientDataJSON)
-            const wa = authorization as Record<string, string>;
+            const wa = authorization as unknown as Record<string, string>;
             const authData = b64ToBytes(wa.authenticatorDataB64);
             const clientDataHash = await crypto.subtle.digest(
               "SHA-256",
