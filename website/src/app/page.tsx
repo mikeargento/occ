@@ -181,7 +181,7 @@ function EnclavePanel() {
 
       {/* PCR0 Measurement */}
       <div className="px-5 py-3 border-b border-border-subtle">
-        <div className="text-[10px] uppercase tracking-wider text-text-tertiary font-medium mb-2">Image Hash (PCR0)</div>
+        <div className="text-[10px] uppercase tracking-wider text-text-tertiary font-medium mb-2">Enclave Measurement (PCR0)</div>
         <code className="block text-[9px] font-mono text-emerald-400/90 leading-relaxed break-all bg-bg-subtle/50 rounded-lg p-2">
           {ENCLAVE_MEASUREMENT}
         </code>
@@ -189,7 +189,7 @@ function EnclavePanel() {
           <div className="mt-1.5 flex items-center gap-1.5">
             <div className={`w-1.5 h-1.5 rounded-full ${measurementMatch ? "bg-emerald-500" : "bg-red-500"}`} />
             <span className={`text-[10px] ${measurementMatch ? "text-emerald-400" : "text-red-400"}`}>
-              {measurementMatch ? "Running code matches published image" : "Running code differs from published image"}
+              {measurementMatch ? "Measurement matches published build" : "Measurement differs from published build"}
             </span>
           </div>
         )}
@@ -315,16 +315,18 @@ export default function Home() {
                 Every proof is independently verifiable
               </h2>
               <p className="text-sm text-text-secondary leading-relaxed mb-6">
-                Proofs are generated inside the enclave shown here. Each proof
-                is a self-contained JSON object that carries everything needed
-                to verify it. No trust in our servers required.
+                Each proof is signed inside the enclave shown here and contains
+                the artifact hash, commit metadata, Ed25519 signature, and
+                hardware attestation. Everything needed to verify the proof is
+                in the proof itself.
               </p>
               <div className="space-y-3">
                 {[
-                  { title: "Content-addressed", desc: "SHA-256 digest locks the proof to exact bytes." },
-                  { title: "Timestamped", desc: "RFC 3161 timestamp from an independent authority." },
-                  { title: "Hardware-attested", desc: "Nitro attestation binds the proof to the enclave image." },
-                  { title: "Device-authorized", desc: "WebAuthn passkey ties the proof to a physical device." },
+                  { title: "Content-addressed", desc: "SHA-256 digest binds the proof to exact artifact bytes." },
+                  { title: "Timestamped", desc: "RFC 3161 timestamp issued by an independent authority." },
+                  { title: "Hardware-attested", desc: "Nitro attestation ties the signature to a measured enclave." },
+                  { title: "Device-authorized", desc: "WebAuthn passkey binds the commit to a physical device." },
+                  { title: "Causally ordered", desc: "Monotonic counter and hash chain prevent reordering or omission." },
                 ].map((item) => (
                   <div key={item.title} className="flex gap-3 items-start">
                     <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
