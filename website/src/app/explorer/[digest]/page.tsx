@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ProofViewer } from "@/components/proof-viewer";
+import { AttestationVerifier } from "@/components/attestation-verifier";
 import type { OCCProof } from "@/lib/occ";
 import {
   fromUrlSafeB64,
@@ -153,7 +154,7 @@ export default function ProofDetailPage() {
           // Simple scalar — render inline
           if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
             return (
-              <SectionCard key={key} title={title}>
+              <SectionCard key={key} title={title} sectionKey={key}>
                 <ValueRow label={key} value={value} />
               </SectionCard>
             );
@@ -162,7 +163,7 @@ export default function ProofDetailPage() {
           // Object or array — render recursively
           if (typeof value === "object" && value !== null) {
             return (
-              <SectionCard key={key} title={title}>
+              <SectionCard key={key} title={title} sectionKey={key}>
                 <ObjectRenderer data={value} />
               </SectionCard>
             );
@@ -170,6 +171,14 @@ export default function ProofDetailPage() {
 
           return null;
         })}
+
+        {/* Attestation Verification */}
+        {proof.environment?.attestation?.reportB64 && proof.environment?.measurement && (
+          <AttestationVerifier
+            reportB64={proof.environment.attestation.reportB64}
+            measurement={proof.environment.measurement}
+          />
+        )}
 
         {/* Raw JSON */}
         <div className="mt-6">
@@ -180,15 +189,33 @@ export default function ProofDetailPage() {
   );
 }
 
+/* ── Collapsible sections — these start expanded but can be toggled ── */
+
+const collapsibleSections = new Set(["environment", "timestamps", "slotAllocation"]);
+
 /* ── Section Card ── */
 
-function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
+function SectionCard({ title, children, sectionKey }: { title: string; children: React.ReactNode; sectionKey?: string }) {
+  const isCollapsible = sectionKey ? collapsibleSections.has(sectionKey) : false;
+  const [open, setOpen] = useState(true);
+
   return (
     <div className="rounded-xl border border-border-subtle bg-bg-elevated overflow-hidden">
-      <div className="px-5 py-3.5 border-b border-border-subtle">
+      <button
+        onClick={isCollapsible ? () => setOpen(!open) : undefined}
+        className={`w-full px-5 py-3.5 flex items-center justify-between ${isCollapsible ? "cursor-pointer hover:bg-bg-subtle/30 transition-colors" : ""} ${open ? "border-b border-border-subtle" : ""}`}
+      >
         <h3 className="text-xs font-medium text-text-tertiary uppercase tracking-wider">{title}</h3>
-      </div>
-      <div className="px-5 py-3">{children}</div>
+        {isCollapsible && (
+          <svg
+            width="14" height="14" viewBox="0 0 14 14" fill="currentColor"
+            className={`text-text-tertiary transition-transform duration-200 ${open ? "rotate-90" : ""}`}
+          >
+            <path d="M4 1.5l5.5 5.5-5.5 5.5" />
+          </svg>
+        )}
+      </button>
+      {open && <div className="px-5 py-3">{children}</div>}
     </div>
   );
 }
@@ -327,9 +354,15 @@ function CollapsibleArray({ items }: { items: unknown[] }) {
       {hasMore && (
         <button
           onClick={() => setExpanded(!expanded)}
-          className="text-xs text-text-tertiary hover:text-text transition-colors mt-1"
+          className="inline-flex items-center gap-1.5 text-[11px] text-emerald-400 hover:text-emerald-300 transition-colors mt-2 font-medium"
         >
-          {expanded ? "Show less" : `Show all ${items.length} items...`}
+          <svg
+            width="10" height="10" viewBox="0 0 14 14" fill="currentColor"
+            className={`transition-transform duration-200 ${expanded ? "rotate-90" : ""}`}
+          >
+            <path d="M4 1.5l5.5 5.5-5.5 5.5" />
+          </svg>
+          {expanded ? "Show less" : `Show all ${items.length} items`}
         </button>
       )}
     </div>
@@ -371,9 +404,15 @@ function ValueRow({ label, value, rawKey }: { label: string; value: unknown; raw
           {isBlob && (
             <button
               onClick={() => setBlobExpanded(!blobExpanded)}
-              className="block text-[10px] text-text-tertiary hover:text-text transition-colors mt-0.5 ml-auto"
+              className="inline-flex items-center gap-1.5 text-[11px] text-emerald-400 hover:text-emerald-300 transition-colors mt-1.5 ml-auto font-medium"
             >
-              {blobExpanded ? "Collapse" : `Show all (${strValue.length} chars)`}
+              <svg
+                width="10" height="10" viewBox="0 0 14 14" fill="currentColor"
+                className={`transition-transform duration-200 ${blobExpanded ? "rotate-90" : ""}`}
+              >
+                <path d="M4 1.5l5.5 5.5-5.5 5.5" />
+              </svg>
+              {blobExpanded ? "Collapse" : `Expand (${strValue.length.toLocaleString()} chars)`}
             </button>
           )}
           {showTimestamp && (

@@ -123,13 +123,14 @@ export async function commitDigest(
   const proofs = await resp.json();
   const raw = Array.isArray(proofs) ? proofs[0] : proofs;
 
-  // Normalize to occ/1 canonical field order
+  // Normalize to occ/1 canonical field order, preserving all enclave fields
   const proof: OCCProof = {
     version: "occ/1",
     artifact: raw.artifact,
     commit: raw.commit,
     signer: raw.signer,
     environment: raw.environment,
+    ...raw, // preserve any extra fields the enclave returns
     timestamps: raw.timestamps,
     agency: raw.agency,
     attribution: raw.attribution,
@@ -182,6 +183,7 @@ export async function commitBatch(
       commit: r.commit as OCCProof["commit"],
       signer: r.signer as OCCProof["signer"],
       environment: r.environment as OCCProof["environment"],
+      ...r, // preserve any extra fields the enclave returns
       timestamps: r.timestamps as OCCProof["timestamps"],
       agency: r.agency as OCCProof["agency"],
       attribution: r.attribution as OCCProof["attribution"],
