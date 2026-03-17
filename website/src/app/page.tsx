@@ -305,7 +305,7 @@ export default function Home() {
 
       {/* ── What You Get ── */}
       <Section>
-        <div className="grid lg:grid-cols-2 gap-12 items-start">
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
           <ScrollReveal>
             <div>
               <h2 className="text-2xl sm:text-3xl font-semibold tracking-[-0.03em] mb-4">
