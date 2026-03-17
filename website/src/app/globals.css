@@ -20,6 +20,7 @@
   --color-info: #3b82f6;
   --font-sans: "acumin-pro", "Helvetica Neue", Helvetica, sans-serif;
   --font-serif: "acumin-pro", "Helvetica Neue", Helvetica, sans-serif;
+
   --font-mono: var(--font-mono, "JetBrains Mono", "SF Mono", ui-monospace, monospace);
 }
 
@@ -88,7 +89,7 @@ body {
   text-wrap: pretty;
 }
 
-h1, h2, h3, h4, h5, h6,
+
 nav, button, [class*="uppercase"],
 [class*="inline-flex"], [class*="rounded-md"][class*="px-6"], [class*="rounded-xl"][class*="px-8"] {
   font-family: var(--font-sans);

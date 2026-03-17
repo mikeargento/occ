@@ -53,9 +53,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`dark ${jetbrainsMono.variable}`}>
-      <head>
-        <link rel="stylesheet" href="https://use.typekit.net/dzx2jda.css" />
-      </head>
+      <head />
       <body className="font-serif antialiased">
         <ThemeProvider>
           <Nav />

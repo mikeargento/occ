@@ -71,9 +71,9 @@ const icons = {
 /* ── Enclave info row ── */
 function EnclaveRow({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
-    <div className="flex items-start justify-between gap-3 py-2 border-b border-border-subtle last:border-0">
-      <span className="text-[11px] text-text-tertiary shrink-0">{label}</span>
-      <span className={`text-[11px] text-text text-right ${mono ? "font-mono" : "font-medium"}`}>{value}</span>
+    <div className="flex items-center justify-between gap-3">
+      <span className="text-xs text-text-tertiary">{label}</span>
+      <span className={`text-xs text-text ${mono ? "font-mono" : "font-medium"}`}>{value}</span>
     </div>
   );
 }
@@ -151,9 +151,9 @@ function EnclavePanel() {
   const measurementMatch = keyInfo.measurement === ENCLAVE_MEASUREMENT;
 
   return (
-    <div className="rounded-xl border border-border-subtle bg-bg-elevated overflow-hidden">
+    <div className="rounded-xl border border-border-subtle bg-bg-elevated p-8">
       {/* Status header */}
-      <div className="px-5 py-5 flex items-center justify-between border-b border-border-subtle">
+      <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
           <div className="relative flex h-2.5 w-2.5">
             {health.status === "online" && (
@@ -164,40 +164,51 @@ function EnclavePanel() {
           <span className="text-sm font-semibold text-text">{statusLabel}</span>
         </div>
         {health.latencyMs !== null && (
-          <span className="text-[10px] font-mono text-text-tertiary">{health.latencyMs}ms</span>
+          <span className="text-xs font-mono text-text-tertiary">{health.latencyMs}ms</span>
         )}
       </div>
 
-      {/* Info grid */}
-      <div className="px-5 py-4 grid grid-cols-2 gap-x-4 gap-y-3 border-b border-border-subtle">
-        <EnclaveRow label="Environment" value="AWS Nitro Enclave" />
-        <EnclaveRow label="Region" value="us-east-2" />
-        <EnclaveRow label="Signing" value="Ed25519" />
-        <EnclaveRow label="Hash" value="SHA-256" />
-        <EnclaveRow label="Attestation" value="aws-nitro" />
-        <EnclaveRow label="Enforcement" value="measured-tee" />
-        <EnclaveRow label="Endpoint" value="nitro.occproof.com" mono />
-      </div>
+      {/* Info rows — grouped */}
+      <div className="space-y-6">
+        {/* Infrastructure */}
+        <div className="space-y-2.5">
+          <EnclaveRow label="Environment" value="AWS Nitro Enclave" />
+          <EnclaveRow label="Region" value="us-east-2" />
+          <EnclaveRow label="Endpoint" value="nitro.occproof.com" mono />
+        </div>
 
-      {/* PCR0 Measurement */}
-      <div className="px-5 py-4 border-b border-border-subtle">
-        <div className="text-[10px] uppercase tracking-wider text-text-tertiary font-medium mb-2">Enclave Measurement (PCR0)</div>
-        <code className="block text-[9px] font-mono text-emerald-400/90 leading-relaxed break-all bg-bg-subtle/50 rounded-lg p-2">
-          {ENCLAVE_MEASUREMENT}
-        </code>
-        {keyInfo.measurement && (
-          <div className="mt-1.5 flex items-center gap-1.5">
-            <div className={`w-1.5 h-1.5 rounded-full ${measurementMatch ? "bg-emerald-500" : "bg-red-500"}`} />
-            <span className={`text-[10px] ${measurementMatch ? "text-emerald-400" : "text-red-400"}`}>
-              {measurementMatch ? "Live enclave matches published build hash" : "Live enclave does not match published build hash"}
-            </span>
-          </div>
-        )}
+        <div className="border-t border-border-subtle" />
+
+        {/* Cryptography */}
+        <div className="space-y-2.5">
+          <EnclaveRow label="Signing" value="Ed25519" />
+          <EnclaveRow label="Hash" value="SHA-256" />
+          <EnclaveRow label="Attestation" value="aws-nitro" />
+          <EnclaveRow label="Enforcement" value="measured-tee" />
+        </div>
+
+        <div className="border-t border-border-subtle" />
+
+        {/* PCR0 Measurement */}
+        <div>
+          <div className="text-xs text-text-tertiary mb-2">Enclave Measurement</div>
+          <code className="block text-sm font-mono text-emerald-400/80 leading-relaxed break-all">
+            {ENCLAVE_MEASUREMENT}
+          </code>
+          {keyInfo.measurement && (
+            <div className="mt-2 flex items-center gap-2">
+              <div className={`w-1.5 h-1.5 rounded-full ${measurementMatch ? "bg-emerald-500" : "bg-red-500"}`} />
+              <span className={`text-xs ${measurementMatch ? "text-emerald-400" : "text-red-400"}`}>
+                {measurementMatch ? "Matches published build hash" : "Does not match published build hash"}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Footer */}
-      <div className="px-5 py-4 flex items-center justify-between">
-        <span className="text-[10px] text-text-tertiary">
+      <div className="mt-8 pt-5 border-t border-border-subtle flex items-center justify-between">
+        <span className="text-xs text-text-tertiary">
           {health.checkedAt
             ? `Checked ${health.checkedAt.toLocaleTimeString()}`
             : "Checking..."}
@@ -205,7 +216,7 @@ function EnclavePanel() {
         <button
           onClick={() => { checkHealth(); fetchKeyInfo(); }}
           disabled={health.status === "checking"}
-          className="text-[10px] font-medium text-text-tertiary hover:text-text transition-colors disabled:opacity-50"
+          className="text-xs font-medium text-text-tertiary hover:text-text transition-colors disabled:opacity-50"
         >
           Refresh
         </button>
