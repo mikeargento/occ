@@ -7,6 +7,7 @@ import { useTheme } from "./theme-provider";
 
 const links: { href: string; label: string; external?: boolean; indicator?: boolean }[] = [
   { href: "/studio", label: "Studio" },
+  { href: "/explorer", label: "Explorer" },
   { href: "/agent", label: "Agent" },
   { href: "/docs", label: "Docs" },
   { href: "/api-reference", label: "API" },

@@ -255,6 +255,13 @@ export default function StudioPage() {
 
       setProofs(generatedProofs);
 
+      // Index proofs in explorer (fire-and-forget)
+      fetch("/api/proofs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ proofs: generatedProofs }),
+      }).catch(() => {});
+
       // Pre-build all zips so downloads are instant
       const zips: Uint8Array[] = [];
       for (let i = 0; i < files.length; i++) {

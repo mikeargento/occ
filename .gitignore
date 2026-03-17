@@ -10,3 +10,4 @@ dashboard/
 .env.*
 .occ/
 .npmrc
+.vercel
