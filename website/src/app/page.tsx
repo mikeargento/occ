@@ -143,10 +143,10 @@ function EnclavePanel() {
 
   const statusLabel =
     health.status === "online"
-      ? "Enclave Online"
+      ? "Verified Enclave"
       : health.status === "checking"
-        ? "Checking..."
-        : "Enclave Offline";
+        ? "Verifying..."
+        : "Enclave Unreachable";
 
   const measurementMatch = keyInfo.measurement === ENCLAVE_MEASUREMENT;
 
@@ -181,7 +181,7 @@ function EnclavePanel() {
 
       {/* PCR0 Measurement */}
       <div className="px-5 py-3 border-b border-border-subtle">
-        <div className="text-[10px] uppercase tracking-wider text-text-tertiary font-medium mb-2">Enclave Measurement (PCR0)</div>
+        <div className="text-[10px] uppercase tracking-wider text-text-tertiary font-medium mb-2">Image Hash (PCR0)</div>
         <code className="block text-[9px] font-mono text-emerald-400/90 leading-relaxed break-all bg-bg-subtle/50 rounded-lg p-2">
           {ENCLAVE_MEASUREMENT}
         </code>
@@ -189,7 +189,7 @@ function EnclavePanel() {
           <div className="mt-1.5 flex items-center gap-1.5">
             <div className={`w-1.5 h-1.5 rounded-full ${measurementMatch ? "bg-emerald-500" : "bg-red-500"}`} />
             <span className={`text-[10px] ${measurementMatch ? "text-emerald-400" : "text-red-400"}`}>
-              {measurementMatch ? "Live measurement matches" : "Measurement mismatch"}
+              {measurementMatch ? "Running code matches published image" : "Running code differs from published image"}
             </span>
           </div>
         )}
@@ -312,25 +312,25 @@ export default function Home() {
           <ScrollReveal delay={150}>
             <div>
               <h2 className="text-2xl sm:text-3xl font-semibold tracking-[-0.03em] mb-4">
-                Portable, verifiable proof
+                Every proof is independently verifiable
               </h2>
               <p className="text-sm text-text-secondary leading-relaxed mb-6">
-                Every proof is a self-contained JSON object. Content hash,
-                commit metadata, cryptographic signature, and hardware
-                attestation. Anyone can verify it independently.
+                Proofs are generated inside the enclave shown here. Each proof
+                is a self-contained JSON object that carries everything needed
+                to verify it. No trust in our servers required.
               </p>
               <div className="space-y-3">
                 {[
-                  { title: "Content-addressed", desc: "SHA-256 hash binds the proof to specific bytes." },
-                  { title: "Timestamped", desc: "RFC 3161 timestamps from trusted authorities." },
-                  { title: "Hardware-attested", desc: "AWS Nitro Enclave attestation proves the environment." },
-                  { title: "Device-authorized", desc: "Biometric passkey ties proof to a specific device." },
+                  { title: "Content-addressed", desc: "SHA-256 digest locks the proof to exact bytes." },
+                  { title: "Timestamped", desc: "RFC 3161 timestamp from an independent authority." },
+                  { title: "Hardware-attested", desc: "Nitro attestation binds the proof to the enclave image." },
+                  { title: "Device-authorized", desc: "WebAuthn passkey ties the proof to a physical device." },
                 ].map((item) => (
                   <div key={item.title} className="flex gap-3 items-start">
                     <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
                     <div>
                       <span className="text-sm font-semibold text-text">{item.title}</span>
-                      <span className="text-sm text-text-secondary ml-1">— {item.desc}</span>
+                      <span className="text-sm text-text-secondary ml-1">· {item.desc}</span>
                     </div>
                   </div>
                 ))}
