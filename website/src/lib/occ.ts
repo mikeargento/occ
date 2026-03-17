@@ -123,9 +123,8 @@ export async function commitDigest(
   const proofs = await resp.json();
   const raw = Array.isArray(proofs) ? proofs[0] : proofs;
 
-  // Preserve all enclave fields, then apply canonical field order on top
+  // Canonical field order first, then any extra enclave fields at the end
   const proof: OCCProof = {
-    ...raw,
     version: raw.version || "occ/1",
     artifact: raw.artifact,
     commit: raw.commit,
@@ -137,6 +136,7 @@ export async function commitDigest(
     slotAllocation: raw.slotAllocation,
     metadata: raw.metadata,
     claims: raw.claims,
+    ...raw, // any extra/unknown fields go at the end
   };
 
   // Promote legacy tsa from metadata
@@ -178,7 +178,6 @@ export async function commitBatch(
 
   return rawProofs.map((r: Record<string, unknown>) => {
     const proof: OCCProof = {
-      ...r,
       version: (r.version as string) || "occ/1",
       artifact: r.artifact as OCCProof["artifact"],
       commit: r.commit as OCCProof["commit"],
@@ -190,6 +189,7 @@ export async function commitBatch(
       slotAllocation: r.slotAllocation as OCCProof["slotAllocation"],
       metadata: r.metadata as OCCProof["metadata"],
       claims: r.claims as OCCProof["claims"],
+      ...r, // any extra/unknown fields go at the end
     };
 
     // Promote legacy tsa from metadata

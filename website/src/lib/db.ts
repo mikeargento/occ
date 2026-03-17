@@ -44,9 +44,27 @@ export async function getProofsByDigest(digestB64: string) {
   const sql = getDb();
   const rows = await sql`SELECT proof_json, indexed_at FROM proofs WHERE digest_b64 = ${digestB64} ORDER BY commit_time DESC`;
   return rows.map((r) => ({
-    proof: r.proof_json as unknown as OCCProof,
+    proof: canonicalizeProof(r.proof_json as unknown as OCCProof),
     indexedAt: r.indexed_at as string,
   }));
+}
+
+/** Reorder proof fields to canonical occ/1 order */
+function canonicalizeProof(raw: OCCProof): OCCProof {
+  return {
+    version: raw.version,
+    artifact: raw.artifact,
+    commit: raw.commit,
+    signer: raw.signer,
+    environment: raw.environment,
+    timestamps: raw.timestamps,
+    agency: raw.agency,
+    attribution: raw.attribution,
+    slotAllocation: raw.slotAllocation,
+    metadata: raw.metadata,
+    claims: raw.claims,
+    ...(raw as unknown as Record<string, unknown>), // extra fields at end
+  };
 }
 
 /* ── Paginated list ── */
