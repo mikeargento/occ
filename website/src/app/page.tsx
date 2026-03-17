@@ -176,7 +176,6 @@ function EnclavePanel() {
         <EnclaveRow label="Hash" value="SHA-256" />
         <EnclaveRow label="Attestation" value="aws-nitro" />
         <EnclaveRow label="Enforcement" value="measured-tee" />
-        <EnclaveRow label="Counter" value={keyInfo.counter ?? "..."} mono />
         <EnclaveRow label="Endpoint" value="nitro.occproof.com" mono />
       </div>
 
