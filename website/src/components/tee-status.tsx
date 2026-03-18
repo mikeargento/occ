@@ -113,7 +113,7 @@ export function TeeStatus() {
         >
           <div className="overflow-hidden">
             <div className="px-5 pb-4 space-y-3">
-              <code className="block text-[10px] font-mono text-emerald-400/90 leading-relaxed break-all bg-bg-subtle/50 rounded-lg p-3">
+              <code className="block text-[10px] font-mono text-text-tertiary leading-relaxed break-all bg-bg-subtle/50 rounded-lg p-3">
                 {ENCLAVE_MEASUREMENT}
               </code>
               <p className="text-[10px] text-text-tertiary leading-relaxed">

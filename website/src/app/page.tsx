@@ -192,7 +192,7 @@ function EnclavePanel() {
         {/* PCR0 Measurement */}
         <div>
           <div className="text-xs text-text-tertiary mb-2">Enclave Measurement</div>
-          <code className="block text-sm font-mono text-emerald-400/80 leading-relaxed break-all">
+          <code className="block text-sm font-mono text-text-tertiary leading-relaxed break-all">
             {ENCLAVE_MEASUREMENT}
           </code>
           {keyInfo.measurement && (
