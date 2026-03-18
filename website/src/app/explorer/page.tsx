@@ -320,48 +320,163 @@ function ProofTable({ proofs, label }: { proofs: ProofSummary[]; label?: string 
       )}
       <div className="divide-y divide-border-subtle">
         {proofs.map((p) => (
-          <Link
-            key={p.id}
-            href={`/explorer/${encodeURIComponent(toUrlSafeB64(p.digestB64))}`}
-            className="flex items-center justify-between px-4 sm:px-5 py-3.5 hover:bg-bg-subtle/40 transition-colors"
-          >
-            <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
-              <code className="text-xs sm:text-sm font-mono text-text shrink-0">
-                {truncateHash(p.digestB64, 10)}
-              </code>
-              <span className={`text-[10px] sm:text-xs font-medium shrink-0 ${enforcementColor(p.enforcement)}`}>
-                <span className="hidden sm:inline">{enforcementLabel(p.enforcement)}</span>
-                <span className="sm:hidden">{p.enforcement === "measured-tee" ? "TEE" : p.enforcement === "hw-key" ? "HW" : "SW"}</span>
-              </span>
-              {p.counter && (
-                <span className="text-[10px] sm:text-xs font-mono text-text-tertiary shrink-0">
-                  #{p.counter}
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-2 sm:ml-4">
-              {p.hasAgency && (
-                <span className="text-blue-400" title="Device-authorized">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                  </svg>
-                </span>
-              )}
-              {p.hasTsa && (
-                <span className="text-purple-400" title="RFC 3161 timestamped">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M12 6v6l4 2" />
-                  </svg>
-                </span>
-              )}
-              <span className="text-[10px] sm:text-xs text-text-tertiary w-14 sm:w-16 text-right">
-                {p.commitTime ? relativeTime(p.commitTime) : "—"}
-              </span>
-            </div>
-          </Link>
+          <ProofRow key={p.id} proof={p} />
         ))}
       </div>
+    </div>
+  );
+}
+
+function ProofRow({ proof: p }: { proof: ProofSummary }) {
+  const [expanded, setExpanded] = useState(false);
+  const [detail, setDetail] = useState<OCCProof | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const toggle = useCallback(async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (expanded) {
+      setExpanded(false);
+      return;
+    }
+    setExpanded(true);
+    if (!detail) {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/proofs/${encodeURIComponent(toUrlSafeB64(p.digestB64))}`);
+        if (res.ok) {
+          const data = await res.json();
+          // API returns { proofs: [{ proof, indexedAt }] }
+          const first = data.proofs?.[0]?.proof ?? data.proof;
+          if (first) setDetail(first);
+        }
+      } catch { /* ignore */ }
+      setLoading(false);
+    }
+  }, [expanded, detail, p.digestB64]);
+
+  return (
+    <div>
+      <div className="flex items-center px-4 sm:px-5 py-3.5 hover:bg-bg-subtle/40 transition-colors">
+        <button
+          onClick={toggle}
+          className="shrink-0 mr-2 sm:mr-3 text-text-tertiary hover:text-text transition-colors p-0.5"
+          title={expanded ? "Collapse" : "Expand"}
+        >
+          <svg
+            width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5"
+            className={`transition-transform duration-150 ${expanded ? "rotate-90" : ""}`}
+          >
+            <path d="M3 1.5L7 5L3 8.5" />
+          </svg>
+        </button>
+        <Link
+          href={`/explorer/${encodeURIComponent(toUrlSafeB64(p.digestB64))}`}
+          className="flex items-center justify-between flex-1 min-w-0"
+        >
+          <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
+            <code className="text-xs sm:text-sm font-mono text-text shrink-0">
+              {truncateHash(p.digestB64, 10)}
+            </code>
+            <span className={`text-[10px] sm:text-xs font-medium shrink-0 ${enforcementColor(p.enforcement)}`}>
+              <span className="hidden sm:inline">{enforcementLabel(p.enforcement)}</span>
+              <span className="sm:hidden">{p.enforcement === "measured-tee" ? "TEE" : p.enforcement === "hw-key" ? "HW" : "SW"}</span>
+            </span>
+            {p.counter && (
+              <span className="text-[10px] sm:text-xs font-mono text-text-tertiary shrink-0">
+                #{p.counter}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-2 sm:ml-4">
+            {p.hasAgency && (
+              <span className="text-blue-400" title="Device-authorized">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+              </span>
+            )}
+            {p.hasTsa && (
+              <span className="text-purple-400" title="RFC 3161 timestamped">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 6v6l4 2" />
+                </svg>
+              </span>
+            )}
+            <span className="text-[10px] sm:text-xs text-text-tertiary w-14 sm:w-16 text-right">
+              {p.commitTime ? relativeTime(p.commitTime) : "—"}
+            </span>
+          </div>
+        </Link>
+      </div>
+
+      {expanded && (
+        <div className="px-4 sm:px-5 pb-4 pt-1 bg-bg-subtle/20">
+          {loading ? (
+            <div className="text-xs text-text-tertiary animate-pulse py-2">Loading proof...</div>
+          ) : detail ? (
+            <div className="space-y-3">
+              {/* Digest */}
+              <div>
+                <div className="text-[10px] text-text-tertiary uppercase tracking-wider mb-1">SHA-256 Digest</div>
+                <code className="text-xs font-mono text-text break-all">{detail.artifact.digestB64}</code>
+              </div>
+
+              {/* Key fields grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2 text-xs">
+                <div>
+                  <div className="text-[10px] text-text-tertiary uppercase tracking-wider">Signer</div>
+                  <code className="font-mono text-text">{truncateHash(detail.signer.publicKeyB64, 12)}</code>
+                </div>
+                <div>
+                  <div className="text-[10px] text-text-tertiary uppercase tracking-wider">Enforcement</div>
+                  <span className={`font-medium ${enforcementColor(detail.environment.enforcement)}`}>
+                    {enforcementLabel(detail.environment.enforcement)}
+                  </span>
+                </div>
+                {detail.commit.time && (
+                  <div>
+                    <div className="text-[10px] text-text-tertiary uppercase tracking-wider">Committed</div>
+                    <span className="text-text">{new Date(detail.commit.time).toLocaleString()}</span>
+                  </div>
+                )}
+                {detail.attribution?.name && (
+                  <div>
+                    <div className="text-[10px] text-text-tertiary uppercase tracking-wider">Attribution</div>
+                    <span className="text-text">{detail.attribution.name}</span>
+                  </div>
+                )}
+                {(detail as Record<string, unknown>).agency && (
+                  <div>
+                    <div className="text-[10px] text-text-tertiary uppercase tracking-wider">Device</div>
+                    <span className="text-blue-400 font-medium">Passkey verified</span>
+                  </div>
+                )}
+                {detail.timestamps?.artifact?.authority && (
+                  <div>
+                    <div className="text-[10px] text-text-tertiary uppercase tracking-wider">Timestamp</div>
+                    <span className="text-purple-400 font-medium">{detail.timestamps.artifact.authority}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* View full proof link */}
+              <Link
+                href={`/explorer/${encodeURIComponent(toUrlSafeB64(p.digestB64))}`}
+                className="inline-flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 transition-colors mt-1"
+              >
+                View full proof
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </Link>
+            </div>
+          ) : (
+            <div className="text-xs text-text-tertiary py-2">Could not load proof details.</div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -13,7 +13,7 @@ function decodeCbor(data: Uint8Array, offset = 0): { value: unknown; offset: num
     if (info < 24) return { len: info, off };
     if (info === 24) return { len: data[off], off: off + 1 };
     if (info === 25) return { len: (data[off] << 8) | data[off + 1], off: off + 2 };
-    if (info === 26) return { len: (data[off] << 24) | (data[off + 1] << 16) | (data[off + 2] << 8) | data[off + 3], off: off + 4 };
+    if (info === 26) return { len: ((data[off] << 24) | (data[off + 1] << 16) | (data[off + 2] << 8) | data[off + 3]) >>> 0, off: off + 4 };
     if (info === 27) {
       // 8-byte length — JS can't handle > 2^53 but for our purposes we read as number
       let len = 0;
@@ -42,6 +42,17 @@ function decodeCbor(data: Uint8Array, offset = 0): { value: unknown; offset: num
       return { value: text, offset: r.off + r.len };
     }
     case 4: { // array
+      if (info === 31) {
+        // indefinite-length array — read until break (0xFF)
+        const arr: unknown[] = [];
+        let off = offset;
+        while (data[off] !== 0xff) {
+          const item = decodeCbor(data, off);
+          arr.push(item.value);
+          off = item.offset;
+        }
+        return { value: arr, offset: off + 1 };
+      }
       const r = readLength(info, offset);
       const arr: unknown[] = [];
       let off = r.off;
@@ -53,6 +64,18 @@ function decodeCbor(data: Uint8Array, offset = 0): { value: unknown; offset: num
       return { value: arr, offset: off };
     }
     case 5: { // map
+      if (info === 31) {
+        // indefinite-length map — read until break (0xFF)
+        const map: Record<string, unknown> = {};
+        let off = offset;
+        while (data[off] !== 0xff) {
+          const key = decodeCbor(data, off);
+          const val = decodeCbor(data, key.offset);
+          map[String(key.value)] = val.value;
+          off = val.offset;
+        }
+        return { value: map, offset: off + 1 };
+      }
       const r = readLength(info, offset);
       const map: Record<string, unknown> = {};
       let off = r.off;
@@ -85,7 +108,10 @@ function decodeCbor(data: Uint8Array, offset = 0): { value: unknown; offset: num
 }
 
 function b64ToBytes(b64: string): Uint8Array {
-  const bin = atob(b64);
+  // Handle both standard and URL-safe base64, and fix padding
+  let s = b64.replace(/-/g, "+").replace(/_/g, "/");
+  while (s.length % 4 !== 0) s += "=";
+  const bin = atob(s);
   const bytes = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
   return bytes;
