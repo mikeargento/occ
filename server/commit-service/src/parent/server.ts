@@ -32,6 +32,25 @@ const PORT = Number(
 );
 
 // ---------------------------------------------------------------------------
+// Proof indexing — fire-and-forget POST to explorer database
+// ---------------------------------------------------------------------------
+
+const INDEX_URL = process.env["PROOF_INDEX_URL"] ?? ""; // e.g. "https://proofstudio.xyz/api/proofs"
+
+async function indexProofs(proofs: OCCProof[]): Promise<void> {
+  if (!INDEX_URL) return;
+  try {
+    await fetch(INDEX_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ proofs }),
+    });
+  } catch (err) {
+    console.warn(`[parent] proof indexing failed: ${err instanceof Error ? err.message : String(err)}`);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // API key auth
 // ---------------------------------------------------------------------------
 
@@ -219,6 +238,9 @@ async function handleCommit(req: IncomingMessage, res: ServerResponse): Promise<
       }
     })
   );
+
+  // Fire-and-forget: index proofs in explorer database
+  void indexProofs(proofs);
 
   sendJson(res, 200, proofs);
 }
