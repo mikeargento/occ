@@ -307,8 +307,10 @@ export default function StudioPage() {
     // Use level 0 (store) for the original file — most artifacts (images,
     // video, audio, DNG) are already compressed, so re-compressing just
     // wastes CPU. Proof JSON is tiny and compresses fast.
+    // If the original file is named "proof.json", rename it to avoid collision
+    const safeFileName = f.name === "proof.json" ? "original_proof.json" : f.name;
     return zipSync({
-      [f.name]: [originalData, { level: 0 }],
+      [safeFileName]: [originalData, { level: 0 }],
       "proof.json": new TextEncoder().encode(proofJson),
     });
   };
