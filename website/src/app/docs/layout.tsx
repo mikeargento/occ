@@ -13,7 +13,7 @@ const sections = [
   { href: "/docs/agent-sdk", label: "Agent SDK" },
   { href: "/docs/what-occ-is-not", label: "What OCC is Not" },
   { href: "/docs/faq", label: "FAQ" },
-  { href: "/whitepaper.html", label: "Whitepaper" },
+  { href: "/docs/whitepaper", label: "Whitepaper" },
 ];
 
 export default function DocsLayout({ children }: { children: React.ReactNode }) {

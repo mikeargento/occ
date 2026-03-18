@@ -1,0 +1,37 @@
+import type { Metadata } from "next";
+import Sections1Through3 from "./sections-1-3";
+import Sections4Through6 from "./sections-4-6";
+import Sections7Through9 from "./sections-7-9";
+import Sections10Through19 from "./sections-10-19";
+
+export const metadata: Metadata = {
+  title: "Whitepaper — Origin Controlled Computing",
+  description:
+    "OCC whitepaper: Proof as a Reachability Property. Formal model, security game, and architecture for authenticated digital state creation.",
+};
+
+export default function WhitepaperPage() {
+  return (
+    <article className="prose-doc">
+      <div className="mb-2">
+        <div className="text-[10px] font-medium uppercase tracking-[0.15em] text-text-tertiary mb-3">
+          Whitepaper
+        </div>
+        <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-3">
+          Origin Controlled Computing
+        </h1>
+        <p className="text-lg text-text-secondary mb-1">
+          Proof as a Reachability Property
+        </p>
+        <p className="text-xs text-text-tertiary mb-8">
+          Michael James Argento &middot; Patent Pending
+        </p>
+      </div>
+
+      <Sections1Through3 />
+      <Sections4Through6 />
+      <Sections7Through9 />
+      <Sections10Through19 />
+    </article>
+  );
+}
