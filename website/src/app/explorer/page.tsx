@@ -208,13 +208,13 @@ export default function ExplorerPage() {
                       {proof.agency && (
                         <div>
                           <div className="text-text-tertiary mb-0.5">Device</div>
-                          <div className="text-blue-400 font-medium">Passkey verified</div>
+                          <div className="text-blue-600 dark:text-blue-400 font-medium">Passkey verified</div>
                         </div>
                       )}
                       {proof.timestamps && (
                         <div>
                           <div className="text-text-tertiary mb-0.5">Timestamp</div>
-                          <div className="text-purple-400 font-medium">RFC 3161</div>
+                          <div className="text-purple-600 dark:text-purple-400 font-medium">RFC 3161</div>
                         </div>
                       )}
                     </div>
@@ -390,14 +390,14 @@ function ProofRow({ proof: p }: { proof: ProofSummary }) {
           </div>
           <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-2 sm:ml-4">
             {p.hasAgency && (
-              <span className="text-blue-400" title="Device-authorized">
+              <span className="text-blue-600 dark:text-blue-400" title="Device-authorized">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                 </svg>
               </span>
             )}
             {p.hasTsa && (
-              <span className="text-purple-400" title="RFC 3161 timestamped">
+              <span className="text-purple-600 dark:text-purple-400" title="RFC 3161 timestamped">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="12" cy="12" r="10" />
                   <path d="M12 6v6l4 2" />
@@ -450,13 +450,13 @@ function ProofRow({ proof: p }: { proof: ProofSummary }) {
                 {!!(detail as unknown as Record<string, unknown>).agency && (
                   <div>
                     <div className="text-[10px] text-text-tertiary uppercase tracking-wider">Device</div>
-                    <span className="text-blue-400 font-medium">Passkey verified</span>
+                    <span className="text-blue-600 dark:text-blue-400 font-medium">Passkey verified</span>
                   </div>
                 )}
                 {detail.timestamps?.artifact?.authority && (
                   <div>
                     <div className="text-[10px] text-text-tertiary uppercase tracking-wider">Timestamp</div>
-                    <span className="text-purple-400 font-medium">{detail.timestamps.artifact.authority}</span>
+                    <span className="text-purple-600 dark:text-purple-400 font-medium">{detail.timestamps.artifact.authority}</span>
                   </div>
                 )}
               </div>

@@ -65,11 +65,11 @@ export function enforcementLabel(enforcement: string): string {
 export function enforcementColor(enforcement: string): string {
   switch (enforcement) {
     case "measured-tee":
-      return "text-emerald-400";
+      return "text-emerald-600 dark:text-emerald-400";
     case "hw-key":
-      return "text-blue-400";
+      return "text-blue-600 dark:text-blue-400";
     case "stub":
-      return "text-yellow-400";
+      return "text-yellow-600 dark:text-yellow-400";
     default:
       return "text-text-tertiary";
   }

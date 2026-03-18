@@ -357,7 +357,7 @@ function CollapsibleArray({ items }: { items: unknown[] }) {
       {hasMore && (
         <button
           onClick={() => setExpanded(!expanded)}
-          className="inline-flex items-center gap-1.5 text-[11px] text-emerald-400 hover:text-emerald-300 transition-colors mt-2 font-medium"
+          className="inline-flex items-center gap-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors mt-2 font-medium"
         >
           <svg
             width="10" height="10" viewBox="0 0 14 14" fill="currentColor"
@@ -407,7 +407,7 @@ function ValueRow({ label, value, rawKey }: { label: string; value: unknown; raw
           {isBlob && (
             <button
               onClick={() => setBlobExpanded(!blobExpanded)}
-              className="inline-flex items-center gap-1.5 text-[11px] text-emerald-400 hover:text-emerald-300 transition-colors mt-1.5 ml-auto font-medium"
+              className="inline-flex items-center gap-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors mt-1.5 ml-auto font-medium"
             >
               <svg
                 width="10" height="10" viewBox="0 0 14 14" fill="currentColor"
