@@ -284,18 +284,19 @@ export default function Home() {
             {
               step: "01",
               title: "Drop a file",
-              desc: "Any file. It never leaves your browser.",
-              micro: "Most people start with a photo.",
+              desc: "Any file. It never leaves your machine.",
+              micro: "Most people try a photo first.",
             },
             {
               step: "02",
               title: "Lock it in",
-              desc: "Your file gets a unique, permanent stamp. Takes about a second.",
+              desc: "This exact version gets sealed. One second.",
             },
             {
               step: "03",
-              title: "Get your proof",
-              desc: "Download a proof file. It works forever, anywhere, for anyone.",
+              title: "Take your proof",
+              desc: "A file that proves this existed, exactly like this, right now.",
+              micro: "No one can dispute it.",
             },
           ].map((item, i) => (
             <ScrollReveal key={item.step} delay={i * 100} className="h-full">
