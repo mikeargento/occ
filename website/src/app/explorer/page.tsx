@@ -447,7 +447,7 @@ function ProofRow({ proof: p }: { proof: ProofSummary }) {
                     <span className="text-text">{detail.attribution.name}</span>
                   </div>
                 )}
-                {(detail as Record<string, unknown>).agency && (
+                {!!(detail as unknown as Record<string, unknown>).agency && (
                   <div>
                     <div className="text-[10px] text-text-tertiary uppercase tracking-wider">Device</div>
                     <span className="text-blue-400 font-medium">Passkey verified</span>
