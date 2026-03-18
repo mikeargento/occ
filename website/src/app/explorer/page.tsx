@@ -170,15 +170,15 @@ export default function ExplorerPage() {
               return (
                 <div className="mt-5 space-y-4 animate-in fade-in duration-500">
                   {/* Verified banner */}
-                  <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-6">
+                  <div className="rounded-xl border border-emerald-600/30 dark:border-emerald-500/30 bg-emerald-500/10 dark:bg-emerald-500/5 p-6">
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-emerald-500/15">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-emerald-400">
+                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-emerald-500/20 dark:bg-emerald-500/15">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-emerald-600 dark:text-emerald-400">
                           <path d="M20 6L9 17l-5-5" />
                         </svg>
                       </div>
                       <div>
-                        <div className="text-lg font-semibold text-emerald-400">Verified</div>
+                        <div className="text-lg font-semibold text-emerald-600 dark:text-emerald-400">Verified</div>
                         <div className="text-xs text-text-tertiary">
                           This file has a cryptographic proof on record
                         </div>
@@ -221,7 +221,7 @@ export default function ExplorerPage() {
 
                     <Link
                       href={`/explorer/${encodeURIComponent(toUrlSafeB64(proof.artifact.digestB64))}`}
-                      className="mt-5 flex items-center justify-center gap-2 w-full py-3 rounded-lg bg-emerald-500/15 text-sm font-medium text-emerald-400 hover:bg-emerald-500/25 transition-colors"
+                      className="mt-5 flex items-center justify-center gap-2 w-full py-3 rounded-lg bg-emerald-500/15 text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/25 transition-colors"
                     >
                       View full proof
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -464,7 +464,7 @@ function ProofRow({ proof: p }: { proof: ProofSummary }) {
               {/* View full proof link */}
               <Link
                 href={`/explorer/${encodeURIComponent(toUrlSafeB64(p.digestB64))}`}
-                className="inline-flex items-center gap-1.5 text-xs text-emerald-400 hover:text-emerald-300 transition-colors mt-1"
+                className="inline-flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors mt-1"
               >
                 View full proof
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
