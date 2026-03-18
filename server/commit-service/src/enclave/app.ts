@@ -754,7 +754,7 @@ async function handleRequest(req: Record<string, unknown>): Promise<unknown> {
         );
       }
 
-      return { ok: true, counter: String(counter), epochId };
+      return { counter: String(counter), epochId };
     }
     case "health": {
       return {
