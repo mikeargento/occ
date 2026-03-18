@@ -23,7 +23,7 @@ function ProofLine() {
       <K>signer</K>{`: { `}<K>publicKeyB64</K>{`: `}<S>QQeecy4yv6dhExeBMVyevBpG2LOUpD6DS0wiEMa9EWE=</S>{`, `}
       <K>signatureB64</K>{`: `}<S>p74Jjzk9B5ieSTqlf1DcCLKnBt/6jBkwVGTJCJ3Z4+PFusMmeu9uqiUCTgHqKwFRidd4A/cHlS5dZpx2camyBw==</S>{` }, `}
       <K>environment</K>{`: { `}<K>enforcement</K>{`: `}<S>measured-tee</S>{`, `}
-      <K>measurement</K>{`: `}<S>8db9ab687fd5f66d813cdcd813e09c7c88f10a9d729f012056bf9914df8975baa40f2a65009517c712241c2fc66cd19d</S>{`, `}
+      <K>measurement</K>{`: `}<S>1acdac0aa2d72178cc8ed9d77a7e07c63fa47c2db9db186eed48ca5ea126f45da98acbc22531aac2c837bee4cc542dee</S>{`, `}
       <K>attestation</K>{`: { `}<K>format</K>{`: `}<S>aws-nitro</S>{` } }, `}
       <K>timestamps</K>{`: { `}<K>authority</K>{`: `}<S>freetsa.org</S>{`, `}<K>time</K>{`: `}<S>2026-03-13T02:25:13Z</S>{` }, `}
       <K>agency</K>{`: { `}<K>algorithm</K>{`: `}<S>ES256</S>{`, `}<K>provider</K>{`: `}<S>passkey</S>{` }, `}

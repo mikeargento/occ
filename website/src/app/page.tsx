@@ -6,7 +6,7 @@ import { useState, useEffect, useCallback } from "react";
 
 const TEE_ENDPOINT = "https://nitro.occproof.com";
 const ENCLAVE_MEASUREMENT =
-  "8db9ab687fd5f66d813cdcd813e09c7c88f10a9d729f012056bf9914df8975baa40f2a65009517c712241c2fc66cd19d";
+  "1acdac0aa2d72178cc8ed9d77a7e07c63fa47c2db9db186eed48ca5ea126f45da98acbc22531aac2c837bee4cc542dee";
 
 function Section({
   children,
