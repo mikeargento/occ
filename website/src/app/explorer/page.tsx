@@ -54,10 +54,14 @@ export default function ExplorerPage() {
   const [recent, setRecent] = useState<ProofSummary[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const perPage = 20;
+  const totalPages = Math.ceil(total / perPage);
 
   /* ── Load recent proofs ── */
   useEffect(() => {
-    fetch("/api/proofs?limit=20")
+    setLoading(true);
+    fetch(`/api/proofs?limit=${perPage}&page=${page}`)
       .then((r) => r.json())
       .then((data) => {
         setRecent(data.proofs ?? []);
@@ -65,7 +69,7 @@ export default function ExplorerPage() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [page]);
 
   /* ── File drop → hash → lookup ── */
   const handleFile = useCallback(async (f: File) => {
@@ -295,7 +299,30 @@ export default function ExplorerPage() {
             </div>
           </div>
         ) : (
-          <ProofTable proofs={recent} />
+          <>
+            <ProofTable proofs={recent} />
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-6">
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium border border-border-subtle bg-bg-elevated text-text-secondary hover:text-text hover:border-border transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+                <span className="text-xs text-text-tertiary px-3">
+                  Page {page} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium border border-border-subtle bg-bg-elevated text-text-secondary hover:text-text hover:border-border transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
