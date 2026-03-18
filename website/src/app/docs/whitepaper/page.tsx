@@ -3,6 +3,7 @@ import Sections1Through3 from "./sections-1-3";
 import Sections4Through6 from "./sections-4-6";
 import Sections7Through9 from "./sections-7-9";
 import Sections10Through19 from "./sections-10-19";
+import TocDropdown from "./toc-dropdown";
 
 export const metadata: Metadata = {
   title: "Whitepaper — Origin Controlled Computing",
@@ -27,6 +28,8 @@ export default function WhitepaperPage() {
           Michael James Argento &middot; Patent Pending
         </p>
       </div>
+
+      <TocDropdown />
 
       <Sections1Through3 />
       <Sections4Through6 />
