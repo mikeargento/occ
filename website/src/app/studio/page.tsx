@@ -782,6 +782,15 @@ export default function StudioPage() {
                 </button>
               )}
 
+              {proofs.length === 1 && proofs[0]?.artifact?.digestB64 && (
+                <a
+                  href={`/explorer/${encodeURIComponent(proofs[0].artifact.digestB64)}`}
+                  className="w-full text-center text-sm text-emerald-600 dark:text-emerald-400 hover:underline transition-colors py-2 block"
+                >
+                  View on Explorer →
+                </a>
+              )}
+
               <button
                 onClick={() => { handleClearFiles(); setShowProofDetails(false); }}
                 className="w-full text-center text-sm text-text-tertiary hover:text-text-secondary transition-colors py-2 cursor-pointer"
@@ -813,12 +822,20 @@ export default function StudioPage() {
                         {proofs.length > 1 && (
                           <div className="flex items-center justify-between">
                             <span className="text-sm font-medium text-text">{files[idx]?.name || `Proof ${idx + 1}`}</span>
-                            <button
-                              onClick={() => handleDownloadZip(idx)}
-                              className="text-xs text-text-tertiary hover:text-text transition-colors cursor-pointer"
-                            >
-                              Download
-                            </button>
+                            <div className="flex items-center gap-3">
+                              <a
+                                href={`/explorer/${encodeURIComponent(p.artifact.digestB64)}`}
+                                className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline transition-colors"
+                              >
+                                Explorer →
+                              </a>
+                              <button
+                                onClick={() => handleDownloadZip(idx)}
+                                className="text-xs text-text-tertiary hover:text-text transition-colors cursor-pointer"
+                              >
+                                Download
+                              </button>
+                            </div>
                           </div>
                         )}
                         <ProofMeta proof={p} fileName={files[idx]?.name} fileSize={files[idx]?.size} />
