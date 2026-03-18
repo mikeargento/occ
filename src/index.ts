@@ -30,7 +30,7 @@ export type { HostCapabilities } from "./host.js";
 export { Constructor } from "./constructor.js";
 
 // Verifier (read path)
-export { verify } from "./verifier.js";
+export { verify, resetEpochLinkState } from "./verifier.js";
 export type { VerifyResult } from "./verifier.js";
 
 // Canonical serialization

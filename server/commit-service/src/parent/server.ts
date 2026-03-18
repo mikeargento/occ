@@ -127,22 +127,31 @@ function persistLastProof(proof: OCCProof): void {
 
 async function initEnclave(): Promise<void> {
   const lastProof = loadLastProof();
+
   if (lastProof) {
     console.log(`[parent] passing last proof to enclave for epoch lineage (counter=${lastProof.commit?.counter})`);
-  } else {
-    console.log(`[parent] no previous proof found — enclave starts as genesis epoch`);
-  }
-
-  const result = await enclaveClient.send({
-    type: "init",
-    lastProof: lastProof ?? undefined,
-  });
-
-  if (result.ok && result.data) {
+    const result = await enclaveClient.send({
+      type: "init",
+      lastProof,
+    });
+    if (!result.ok) {
+      // Enclave HALTED — fail-closed. Do not silently continue.
+      throw new Error(`Enclave rejected predecessor proof: ${result.error ?? "unknown"}`);
+    }
     const data = result.data as { counter: string; epochId: string };
-    console.log(`[parent] enclave initialized: counter=${data.counter} epochId=${data.epochId}`);
+    console.log(`[parent] enclave initialized with lineage: epochId=${data.epochId}`);
   } else {
-    console.warn(`[parent] enclave init response: ${result.error ?? "unknown"}`);
+    // No previous proof on disk — explicit genesis.
+    console.log(`[parent] no previous proof found — requesting genesis epoch`);
+    const result = await enclaveClient.send({
+      type: "init",
+      allowGenesis: true,
+    });
+    if (!result.ok) {
+      throw new Error(`Enclave rejected genesis start: ${result.error ?? "unknown"}`);
+    }
+    const data = result.data as { counter: string; epochId: string };
+    console.log(`[parent] enclave initialized as GENESIS: epochId=${data.epochId}`);
   }
 }
 

@@ -642,74 +642,116 @@ async function handleRequest(req: Record<string, unknown>): Promise<unknown> {
 
   switch (action) {
     case "init": {
-      // Epoch lineage: parent sends the last proof from the previous epoch.
-      // The enclave MUST cryptographically verify it before trusting any fields.
-      // Disk (.occ/last-proof.json) is only a transport — not a source of truth.
+      // ── FAIL-CLOSED EPOCH LINEAGE ──
+      //
+      // If lastProof is provided, it MUST pass full cryptographic verification
+      // or the enclave HALTS. No silent fallback to genesis.
+      //
+      // Genesis is allowed ONLY when:
+      //   a) no lastProof is provided, AND
+      //   b) allowGenesis === true is explicitly set
+      //
+      // Invariant: "If predecessor is invalid, continuation must fail."
+      // Invariant: "Genesis must be explicit, never implicit."
       //
       // Counter does NOT carry over. Each epoch starts fresh.
       // The previous counter is referenced only inside epochLink.
+      //
+      // Disk (.occ/last-proof.json) is only a transport — not a source of truth.
+      // The enclave fully verifies the proof cryptographically before using it.
+
       const lastProof = (req as { lastProof?: OCCProof }).lastProof;
+      const allowGenesis = (req as { allowGenesis?: boolean }).allowGenesis === true;
 
       if (lastProof) {
-        try {
-          // 1. Validate structure
-          if (!lastProof.signer?.publicKeyB64 || !lastProof.signer?.signatureB64) {
-            throw new Error("lastProof missing signer fields");
-          }
-          if (!lastProof.commit?.epochId) {
-            throw new Error("lastProof missing commit.epochId");
-          }
+        // ── STRICT PREDECESSOR VERIFICATION ──
+        // Any failure here is FATAL. The enclave will not start.
 
-          // 2. Reconstruct the signed body and verify Ed25519 signature
-          const prevSignedBody: SignedBody = {
-            version: lastProof.version,
-            artifact: lastProof.artifact,
-            commit: lastProof.commit,
-            publicKeyB64: lastProof.signer.publicKeyB64,
-            enforcement: lastProof.environment?.enforcement ?? "measured-tee",
-            measurement: lastProof.environment?.measurement ?? "",
-          };
-          if (lastProof.environment?.attestation?.format) {
-            prevSignedBody.attestationFormat = lastProof.environment.attestation.format;
-          }
-          // Include actor if present (it's part of the signed body)
-          if (lastProof.agency?.actor) {
-            prevSignedBody.actor = lastProof.agency.actor;
-          }
-          // Include attribution if present
-          if (lastProof.attribution) {
-            prevSignedBody.attribution = lastProof.attribution;
-          }
-
-          const prevCanonical = canonicalize(prevSignedBody);
-          const prevPubKey = Buffer.from(lastProof.signer.publicKeyB64, "base64");
-          const prevSig = Buffer.from(lastProof.signer.signatureB64, "base64");
-          const sigValid = await verifyAsync(prevSig, prevCanonical, prevPubKey);
-
-          if (!sigValid) {
-            throw new Error("lastProof Ed25519 signature verification FAILED — rejecting epoch link");
-          }
-
-          // 3. Compute canonical hash of the full proof
-          const prevProofHashB64 = Buffer.from(sha256(canonicalize(lastProof))).toString("base64");
-
-          // 4. Build epochLink — consumed by the first proof of this epoch
-          pendingEpochLink = {
-            prevEpochId: lastProof.commit.epochId,
-            prevPublicKeyB64: lastProof.signer.publicKeyB64,
-            prevCounter: lastProof.commit.counter ?? "0",
-            prevProofHashB64,
-          };
-
-          console.log(`[enclave] epoch lineage verified: prevEpoch=${lastProof.commit.epochId.slice(0, 12)}... prevCounter=${pendingEpochLink.prevCounter}`);
-        } catch (err) {
-          // Log but don't crash — this epoch starts without lineage
-          console.error(`[enclave] epoch lineage verification failed: ${err instanceof Error ? err.message : String(err)}`);
-          console.error(`[enclave] starting epoch WITHOUT lineage link (genesis epoch)`);
-          pendingEpochLink = undefined;
+        // 1. Validate structure
+        if (!lastProof.signer?.publicKeyB64 || !lastProof.signer?.signatureB64) {
+          throw new Error("FATAL: lastProof missing signer fields — enclave HALTED");
         }
+        if (!lastProof.commit?.epochId) {
+          throw new Error("FATAL: lastProof missing commit.epochId — enclave HALTED");
+        }
+        if (!lastProof.version || lastProof.version !== "occ/1") {
+          throw new Error(`FATAL: lastProof unsupported version "${lastProof.version}" — enclave HALTED`);
+        }
+        if (!lastProof.artifact?.digestB64 || !lastProof.artifact?.hashAlg) {
+          throw new Error("FATAL: lastProof missing artifact fields — enclave HALTED");
+        }
+        if (!lastProof.environment?.enforcement || !lastProof.environment?.measurement) {
+          throw new Error("FATAL: lastProof missing environment fields — enclave HALTED");
+        }
+
+        // 2. Reconstruct the signed body and verify Ed25519 signature
+        const prevSignedBody: SignedBody = {
+          version: lastProof.version,
+          artifact: lastProof.artifact,
+          commit: lastProof.commit,
+          publicKeyB64: lastProof.signer.publicKeyB64,
+          enforcement: lastProof.environment.enforcement,
+          measurement: lastProof.environment.measurement,
+        };
+        if (lastProof.environment.attestation?.format) {
+          prevSignedBody.attestationFormat = lastProof.environment.attestation.format;
+        }
+        if (lastProof.agency?.actor) {
+          prevSignedBody.actor = lastProof.agency.actor;
+        }
+        if (lastProof.attribution) {
+          prevSignedBody.attribution = lastProof.attribution;
+        }
+
+        const prevCanonical = canonicalize(prevSignedBody);
+        const prevPubKey = Buffer.from(lastProof.signer.publicKeyB64, "base64");
+        const prevSig = Buffer.from(lastProof.signer.signatureB64, "base64");
+
+        if (prevPubKey.length !== 32) {
+          throw new Error(`FATAL: lastProof signer key is ${prevPubKey.length} bytes, expected 32 — enclave HALTED`);
+        }
+        if (prevSig.length !== 64) {
+          throw new Error(`FATAL: lastProof signature is ${prevSig.length} bytes, expected 64 — enclave HALTED`);
+        }
+
+        const sigValid = await verifyAsync(prevSig, prevCanonical, prevPubKey);
+        if (!sigValid) {
+          throw new Error("FATAL: lastProof Ed25519 signature verification FAILED — enclave HALTED");
+        }
+
+        // 3. Compute canonical hash of the full proof (deterministic, sorted keys)
+        const prevProofHashB64 = Buffer.from(sha256(canonicalize(lastProof))).toString("base64");
+
+        // 4. Build epochLink with successor binding
+        // toEpochId and toPublicKeyB64 bind this predecessor to THIS specific successor.
+        pendingEpochLink = {
+          prevEpochId: lastProof.commit.epochId,
+          prevPublicKeyB64: lastProof.signer.publicKeyB64,
+          prevCounter: lastProof.commit.counter ?? "0",
+          prevProofHashB64,
+          toEpochId: epochId,
+          toPublicKeyB64: publicKeyB64,
+        };
+
+        console.log(`[enclave] epoch lineage VERIFIED:`);
+        console.log(`  prevEpoch  = ${pendingEpochLink.prevEpochId.slice(0, 16)}...`);
+        console.log(`  prevCounter= ${pendingEpochLink.prevCounter}`);
+        console.log(`  prevHash   = ${pendingEpochLink.prevProofHashB64.slice(0, 16)}...`);
+        console.log(`  → thisEpoch= ${epochId.slice(0, 16)}...`);
+      } else if (allowGenesis) {
+        // ── EXPLICIT GENESIS ──
+        // No predecessor — this is the first epoch in the lineage.
+        console.log(`[enclave] GENESIS epoch (no predecessor, allowGenesis=true)`);
+        console.log(`  epochId = ${epochId.slice(0, 16)}...`);
+        pendingEpochLink = undefined;
       } else {
-        console.log(`[enclave] no lastProof provided — this is a genesis epoch (no predecessor)`);
+        // ── FAIL-CLOSED ──
+        // No lastProof AND no allowGenesis flag → refuse to start.
+        throw new Error(
+          "FATAL: no lastProof provided and allowGenesis is not set — " +
+          "enclave refuses to start without explicit genesis authorization or valid predecessor. " +
+          "Pass { allowGenesis: true } to start a new chain, or provide lastProof for continuation."
+        );
       }
 
       return { ok: true, counter: String(counter), epochId };

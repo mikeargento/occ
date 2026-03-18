@@ -183,6 +183,10 @@ export interface OCCProof {
       prevCounter: string;
       /** SHA-256 hash of the full predecessor proof (canonicalized). */
       prevProofHashB64: string;
+      /** EpochId of THIS (successor) epoch — must match proof's commit.epochId. */
+      toEpochId: string;
+      /** Ed25519 public key of THIS (successor) epoch — must match proof's signer.publicKeyB64. */
+      toPublicKeyB64: string;
     };
   };
 

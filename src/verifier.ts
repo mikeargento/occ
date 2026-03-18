@@ -183,6 +183,16 @@ export async function verify(opts: {
   }
 
   // ------------------------------------------------------------------
+  // 4d. Epoch link verification (cross-epoch lineage)
+  // ------------------------------------------------------------------
+  if (proof.commit.epochLink !== undefined) {
+    const epochLinkError = verifyEpochLink(proof);
+    if (epochLinkError !== null) {
+      return fail(epochLinkError);
+    }
+  }
+
+  // ------------------------------------------------------------------
   // 5. Policy checks
   // ------------------------------------------------------------------
   if (trustAnchors !== undefined) {
@@ -760,6 +770,131 @@ async function verifySlotAllocation(proof: OCCProof): Promise<string | null> {
   }
 
   return null;
+}
+
+// ---------------------------------------------------------------------------
+// Epoch link verification (cross-epoch lineage)
+// ---------------------------------------------------------------------------
+
+/**
+ * Single-successor tracking.
+ *
+ * Maps successorKey → the epochId that consumed it.
+ * successorKey = SHA-256(prevEpochId || prevCounter || prevProofHashB64)
+ *
+ * If a DIFFERENT successor epoch attempts to consume the same predecessor,
+ * the verifier detects a fork and rejects.
+ *
+ * This is an in-memory registry scoped to the verifier's lifecycle.
+ * For persistent fork detection across processes, callers should maintain
+ * an external store and pass consumed predecessors via the
+ * `consumedPredecessors` option.
+ */
+const consumedPredecessors = new Map<string, string>(); // successorKey → toEpochId
+
+/**
+ * Compute the unique key for a consumed predecessor.
+ * successorKey = BASE64(SHA-256(prevEpochId + "|" + prevCounter + "|" + prevProofHashB64))
+ */
+function computeSuccessorKey(link: NonNullable<OCCProof["commit"]["epochLink"]>): string {
+  const input = `${link.prevEpochId}|${link.prevCounter}|${link.prevProofHashB64}`;
+  const hash = sha256(new TextEncoder().encode(input));
+  return Buffer.from(hash).toString("base64");
+}
+
+/**
+ * Verify epoch link correctness and single-successor invariant.
+ *
+ * Checks:
+ *   1. Structural validation of epochLink fields
+ *   2. Successor binding: toEpochId === proof's epochId
+ *   3. Successor binding: toPublicKeyB64 === proof's signer key
+ *   4. Single-successor: no other epoch has consumed this predecessor
+ *
+ * Note: Validating the predecessor proof's signature requires the predecessor
+ * proof itself, which is not embedded in the current proof. The enclave
+ * performs this validation at init time. The verifier checks structural
+ * consistency and fork detection.
+ */
+function verifyEpochLink(proof: OCCProof): string | null {
+  const link = proof.commit.epochLink!;
+
+  // 1. Structural validation
+  if (typeof link.prevEpochId !== "string" || link.prevEpochId.length === 0) {
+    return "epochLink.prevEpochId must be a non-empty string";
+  }
+  if (typeof link.prevPublicKeyB64 !== "string" || link.prevPublicKeyB64.length === 0) {
+    return "epochLink.prevPublicKeyB64 must be a non-empty string";
+  }
+  if (typeof link.prevCounter !== "string" || link.prevCounter.length === 0) {
+    return "epochLink.prevCounter must be a non-empty string";
+  }
+  if (typeof link.prevProofHashB64 !== "string" || link.prevProofHashB64.length === 0) {
+    return "epochLink.prevProofHashB64 must be a non-empty string";
+  }
+  if (typeof link.toEpochId !== "string" || link.toEpochId.length === 0) {
+    return "epochLink.toEpochId must be a non-empty string";
+  }
+  if (typeof link.toPublicKeyB64 !== "string" || link.toPublicKeyB64.length === 0) {
+    return "epochLink.toPublicKeyB64 must be a non-empty string";
+  }
+
+  // Validate prevCounter is a valid decimal string
+  try {
+    BigInt(link.prevCounter);
+  } catch {
+    return "epochLink.prevCounter is not a valid decimal string";
+  }
+
+  // 2. Successor binding: toEpochId must match proof's commit.epochId
+  if (proof.commit.epochId !== undefined && link.toEpochId !== proof.commit.epochId) {
+    return `epochLink.toEpochId "${link.toEpochId}" does not match proof commit.epochId "${proof.commit.epochId}" — successor binding broken`;
+  }
+
+  // 3. Successor binding: toPublicKeyB64 must match proof's signer
+  if (link.toPublicKeyB64 !== proof.signer.publicKeyB64) {
+    return `epochLink.toPublicKeyB64 does not match proof signer.publicKeyB64 — successor binding broken`;
+  }
+
+  // 4. Predecessor must be from a DIFFERENT epoch (same epoch = not an epoch link)
+  if (link.prevEpochId === link.toEpochId) {
+    return "epochLink.prevEpochId equals toEpochId — epoch link must cross epoch boundary";
+  }
+
+  // 5. Predecessor signer must differ from successor signer
+  //    (new epoch = new keypair, so keys must be different)
+  if (link.prevPublicKeyB64 === link.toPublicKeyB64) {
+    return "epochLink.prevPublicKeyB64 equals toPublicKeyB64 — epochs must have different keys";
+  }
+
+  // 6. Single-successor invariant: detect forks
+  const successorKey = computeSuccessorKey(link);
+  const existingSuccessor = consumedPredecessors.get(successorKey);
+
+  if (existingSuccessor !== undefined) {
+    if (existingSuccessor !== link.toEpochId) {
+      return (
+        `FORK DETECTED: predecessor (epoch=${link.prevEpochId.slice(0, 12)}..., counter=${link.prevCounter}) ` +
+        `already consumed by epoch ${existingSuccessor.slice(0, 12)}..., ` +
+        `but this proof claims consumption by epoch ${link.toEpochId.slice(0, 12)}... — ` +
+        `single-successor invariant violated`
+      );
+    }
+    // Same successor — idempotent (re-verifying same proof)
+  } else {
+    // Record this consumption
+    consumedPredecessors.set(successorKey, link.toEpochId);
+  }
+
+  return null;
+}
+
+/**
+ * Reset the in-memory single-successor tracking state.
+ * Use this when starting a fresh verification context.
+ */
+export function resetEpochLinkState(): void {
+  consumedPredecessors.clear();
 }
 
 // ---------------------------------------------------------------------------

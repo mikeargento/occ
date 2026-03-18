@@ -43,10 +43,19 @@ export interface ConvertBWRequest {
   imageB64: string;
 }
 
-/** Initialize enclave with previous epoch's last proof for lineage. */
+/**
+ * Initialize enclave with previous epoch's last proof for lineage.
+ *
+ * Fail-closed semantics:
+ *   - lastProof provided → enclave verifies it or HALTS
+ *   - no lastProof + allowGenesis=true → genesis epoch (no predecessor)
+ *   - no lastProof + no allowGenesis → enclave HALTS (refuses implicit genesis)
+ */
 export interface InitRequest {
   type: "init";
   lastProof?: OCCProof;
+  /** Must be explicitly true to start without a predecessor. */
+  allowGenesis?: boolean;
 }
 
 export type EnclaveRequest =
