@@ -164,80 +164,74 @@ export default function ExplorerPage() {
               </div>
             )}
 
-            {lookupResults !== null && lookupResults.length > 0 && (() => {
-              const r = lookupResults[0];
-              const proof = r.proof;
-              return (
-                <div className="mt-5 space-y-4 animate-in fade-in duration-500">
-                  {/* Verified banner */}
-                  <div className="rounded-xl border border-emerald-600/30 dark:border-emerald-500/30 bg-emerald-500/10 dark:bg-emerald-500/5 p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-emerald-500/20 dark:bg-emerald-500/15">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-emerald-600 dark:text-emerald-400">
-                          <path d="M20 6L9 17l-5-5" />
-                        </svg>
-                      </div>
-                      <div>
-                        <div className="text-lg font-semibold text-emerald-600 dark:text-emerald-400">Verified</div>
-                        <div className="text-xs text-text-tertiary">
-                          This file has a cryptographic proof on record
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Proof summary */}
-                    <div className="grid grid-cols-2 gap-3 text-xs">
-                      {proof.commit.counter && (
-                        <div>
-                          <div className="text-text-tertiary mb-0.5">Proof</div>
-                          <div className="font-mono text-text">#{proof.commit.counter}</div>
-                        </div>
-                      )}
-                      <div>
-                        <div className="text-text-tertiary mb-0.5">Enforcement</div>
-                        <div className={`font-medium ${enforcementColor(proof.environment.enforcement)}`}>
-                          {enforcementLabel(proof.environment.enforcement)}
-                        </div>
-                      </div>
-                      {proof.commit.time && (
-                        <div>
-                          <div className="text-text-tertiary mb-0.5">Committed</div>
-                          <div className="text-text">{new Date(proof.commit.time).toLocaleDateString()}</div>
-                        </div>
-                      )}
-                      {proof.agency && (
-                        <div>
-                          <div className="text-text-tertiary mb-0.5">Device</div>
-                          <div className="text-blue-600 dark:text-blue-400 font-medium">Passkey verified</div>
-                        </div>
-                      )}
-                      {proof.timestamps && (
-                        <div>
-                          <div className="text-text-tertiary mb-0.5">Timestamp</div>
-                          <div className="text-purple-600 dark:text-purple-400 font-medium">RFC 3161</div>
-                        </div>
-                      )}
-                    </div>
-
-                    <Link
-                      href={`/explorer/${encodeURIComponent(toUrlSafeB64(proof.artifact.digestB64))}`}
-                      className="mt-5 flex items-center justify-center gap-2 w-full py-3 rounded-lg bg-emerald-500/15 text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/25 transition-colors"
-                    >
-                      View full proof
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M5 12h14M12 5l7 7-7 7" />
+            {lookupResults !== null && lookupResults.length > 0 && (
+              <div className="mt-5 space-y-4 animate-in fade-in duration-500">
+                {/* Verified banner */}
+                <div className="rounded-xl border border-emerald-600/30 dark:border-emerald-500/30 bg-emerald-500/10 dark:bg-emerald-500/5 p-5">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-emerald-500/20 dark:bg-emerald-500/15">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-emerald-600 dark:text-emerald-400">
+                        <path d="M20 6L9 17l-5-5" />
                       </svg>
-                    </Link>
-                  </div>
-
-                  {lookupResults.length > 1 && (
-                    <div className="text-xs text-text-tertiary text-center">
-                      +{lookupResults.length - 1} more proof{lookupResults.length > 2 ? "s" : ""} for this file
                     </div>
-                  )}
+                    <div>
+                      <div className="text-lg font-semibold text-emerald-600 dark:text-emerald-400">Verified</div>
+                      <div className="text-xs text-text-tertiary">
+                        {lookupResults.length} proof{lookupResults.length !== 1 ? "s" : ""} on record for this file
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              );
-            })()}
+
+                {/* List all proofs */}
+                <div className="rounded-xl border border-border-subtle bg-bg-elevated overflow-hidden divide-y divide-border-subtle">
+                  {lookupResults.map((r, i) => {
+                    const p = r.proof;
+                    return (
+                      <Link
+                        key={i}
+                        href={`/explorer/${encodeURIComponent(toUrlSafeB64(p.artifact.digestB64))}`}
+                        className="flex items-center justify-between px-5 py-4 hover:bg-bg-subtle/40 transition-colors"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          {p.commit.counter && (
+                            <span className="text-xs font-mono text-text-tertiary shrink-0">#{p.commit.counter}</span>
+                          )}
+                          <span className={`text-xs font-medium shrink-0 ${enforcementColor(p.environment.enforcement)}`}>
+                            {enforcementLabel(p.environment.enforcement)}
+                          </span>
+                          {p.agency && (
+                            <span className="text-blue-600 dark:text-blue-400 shrink-0" title="Device-authorized">
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                              </svg>
+                            </span>
+                          )}
+                          {p.timestamps && (
+                            <span className="text-purple-600 dark:text-purple-400 shrink-0" title="RFC 3161 timestamped">
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <circle cx="12" cy="12" r="10" />
+                                <path d="M12 6v6l4 2" />
+                              </svg>
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3 shrink-0">
+                          {p.commit.time && (
+                            <span className="text-xs text-text-tertiary">
+                              {new Date(p.commit.time).toLocaleDateString()}
+                            </span>
+                          )}
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-text-tertiary">
+                            <path d="M5 12h14M12 5l7 7-7 7" />
+                          </svg>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
