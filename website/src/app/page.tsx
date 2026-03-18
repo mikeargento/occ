@@ -283,18 +283,19 @@ export default function Home() {
           {[
             {
               step: "01",
-              title: "Drop your artifact",
-              desc: "Drag any file into ProofStudio. It\u2019s hashed locally in your browser. Nothing is uploaded.",
+              title: "Drop a file",
+              desc: "Any file. It never leaves your browser.",
+              micro: "Most people start with a photo.",
             },
             {
               step: "02",
-              title: "Commit",
-              desc: "Your artifact\u2019s fingerprint is sent to a secure environment and locked to a unique, unrepeatable commit event.",
+              title: "Lock it in",
+              desc: "Your file gets a unique, permanent stamp. Takes about a second.",
             },
             {
               step: "03",
-              title: "Receive proof",
-              desc: "You get back a portable proof file: signed evidence that this exact artifact existed in this exact form, at that moment.",
+              title: "Get your proof",
+              desc: "Download a proof file. It works forever, anywhere, for anyone.",
             },
           ].map((item, i) => (
             <ScrollReveal key={item.step} delay={i * 100} className="h-full">
@@ -306,6 +307,11 @@ export default function Home() {
                 <p className="text-sm text-text-secondary leading-relaxed">
                   {item.desc}
                 </p>
+                {item.micro && (
+                  <p className="text-xs text-text-tertiary mt-3 italic">
+                    {item.micro}
+                  </p>
+                )}
               </div>
             </ScrollReveal>
           ))}
