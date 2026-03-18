@@ -13,6 +13,7 @@ const sections = [
   { href: "/docs/agent-sdk", label: "Agent SDK" },
   { href: "/docs/what-occ-is-not", label: "What OCC is Not" },
   { href: "/docs/faq", label: "FAQ" },
+  { href: "/whitepaper.html", label: "Whitepaper" },
 ];
 
 export default function DocsLayout({ children }: { children: React.ReactNode }) {
@@ -59,9 +60,6 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
               ))}
             </nav>
             <div className="mt-8 pt-4 border-t border-border-subtle">
-              <a href="/whitepaper.html" target="_blank" rel="noopener" className="block text-sm text-text-secondary hover:text-text transition-colors px-4 py-2">
-                Whitepaper
-              </a>
               <Link href="/api-reference" className="block text-sm text-text-secondary hover:text-text transition-colors px-4 py-2">
                 API Reference
               </Link>

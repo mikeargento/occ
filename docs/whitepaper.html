@@ -13,7 +13,7 @@
 :root{--sidebar-w:260px;--nav-h:58px}
 *{margin:0;padding:0;box-sizing:border-box;max-width:100%}
 mjx-container *,mjx-container svg{max-width:none}
-html{overflow-x:hidden;width:100%;color-scheme:light}
+html{overflow-x:hidden;width:100%;color-scheme:light dark}
 body{font-family:'Inter',-apple-system,sans-serif;font-size:14px;line-height:1.65;color:#202122;background:#fff;overflow-x:hidden;width:100%}
 a{color:#3366cc}
 a:hover{text-decoration:underline}
@@ -127,6 +127,7 @@ footer{padding-bottom:120px}
 .page-body{display:block;padding-left:0}
 .sidebar{display:none}
 .sidebar.open{display:block;width:280px;z-index:999}
+.content-wrap nav,.content-wrap .nav-wrap,.content-wrap .main{padding-left:24px !important}
 .main{padding:24px 20px 60px;width:100%;max-width:100%;margin-left:0;margin-right:0}
 .sidebar-nav-links{display:block}
 .main table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
@@ -150,15 +151,64 @@ img{max-width:100%;height:auto}
 .diagram-flex > div{width:100% !important}
 .main{padding:16px 12px 48px}
 }
+/* ── Dark mode ── */
+/* Theme toggle */
+.theme-toggle{background:none;border:1px solid #c8ccd1;border-radius:6px;padding:4px 8px;cursor:pointer;color:#54595d;font-size:16px;line-height:1}
+html.dark .theme-toggle{border-color:#333;color:#888}
+
+@media(prefers-color-scheme:dark){html:not(.light){color-scheme:dark}}
+html.dark{color-scheme:dark}
+html.dark body{background:#111;color:#a0a0a0}
+html.dark .main{background:#111;color:#a0a0a0}
+html.dark .main a{color:#a0a0a0;text-decoration-color:#333}
+html.dark h1,html.dark h2,html.dark h3,html.dark .doc-h1,html.dark strong,html.dark .main h3{color:#e0e0e0 !important}
+html.dark a{color:#a0a0a0}
+html.dark .nav-brand{color:#e0e0e0}
+html.dark .nav-rule{border-color:#222}
+html.dark .sidebar{background:#0a0a0a;border-color:#222}
+html.dark .sidebar .doc-title{color:#666;border-color:#222}
+html.dark .sidebar .toc-list a{color:#888}
+html.dark .sidebar .toc-list a:hover{color:#e0e0e0;background:rgba(255,255,255,0.03)}
+html.dark .sidebar .toc-list a.active{color:#e0e0e0;border-left-color:#e0e0e0;background:rgba(255,255,255,0.05)}
+html.dark .sidebar .toc-list .toc-list a{color:#666}
+html.dark .sidebar-search input{background:#111;border-color:#333;color:#a0a0a0}
+html.dark .sidebar-search input::placeholder{color:#555}
+html.dark .sidebar-search .search-title{color:#666}
+html.dark .search-results a{color:#888;border-color:#222}
+html.dark .subtitle{color:#666;border-color:#222}
+html.dark .subtitle a{color:#888}
+html.dark #abstract{background:rgba(255,255,255,0.02) !important;border-color:#222 !important}
+html.dark #abstract div[style*="uppercase"]{color:#555 !important}
+html.dark .definition,html.dark .invariant,html.dark .property,html.dark .remark,html.dark .nongoal,html.dark .proposition,html.dark .proof,html.dark .theorem{background:rgba(255,255,255,0.02);border-color:#333}
+html.dark table th{background:rgba(255,255,255,0.02);color:#666;border-color:#222}
+html.dark table td{border-color:#222}
+html.dark .main mjx-container[display="true"]{background:rgba(255,255,255,0.02);border-color:#333}
+html.dark mjx-container{color:#e0e0e0 !important}
+html.dark .diagram{background:rgba(255,255,255,0.02);border-color:#222}
+html.dark .fig-cap{color:#666 !important}
+html.dark .fig-cap b{color:#e0e0e0 !important}
+html.dark .header-section-number{color:#555}
+html.dark .sidebar-nav-links a{color:#888}
+html.dark .hamburger{color:#e0e0e0}
+@media(max-width:900px){html.dark .nav-links{background:#111;border-color:#222}}
 </style>
 </head>
 <body>
+<script>
+// Apply saved theme or system preference
+(function(){
+  var t=localStorage.getItem('wp-theme');
+  if(t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches)){
+    document.documentElement.classList.add('dark');
+  }
+})();
+</script>
 <div class="sidebar">
 <div class="doc-title">Documentation</div>
 <div class="sidebar-nav-links">
-<a href="whitepaper.html">Doc</a>
+<a href="/docs">Docs</a>
+<a href="/explorer">Explorer</a>
 <a href="https://github.com/mikeargento/occ" target="_blank">GitHub</a>
-<a href="https://npmjs.com/package/occproof" target="_blank">npm</a>
 </div>
 <ul class="toc-list">
 <li><a href="#abstract">Abstract</a></li>
@@ -251,11 +301,12 @@ img{max-width:100%;height:auto}
 </div>
 <div class="content-wrap">
 <nav>
-<a href="/" class="nav-brand">🤖 <span style="position:relative;top:1px">occ.wtf</span></a>
+<a href="/" class="nav-brand"><span style="position:relative;top:1px">ProofStudio</span></a>
 <div class="nav-links">
-<a href="/whitepaper.html">doc</a>
-<a href="https://github.com/mikeargento/occ" target="_blank">github</a>
-<a href="https://npmjs.com/package/occproof" target="_blank">npm</a>
+<a href="/docs">Docs</a>
+<a href="/explorer">Explorer</a>
+<a href="https://github.com/mikeargento/occ" target="_blank">GitHub</a>
+<button class="theme-toggle" onclick="document.documentElement.classList.toggle('dark');localStorage.setItem('wp-theme',document.documentElement.classList.contains('dark')?'dark':'light')" title="Toggle theme">☀</button>
 </div>
 <button class="hamburger" aria-label="Menu" onclick="document.querySelector('.nav-links').classList.toggle('open')">
 <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
