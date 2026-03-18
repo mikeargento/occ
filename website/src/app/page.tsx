@@ -284,19 +284,18 @@ export default function Home() {
             {
               step: "01",
               title: "Drop a file",
-              desc: "Any file. It never leaves your machine.",
+              desc: "Any file. It stays on your device.",
               micro: "Most people try a photo first.",
             },
             {
               step: "02",
               title: "Lock it in",
-              desc: "This exact version gets sealed. One second.",
+              desc: "This exact version gets sealed. Takes a second.",
             },
             {
               step: "03",
               title: "Take your proof",
-              desc: "A file that proves this existed, exactly like this, right now.",
-              micro: "No one can dispute it.",
+              desc: "Now you can prove this existed.",
             },
           ].map((item, i) => (
             <ScrollReveal key={item.step} delay={i * 100} className="h-full">
