@@ -2,7 +2,7 @@
 // Copyright 2024-2026 Mike Argento
 
 import { connect, type Socket } from "node:net";
-import type { AgencyEnvelope } from "occproof";
+import type { AgencyEnvelope, OCCProof } from "occproof";
 
 export interface CommitRequest {
   type: "commit";
@@ -43,13 +43,20 @@ export interface ConvertBWRequest {
   imageB64: string;
 }
 
+/** Initialize enclave with previous epoch's last proof for lineage. */
+export interface InitRequest {
+  type: "init";
+  lastProof?: OCCProof;
+}
+
 export type EnclaveRequest =
   | CommitRequest
   | CommitDigestRequest
   | AllocateSlotRequest
   | KeyRequest
   | ChallengeRequest
-  | ConvertBWRequest;
+  | ConvertBWRequest
+  | InitRequest;
 
 export interface EnclaveResponse {
   ok: boolean;

@@ -154,6 +154,36 @@ export interface OCCProof {
      * break the commit signature.
      */
     slotHashB64?: string;
+
+    /**
+     * Epoch lineage link — present only on the FIRST proof of a new epoch.
+     *
+     * Establishes cryptographic succession: this epoch consumed the final
+     * proof of the previous epoch. The referenced proof's hash, signer,
+     * epochId, and counter are all included so a verifier can:
+     *   1. Confirm the predecessor proof is valid
+     *   2. Confirm prevProofHashB64 matches its canonical hash
+     *   3. Confirm prevPublicKeyB64 matches its signer
+     *   4. Detect forks (same predecessor consumed by multiple successors)
+     *
+     * New epochs continue lineage, not counters. Each epoch maintains its
+     * own local monotonic counter starting fresh.
+     *
+     * Single-successor invariant: a given (prevEpochId, prevCounter,
+     * prevProofHashB64) tuple MUST be consumed by AT MOST ONE successor
+     * epoch. Multiple epoch-genesis proofs referencing the same predecessor
+     * constitute a detectable fork.
+     */
+    epochLink?: {
+      /** EpochId of the predecessor epoch. */
+      prevEpochId: string;
+      /** Ed25519 public key of the predecessor epoch's signer. */
+      prevPublicKeyB64: string;
+      /** Final counter value from the predecessor epoch. */
+      prevCounter: string;
+      /** SHA-256 hash of the full predecessor proof (canonicalized). */
+      prevProofHashB64: string;
+    };
   };
 
   /**

@@ -20,6 +20,8 @@
  */
 
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
+import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { join, dirname } from "node:path";
 import { verify } from "occproof";
 import type { OCCProof, VerificationPolicy, AgencyEnvelope } from "occproof";
 import { VsockClient, type EnclaveClient } from "./vsock-client.js";
@@ -89,6 +91,59 @@ async function getKeyInfo(): Promise<{ publicKeyB64: string; measurement: string
   }
   cachedKeyResponse = result.data as unknown as typeof cachedKeyResponse;
   return cachedKeyResponse!;
+}
+
+// ---------------------------------------------------------------------------
+// Last proof persistence — epoch lineage transport
+//
+// The parent persists the last proof to disk so it can be passed to the
+// enclave on reboot. This is ONLY a transport mechanism — the enclave
+// fully verifies the proof cryptographically before trusting it.
+// ---------------------------------------------------------------------------
+
+const LAST_PROOF_PATH = join(process.cwd(), ".occ", "last-proof.json");
+
+function loadLastProof(): OCCProof | null {
+  try {
+    const raw = readFileSync(LAST_PROOF_PATH, "utf8");
+    return JSON.parse(raw) as OCCProof;
+  } catch {
+    return null; // No previous epoch — genesis
+  }
+}
+
+function persistLastProof(proof: OCCProof): void {
+  try {
+    mkdirSync(dirname(LAST_PROOF_PATH), { recursive: true });
+    writeFileSync(LAST_PROOF_PATH, JSON.stringify(proof, null, 2));
+  } catch (err) {
+    console.warn(`[parent] failed to persist last proof: ${err instanceof Error ? err.message : String(err)}`);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Enclave initialization — pass previous epoch's last proof for lineage
+// ---------------------------------------------------------------------------
+
+async function initEnclave(): Promise<void> {
+  const lastProof = loadLastProof();
+  if (lastProof) {
+    console.log(`[parent] passing last proof to enclave for epoch lineage (counter=${lastProof.commit?.counter})`);
+  } else {
+    console.log(`[parent] no previous proof found — enclave starts as genesis epoch`);
+  }
+
+  const result = await enclaveClient.send({
+    type: "init",
+    lastProof: lastProof ?? undefined,
+  });
+
+  if (result.ok && result.data) {
+    const data = result.data as { counter: string; epochId: string };
+    console.log(`[parent] enclave initialized: counter=${data.counter} epochId=${data.epochId}`);
+  } else {
+    console.warn(`[parent] enclave init response: ${result.error ?? "unknown"}`);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -238,6 +293,12 @@ async function handleCommit(req: IncomingMessage, res: ServerResponse): Promise<
       }
     })
   );
+
+  // Persist the last proof for epoch lineage (transport only — enclave verifies)
+  const lastProof = proofs[proofs.length - 1];
+  if (lastProof) {
+    persistLastProof(lastProof);
+  }
 
   // Fire-and-forget: index proofs in explorer database
   void indexProofs(proofs);
@@ -407,7 +468,7 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
   }
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
   console.log(`[parent] listening on http://localhost:${PORT}`);
   console.log(`  POST /commit         (Content-Type: application/json, Authorization: Bearer <key>)`);
   console.log(`  POST /allocate-slot  (public — pre-allocates causal slot)`);
@@ -416,6 +477,14 @@ server.listen(PORT, () => {
   console.log(`  GET  /key`);
   console.log(`  POST /verify         (Content-Type: application/json)`);
   console.log(`  GET  /health`);
+
+  // Initialize enclave with previous epoch's last proof for lineage
+  try {
+    await initEnclave();
+  } catch (err) {
+    console.error(`[parent] enclave init failed: ${err instanceof Error ? err.message : String(err)}`);
+    console.error(`[parent] enclave will start as genesis epoch`);
+  }
 });
 
 export { server, PORT };

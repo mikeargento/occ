@@ -40,7 +40,7 @@
 import { createServer, type Socket } from "node:net";
 import { createVerify, createHash } from "node:crypto";
 import { sha256 } from "@noble/hashes/sha256";
-import { getPublicKeyAsync, signAsync, utils } from "@noble/ed25519";
+import { getPublicKeyAsync, signAsync, verifyAsync, utils } from "@noble/ed25519";
 import { canonicalize, canonicalizeToString } from "occproof";
 import { Constructor } from "occproof";
 import type { HostCapabilities, OCCProof, SignedBody, SlotAllocation, ActorIdentity, AgencyEnvelope, AuthorizationPayload, WebAuthnAuthorization } from "occproof";
@@ -114,6 +114,16 @@ let counter = 0n;
 // ---------------------------------------------------------------------------
 
 let lastProofHashB64: string | undefined;
+
+// ---------------------------------------------------------------------------
+// Epoch lineage — set during init if a lastProof from a previous epoch is
+// provided. Consumed by the FIRST proof of this epoch (injected as
+// commit.epochLink), then cleared so subsequent proofs don't carry it.
+//
+// New epochs continue lineage, not counters. Counter starts fresh each epoch.
+// ---------------------------------------------------------------------------
+
+let pendingEpochLink: OCCProof["commit"]["epochLink"] | undefined;
 
 // ---------------------------------------------------------------------------
 // Challenge state — pending challenges for agency signing
@@ -527,6 +537,15 @@ async function handleCommit(req: {
     commitFields.prevB64 = lastProofHashB64;
   }
 
+  // Epoch lineage: inject epochLink on the FIRST proof of this epoch only.
+  // After injection, clear pendingEpochLink so subsequent proofs don't carry it.
+  // This establishes: "this epoch consumed the final proof of the previous epoch."
+  if (pendingEpochLink) {
+    commitFields.epochLink = pendingEpochLink;
+    console.log(`[enclave] epoch lineage injected: prevEpoch=${pendingEpochLink.prevEpochId.slice(0, 12)}... prevCounter=${pendingEpochLink.prevCounter}`);
+    pendingEpochLink = undefined; // single-use consumption
+  }
+
   const signedBody: SignedBody = {
     version: "occ/1",
     artifact: { hashAlg: "sha256", digestB64 },
@@ -623,16 +642,76 @@ async function handleRequest(req: Record<string, unknown>): Promise<unknown> {
 
   switch (action) {
     case "init": {
-      // Parent server sends the last DynamoDB-anchored counter on boot.
-      // We set our in-memory counter to at least that value so the next
-      // proof's counter will be higher, passing DynamoDB's conditional write.
-      const lastKnown = (req as { lastKnownCounter?: number }).lastKnownCounter ?? 0;
-      if (BigInt(lastKnown) > counter) {
-        counter = BigInt(lastKnown);
-        console.log(`[enclave] counter initialized to ${counter} from DynamoDB head`);
+      // Epoch lineage: parent sends the last proof from the previous epoch.
+      // The enclave MUST cryptographically verify it before trusting any fields.
+      // Disk (.occ/last-proof.json) is only a transport — not a source of truth.
+      //
+      // Counter does NOT carry over. Each epoch starts fresh.
+      // The previous counter is referenced only inside epochLink.
+      const lastProof = (req as { lastProof?: OCCProof }).lastProof;
+
+      if (lastProof) {
+        try {
+          // 1. Validate structure
+          if (!lastProof.signer?.publicKeyB64 || !lastProof.signer?.signatureB64) {
+            throw new Error("lastProof missing signer fields");
+          }
+          if (!lastProof.commit?.epochId) {
+            throw new Error("lastProof missing commit.epochId");
+          }
+
+          // 2. Reconstruct the signed body and verify Ed25519 signature
+          const prevSignedBody: SignedBody = {
+            version: lastProof.version,
+            artifact: lastProof.artifact,
+            commit: lastProof.commit,
+            publicKeyB64: lastProof.signer.publicKeyB64,
+            enforcement: lastProof.environment?.enforcement ?? "measured-tee",
+            measurement: lastProof.environment?.measurement ?? "",
+          };
+          if (lastProof.environment?.attestation?.format) {
+            prevSignedBody.attestationFormat = lastProof.environment.attestation.format;
+          }
+          // Include actor if present (it's part of the signed body)
+          if (lastProof.agency?.actor) {
+            prevSignedBody.actor = lastProof.agency.actor;
+          }
+          // Include attribution if present
+          if (lastProof.attribution) {
+            prevSignedBody.attribution = lastProof.attribution;
+          }
+
+          const prevCanonical = canonicalize(prevSignedBody);
+          const prevPubKey = Buffer.from(lastProof.signer.publicKeyB64, "base64");
+          const prevSig = Buffer.from(lastProof.signer.signatureB64, "base64");
+          const sigValid = await verifyAsync(prevSig, prevCanonical, prevPubKey);
+
+          if (!sigValid) {
+            throw new Error("lastProof Ed25519 signature verification FAILED — rejecting epoch link");
+          }
+
+          // 3. Compute canonical hash of the full proof
+          const prevProofHashB64 = Buffer.from(sha256(canonicalize(lastProof))).toString("base64");
+
+          // 4. Build epochLink — consumed by the first proof of this epoch
+          pendingEpochLink = {
+            prevEpochId: lastProof.commit.epochId,
+            prevPublicKeyB64: lastProof.signer.publicKeyB64,
+            prevCounter: lastProof.commit.counter ?? "0",
+            prevProofHashB64,
+          };
+
+          console.log(`[enclave] epoch lineage verified: prevEpoch=${lastProof.commit.epochId.slice(0, 12)}... prevCounter=${pendingEpochLink.prevCounter}`);
+        } catch (err) {
+          // Log but don't crash — this epoch starts without lineage
+          console.error(`[enclave] epoch lineage verification failed: ${err instanceof Error ? err.message : String(err)}`);
+          console.error(`[enclave] starting epoch WITHOUT lineage link (genesis epoch)`);
+          pendingEpochLink = undefined;
+        }
       } else {
-        console.log(`[enclave] counter already at ${counter}, ignoring init(${lastKnown})`);
+        console.log(`[enclave] no lastProof provided — this is a genesis epoch (no predecessor)`);
       }
+
       return { ok: true, counter: String(counter), epochId };
     }
     case "health": {
