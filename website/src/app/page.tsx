@@ -297,8 +297,8 @@ export default function Home() {
               desc: "You get back a portable proof file: signed evidence that this exact artifact existed in this exact form, at that moment.",
             },
           ].map((item, i) => (
-            <ScrollReveal key={item.step} delay={i * 100}>
-              <div className="relative rounded-xl border border-border-subtle bg-bg-elevated p-8">
+            <ScrollReveal key={item.step} delay={i * 100} className="h-full">
+              <div className="relative rounded-xl border border-border-subtle bg-bg-elevated p-8 h-full">
                 <div className="text-2xl font-mono font-light text-text-tertiary mb-4">
                   {item.step}
                 </div>
