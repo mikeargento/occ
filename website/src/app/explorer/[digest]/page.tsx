@@ -145,8 +145,13 @@ export default function ProofDetailPage() {
         </div>
       )}
 
+      {/* Raw JSON — primary view */}
+      <div className="mt-8">
+        <ProofViewer proof={proof} defaultExpanded />
+      </div>
+
       {/* ── Detail Cards — one per top-level key ── */}
-      <div className="mt-8 space-y-4">
+      <div className="mt-6 space-y-4">
         {allKeys.map((key) => {
           const value = proofAny[key];
           const title = sectionNames[key] || key;
@@ -180,10 +185,6 @@ export default function ProofDetailPage() {
           />
         )}
 
-        {/* Raw JSON */}
-        <div className="mt-6">
-          <ProofViewer proof={proof} />
-        </div>
       </div>
     </div>
   );
