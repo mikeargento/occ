@@ -147,7 +147,7 @@ export default function ProofDetailPage() {
 
       {/* Raw JSON — primary view */}
       <div className="mt-8">
-        <ProofViewer proof={proof} defaultExpanded />
+        <ProofViewer proof={proof} />
       </div>
 
       {/* ── Detail Cards — one per top-level key ── */}

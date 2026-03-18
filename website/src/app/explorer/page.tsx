@@ -375,18 +375,13 @@ function ProofRow({ proof: p }: { proof: ProofSummary }) {
           className="flex items-center justify-between flex-1 min-w-0"
         >
           <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
-            <code className="text-xs sm:text-sm font-mono text-text shrink-0">
-              {truncateHash(p.digestB64, 10)}
+            <code className="text-xs sm:text-sm font-mono text-text truncate min-w-0">
+              {p.digestB64}
             </code>
             <span className={`text-[10px] sm:text-xs font-medium shrink-0 ${enforcementColor(p.enforcement)}`}>
               <span className="hidden sm:inline">{enforcementLabel(p.enforcement)}</span>
               <span className="sm:hidden">{p.enforcement === "measured-tee" ? "TEE" : p.enforcement === "hw-key" ? "HW" : "SW"}</span>
             </span>
-            {p.counter && (
-              <span className="text-[10px] sm:text-xs font-mono text-text-tertiary shrink-0">
-                #{p.counter}
-              </span>
-            )}
           </div>
           <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-2 sm:ml-4">
             {p.hasAgency && (
