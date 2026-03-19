@@ -1,0 +1,36 @@
+{
+  "name": "@occ/reference-point",
+  "version": "1.0.0",
+  "description": "Reference point service for OCC — content-hash to verification material lookup (§9.5)",
+  "author": "Mike Argento",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "bin": {
+    "occ-reference-point": "./dist/server.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "start": "node dist/server.js",
+    "test": "tsc && node --test dist/__tests__/store.test.js dist/__tests__/server.test.js dist/__tests__/verify.test.js"
+  },
+  "dependencies": {
+    "@noble/hashes": "^1.4.0",
+    "occproof": "file:../../"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
