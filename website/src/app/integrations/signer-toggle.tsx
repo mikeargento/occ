@@ -181,7 +181,7 @@ export function InteractiveSignerSection() {
       {/* Verify it yourself */}
       <div className="mt-5 border-t border-border-subtle pt-5 flex items-center justify-between">
         <p className="text-sm text-text-secondary">
-          Try it now — drop any file into <a href="/studio" className="text-text underline underline-offset-2 hover:text-text-secondary transition-colors">Proof Studio</a> and get a signed proof in seconds. Then verify it in the <a href="/explorer" className="text-text underline underline-offset-2 hover:text-text-secondary transition-colors">Explorer</a>.
+          <span className="text-success font-medium">Try it now</span> — drop any file into <a href="/studio" className="text-text underline underline-offset-2 hover:text-text-secondary transition-colors">Proof Studio</a> and get a signed proof in seconds. Then verify it in the <a href="/explorer" className="text-text underline underline-offset-2 hover:text-text-secondary transition-colors">Explorer</a>.
         </p>
         <a
           href="/studio"
