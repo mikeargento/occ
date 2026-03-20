@@ -16,6 +16,45 @@ import type { OCCProof } from "@/lib/occ";
 
 /* eslint-disable @next/next/no-img-element */
 
+/* ── Install button ── */
+
+function InstallButton() {
+  const [copied, setCopied] = useState(false);
+
+  return (
+    <button
+      onClick={() => {
+        navigator.clipboard.writeText("npx occ-mcp-proxy");
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }}
+      className="hero-animate mt-8 group relative inline-flex items-center gap-3 px-6 py-3 rounded-full bg-bg-elevated/80 border border-border-subtle cursor-pointer transition-all duration-200 hover:bg-bg-elevated hover:border-border hover:scale-[1.02] active:scale-[0.98]"
+      style={{ animationDelay: "160ms" }}
+    >
+      <code className="text-base sm:text-lg font-mono text-text-secondary group-hover:text-text transition-colors">
+        npx occ-mcp-proxy
+      </code>
+      <span className="shrink-0 text-text-tertiary group-hover:text-text transition-colors">
+        {copied ? (
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        ) : (
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+          </svg>
+        )}
+      </span>
+      {copied && (
+        <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-xs text-success font-medium animate-fade-in">
+          Copied!
+        </span>
+      )}
+    </button>
+  );
+}
+
 /* ── Logo helper ── */
 
 function Logo({ src, alt, invert }: { src: string; alt: string; invert?: boolean }) {
@@ -521,12 +560,7 @@ export default function Home() {
               Every action produces a cryptographic receipt.
               If the receipt exists, it couldn&apos;t have happened any other way.
             </p>
-            <div className="hero-animate mt-8 inline-flex items-center gap-3 px-6 py-3 rounded-full bg-bg-elevated/80 border border-border-subtle" style={{ animationDelay: "160ms" }}>
-              <code className="text-base sm:text-lg font-mono text-text-secondary">
-                npx occ-mcp-proxy
-              </code>
-              <CopyButton text="npx occ-mcp-proxy" />
-            </div>
+            <InstallButton />
           </div>
           <div className="hero-animate grid grid-cols-4 gap-3 sm:gap-5 shrink-0" style={{ animationDelay: "200ms" }}>
             {heroLogos.map((h) => (
