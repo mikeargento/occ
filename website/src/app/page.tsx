@@ -232,7 +232,7 @@ const ai = createAI({
     logo: logos.mastra,
   },
   {
-    name: "Cloudflare Workers AI",
+    name: "Cloudflare Workers",
     description: "Edge-deployed AI with proof",
     status: "coming-soon",
     icon: "\u2601",
