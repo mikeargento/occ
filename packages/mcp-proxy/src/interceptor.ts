@@ -24,7 +24,10 @@ export type ProofWriterFn = (entry: {
   timestamp: string;
   tool: string;
   args: Record<string, unknown>;
-  output: unknown;
+  output?: unknown;
+  denied?: boolean;
+  reason?: string;
+  policyRule?: string;
   receipt?: unknown | undefined;
   proofDigestB64?: string | undefined;
 }) => void;
@@ -72,6 +75,81 @@ export class Interceptor {
     this.#auditForwarder = opts.auditForwarder;
   }
 
+  /**
+   * Sign a denial and write it to proof log.
+   * Uses the same signer + counter sequence as allowed actions.
+   */
+  async #signDenial(
+    toolName: string,
+    args: Record<string, unknown>,
+    reason: string,
+    constraint: string,
+    now: number,
+  ): Promise<{ proofDigestB64?: string | undefined; receiptJson?: string | undefined }> {
+    let proofDigestB64: string | undefined;
+    let receiptJson: string | undefined;
+
+    try {
+      const inputHashB64 = hashValue(args);
+      const outputHashB64 = hashValue({ denied: true, reason });
+
+      const envelope = createExecutionEnvelope({
+        tool: toolName,
+        toolVersion: "1.0.0",
+        runtime: "occ-agent",
+        inputHashB64,
+        outputHashB64,
+      });
+
+      if (this.#localSigner) {
+        const digestB64 = hashExecutionEnvelope(envelope);
+        const proof = await this.#localSigner.commitDigest(digestB64, {
+          kind: "tool-denial",
+          tool: toolName,
+          adapter: "occ-agent",
+          runtime: "occ-agent",
+          denied: true,
+          reason,
+          constraint,
+        });
+        proofDigestB64 = digestB64;
+
+        receiptJson = exportReceipt({
+          output: { denied: true, reason },
+          executionEnvelope: envelope,
+          occProof: proof,
+        });
+      } else if (this.#occConfig) {
+        const commitResult = await commitExecutionEnvelope(envelope, this.#occConfig);
+        proofDigestB64 = commitResult.digestB64;
+
+        receiptJson = exportReceipt({
+          output: { denied: true, reason },
+          executionEnvelope: envelope,
+          occProof: commitResult.proof,
+        });
+      }
+    } catch {
+      // Signing is best-effort — don't fail the denial response
+    }
+
+    // Write to proof file (--wrap mode)
+    if (this.#proofWriter) {
+      this.#proofWriter({
+        timestamp: new Date(now).toISOString(),
+        tool: toolName,
+        args,
+        denied: true,
+        reason,
+        policyRule: constraint,
+        receipt: receiptJson ? JSON.parse(receiptJson) : undefined,
+        proofDigestB64,
+      });
+    }
+
+    return { proofDigestB64, receiptJson };
+  }
+
   async handleToolCall(
     agentId: string,
     toolName: string,
@@ -84,7 +162,15 @@ export class Interceptor {
     // ── Check if agent is paused ──
     if (this.#state.isAgentPaused(agentId)) {
       const decision = { allowed: false as const, reason: "Agent is paused", constraint: "agent.status" };
-      const auditId = context.addAudit(toolName, decision, skill ? { skill } : undefined);
+
+      // Sign the denial — same counter sequence as allowed actions
+      const { proofDigestB64 } = await this.#signDenial(toolName, args, decision.reason, decision.constraint, now);
+
+      const auditOpts: { skill?: string; proofDigestB64?: string } = {};
+      if (skill) auditOpts.skill = skill;
+      if (proofDigestB64) auditOpts.proofDigestB64 = proofDigestB64;
+
+      const auditId = context.addAudit(toolName, decision, auditOpts);
       this.#events.emit({
         type: "policy-violation",
         timestamp: now,
@@ -93,6 +179,7 @@ export class Interceptor {
         agentId,
         reason: decision.reason,
         constraint: decision.constraint,
+        ...(proofDigestB64 ? { proofDigestB64 } : {}),
       });
       return {
         content: [{ type: "text", text: `Policy violation: ${decision.reason}` }],
@@ -114,7 +201,14 @@ export class Interceptor {
       );
 
       if (!decision.allowed) {
-        const auditId = context.addAudit(toolName, decision, skill ? { skill } : undefined);
+        // Sign the denial — same counter sequence as allowed actions
+        const { proofDigestB64 } = await this.#signDenial(toolName, args, decision.reason, decision.constraint, now);
+
+        const auditOpts: { skill?: string; proofDigestB64?: string } = {};
+        if (skill) auditOpts.skill = skill;
+        if (proofDigestB64) auditOpts.proofDigestB64 = proofDigestB64;
+
+        const auditId = context.addAudit(toolName, decision, auditOpts);
 
         this.#events.emit({
           type: "policy-violation",
@@ -124,6 +218,7 @@ export class Interceptor {
           agentId,
           reason: decision.reason,
           constraint: decision.constraint,
+          ...(proofDigestB64 ? { proofDigestB64 } : {}),
         });
 
         return {

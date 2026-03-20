@@ -16,7 +16,7 @@ export interface DiscoveredTool {
 /** Events emitted by the proxy for real-time monitoring. */
 export type ProxyEvent =
   | { type: "tool-executed"; timestamp: number; tool: string; skill?: string; agentId: string; costCents: number; proofDigestB64?: string }
-  | { type: "policy-violation"; timestamp: number; tool: string; skill?: string; agentId: string; reason: string; constraint: string }
+  | { type: "policy-violation"; timestamp: number; tool: string; skill?: string; agentId: string; reason: string; constraint: string; proofDigestB64?: string }
   | { type: "context-updated"; timestamp: number; agentId: string }
   | { type: "policy-loaded"; timestamp: number; policyName: string; policyDigestB64: string }
   | { type: "proxy-started"; timestamp: number; toolCount: number }

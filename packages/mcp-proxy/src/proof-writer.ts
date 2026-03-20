@@ -22,7 +22,10 @@ export class ProofWriter {
     timestamp: string;
     tool: string;
     args: Record<string, unknown>;
-    output: unknown;
+    output?: unknown;
+    denied?: boolean;
+    reason?: string;
+    policyRule?: string;
     receipt?: unknown | undefined;
     proofDigestB64?: string | undefined;
   }): void {

@@ -20,6 +20,17 @@
       "runtimeArgs": ["run", "dev"],
       "port": 3002,
       "cwd": "packages/commandcentral"
+    },
+    {
+      "name": "paperclip",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["tsx", "src/index.ts"],
+      "port": 3100,
+      "cwd": "packages/paperclip/server",
+      "env": {
+        "OCC_MODE": "tee",
+        "PAPERCLIP_MIGRATION_AUTO_APPLY": "true"
+      }
     }
   ]
 }
