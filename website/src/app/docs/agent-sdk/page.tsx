@@ -55,7 +55,7 @@ result.occProof;          // portable OCC proof`}</pre>
         <li><strong className="text-text">5. Build envelope</strong> - canonical JSON with tool name, version, both hashes, timestamp</li>
         <li><strong className="text-text">6. Commit</strong> - SHA-256 of the envelope is sent to OCC. The enclave signs it and returns a proof.</li>
       </ol>
-      <div className="rounded-xl border border-border-subtle border-l-2 border-l-text-tertiary bg-bg-elevated p-6 mb-6">
+      <div className="border-l-2 border-l-text-tertiary pl-6 mb-6">
         <p className="text-sm text-text italic">
           Only the 32-byte envelope digest crosses the network. The enclave never sees your input, output, or tool logic.
         </p>
@@ -127,7 +127,7 @@ const receipt = loadReceipt(await fs.readFile("receipt.json", "utf8"));
 // receipt.envelope - the execution envelope
 // receipt.proof    - the OCC proof`}</pre>
       </div>
-      <div className="rounded-xl border border-border-subtle border-l-2 border-l-text-tertiary bg-bg-elevated p-6 mb-6">
+      <div className="border-l-2 border-l-text-tertiary pl-6 mb-6">
         <p className="text-sm text-text italic">
           The receipt format is <code className="text-xs font-mono bg-bg-subtle px-1.5 py-0.5 rounded">occ-agent/receipt/1</code>. It contains everything needed for offline verification. Hand it to anyone and they can verify without contacting OCC.
         </p>

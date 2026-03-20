@@ -49,7 +49,7 @@ export default function WhatOCCIsNotPage() {
             body: "Traditional notarization involves a trusted third party witnessing a signing event. OCC is a self-contained proof system. The proof is verifiable offline using only the public key and the original bytes. No trusted third party is required for core verification. TSA timestamps are optional, advisory evidence.",
           },
         ].map((item) => (
-          <div key={item.title} className="rounded-xl border border-border-subtle border-l-2 border-l-text-tertiary p-6">
+          <div key={item.title} className="border-l-2 border-l-text-tertiary pl-6">
             <h2 className="text-base font-semibold mb-3">{item.title}</h2>
             <p className="text-sm text-text-secondary leading-relaxed">{item.body}</p>
           </div>

@@ -94,7 +94,7 @@ export default function UseCasesPage() {
 
       <div className="section-divider mt-16 mb-16" />
       <div>
-        <div className="rounded-xl border border-border-subtle border-l-2 border-l-warning bg-bg-elevated p-8">
+        <div className="border-l-2 border-l-warning pl-8 my-8">
           <h2 className="text-xl font-semibold tracking-[-0.02em] mb-4">What OCC does not prove</h2>
           <p className="text-sm text-text-secondary leading-relaxed mb-4">
             OCC proves that specific bytes were committed through an authorized

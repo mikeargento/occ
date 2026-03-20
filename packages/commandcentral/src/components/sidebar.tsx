@@ -24,7 +24,7 @@ export function Sidebar() {
     <aside className="w-60 flex-shrink-0 border-r border-border bg-bg-elevated flex flex-col h-screen select-none">
       {/* Brand */}
       <div className="px-5 pt-6 pb-5">
-        <div className="text-[11px] font-medium uppercase tracking-[0.15em] text-text-tertiary">
+        <div className="text-base font-black tracking-[-0.02em] text-text" style={{ fontFamily: "var(--font-inter)" }}>
           OCC Agent
         </div>
       </div>

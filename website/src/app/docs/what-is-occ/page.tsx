@@ -32,7 +32,7 @@ export default function WhatIsOCCPage() {
         authorized boundary.
       </p>
 
-      <div className="rounded-xl border border-border-subtle border-l-2 border-l-text-tertiary bg-bg-elevated p-6 my-8">
+      <div className="border-l-2 border-l-text-tertiary pl-6 my-8">
         <p className="text-sm text-text italic">
           If proof exists, the authorized commit path was traversed.
         </p>

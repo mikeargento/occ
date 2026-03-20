@@ -46,7 +46,7 @@ export default function VerificationPage() {
             desc: "If a VerificationPolicy is provided, enforce its constraints: enforcement tier, allowed measurements, allowed public keys, attestation requirements, counter range, time range, epoch requirements.",
           },
         ].map((item) => (
-          <div key={item.step} className="rounded-xl border border-border-subtle border-l-2 border-l-text-tertiary bg-bg-elevated p-6">
+          <div key={item.step} className="border-l-2 border-l-text-tertiary pl-6">
             <div className="flex items-center gap-3 mb-3">
               <span className="inline-flex w-7 h-7 items-center justify-center rounded-md bg-bg-subtle text-xs font-mono font-semibold">
                 {item.step}
@@ -82,15 +82,15 @@ export default function VerificationPage() {
 
       <h3 className="text-lg font-semibold mt-8 mb-4">Trust anchor hierarchy</h3>
       <div className="space-y-3 mb-8">
-        <div className="rounded-xl border border-border-subtle border-l-2 border-l-text-tertiary p-4">
+        <div className="border-l-2 border-l-text-tertiary pl-4 py-1">
           <code className="text-xs font-mono text-warning">requireEnforcement</code>
           <span className="text-sm text-text-secondary ml-2">alone - prevents in-transit downgrade only</span>
         </div>
-        <div className="rounded-xl border border-border-subtle border-l-2 border-l-text-tertiary p-4">
+        <div className="border-l-2 border-l-text-tertiary pl-4 py-1">
           <code className="text-xs font-mono text-info">requireEnforcement + allowedMeasurements</code>
           <span className="text-sm text-text-secondary ml-2">- pins to specific enclave image</span>
         </div>
-        <div className="rounded-xl border border-border-subtle border-l-2 border-l-text-tertiary p-4">
+        <div className="border-l-2 border-l-text-tertiary pl-4 py-1">
           <code className="text-xs font-mono text-success">+ requireAttestation</code>
           <span className="text-sm text-text-secondary ml-2">- full trust (vendor-attested hardware boundary)</span>
         </div>
