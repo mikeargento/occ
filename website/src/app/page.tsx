@@ -523,9 +523,9 @@ export default function Home() {
             </p>
             <div className="hero-animate mt-8 flex items-center gap-3" style={{ animationDelay: "160ms" }}>
               <code className="text-2xl sm:text-3xl md:text-4xl font-mono font-bold tracking-tight text-text">
-                npx occ
+                npx occ-mcp-proxy
               </code>
-              <CopyButton text="npx occ" />
+              <CopyButton text="npx occ-mcp-proxy" />
             </div>
           </div>
           <div className="hero-animate grid grid-cols-4 gap-3 sm:gap-5 shrink-0" style={{ animationDelay: "200ms" }}>

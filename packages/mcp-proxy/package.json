@@ -9,8 +9,7 @@
   "types": "./dist/index.d.ts",
   "bin": {
     "occ-mcp-proxy": "dist/index.js",
-    "occ-agent": "dist/index.js",
-    "occ": "dist/index.js"
+    "occ-agent": "dist/index.js"
   },
   "exports": {
     ".": {
