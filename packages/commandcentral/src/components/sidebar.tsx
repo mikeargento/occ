@@ -8,6 +8,8 @@ const NAV_ITEMS = [
   { href: "/agents", label: "Agents" },
   { href: "/policies", label: "Policies" },
   { href: "/audit", label: "Proof Log" },
+  { href: "/connections", label: "Connections", icon: "plug" as const },
+  { href: "/keys", label: "API Keys", icon: "key" as const },
   { href: "/setup", label: "Setup" },
 ] as const;
 
@@ -29,19 +31,30 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
-        {NAV_ITEMS.map(({ href, label }) => {
-          const active = isActive(href);
+        {NAV_ITEMS.map((item) => {
+          const active = isActive(item.href);
           return (
             <Link
-              key={href}
-              href={href}
-              className={`block rounded-lg px-4 py-2 text-sm transition-colors ${
+              key={item.href}
+              href={item.href}
+              className={`flex items-center gap-2.5 rounded-lg px-4 py-2 text-sm transition-colors ${
                 active
                   ? "bg-bg-subtle text-text font-semibold"
                   : "text-text-secondary hover:text-text"
               }`}
             >
-              {label}
+              {"icon" in item && item.icon === "plug" && (
+                <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M6 2v4M10 2v4M4 6h8v2a4 4 0 0 1-4 4v0a4 4 0 0 1-4-4V6zM8 12v2.5" />
+                </svg>
+              )}
+              {"icon" in item && item.icon === "key" && (
+                <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="5.5" cy="10.5" r="3" />
+                  <path d="M7.5 8.5L13 3M11.5 3H14M14 3v2.5" />
+                </svg>
+              )}
+              {item.label}
             </Link>
           );
         })}

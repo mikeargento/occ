@@ -9,8 +9,21 @@ import type { AgentPolicy } from "occ-policy-sdk";
 import type { ProxyState } from "./state.js";
 import type { ProxyEventBus } from "./events.js";
 import type { ToolRegistry } from "./tool-registry.js";
-import type { ProxyConfig } from "./config.js";
+import type { ProxyConfig, SignerMode } from "./config.js";
+import { OCC_CLOUD_URL } from "./config.js";
 import type { LocalSigner } from "./local-signer.js";
+import { createLocalSigner } from "./local-signer.js";
+import { getDemoPageHtml } from "./demo-page.js";
+import { ConsensusEngine } from "./consensus.js";
+import { handleConsensusRoute } from "./consensus-api.js";
+import { KeyStore } from "./key-store.js";
+import { ConnectionManager } from "./connections.js";
+
+/** Read the self-contained management UI HTML. */
+function getUiHtml(): string {
+  const uiPath = resolve(fileURLToPath(new URL(".", import.meta.url)), "../ui.html");
+  return readFileSync(uiPath, "utf-8");
+}
 
 // ── Static file serving ──
 
@@ -166,6 +179,13 @@ export function isManagementPrimary(): boolean {
 /**
  * Start the management HTTP API + dashboard for OCC Agent.
  */
+/** Mutable signer state so we can switch modes at runtime. */
+export interface SignerState {
+  mode: SignerMode;
+  teeUrl: string;
+  localSigner?: LocalSigner | undefined;
+}
+
 export function startManagementApi(
   config: ProxyConfig,
   state: ProxyState,
@@ -175,6 +195,19 @@ export function startManagementApi(
 ): void {
   primaryUrl = `http://localhost:${config.managementPort}`;
   const hasDashboard = existsSync(DASHBOARD_DIR);
+  const consensusEngine = new ConsensusEngine();
+
+  // Key store + connection manager — use .occ dir from signer state path
+  const occDir = resolve(config.signerStatePath, "..");
+  const keyStore = new KeyStore(resolve(occDir, "keys.json"));
+  const connectionManager = new ConnectionManager(keyStore, resolve(occDir, "connections.json"));
+
+  // Mutable signer state — can be changed via PUT /api/signer
+  const signerState: SignerState = {
+    mode: config.signerMode,
+    teeUrl: config.teeUrl,
+    localSigner,
+  };
 
   const server = createServer(async (req: IncomingMessage, res: ServerResponse) => {
     const url = new URL(req.url ?? "/", `http://localhost:${config.managementPort}`);
@@ -188,6 +221,30 @@ export function startManagementApi(
       }
 
       // ── API Routes ──
+
+      // ── Management UI ──
+      if (method === "GET" && (url.pathname === "/" || url.pathname === "")) {
+        const html = getUiHtml();
+        res.writeHead(200, {
+          "Content-Type": "text/html; charset=utf-8",
+          "Content-Length": Buffer.byteLength(html),
+          "Cache-Control": "no-cache",
+        });
+        res.end(html);
+        return;
+      }
+
+      // ── Demo page ──
+      if (method === "GET" && (url.pathname === "/demo" || url.pathname === "/demo/")) {
+        const html = getDemoPageHtml();
+        res.writeHead(200, {
+          "Content-Type": "text/html; charset=utf-8",
+          "Content-Length": Buffer.byteLength(html),
+          "Cache-Control": "no-cache",
+        });
+        res.end(html);
+        return;
+      }
 
       if (isApiRoute(url.pathname)) {
         const route = stripApiPrefix(url.pathname);
@@ -209,6 +266,71 @@ export function startManagementApi(
             toolCount: tools.length,
             timestamp: Date.now(),
           });
+          return;
+        }
+
+        // ── Signer ──
+        if (method === "GET" && route === "/signer") {
+          const resp: Record<string, unknown> = { mode: signerState.mode };
+          if (signerState.mode === "local" && signerState.localSigner) {
+            resp.publicKey = signerState.localSigner.publicKeyB64;
+          }
+          if (signerState.mode === "occ-cloud") {
+            resp.teeUrl = OCC_CLOUD_URL;
+          }
+          if (signerState.mode === "custom-tee") {
+            resp.teeUrl = signerState.teeUrl;
+          }
+          sendJson(res, 200, resp);
+          return;
+        }
+
+        if (method === "PUT" && route === "/signer") {
+          const raw = await readBody(req);
+          let body: { mode?: string; teeUrl?: string };
+          try {
+            body = JSON.parse(raw.toString("utf-8")) as { mode?: string; teeUrl?: string };
+          } catch {
+            sendError(res, 400, "Invalid JSON body");
+            return;
+          }
+          const mode = body.mode as SignerMode | undefined;
+          if (!mode || !["occ-cloud", "custom-tee", "local"].includes(mode)) {
+            sendError(res, 400, 'mode must be "occ-cloud", "custom-tee", or "local"');
+            return;
+          }
+          if (mode === "custom-tee" && !body.teeUrl) {
+            sendError(res, 400, "teeUrl is required for custom-tee mode");
+            return;
+          }
+
+          // Reinitialize signer for the new mode
+          signerState.mode = mode;
+          config.signerMode = mode;
+
+          if (mode === "local") {
+            if (!signerState.localSigner) {
+              signerState.localSigner = await createLocalSigner(config.signerStatePath);
+            }
+            signerState.teeUrl = OCC_CLOUD_URL;
+            config.teeUrl = OCC_CLOUD_URL;
+          } else if (mode === "occ-cloud") {
+            signerState.teeUrl = OCC_CLOUD_URL;
+            config.teeUrl = OCC_CLOUD_URL;
+            signerState.localSigner = undefined;
+          } else {
+            signerState.teeUrl = body.teeUrl!;
+            config.teeUrl = body.teeUrl!;
+            signerState.localSigner = undefined;
+          }
+
+          const resp: Record<string, unknown> = { mode: signerState.mode };
+          if (signerState.mode === "local" && signerState.localSigner) {
+            resp.publicKey = signerState.localSigner.publicKeyB64;
+          }
+          if (signerState.mode === "occ-cloud") resp.teeUrl = OCC_CLOUD_URL;
+          if (signerState.mode === "custom-tee") resp.teeUrl = signerState.teeUrl;
+          sendJson(res, 200, resp);
           return;
         }
 
@@ -248,7 +370,7 @@ export function startManagementApi(
               commitment = await state.loadPolicyWithLocalSigner(policy, localSigner);
             } else {
               try {
-                commitment = await state.loadPolicy(policy, { apiUrl: config.occApiUrl, apiKey: config.occApiKey });
+                commitment = await state.loadPolicy(policy, { apiUrl: config.teeUrl, apiKey: config.occApiKey });
               } catch {
                 state.loadPolicyLocal(policy);
                 commitment = state.policyCommitment!;
@@ -463,6 +585,111 @@ export function startManagementApi(
           });
           req.on("close", () => { unsubscribe(); });
           return;
+        }
+
+        // ── Keys ──
+        if (method === "GET" && route === "/keys") {
+          const keys = await keyStore.listKeys();
+          sendJson(res, 200, { keys });
+          return;
+        }
+
+        const keyMatch = route.match(/^\/keys\/([^/]+)$/);
+        if (keyMatch) {
+          const keyId = decodeURIComponent(keyMatch[1]!);
+
+          if (method === "PUT") {
+            const raw = await readBody(req);
+            let body: { name?: string; value?: string };
+            try {
+              body = JSON.parse(raw.toString("utf-8")) as { name?: string; value?: string };
+            } catch {
+              sendError(res, 400, "Invalid JSON body");
+              return;
+            }
+            if (!body.name || !body.value) {
+              sendError(res, 400, "name and value are required");
+              return;
+            }
+            const stored = await keyStore.setKey(keyId, body.name, body.value);
+            sendJson(res, 200, {
+              id: stored.id,
+              name: stored.name,
+              maskedValue: stored.maskedValue,
+              createdAt: stored.createdAt,
+              updatedAt: stored.updatedAt,
+            });
+            return;
+          }
+
+          if (method === "DELETE") {
+            const deleted = await keyStore.deleteKey(keyId);
+            if (!deleted) { sendError(res, 404, `Key "${keyId}" not found`); return; }
+            sendJson(res, 200, { deleted: true });
+            return;
+          }
+        }
+
+        // ── Connections ──
+        if (method === "GET" && route === "/connections") {
+          const connections = await connectionManager.listConnections();
+          sendJson(res, 200, { connections });
+          return;
+        }
+
+        const connMatch = route.match(/^\/connections\/([^/]+)(\/.*)?$/);
+        if (connMatch) {
+          const connId = decodeURIComponent(connMatch[1]!);
+          const subpath = connMatch[2] ?? "";
+
+          if (method === "POST" && subpath === "/test") {
+            const result = await connectionManager.testConnection(connId);
+            sendJson(res, 200, result);
+            return;
+          }
+
+          if (method === "POST" && subpath === "") {
+            const raw = await readBody(req);
+            let body: { apiKey?: string; config?: Record<string, string> };
+            try {
+              body = JSON.parse(raw.toString("utf-8")) as { apiKey?: string; config?: Record<string, string> };
+            } catch {
+              sendError(res, 400, "Invalid JSON body");
+              return;
+            }
+            if (!body.apiKey) {
+              sendError(res, 400, "apiKey is required");
+              return;
+            }
+            try {
+              const conn = await connectionManager.connect(connId, body.apiKey, body.config);
+              sendJson(res, 200, { connection: conn });
+            } catch (err) {
+              sendError(res, 400, err instanceof Error ? err.message : "Connection failed");
+            }
+            return;
+          }
+
+          if (method === "DELETE" && subpath === "") {
+            await connectionManager.disconnect(connId);
+            sendJson(res, 200, { disconnected: true });
+            return;
+          }
+        }
+
+        // ── Consensus ──
+        {
+          let consensusBody: Record<string, unknown> | undefined;
+          if (method === "POST") {
+            const raw = await readBody(req);
+            try { consensusBody = JSON.parse(raw.toString("utf-8")) as Record<string, unknown>; }
+            catch { /* leave undefined */ }
+          }
+          const consensusResult = handleConsensusRoute(consensusEngine, method, route, consensusBody);
+          if (consensusResult) {
+            sendJson(res, consensusResult.status, consensusResult.body);
+            return;
+          }
         }
 
         sendError(res, 404, `${method} ${url.pathname} not found`);

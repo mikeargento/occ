@@ -100,6 +100,25 @@ export interface AgentSummary extends AgentInstance {
   auditCount: number;
 }
 
+export interface StoredKey {
+  id: string;
+  name: string;
+  maskedValue: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface Connection {
+  id: string;
+  name: string;
+  type: "orchestrator" | "observability" | "platform";
+  status: "connected" | "disconnected" | "error";
+  keyId: string | null;
+  config: Record<string, string>;
+  lastChecked: number | null;
+  error: string | null;
+}
+
 export type ProxyEvent =
   | { type: "tool-executed"; timestamp: number; tool: string; skill?: string; agentId: string; costCents: number; proofDigestB64?: string }
   | { type: "policy-violation"; timestamp: number; tool: string; skill?: string; agentId: string; reason: string; constraint: string }

@@ -2,14 +2,14 @@ import type { Metadata } from "next";
 import { CommitPathDiagram } from "@/components/commit-path-diagram";
 
 export const metadata: Metadata = {
-  title: "What is OCC",
+  title: "WTF is OCC",
   description: "OCC is a protocol for portable cryptographic proof caused by system structure.",
 };
 
 export default function WhatIsOCCPage() {
   return (
     <article className="prose-doc">
-      <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-6">What is OCC</h1>
+      <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-6">WTF is OCC</h1>
 
       <p className="text-text-secondary leading-relaxed mb-10">
         OCC (Origin Controlled Computing) is a protocol that produces portable
@@ -77,21 +77,14 @@ export default function WhatIsOCCPage() {
       </ul>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Key properties</h2>
-      <div className="space-y-4">
-        {[
-          { title: "Portable", desc: "A proof is a self-contained JSON object. Any verifier can check it offline with only the public key and the original bytes." },
-          { title: "Atomic", desc: "The commit is fail-closed. Either a complete, valid proof is produced, or nothing is. No partial proofs." },
-          { title: "Causal", desc: "Every proof is bound to a pre-allocated slot created before the artifact hash was known. The slot proves the enclave committed to a sequence position independently of content." },
-          { title: "Ordered", desc: "Each proof carries a monotonic counter within its epoch. Counter + epoch + chain link + slot ordering establish sequencing." },
-          { title: "Measured", desc: "The proof binds to a specific execution environment via measurement (PCR0 on Nitro, MRENCLAVE on SGX)." },
-          { title: "Verifiable", desc: "Ed25519 signature, SHA-256 digest, and canonical serialization, all checkable with standard cryptographic primitives." },
-        ].map((item) => (
-          <div key={item.title} className="rounded-xl border border-border-subtle border-l-2 border-l-text-tertiary p-4">
-            <h3 className="text-sm font-semibold mb-1">{item.title}</h3>
-            <p className="text-sm text-text-secondary">{item.desc}</p>
-          </div>
-        ))}
-      </div>
+      <ul className="space-y-2 mb-6">
+        <li className="text-text-secondary"><strong className="text-text">Portable</strong> — a self-contained JSON object. Any verifier can check it offline with only the public key and the original bytes.</li>
+        <li className="text-text-secondary"><strong className="text-text">Atomic</strong> — fail-closed. Either a complete, valid proof is produced, or nothing is.</li>
+        <li className="text-text-secondary"><strong className="text-text">Causal</strong> — every proof is bound to a pre-allocated slot created before the artifact hash was known.</li>
+        <li className="text-text-secondary"><strong className="text-text">Ordered</strong> — monotonic counter within its epoch. Counter + epoch + chain link establish sequencing.</li>
+        <li className="text-text-secondary"><strong className="text-text">Measured</strong> — binds to a specific execution environment via measurement (PCR0 on Nitro, MRENCLAVE on SGX).</li>
+        <li className="text-text-secondary"><strong className="text-text">Verifiable</strong> — Ed25519 signature, SHA-256 digest, canonical serialization. Standard cryptographic primitives.</li>
+      </ul>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Enforcement tiers</h2>
       <div className="overflow-x-auto mb-8">

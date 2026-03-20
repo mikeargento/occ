@@ -3,8 +3,10 @@ import type {
   AgentPolicy,
   AgentSummary,
   AuditEntry,
+  Connection,
   DiscoveredTool,
   ExecutionContextState,
+  StoredKey,
 } from "./types";
 
 function getBaseUrl(): string {
@@ -153,4 +155,46 @@ export async function getAuditEntry(auditId: string, agentId = "default-agent"):
   receipt: unknown | null;
 }> {
   return apiFetch(`/audit/${encodeURIComponent(auditId)}?agentId=${encodeURIComponent(agentId)}`);
+}
+
+// ── Connections ──
+
+export async function listConnections(): Promise<Connection[]> {
+  return apiFetch("/connections");
+}
+
+export async function connectService(
+  id: string,
+  apiKey: string,
+  config?: Record<string, string>,
+): Promise<Connection> {
+  return apiFetch(`/connections/${encodeURIComponent(id)}`, {
+    method: "PUT",
+    body: JSON.stringify({ apiKey, config }),
+  });
+}
+
+export async function disconnectService(id: string): Promise<void> {
+  await apiFetch(`/connections/${encodeURIComponent(id)}`, { method: "DELETE" });
+}
+
+export async function testConnection(id: string): Promise<{ ok: boolean; error?: string }> {
+  return apiFetch(`/connections/${encodeURIComponent(id)}/test`, { method: "POST" });
+}
+
+// ── Keys ──
+
+export async function listKeys(): Promise<StoredKey[]> {
+  return apiFetch("/keys");
+}
+
+export async function setKey(id: string, name: string, value: string): Promise<StoredKey> {
+  return apiFetch("/keys", {
+    method: "POST",
+    body: JSON.stringify({ id, name, value }),
+  });
+}
+
+export async function deleteKey(id: string): Promise<boolean> {
+  return apiFetch(`/keys/${encodeURIComponent(id)}`, { method: "DELETE" });
 }

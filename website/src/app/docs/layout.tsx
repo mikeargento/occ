@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 const sections = [
   { href: "/docs", label: "Overview" },
-  { href: "/docs/what-is-occ", label: "What is OCC" },
+  { href: "/docs/what-is-occ", label: "WTF is OCC" },
   { href: "/docs/proof-format", label: "Proof Format (occ/1)" },
   { href: "/docs/verification", label: "Verification" },
   { href: "/docs/trust-model", label: "Trust Model" },
