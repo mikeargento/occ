@@ -521,6 +521,12 @@ export default function Home() {
               Every action produces a cryptographic receipt.
               If the receipt exists, it couldn&apos;t have happened any other way.
             </p>
+            <div className="hero-animate mt-8 flex items-center gap-3" style={{ animationDelay: "160ms" }}>
+              <code className="text-2xl sm:text-3xl md:text-4xl font-mono font-bold tracking-tight text-text">
+                npx occ
+              </code>
+              <CopyButton text="npx occ" />
+            </div>
           </div>
           <div className="hero-animate grid grid-cols-4 gap-3 sm:gap-5 shrink-0" style={{ animationDelay: "200ms" }}>
             {heroLogos.map((h) => (
