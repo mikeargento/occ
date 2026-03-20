@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useProxy } from "@/lib/use-proxy";
+import { useTheme } from "./theme-provider";
 
 const NAV_ITEMS = [
   { href: "/agents", label: "Agents" },
@@ -16,6 +17,7 @@ const NAV_ITEMS = [
 export function Sidebar() {
   const pathname = usePathname();
   const { isConnected, proxyId } = useProxy();
+  const { theme, toggle } = useTheme();
 
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(href + "/");
@@ -23,10 +25,26 @@ export function Sidebar() {
   return (
     <aside className="w-60 flex-shrink-0 border-r border-border bg-bg-elevated flex flex-col h-screen select-none">
       {/* Brand */}
-      <div className="px-5 pt-6 pb-5">
-        <div className="text-base font-black tracking-[-0.02em] text-text" style={{ fontFamily: "var(--font-inter)" }}>
+      <div className="px-5 pt-6 pb-5 flex items-center justify-between">
+        <div className="text-[22px] font-black tracking-[-0.02em] text-text" style={{ fontFamily: "var(--font-inter)" }}>
           OCC Agent
         </div>
+        <button
+          onClick={toggle}
+          className="p-1.5 rounded-md text-text-tertiary hover:text-text transition-colors"
+          title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+        >
+          {theme === "dark" ? (
+            <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="8" cy="8" r="3" />
+              <path d="M8 1.5v1M8 13.5v1M3.4 3.4l.7.7M11.9 11.9l.7.7M1.5 8h1M13.5 8h1M3.4 12.6l.7-.7M11.9 4.1l.7-.7" />
+            </svg>
+          ) : (
+            <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M6.2 1.6a6.5 6.5 0 0 0 8.2 8.2 6.5 6.5 0 1 1-8.2-8.2z" />
+            </svg>
+          )}
+        </button>
       </div>
 
       {/* Navigation */}

@@ -44,6 +44,21 @@
   color-scheme: dark;
 }
 
+.light {
+  --bg: #ffffff;
+  --bg-elevated: #f4f4f5;
+  --bg-subtle: #e4e4e7;
+  --bg-inset: #fafafa;
+  --c-border: #d4d4d8;
+  --c-border-subtle: #e4e4e7;
+  --c-text: #09090b;
+  --c-text-secondary: #52525b;
+  --c-text-tertiary: #a1a1aa;
+  --c-accent: #27272a;
+  --c-accent-dim: #a1a1aa;
+  color-scheme: light;
+}
+
 /* ── Base ── */
 
 html {
