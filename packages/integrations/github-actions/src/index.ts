@@ -15,10 +15,12 @@
  * Can be used standalone or as a GitHub Action (see action.yml).
  */
 
-import { readFileSync, appendFileSync, existsSync } from "node:fs";
+import { readFileSync, appendFileSync, existsSync, realpathSync } from "node:fs";
 import { resolve } from "node:path";
-import { verify, canonicalize, type OCCProof, type VerifyResult } from "occproof";
+import { fileURLToPath } from "node:url";
+import { canonicalize, type OCCProof } from "occproof";
 import { sha256 } from "@noble/hashes/sha256";
+import { verifyAsync as ed25519VerifyAsync } from "@noble/ed25519";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -65,12 +67,73 @@ function proofHash(proof: OCCProof): string {
   return toBase64(sha256(canonicalize(proof)));
 }
 
+interface VerifyResult {
+  valid: boolean;
+  reason?: string;
+}
+
+function fromBase64(b64: string): Uint8Array {
+  return new Uint8Array(Buffer.from(b64, "base64"));
+}
+
 /**
  * Verify a single OCC proof's Ed25519 signature.
+ *
+ * This reconstructs the canonical signed body and verifies the Ed25519
+ * signature directly, without requiring the original artifact bytes
+ * (which are not stored in proof.jsonl).
  */
 async function verifyProofSignature(proof: OCCProof): Promise<VerifyResult> {
-  const bytes = new Uint8Array(Buffer.from(JSON.stringify(canonicalize(proof))));
-  return verify({ proof, bytes });
+  // Reconstruct the canonical signed body (same structure as occproof's verify)
+  const signedBody: Record<string, unknown> = {
+    version: proof.version,
+    artifact: proof.artifact,
+    commit: proof.commit,
+    publicKeyB64: proof.signer.publicKeyB64,
+    enforcement: proof.environment.enforcement,
+    measurement: proof.environment.measurement,
+  };
+
+  if (proof.environment.attestation !== undefined) {
+    signedBody.attestationFormat = proof.environment.attestation.format;
+  }
+  if ((proof as any).agency !== undefined) {
+    signedBody.actor = (proof as any).agency.actor;
+  }
+  if ((proof as any).attribution !== undefined) {
+    signedBody.attribution = (proof as any).attribution;
+  }
+
+  const canonicalBytes = canonicalize(signedBody);
+
+  let signatureBytes: Uint8Array;
+  try {
+    signatureBytes = fromBase64(proof.signer.signatureB64);
+  } catch {
+    return { valid: false, reason: "signer.signatureB64 is not valid base64" };
+  }
+
+  let publicKeyBytes: Uint8Array;
+  try {
+    publicKeyBytes = fromBase64(proof.signer.publicKeyB64);
+  } catch {
+    return { valid: false, reason: "signer.publicKeyB64 is not valid base64" };
+  }
+
+  if (signatureBytes.length !== 64) {
+    return { valid: false, reason: `signature is ${signatureBytes.length} bytes; expected 64` };
+  }
+  if (publicKeyBytes.length !== 32) {
+    return { valid: false, reason: `public key is ${publicKeyBytes.length} bytes; expected 32` };
+  }
+
+  try {
+    const valid = await ed25519VerifyAsync(signatureBytes, canonicalBytes, publicKeyBytes);
+    if (valid) return { valid: true };
+    return { valid: false, reason: "Ed25519 signature verification failed" };
+  } catch (e) {
+    return { valid: false, reason: `signature check error: ${e instanceof Error ? e.message : String(e)}` };
+  }
 }
 
 /**
@@ -306,10 +369,15 @@ async function main(): Promise<void> {
 }
 
 // Only run CLI when executed directly (not when imported as a library)
-const isDirectRun =
-  process.argv[1] &&
-  (import.meta.url === `file://${process.argv[1]}` ||
-   import.meta.url === new URL(`file://${process.argv[1]}`).href);
+const isDirectRun = (() => {
+  try {
+    const thisFile = realpathSync(fileURLToPath(import.meta.url));
+    const runFile = realpathSync(resolve(process.argv[1] ?? ""));
+    return thisFile === runFile;
+  } catch {
+    return false;
+  }
+})();
 
 if (isDirectRun) {
   main().catch((err) => {
