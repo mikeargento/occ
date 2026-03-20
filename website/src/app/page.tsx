@@ -521,8 +521,8 @@ export default function Home() {
               Every action produces a cryptographic receipt.
               If the receipt exists, it couldn&apos;t have happened any other way.
             </p>
-            <div className="hero-animate mt-8 flex items-center gap-3" style={{ animationDelay: "160ms" }}>
-              <code className="text-2xl sm:text-3xl md:text-4xl font-mono font-bold tracking-tight text-text">
+            <div className="hero-animate mt-8 inline-flex items-center gap-3 px-6 py-3 rounded-full bg-bg-elevated/80 border border-border-subtle" style={{ animationDelay: "160ms" }}>
+              <code className="text-base sm:text-lg font-mono text-text-secondary">
                 npx occ-mcp-proxy
               </code>
               <CopyButton text="npx occ-mcp-proxy" />
