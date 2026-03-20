@@ -218,7 +218,7 @@ export default function AgentsPage() {
                                 : "bg-success animate-pulse-dot"
                             }`}
                           />
-                          <span className="text-sm font-medium text-text group-hover:text-white transition-colors">
+                          <span className="text-sm font-medium text-text transition-colors">
                             {agent.name}
                           </span>
                         </div>
