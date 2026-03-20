@@ -222,8 +222,17 @@ export function startManagementApi(
 
       // ── API Routes ──
 
-      // ── Management UI ──
+      // ── Dashboard (prefer CommandCentral static export, fall back to ui.html) ──
       if (method === "GET" && (url.pathname === "/" || url.pathname === "")) {
+        if (hasDashboard) {
+          // Serve CommandCentral index.html
+          const indexPath = join(DASHBOARD_DIR, "index.html");
+          if (existsSync(indexPath)) {
+            serveFile(indexPath, res);
+            return;
+          }
+        }
+        // Fallback: lightweight wrap dashboard
         const html = getUiHtml();
         res.writeHead(200, {
           "Content-Type": "text/html; charset=utf-8",
