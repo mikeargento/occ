@@ -256,6 +256,12 @@ async function runWrapMode(command: string, args: string[], signerMode: "local" 
     });
     dashboardAddProof = dashboard.addProof;
     console.error(`  Dashboard: http://localhost:${dashboard.port}`);
+    // Auto-open browser
+    try {
+      const { exec } = await import("node:child_process");
+      const cmd = process.platform === "darwin" ? "open" : process.platform === "win32" ? "start" : "xdg-open";
+      exec(`${cmd} http://localhost:${dashboard.port}`);
+    } catch { /* ignore */ }
   }
 
   console.error("");
@@ -394,13 +400,12 @@ async function runDashboardMode(): Promise<void> {
     console.error("");
   }
 
-  if (process.argv.includes("--open")) {
-    try {
-      const { exec } = await import("node:child_process");
-      const cmd = process.platform === "darwin" ? "open" : process.platform === "win32" ? "start" : "xdg-open";
-      exec(`${cmd} http://localhost:${config.managementPort}`);
-    } catch {
-      // ignore
-    }
+  // Auto-open browser
+  try {
+    const { exec } = await import("node:child_process");
+    const cmd = process.platform === "darwin" ? "open" : process.platform === "win32" ? "start" : "xdg-open";
+    exec(`${cmd} http://localhost:${config.managementPort}`);
+  } catch {
+    // ignore
   }
 }
