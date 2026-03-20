@@ -195,7 +195,7 @@ export default function ExplorerPage() {
                       <Link
                         key={i}
                         href={`/explorer/${encodeURIComponent(toUrlSafeB64(p.artifact.digestB64))}`}
-                        className="flex items-center justify-between px-5 py-4 hover:bg-bg-subtle/40 transition-colors"
+                        className="group flex items-center justify-between px-5 py-4 hover:bg-bg-subtle/60 transition-all duration-150 cursor-pointer"
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           {p.commit.counter && (
@@ -220,15 +220,18 @@ export default function ExplorerPage() {
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center gap-3 shrink-0">
+                        <div className="flex items-center gap-2 shrink-0">
                           {p.commit.time && (
                             <span className="text-xs text-text-tertiary">
                               {new Date(p.commit.time).toLocaleDateString()}
                             </span>
                           )}
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-text-tertiary">
-                            <path d="M5 12h14M12 5l7 7-7 7" />
-                          </svg>
+                          <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-500 dark:group-hover:text-emerald-300 transition-colors">
+                            View proof
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="group-hover:translate-x-0.5 transition-transform duration-150">
+                              <path d="M5 12h14M12 5l7 7-7 7" />
+                            </svg>
+                          </span>
                         </div>
                       </Link>
                     );
