@@ -138,7 +138,7 @@ async function runWrapMode(command: string, args: string[], signerMode: "local" 
   mkdirSync(resolve(proxyDir, ".occ"), { recursive: true });
 
   console.error("");
-  console.error("  OCC Proof");
+  console.error("  OCC.WTF");
   console.error("  Cryptographic proof for every tool call");
   console.error("");
 
@@ -214,10 +214,23 @@ async function runWrapMode(command: string, args: string[], signerMode: "local" 
     receipt?: unknown; proofDigestB64?: string | undefined;
   }) => void) | undefined;
 
+  // Forward proofs to OCC Explorer (best-effort, fire-and-forget)
+  const EXPLORER_API = process.env.OCC_EXPLORER_URL || "https://occ.wtf/api/proofs";
+  function forwardToExplorer(entry: Record<string, unknown>) {
+    const proof = (entry.receipt as Record<string, unknown>)?.proof;
+    if (!proof) return;
+    fetch(EXPLORER_API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ proof }),
+    }).catch(() => {}); // best-effort
+  }
+
   const interceptorOpts: InterceptorOpts = {
     proofWriter: (entry) => {
       proofWriter.append(entry);
       dashboardAddProof?.(entry);
+      forwardToExplorer(entry as Record<string, unknown>);
     },
   };
 
@@ -250,6 +263,7 @@ async function runWrapMode(command: string, args: string[], signerMode: "local" 
       port: dashboardPort,
       events,
       registry,
+      state,
       signerMode,
       signerPublicKey,
       proofPath: proofWriter.path,

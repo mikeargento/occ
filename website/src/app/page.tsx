@@ -377,7 +377,7 @@ function LiveProofFeed() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/proofs?limit=5&page=1")
+    fetch("/api/proofs?limit=10&page=1")
       .then((r) => r.json())
       .then((data) => setProofs(data.proofs ?? []))
       .catch(() => {})
