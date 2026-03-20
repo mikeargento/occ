@@ -61,7 +61,7 @@ export function InteractiveSignerSection() {
   const [mode, setMode] = useState<"local" | "tee">("local");
 
   return (
-    <div className="rounded-xl border border-border-subtle bg-bg-elevated p-8 sm:p-10 mb-20 sm:mb-28">
+    <div className="rounded-xl border border-border-subtle bg-bg-elevated p-4 sm:p-8 md:p-10 mb-16 sm:mb-28 overflow-hidden">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
           <h2 className="text-xl font-semibold tracking-[-0.02em] mb-1">
@@ -81,7 +81,7 @@ export function InteractiveSignerSection() {
           <div className="text-xs font-mono text-text-tertiary uppercase tracking-wider mb-2">
             {mode === "local" ? "bash" : "bash"}
           </div>
-          <pre className="text-sm font-mono text-text-secondary overflow-x-auto">
+          <pre className="text-[11px] sm:text-sm font-mono text-text-secondary overflow-x-auto">
             <code>{mode === "local"
               ? `npx occ-mcp-proxy --wrap npx <server>
 
@@ -98,7 +98,7 @@ export function InteractiveSignerSection() {
           <div className="text-xs font-mono text-text-tertiary uppercase tracking-wider mb-2">
             claude desktop config
           </div>
-          <pre className="text-sm font-mono text-text-secondary overflow-x-auto">
+          <pre className="text-[11px] sm:text-sm font-mono text-text-secondary overflow-x-auto">
             <code>{mode === "local"
               ? `{
   "command": "npx",

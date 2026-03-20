@@ -297,9 +297,9 @@ export default function Home() {
   return (
     <>
     <div className="noise-overlay" />
-    <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-28">
+    <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-28 overflow-x-hidden">
       {/* Hero */}
-      <section className="relative mb-16 sm:mb-28">
+      <section className="relative mb-16 sm:mb-28 overflow-hidden">
         <div className="hero-glow" />
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-12">
           <div className="lg:max-w-xl">
