@@ -27,7 +27,7 @@ export function Sidebar() {
       {/* Brand */}
       <div className="px-5 pt-6 pb-5 flex items-center justify-between">
         <div className="text-[22px] font-black tracking-[-0.02em] text-text" style={{ fontFamily: "var(--font-inter)" }}>
-          OCC Agent
+          OCC.WTF
         </div>
         <button
           onClick={toggle}
