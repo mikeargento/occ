@@ -302,6 +302,22 @@ async function runDashboardMode(): Promise<void> {
   const enableMcp = process.argv.includes("--mcp");
 
   const config = loadConfig(configPath);
+
+  // CLI overrides for signer mode (so you don't need a config file)
+  const signerIdx = process.argv.indexOf("--signer");
+  if (signerIdx !== -1) {
+    const val = process.argv[signerIdx + 1];
+    if (val === "local" || val === "occ-cloud" || val === "custom-tee") {
+      config.signerMode = val;
+    }
+  }
+  if (process.argv.includes("--tee")) {
+    config.signerMode = "occ-cloud";
+  }
+  const teeUrlIdx = process.argv.indexOf("--tee-url");
+  if (teeUrlIdx !== -1 && process.argv[teeUrlIdx + 1]) {
+    config.teeUrl = process.argv[teeUrlIdx + 1]!;
+  }
   const events = new ProxyEventBus();
   const registry = new ToolRegistry();
   const state = new ProxyState(events);
