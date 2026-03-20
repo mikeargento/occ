@@ -9,23 +9,87 @@
  *   occ-mcp-proxy --wrap <command> [args...]   # wrap any MCP server with proof
  *   occ-mcp-proxy --mcp                        # dashboard + MCP server mode
  *   occ-mcp-proxy --config proxy.json --mcp    # custom config
+ *   occ-mcp-proxy verify <proof.jsonl> [--policy policy.json]  # verify a proof log
  */
 
 import { resolve } from "node:path";
+
+// ── Verify subcommand ──
+const verifyIdx = process.argv.indexOf("verify");
+if (verifyIdx !== -1) {
+  const proofPath = process.argv[verifyIdx + 1];
+  if (!proofPath) {
+    console.error("Usage: occ-mcp-proxy verify <proof.jsonl> [--policy policy.json]");
+    process.exit(1);
+  }
+  const policyIdx = process.argv.indexOf("--policy");
+  const policyPath = policyIdx !== -1 ? process.argv[policyIdx + 1] : undefined;
+
+  const { verifyProofChain } = await import("./verify.js");
+  await verifyProofChain(resolve(proofPath), policyPath ? resolve(policyPath) : undefined);
+  process.exit(0);
+}
 
 // ── Detect mode ──
 const wrapIdx = process.argv.indexOf("--wrap");
 
 if (wrapIdx !== -1) {
   // --wrap mode: transparent proof layer, no dashboard
-  const useTee = process.argv.includes("--tee");
-  const wrapArgs = process.argv.slice(wrapIdx + 1).filter((a) => a !== "--tee");
+
+  // Parse flags from wrap args
+  let policyPath: string | undefined;
+  let signerMode: "local" | "occ-cloud" | "custom-tee" = "local";
+  let teeUrl: string | undefined;
+  let dashboardPort = 9100;
+  let noDashboard = false;
+  const rawWrapArgs = process.argv.slice(wrapIdx + 1);
+  const filteredWrapArgs: string[] = [];
+  for (let i = 0; i < rawWrapArgs.length; i++) {
+    if (rawWrapArgs[i] === "--policy") {
+      policyPath = rawWrapArgs[++i];
+    } else if (rawWrapArgs[i] === "--tee") {
+      // Legacy shorthand for --signer occ-cloud
+      signerMode = "occ-cloud";
+    } else if (rawWrapArgs[i] === "--signer") {
+      const val = rawWrapArgs[++i];
+      if (val === "local" || val === "occ-cloud" || val === "custom-tee") {
+        signerMode = val;
+      } else {
+        console.error(`Unknown signer mode: ${val}. Use: local, occ-cloud, custom-tee`);
+        process.exit(1);
+      }
+    } else if (rawWrapArgs[i] === "--tee-url") {
+      teeUrl = rawWrapArgs[++i];
+    } else if (rawWrapArgs[i] === "--dashboard-port") {
+      dashboardPort = parseInt(rawWrapArgs[++i] ?? "9100", 10);
+    } else if (rawWrapArgs[i] === "--no-dashboard") {
+      noDashboard = true;
+    } else {
+      filteredWrapArgs.push(rawWrapArgs[i]!);
+    }
+  }
+  const wrapArgs = filteredWrapArgs;
+
+  // Validate custom-tee requires --tee-url
+  if (signerMode === "custom-tee" && !teeUrl) {
+    console.error("Error: --signer custom-tee requires --tee-url <url>");
+    process.exit(1);
+  }
+
   if (wrapArgs.length === 0) {
-    console.error("Usage: occ-mcp-proxy --wrap [--tee] <command> [args...]");
+    console.error("Usage: occ-mcp-proxy --wrap [--signer <mode>] [--tee-url <url>] [--policy <path>] <command> [args...]");
+    console.error("");
+    console.error("Signer modes:");
+    console.error("  --signer local       Ed25519 signing on your machine (default)");
+    console.error("  --signer occ-cloud   Hardware-attested via OCC Nitro Enclave");
+    console.error("  --signer custom-tee  Your own TEE (requires --tee-url)");
+    console.error("  --tee                Shorthand for --signer occ-cloud");
     console.error("");
     console.error("Example:");
     console.error("  occ-mcp-proxy --wrap npx my-mcp-server");
-    console.error("  occ-mcp-proxy --wrap --tee npx my-mcp-server  # sign via Nitro Enclave");
+    console.error("  occ-mcp-proxy --wrap --signer occ-cloud npx my-mcp-server");
+    console.error("  occ-mcp-proxy --wrap --signer custom-tee --tee-url https://my-tee.example.com/commit npx my-mcp-server");
+    console.error("  occ-mcp-proxy --wrap --policy policy.json npx my-mcp-server");
     console.error("");
     console.error("Claude Desktop config:");
     console.error("  {");
@@ -42,7 +106,7 @@ if (wrapIdx !== -1) {
   const command = wrapArgs[0]!;
   const args = wrapArgs.slice(1);
 
-  runWrapMode(command, args, useTee).catch((err) => {
+  runWrapMode(command, args, signerMode, teeUrl, policyPath, noDashboard ? 0 : dashboardPort).catch((err) => {
     console.error("[occ] Fatal:", err);
     process.exit(1);
   });
@@ -58,17 +122,20 @@ if (wrapIdx !== -1) {
 // --wrap mode: zero config, just proof
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-async function runWrapMode(command: string, args: string[], useTee = false): Promise<void> {
+async function runWrapMode(command: string, args: string[], signerMode: "local" | "occ-cloud" | "custom-tee" = "local", teeUrl?: string, policyPath?: string, dashboardPort: number = 9100): Promise<void> {
   const { ProxyEventBus } = await import("./events.js");
   const { ToolRegistry } = await import("./tool-registry.js");
   const { ProxyState } = await import("./state.js");
   const { Interceptor } = await import("./interceptor.js");
   const { startMcpServer } = await import("./mcp-server.js");
   const { ProofWriter } = await import("./proof-writer.js");
-  const { mkdirSync } = await import("node:fs");
+  const { mkdirSync, readFileSync } = await import("node:fs");
 
-  const signerStatePath = resolve(process.cwd(), ".occ/signer-state.json");
-  mkdirSync(resolve(process.cwd(), ".occ"), { recursive: true });
+  // Use the proxy package dir (not cwd — Claude Desktop may set cwd to /)
+  const { fileURLToPath } = await import("node:url");
+  const proxyDir = resolve(fileURLToPath(new URL(".", import.meta.url)), "..");
+  const signerStatePath = resolve(proxyDir, ".occ/signer-state.json");
+  mkdirSync(resolve(proxyDir, ".occ"), { recursive: true });
 
   console.error("");
   console.error("  OCC Proof");
@@ -94,12 +161,40 @@ async function runWrapMode(command: string, args: string[], useTee = false): Pro
   const toolCount = registry.listTools().length;
   console.error(`  Tools: ${toolCount} discovered`);
 
-  // 2. Allow-all agent (no enforcement — just proof)
+  // 2. Create agent — with policy enforcement if --policy provided, otherwise allow-all
   const allToolNames = registry.listTools().map((t) => t.name);
-  state.createAgent("default", allToolNames);
 
-  // 3. Proof file
-  const proofWriter = new ProofWriter();
+  if (policyPath) {
+    const policyJson = JSON.parse(readFileSync(resolve(policyPath), "utf-8"));
+
+    // Ensure required fields have sensible defaults for AgentPolicy shape
+    const policy = {
+      version: policyJson.version ?? ("occ/policy/1" as const),
+      name: policyJson.name ?? "wrap-policy",
+      createdAt: policyJson.createdAt ?? Date.now(),
+      globalConstraints: policyJson.globalConstraints ?? {},
+      skills: policyJson.skills ?? {},
+      ...(policyJson.toolConstraints ? { toolConstraints: policyJson.toolConstraints } : {}),
+    };
+
+    // Create agent with all tools initially (policy enforcer handles allow/block)
+    const agent = state.createAgent("default", allToolNames);
+    state.updateAgentPolicy(agent.id, policy);
+
+    console.error(`  Policy: ${resolve(policyPath)}`);
+    console.error(`  Policy name: ${policy.name}`);
+    if (policy.globalConstraints.allowedTools) {
+      console.error(`  Allowed tools: ${policy.globalConstraints.allowedTools.join(", ")}`);
+    }
+    if (policy.globalConstraints.blockedTools) {
+      console.error(`  Blocked tools: ${policy.globalConstraints.blockedTools.join(", ")}`);
+    }
+  } else {
+    state.createAgent("default", allToolNames);
+  }
+
+  // 3. Proof file (write next to the proxy, not in cwd which may be /)
+  const proofWriter = new ProofWriter(resolve(proxyDir, "proof.jsonl"));
 
   // 4. Initialize signer (local or TEE)
   type InterceptorOpts = {
@@ -107,39 +202,75 @@ async function runWrapMode(command: string, args: string[], useTee = false): Pro
     occConfig?: { apiUrl: string; apiKey?: string | undefined; runtime: string };
     proofWriter: (entry: {
       timestamp: string; tool: string; args: Record<string, unknown>;
-      output: unknown; receipt?: unknown | undefined; proofDigestB64?: string | undefined;
+      output?: unknown; denied?: boolean; reason?: string; policyRule?: string;
+      receipt?: unknown | undefined; proofDigestB64?: string | undefined;
     }) => void;
   };
 
+  // Dashboard addProof callback (set after dashboard starts)
+  let dashboardAddProof: ((entry: {
+    timestamp: string; tool: string; args: Record<string, unknown>;
+    output?: unknown; denied?: boolean; reason?: string; policyRule?: string;
+    receipt?: unknown; proofDigestB64?: string | undefined;
+  }) => void) | undefined;
+
   const interceptorOpts: InterceptorOpts = {
-    proofWriter: (entry) => proofWriter.append(entry),
+    proofWriter: (entry) => {
+      proofWriter.append(entry);
+      dashboardAddProof?.(entry);
+    },
   };
 
-  if (useTee) {
-    const OCC_API_URL = "https://nitro.occproof.com/commit";
-    console.error(`  Signer: TEE (${OCC_API_URL})`);
-    interceptorOpts.occConfig = { apiUrl: OCC_API_URL, runtime: "occ-agent" };
+  let signerPublicKey: string | undefined;
+
+  if (signerMode === "occ-cloud") {
+    const OCC_CLOUD_URL = "https://nitro.occproof.com/commit";
+    console.error(`  Signer: OCC Cloud (nitro.occproof.com)`);
+    interceptorOpts.occConfig = { apiUrl: OCC_CLOUD_URL, runtime: "occ-agent" };
+  } else if (signerMode === "custom-tee") {
+    const url = teeUrl!;
+    let hostname: string;
+    try { hostname = new URL(url).hostname; } catch { hostname = url; }
+    console.error(`  Signer: Custom TEE (${hostname})`);
+    interceptorOpts.occConfig = { apiUrl: url, runtime: "occ-agent" };
   } else {
     const { createLocalSigner } = await import("./local-signer.js");
     const localSigner = await createLocalSigner(signerStatePath);
-    console.error(`  Signer: local (${localSigner.publicKeyB64.slice(0, 16)}...)`);
+    signerPublicKey = localSigner.publicKeyB64;
+    console.error(`  Signer: ${signerPublicKey.slice(0, 16)}...`);
     interceptorOpts.localSigner = localSigner;
   }
 
   console.error(`  Proof log: ${proofWriter.path}`);
+
+  // 5. Start local dashboard
+  if (dashboardPort > 0) {
+    const { startWrapDashboard } = await import("./wrap-dashboard.js");
+    const dashboard = startWrapDashboard({
+      port: dashboardPort,
+      events,
+      registry,
+      signerMode,
+      signerPublicKey,
+      proofPath: proofWriter.path,
+    });
+    dashboardAddProof = dashboard.addProof;
+    console.error(`  Dashboard: http://localhost:${dashboard.port}`);
+  }
+
   console.error("");
 
-  // 5. Interceptor: sign everything, write to file
+  // 6. Interceptor: sign everything, write to file
   const interceptor = new Interceptor(registry, state, events, interceptorOpts);
 
-  // 6. Start MCP server on stdio
+  // 7. Start MCP server on stdio
   await startMcpServer(
     {
       proxyId: "occ-wrap",
       downstreamServers: [],
-      signerMode: "local",
+      signerMode,
       signerStatePath,
-      occApiUrl: "",
+      teeUrl: teeUrl ?? "https://nitro.occproof.com/commit",
       managementPort: 0,
       mcpTransport: "stdio",
     },
@@ -186,8 +317,12 @@ async function runDashboardMode(): Promise<void> {
   if (config.signerMode === "local") {
     localSigner = await createLocalSigner(config.signerStatePath);
     console.error(`  Signer: local (${localSigner.publicKeyB64.slice(0, 12)}...)`);
+  } else if (config.signerMode === "occ-cloud") {
+    console.error(`  Signer: OCC Cloud (nitro.occproof.com)`);
   } else {
-    console.error(`  Signer: remote (${config.occApiUrl})`);
+    let hostname: string;
+    try { hostname = new URL(config.teeUrl).hostname; } catch { hostname = config.teeUrl; }
+    console.error(`  Signer: Custom TEE (${hostname})`);
   }
 
   const auditForwarder = (entry: {
@@ -207,7 +342,7 @@ async function runDashboardMode(): Promise<void> {
     ? new Interceptor(registry, state, events, { localSigner, auditForwarder })
     : new Interceptor(registry, state, events, {
         occConfig: {
-          apiUrl: config.occApiUrl,
+          apiUrl: config.teeUrl,
           apiKey: config.occApiKey,
           runtime: "occ-agent",
         },
