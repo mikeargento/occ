@@ -1,10 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import React from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { ScrollReveal } from "@/components/scroll-reveal";
 import { InteractiveSignerSection } from "./integrations/signer-toggle";
 import { CopyButton } from "./integrations/copy-button";
+import {
+  toUrlSafeB64,
+  truncateHash,
+  relativeTime,
+  enforcementLabel,
+  enforcementColor,
+} from "@/lib/explorer";
+import type { OCCProof } from "@/lib/occ";
 
 /* eslint-disable @next/next/no-img-element */
 
@@ -52,15 +60,15 @@ const heroLogos = [
   { key: "langchain", logo: logos.langchain, available: true },
   { key: "vercel", logo: logos.vercel, available: true },
   { key: "crewai", logo: logos.crewai, available: true },
-  { key: "google", logo: logos.google, available: false },
-  { key: "llamaindex", logo: logos.llamaindex, available: false },
-  { key: "autogen", logo: logos.autogen, available: false },
-  { key: "cloudflare", logo: logos.cloudflare, available: false },
+  { key: "google", logo: logos.google, available: true },
+  { key: "llamaindex", logo: logos.llamaindex, available: true },
+  { key: "autogen", logo: logos.autogen, available: true },
+  { key: "cloudflare", logo: logos.cloudflare, available: true },
   { key: "github", logo: logos.github, available: true },
   { key: "paperclip", logo: <Logo src="/logos/paperclip.svg" alt="Paperclip" invert />, available: true },
   { key: "composio", logo: logos.composio, available: true },
-  { key: "openclaw", logo: logos.openclaw, available: false },
-  { key: "mastra", logo: logos.mastra, available: false },
+  { key: "openclaw", logo: logos.openclaw, available: true },
+  { key: "mastra", logo: logos.mastra, available: true },
 ];
 
 /* ── Framework data ── */
@@ -112,6 +120,18 @@ const frameworks: Framework[] = [
     status: "available",
     icon: "\u270e",
     logo: logos.cursor,
+    snippet: `{
+  "mcpServers": {
+    "my-server": {
+      "command": "npx",
+      "args": [
+        "occ-mcp-proxy",
+        "--wrap",
+        "npx", "@modelcontextprotocol/server-filesystem", "/home"
+      ]
+    }
+  }
+}`,
   },
   {
     name: "OpenAI",
@@ -162,9 +182,15 @@ chain.invoke(input, config={"callbacks": [handler]})`,
   {
     name: "LangGraph",
     description: "Proof for every node execution",
-    status: "coming-soon",
+    install: "npm install occ-langgraph",
+    status: "available",
     icon: "\ud83e\udd9c",
     logo: logos.langchain,
+    snippet: `import { occNode } from 'occ-langgraph';
+
+const searchNode = occNode(async (state) => {
+  return { results: await search(state.query) };
+}, 'search');`,
   },
   {
     name: "Vercel AI SDK",
@@ -192,51 +218,91 @@ const ai = createAI({
   {
     name: "Google Gemini",
     description: "Proof for Gemini function calling",
-    status: "coming-soon",
+    install: "pip install occ-gemini",
+    status: "available",
     icon: "\u25c7",
     logo: logos.google,
+    snippet: `from occ_gemini import wrap_model
+
+model = wrap_model(genai.GenerativeModel('gemini-pro'))
+# Every function call gets a signed receipt.`,
   },
   {
     name: "Google ADK",
     description: "Agent Development Kit integration",
-    status: "coming-soon",
+    install: "pip install occ-google-adk",
+    status: "available",
     icon: "\u25c7",
     logo: logos.google,
+    snippet: `from occ_google_adk import occ_tool, OccToolHook
+
+@occ_tool
+def search(query: str) -> str:
+    return web_search(query)`,
   },
   {
     name: "LlamaIndex",
     description: "Tool-level proof for LlamaIndex agents",
-    status: "coming-soon",
+    install: "pip install occ-llamaindex",
+    status: "available",
     icon: "\ud83e\udd99",
     logo: logos.llamaindex,
+    snippet: `from occ_llamaindex import OccTool, wrap_tools
+
+safe_tools = wrap_tools([search_tool, calc_tool])
+# Every tool call is signed.`,
   },
   {
     name: "AutoGen",
     description: "Multi-agent proof chains for AutoGen",
-    status: "coming-soon",
+    install: "pip install occ-autogen",
+    status: "available",
     icon: "\u2699",
     logo: logos.autogen,
+    snippet: `from occ_autogen import occ_tool
+
+@occ_tool
+def calculator(expression: str) -> str:
+    return str(eval(expression))`,
   },
   {
     name: "OpenClaw",
     description: "Local AI assistant with 20+ messaging platforms",
-    status: "coming-soon",
+    install: "pip install occ-openclaw",
+    status: "available",
     icon: "🦞",
     logo: logos.openclaw,
+    snippet: `from occ_openclaw import occ_tool, OccMiddleware
+
+@occ_tool
+def send_message(text: str) -> str:
+    return dispatch(text)`,
   },
   {
     name: "Mastra",
     description: "TypeScript AI framework integration",
-    status: "coming-soon",
+    install: "npm install occ-mastra",
+    status: "available",
     icon: "\u25ce",
     logo: logos.mastra,
+    snippet: `import { occWrapTools } from 'occ-mastra';
+
+const tools = occWrapTools({
+  search: searchTool,
+  calculate: calcTool,
+});`,
   },
   {
     name: "Cloudflare Workers",
     description: "Edge-deployed AI with proof",
-    status: "coming-soon",
+    install: "npm install occ-cloudflare",
+    status: "available",
     icon: "\u2601",
     logo: logos.cloudflare,
+    snippet: `import { occWrapTool } from 'occ-cloudflare';
+
+const wrapped = occWrapTool(myTool, 'search');
+const { result, proofs } = await wrapped.execute(args);`,
   },
   {
     name: "GitHub Actions",
@@ -252,47 +318,191 @@ const ai = createAI({
   },
 ];
 
-/* ── Code examples for the bottom section ── */
+/* ── Live Proof Feed (homepage mini-explorer) ── */
 
-const codeExamples = [
-  {
-    title: "Wrap any MCP server",
-    lang: "bash",
-    code: `npx occ-mcp-proxy --wrap npx @modelcontextprotocol/server-filesystem /home
+interface HomeProofSummary {
+  id: number;
+  digestB64: string;
+  counter: string | null;
+  commitTime: number | null;
+  enforcement: string;
+  signerPub: string;
+  hasAgency: boolean;
+  hasTsa: boolean;
+  attrName: string | null;
+  indexedAt: string;
+}
 
-# proof.jsonl appears in .occ/
-# Every tool call → Ed25519 signed receipt`,
-  },
-  {
-    title: "Python (LangChain)",
-    lang: "python",
-    code: `from occ import OccTool
+function LiveProofFeed() {
+  const [proofs, setProofs] = useState<HomeProofSummary[]>([]);
+  const [loading, setLoading] = useState(true);
 
-@occ_tool
-def search(query: str) -> str:
-    return web_search(query)
+  useEffect(() => {
+    fetch("/api/proofs?limit=5&page=1")
+      .then((r) => r.json())
+      .then((data) => setProofs(data.proofs ?? []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
-# Every call is signed.
-# Every denial is on the record.`,
-  },
-  {
-    title: "TypeScript (Vercel AI)",
-    lang: "typescript",
-    code: `import { occMiddleware } from 'occ-vercel';
+  if (loading) {
+    return <div className="text-sm text-text-tertiary animate-pulse py-4">Loading live proofs...</div>;
+  }
 
-const ai = createAI({
-  middleware: [occMiddleware()],
-});
+  if (proofs.length === 0) {
+    return (
+      <div className="text-sm text-text-secondary py-4">
+        No proofs indexed yet. Commit a file through{" "}
+        <Link href="/studio" className="text-text hover:underline">Studio</Link>{" "}
+        to see it here.
+      </div>
+    );
+  }
 
-// Proof for every tool call, automatically.`,
-  },
-];
+  return (
+    <div className="rounded-xl border border-border-subtle bg-bg overflow-hidden divide-y divide-border-subtle">
+      {proofs.map((p) => (
+        <HomeProofRow key={p.id} proof={p} />
+      ))}
+    </div>
+  );
+}
+
+function HomeProofRow({ proof: p }: { proof: HomeProofSummary }) {
+  const [expanded, setExpanded] = useState(false);
+  const [detail, setDetail] = useState<OCCProof | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const toggle = useCallback(async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (expanded) {
+      setExpanded(false);
+      return;
+    }
+    setExpanded(true);
+    if (!detail) {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/proofs/${encodeURIComponent(toUrlSafeB64(p.digestB64))}`);
+        if (res.ok) {
+          const data = await res.json();
+          const first = data.proofs?.[0]?.proof ?? data.proof;
+          if (first) setDetail(first);
+        }
+      } catch { /* ignore */ }
+      setLoading(false);
+    }
+  }, [expanded, detail, p.digestB64]);
+
+  return (
+    <div>
+      <div className="flex items-center px-4 sm:px-5 py-3.5 hover:bg-bg-subtle/40 transition-colors">
+        <button
+          onClick={toggle}
+          className="shrink-0 mr-2 sm:mr-3 text-text-tertiary hover:text-text transition-colors p-0.5"
+          title={expanded ? "Collapse" : "Expand"}
+        >
+          <svg
+            width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5"
+            className={`transition-transform duration-150 ${expanded ? "rotate-90" : ""}`}
+          >
+            <path d="M3 1.5L7 5L3 8.5" />
+          </svg>
+        </button>
+        <Link
+          href={`/explorer/${encodeURIComponent(toUrlSafeB64(p.digestB64))}`}
+          className="flex items-center justify-between flex-1 min-w-0"
+        >
+          <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
+            <code className="text-xs sm:text-sm font-mono text-text truncate min-w-0">
+              {p.digestB64}
+            </code>
+            <span className={`text-[10px] sm:text-xs font-medium shrink-0 ${enforcementColor(p.enforcement)}`}>
+              <span className="hidden sm:inline">{enforcementLabel(p.enforcement)}</span>
+              <span className="sm:hidden">{p.enforcement === "measured-tee" ? "TEE" : p.enforcement === "hw-key" ? "HW" : "SW"}</span>
+            </span>
+          </div>
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-2 sm:ml-4">
+            {p.hasAgency && (
+              <span className="text-blue-600 dark:text-blue-400" title="Device-authorized">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+              </span>
+            )}
+            {p.hasTsa && (
+              <span className="text-purple-600 dark:text-purple-400" title="RFC 3161 timestamped">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 6v6l4 2" />
+                </svg>
+              </span>
+            )}
+            <span className="text-[10px] sm:text-xs text-text-tertiary w-14 sm:w-16 text-right">
+              {p.commitTime ? relativeTime(p.commitTime) : "—"}
+            </span>
+          </div>
+        </Link>
+      </div>
+
+      {expanded && (
+        <div className="px-4 sm:px-5 pb-4 pt-1 bg-bg-subtle/20">
+          {loading ? (
+            <div className="text-xs text-text-tertiary animate-pulse py-2">Loading proof...</div>
+          ) : detail ? (
+            <div className="space-y-3">
+              <div>
+                <div className="text-[10px] text-text-tertiary uppercase tracking-wider mb-1">SHA-256 Digest</div>
+                <code className="text-xs font-mono text-text break-all">{detail.artifact.digestB64}</code>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2 text-xs">
+                <div>
+                  <div className="text-[10px] text-text-tertiary uppercase tracking-wider">Signer</div>
+                  <code className="font-mono text-text">{truncateHash(detail.signer.publicKeyB64, 12)}</code>
+                </div>
+                <div>
+                  <div className="text-[10px] text-text-tertiary uppercase tracking-wider">Enforcement</div>
+                  <span className={`font-medium ${enforcementColor(detail.environment.enforcement)}`}>
+                    {enforcementLabel(detail.environment.enforcement)}
+                  </span>
+                </div>
+                {detail.commit.time && (
+                  <div>
+                    <div className="text-[10px] text-text-tertiary uppercase tracking-wider">Committed</div>
+                    <span className="text-text">{new Date(detail.commit.time).toLocaleString()}</span>
+                  </div>
+                )}
+                {detail.attribution?.name && (
+                  <div>
+                    <div className="text-[10px] text-text-tertiary uppercase tracking-wider">Attribution</div>
+                    <span className="text-text">{detail.attribution.name}</span>
+                  </div>
+                )}
+              </div>
+              <Link
+                href={`/explorer/${encodeURIComponent(toUrlSafeB64(p.digestB64))}`}
+                className="inline-flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors mt-1"
+              >
+                View full proof
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </Link>
+            </div>
+          ) : (
+            <div className="text-xs text-text-tertiary py-2">Could not load proof details.</div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 /* ── Page ── */
 
 export default function Home() {
   const available = frameworks.filter((f) => f.status === "available");
-  const comingSoon = frameworks.filter((f) => f.status === "coming-soon");
 
   return (
     <>
@@ -300,8 +510,7 @@ export default function Home() {
     <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-28">
       {/* Hero */}
       <section className="relative mb-16 sm:mb-28">
-        <div className="hero-glow" />
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-12">
+                <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-12">
           <div className="lg:max-w-xl">
             <h1 className="hero-animate text-3xl sm:text-5xl md:text-6xl font-bold tracking-[-0.04em] mb-6" style={{ animationDelay: "0ms" }}>
               One proof format.<br />
@@ -354,97 +563,32 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Coming Soon */}
-      <section className="mb-20 sm:mb-28">
-        <ScrollReveal>
-        <div className="flex items-center gap-3 mb-10">
-          <h2 className="text-2xl font-semibold tracking-[-0.02em]">
-            Coming soon
-          </h2>
-          <span className="inline-flex items-center rounded-full bg-bg-subtle px-2.5 py-0.5 text-xs font-medium text-text-tertiary">
-            {comingSoon.length} planned
-          </span>
-        </div>
-        </ScrollReveal>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {comingSoon.map((f, i) => (
-            <ScrollReveal key={f.name} delay={i * 40} className="h-full">
-              <FrameworkCard framework={f} />
-            </ScrollReveal>
-          ))}
-        </div>
-      </section>
-
-      {/* Code Examples */}
-      <section className="mb-20 sm:mb-28">
-        <ScrollReveal>
-        <h2 className="text-2xl font-semibold tracking-[-0.02em] mb-4">
-          Three lines to proof
-        </h2>
-        <p className="text-text-secondary text-base leading-relaxed max-w-xl mb-10">
-          No matter which framework you use, integration is the same pattern:
-          wrap, call, verify.
-        </p>
-        </ScrollReveal>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {codeExamples.map((ex, i) => (
-            <ScrollReveal key={ex.title} delay={i * 60}>
-            <div
-              className="rounded-xl border border-border-subtle bg-bg-elevated p-6 flex flex-col h-full transition-all duration-300 hover:border-border"
-            >
-              <div className="flex items-center gap-2 mb-4">
-                <span className="text-xs font-mono text-text-tertiary uppercase tracking-wider">
-                  {ex.lang}
-                </span>
-                <span className="text-text-tertiary">&middot;</span>
-                <span className="text-sm font-medium text-text-secondary">
-                  {ex.title}
-                </span>
-              </div>
-              <div className="relative flex-1">
-                <div className="absolute top-0 right-0">
-                  <CopyButton text={ex.code} />
-                </div>
-                <pre className="text-[11px] sm:text-sm font-mono text-text-secondary leading-relaxed overflow-x-auto">
-                  <code>{ex.code}</code>
-                </pre>
-              </div>
-            </div>
-            </ScrollReveal>
-          ))}
-        </div>
-      </section>
-
-      {/* Universal Proof Format */}
+      {/* Live Proof Explorer */}
       <section className="mb-20 sm:mb-28">
         <ScrollReveal>
         <div className="rounded-xl border border-border-subtle bg-bg-elevated p-6 sm:p-10 md:p-14">
-          <h2 className="text-2xl font-semibold tracking-[-0.02em] mb-4">
-            Universal Proof Format
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-semibold tracking-[-0.02em]">
+              Live Proofs
+            </h2>
+            <Link
+              href="/explorer"
+              className="inline-flex items-center gap-1.5 text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors"
+            >
+              View all in Explorer
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
           <p className="text-text-secondary text-base leading-relaxed max-w-2xl mb-6">
             Every integration produces the same{" "}
             <code className="font-mono text-sm bg-bg-subtle px-1.5 py-0.5 rounded">
               occ/1
             </code>{" "}
-            proof format. Same Ed25519 signatures. Same verification algorithm.
-            Whether the proof was generated by a Python agent, a TypeScript MCP
-            server, or a CI pipeline — the output is identical and
-            interchangeable.
+            proof format. These are real proofs committed through OCC — click to expand.
           </p>
-          <pre className="text-[11px] sm:text-sm font-mono text-text-secondary leading-relaxed bg-bg rounded-lg p-4 sm:p-6 overflow-x-auto">
-            <code>{`{
-  "version": "occ/1",
-  "timestamp": "2026-03-19T...",
-  "tool": "search",
-  "input_digest": "sha256:...",
-  "output_digest": "sha256:...",
-  "signature": "ed25519:...",
-  "public_key": "ed25519:..."
-}`}</code>
-          </pre>
+          <LiveProofFeed />
         </div>
         </ScrollReveal>
       </section>
@@ -625,7 +769,7 @@ function FrameworkCard({ framework }: { framework: Framework }) {
             <code className="flex-1 text-[11px] sm:text-xs font-mono text-text-tertiary overflow-x-auto whitespace-nowrap">
               {install}
             </code>
-            <CopyButton text={install} />
+            <CopyButton text={snippet ?? install} />
           </div>
         </div>
       )}

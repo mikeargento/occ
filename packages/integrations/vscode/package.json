@@ -1,0 +1,137 @@
+{
+  "name": "occ-enforcement",
+  "displayName": "OCC Agent Enforcement",
+  "description": "Cryptographic proof and policy enforcement for AI agent tool calls. See every action, verify every proof.",
+  "version": "0.1.0",
+  "publisher": "proofstudio",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mikeargento/occ"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other",
+    "Machine Learning"
+  ],
+  "keywords": [
+    "occ",
+    "agent",
+    "enforcement",
+    "proof",
+    "cryptographic",
+    "policy",
+    "ai",
+    "mcp"
+  ],
+  "activationEvents": [
+    "workspaceContains:proof.jsonl",
+    "workspaceContains:.occ/**"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "occ-enforcement",
+          "title": "OCC Enforcement",
+          "icon": "resources/occ-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "occ-enforcement": [
+        {
+          "id": "occ.proofChain",
+          "name": "Proof Chain"
+        },
+        {
+          "id": "occ.policyStatus",
+          "name": "Policy Status"
+        },
+        {
+          "id": "occ.agents",
+          "name": "Agents"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "occ.verifyProofs",
+        "title": "OCC: Verify Proof Chain",
+        "icon": "$(shield)"
+      },
+      {
+        "command": "occ.openDashboard",
+        "title": "OCC: Open Dashboard",
+        "icon": "$(dashboard)"
+      },
+      {
+        "command": "occ.startProxy",
+        "title": "OCC: Start Proxy",
+        "icon": "$(play)"
+      },
+      {
+        "command": "occ.stopProxy",
+        "title": "OCC: Stop Proxy",
+        "icon": "$(stop)"
+      },
+      {
+        "command": "occ.loadPolicy",
+        "title": "OCC: Load Policy",
+        "icon": "$(file-code)"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "occ.verifyProofs",
+          "when": "resourceFilename == proof.jsonl",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "OCC Enforcement",
+      "properties": {
+        "occ.proxyUrl": {
+          "type": "string",
+          "default": "http://localhost:9100",
+          "description": "OCC proxy HTTP API URL"
+        },
+        "occ.proofFile": {
+          "type": "string",
+          "default": "proof.jsonl",
+          "description": "Path to proof.jsonl file (relative to workspace)"
+        },
+        "occ.autoStart": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically start the OCC proxy when VS Code opens"
+        },
+        "occ.policyFile": {
+          "type": "string",
+          "default": "",
+          "description": "Default policy file to load on proxy start"
+        }
+      }
+    },
+    "languages": [
+      {
+        "id": "jsonl",
+        "extensions": [".jsonl"],
+        "aliases": ["JSON Lines"]
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.4.0"
+  }
+}

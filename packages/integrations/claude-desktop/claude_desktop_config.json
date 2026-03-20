@@ -1,0 +1,30 @@
+{
+  "mcpServers": {
+    "occ-filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "occ-mcp-proxy@latest",
+        "--wrap",
+        "npx",
+        "-y",
+        "@anthropic/mcp-filesystem",
+        "/tmp"
+      ]
+    },
+    "occ-github": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "occ-mcp-proxy@latest",
+        "--wrap",
+        "npx",
+        "-y",
+        "@anthropic/mcp-github"
+      ],
+      "env": {
+        "GITHUB_TOKEN": "your-token-here"
+      }
+    }
+  }
+}
