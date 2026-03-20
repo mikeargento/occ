@@ -9,7 +9,7 @@ export function Card({
 }) {
   return (
     <div
-      className={`bg-bg-elevated border border-border rounded-xl ${
+      className={`bg-bg-elevated border border-border rounded-xl overflow-hidden ${
         padding ? "p-5" : ""
       } ${className}`}
     >

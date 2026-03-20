@@ -134,3 +134,10 @@ body {
   animation: shimmer 1.5s ease-in-out infinite;
   border-radius: 4px;
 }
+
+/* ── Layout constraint ── */
+
+.main-content {
+  max-width: calc(100vw - 15rem);
+  overflow-x: hidden;
+}

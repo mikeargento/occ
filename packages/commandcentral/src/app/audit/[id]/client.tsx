@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import Link from "next/link";
 import { getAuditEntry } from "@/lib/api";
 import type { AuditEntry } from "@/lib/types";
@@ -12,7 +12,8 @@ import { formatTimestamp } from "@/lib/format";
 
 export default function AuditEntryPage() {
   const params = useParams();
-  const auditId = params.id as string;
+  const pathname = usePathname();
+  const auditId = (params.id && params.id !== "__" ? params.id : pathname.split("/").pop() ?? params.id) as string;
   const [entry, setEntry] = useState<AuditEntry | null>(null);
   const [receipt, setReceipt] = useState<Record<string, unknown> | null>(null);
   const [error, setError] = useState<string | null>(null);

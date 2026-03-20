@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import Link from "next/link";
 import {
   getAgent,
@@ -24,7 +24,9 @@ import { formatCents, formatNumber, formatRelativeTime } from "@/lib/format";
 
 export default function AgentDetailPage() {
   const params = useParams();
-  const agentId = params.id as string;
+  const pathname = usePathname();
+  // Static export returns "__" from useParams — extract real ID from URL
+  const agentId = (params.id && params.id !== "__" ? params.id : pathname.split("/").pop() ?? params.id) as string;
   const { events, isConnected } = useProxyEvents();
   const [agent, setAgent] = useState<AgentInstance | null>(null);
   const [context, setContext] = useState<ExecutionContextState | null>(null);
@@ -99,7 +101,7 @@ export default function AgentDetailPage() {
 
   if (loading) {
     return (
-      <div className="max-w-6xl mx-auto px-8 py-8">
+      <div className="px-8 py-8">
         <div className="skeleton h-8 w-48 mb-6" />
         <div className="skeleton h-[400px] rounded-xl" />
       </div>
@@ -107,7 +109,7 @@ export default function AgentDetailPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-8 py-8">
+    <div className="px-8 py-8">
       {/* Breadcrumb + Header */}
       <div className="mb-8">
         <div className="flex items-center gap-1.5 text-xs text-text-tertiary mb-3">
@@ -168,9 +170,9 @@ export default function AgentDetailPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6 overflow-hidden">
         {/* Left column */}
-        <div className="space-y-6">
+        <div className="space-y-6 min-w-0 overflow-hidden">
           {/* Tool Access */}
           <section>
             <SectionHeader
@@ -185,7 +187,7 @@ export default function AgentDetailPage() {
                   </p>
                 </div>
               ) : (
-                <div className="divide-y divide-border-subtle">
+                <div className="divide-y divide-border-subtle overflow-hidden">
                   {allTools.map((tool) => {
                     const enabled = allowedTools.has(tool.name);
                     const isToggling = toggling.has(tool.name);
@@ -218,9 +220,9 @@ export default function AgentDetailPage() {
                             />
                           </div>
                         </button>
-                        <div className="min-w-0 flex-1">
+                        <div className="min-w-0 flex-1 overflow-hidden">
                           <p
-                            className={`text-sm font-mono transition-colors ${
+                            className={`text-sm font-mono transition-colors truncate ${
                               enabled ? "text-text" : "text-text-tertiary"
                             }`}
                           >

@@ -34,7 +34,7 @@ export default function RootLayout({
           <ProxyProvider>
             <div className="flex h-screen overflow-hidden">
               <Sidebar />
-              <main className="flex-1 overflow-y-auto">
+              <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden">
                 {children}
               </main>
             </div>

@@ -69,7 +69,8 @@ function proofHash(proof: OCCProof): string {
  * Verify a single OCC proof's Ed25519 signature.
  */
 async function verifyProofSignature(proof: OCCProof): Promise<VerifyResult> {
-  return verify({ proof });
+  const bytes = new Uint8Array(Buffer.from(JSON.stringify(canonicalize(proof))));
+  return verify({ proof, bytes });
 }
 
 /**
@@ -304,7 +305,15 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((err) => {
-  console.error("[OCC] Verification failed:", err);
-  process.exit(1);
-});
+// Only run CLI when executed directly (not when imported as a library)
+const isDirectRun =
+  process.argv[1] &&
+  (import.meta.url === `file://${process.argv[1]}` ||
+   import.meta.url === new URL(`file://${process.argv[1]}`).href);
+
+if (isDirectRun) {
+  main().catch((err) => {
+    console.error("[OCC] Verification failed:", err);
+    process.exit(1);
+  });
+}

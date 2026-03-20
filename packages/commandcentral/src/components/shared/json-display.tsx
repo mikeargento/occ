@@ -21,51 +21,46 @@ export function JsonDisplay({
   );
 }
 
+const TAG_REGEX = /(<k>|<\/k>|<s>|<\/s>|<b>|<\/b>|<n>|<\/n>)/;
+const OPEN_TAGS = new Set(["<k>", "<s>", "<b>", "<n>"]);
+const CLOSE_TAGS = new Set(["</k>", "</s>", "</b>", "</n>"]);
+
+const TAG_CLASSES: Record<string, string> = {
+  "<k>": "text-text",
+  "<s>": "text-success/70",
+  "<b>": "text-info/70",
+  "<n>": "text-warning/70",
+};
+
 function colorize(json: string): React.ReactNode[] {
   return json.split("\n").map((line, i) => {
     const colored = line
-      .replace(
-        /("(?:[^"\\]|\\.)*")(\s*:)/g,
-        '<k>$1</k>$2'
-      )
-      .replace(
-        /:\s*("(?:[^"\\]|\\.)*")/g,
-        ': <s>$1</s>'
-      )
-      .replace(
-        /:\s*(true|false|null)\b/g,
-        ': <b>$1</b>'
-      )
-      .replace(
-        /:\s*(-?\d+\.?\d*)/g,
-        ': <n>$1</n>'
-      );
+      .replace(/("(?:[^"\\]|\\.)*")(\s*:)/g, "<k>$1</k>$2")
+      .replace(/:\s*("(?:[^"\\]|\\.)*")/g, ": <s>$1</s>")
+      .replace(/:\s*(true|false|null)\b/g, ": <b>$1</b>")
+      .replace(/:\s*(-?\d+\.?\d*)/g, ": <n>$1</n>");
 
-    return (
-      <span key={i}>
-        {colored.split(/(<k>|<\/k>|<s>|<\/s>|<b>|<\/b>|<n>|<\/n>)/).reduce<React.ReactNode[]>(
-          (acc, part, j) => {
-            if (part === "<k>" || part === "</k>" || part === "<s>" || part === "</s>" || part === "<b>" || part === "</b>" || part === "<n>" || part === "</n>") return acc;
-            const prev = colored.split(/(<k>|<\/k>|<s>|<\/s>|<b>|<\/b>|<n>|<\/n>)/);
-            const idx = prev.indexOf(part);
-            const openTag = idx > 0 ? prev[idx - 1] : "";
-            if (openTag === "<k>") {
-              acc.push(<span key={j} className="text-text">{part}</span>);
-            } else if (openTag === "<s>") {
-              acc.push(<span key={j} className="text-success/70">{part}</span>);
-            } else if (openTag === "<b>") {
-              acc.push(<span key={j} className="text-info/70">{part}</span>);
-            } else if (openTag === "<n>") {
-              acc.push(<span key={j} className="text-warning/70">{part}</span>);
-            } else {
-              acc.push(<span key={j}>{part}</span>);
-            }
-            return acc;
-          },
-          []
-        )}
-        {"\n"}
-      </span>
-    );
+    const parts = colored.split(TAG_REGEX);
+    const nodes: React.ReactNode[] = [];
+    let currentTag = "";
+    let nodeKey = 0;
+
+    for (const part of parts) {
+      if (OPEN_TAGS.has(part)) {
+        currentTag = part;
+      } else if (CLOSE_TAGS.has(part)) {
+        currentTag = "";
+      } else if (part) {
+        const cls = TAG_CLASSES[currentTag];
+        nodes.push(
+          cls
+            ? <span key={nodeKey} className={cls}>{part}</span>
+            : <span key={nodeKey}>{part}</span>
+        );
+        nodeKey++;
+      }
+    }
+
+    return <span key={i}>{nodes}{"\n"}</span>;
   });
 }

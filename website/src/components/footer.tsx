@@ -8,7 +8,7 @@ export function Footer() {
       <div className="mx-auto max-w-6xl px-6 pt-16">
         <div className="flex flex-col md:flex-row md:justify-between gap-12">
           <div className="max-w-md">
-            <div className="text-xl font-black tracking-[-0.01em] mb-5" style={{ fontFamily: "var(--font-inter)" }}>
+            <div className="text-xl font-black tracking-[-0.01em] mb-5 text-text" style={{ fontFamily: "var(--font-inter)" }}>
               OCC
             </div>
             <p className="text-sm text-text-tertiary leading-relaxed">
