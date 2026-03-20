@@ -181,7 +181,7 @@ export function InteractiveSignerSection() {
       {/* Verify it yourself */}
       <div className="mt-5 border-t border-border-subtle pt-5 flex items-center justify-between">
         <p className="text-sm text-text-secondary">
-          Don&apos;t take our word for it. Drop a <code className="text-[11px] font-mono bg-bg-subtle px-1 py-0.5 rounded">proof.jsonl</code> file and verify it yourself.
+          Don&apos;t take our word for it. Drop a <code className="text-[11px] font-mono bg-bg-subtle px-1 py-0.5 rounded">proof.jsonl</code> file into <a href="/explorer" className="text-text underline underline-offset-2 hover:text-text-secondary transition-colors">Proof Studio</a> and verify it yourself.
         </p>
         <a
           href="/explorer"
