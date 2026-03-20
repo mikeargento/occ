@@ -297,17 +297,17 @@ export default function Home() {
   return (
     <>
     <div className="noise-overlay" />
-    <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-28 overflow-x-hidden">
+    <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-28">
       {/* Hero */}
-      <section className="relative mb-16 sm:mb-28 overflow-hidden">
+      <section className="relative mb-16 sm:mb-28">
         <div className="hero-glow" />
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-12">
           <div className="lg:max-w-xl">
-            <h1 className="hero-animate text-[2.1rem] sm:text-5xl md:text-6xl font-bold tracking-[-0.04em] mb-6" style={{ animationDelay: "0ms" }}>
-              <span className="whitespace-nowrap">One proof format.</span><br />
-              <span className="whitespace-nowrap">Every AI framework.</span>
+            <h1 className="hero-animate text-3xl sm:text-5xl md:text-6xl font-bold tracking-[-0.04em] mb-6" style={{ animationDelay: "0ms" }}>
+              One proof format.<br />
+              Every AI framework.
             </h1>
-            <p className="hero-animate text-text-secondary text-lg sm:text-xl leading-relaxed" style={{ animationDelay: "120ms" }}>
+            <p className="hero-animate text-text-secondary text-base sm:text-lg md:text-xl leading-relaxed" style={{ animationDelay: "120ms" }}>
               OCC runs beneath your tools, your agents, your entire stack.
               Every action produces a cryptographic receipt.
               If the receipt exists, it couldn&apos;t have happened any other way.
@@ -466,7 +466,7 @@ export default function Home() {
         </p>
         </ScrollReveal>
 
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {([
             {
               name: "Paperclip",
