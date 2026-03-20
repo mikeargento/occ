@@ -297,15 +297,15 @@ export default function Home() {
   return (
     <>
     <div className="noise-overlay" />
-    <div className="mx-auto max-w-6xl px-6 py-20 sm:py-28">
+    <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-28">
       {/* Hero */}
-      <section className="relative mb-20 sm:mb-28">
+      <section className="relative mb-16 sm:mb-28">
         <div className="hero-glow" />
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-12">
           <div className="lg:max-w-xl">
-            <h1 className="hero-animate text-[2rem] sm:text-5xl md:text-6xl font-bold tracking-[-0.04em] mb-6 whitespace-nowrap" style={{ animationDelay: "0ms" }}>
-              One proof format.<br />
-              Every AI framework.
+            <h1 className="hero-animate text-[1.75rem] xs:text-[2rem] sm:text-5xl md:text-6xl font-bold tracking-[-0.04em] mb-6" style={{ animationDelay: "0ms" }}>
+              <span className="whitespace-nowrap">One proof format.</span><br />
+              <span className="whitespace-nowrap">Every AI framework.</span>
             </h1>
             <p className="hero-animate text-text-secondary text-lg sm:text-xl leading-relaxed" style={{ animationDelay: "120ms" }}>
               OCC runs beneath your tools, your agents, your entire stack.
@@ -313,11 +313,11 @@ export default function Home() {
               If the receipt exists, it couldn&apos;t have happened any other way.
             </p>
           </div>
-          <div className="hero-animate grid grid-cols-4 gap-4 sm:gap-5 shrink-0" style={{ animationDelay: "200ms" }}>
+          <div className="hero-animate grid grid-cols-4 gap-3 sm:gap-5 shrink-0" style={{ animationDelay: "200ms" }}>
             {heroLogos.map((h) => (
               <div
                 key={h.key}
-                className="flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-xl transition-all duration-300 bg-bg-elevated/50 hover:bg-bg-elevated"
+                className="flex items-center justify-center w-14 h-14 sm:w-20 sm:h-20 rounded-xl transition-all duration-300 bg-bg-elevated/50 hover:bg-bg-elevated"
                 title={h.key}
               >
                 {h.logo}
@@ -407,7 +407,7 @@ export default function Home() {
                 <div className="absolute top-0 right-0">
                   <CopyButton text={ex.code} />
                 </div>
-                <pre className="text-sm font-mono text-text-secondary leading-relaxed overflow-x-auto">
+                <pre className="text-[11px] sm:text-sm font-mono text-text-secondary leading-relaxed overflow-x-auto">
                   <code>{ex.code}</code>
                 </pre>
               </div>
@@ -420,7 +420,7 @@ export default function Home() {
       {/* Universal Proof Format */}
       <section className="mb-20 sm:mb-28">
         <ScrollReveal>
-        <div className="rounded-xl border border-border-subtle bg-bg-elevated p-10 sm:p-14">
+        <div className="rounded-xl border border-border-subtle bg-bg-elevated p-6 sm:p-10 md:p-14">
           <h2 className="text-2xl font-semibold tracking-[-0.02em] mb-4">
             Universal Proof Format
           </h2>
@@ -434,7 +434,7 @@ export default function Home() {
             server, or a CI pipeline — the output is identical and
             interchangeable.
           </p>
-          <pre className="text-sm font-mono text-text-secondary leading-relaxed bg-bg rounded-lg p-6 overflow-x-auto">
+          <pre className="text-[11px] sm:text-sm font-mono text-text-secondary leading-relaxed bg-bg rounded-lg p-4 sm:p-6 overflow-x-auto">
             <code>{`{
   "version": "occ/1",
   "timestamp": "2026-03-19T...",
@@ -466,7 +466,7 @@ export default function Home() {
         </p>
         </ScrollReveal>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {([
             {
               name: "Paperclip",
@@ -540,7 +540,7 @@ export default function Home() {
                   {o.status === "available" ? "Available" : "Coming Soon"}
                 </span>
               </div>
-              <p className="text-xs text-text-secondary leading-relaxed">
+              <p className="text-[11px] sm:text-xs text-text-secondary leading-relaxed line-clamp-3 sm:line-clamp-none">
                 {o.description}
               </p>
             </div>
@@ -615,14 +615,14 @@ function FrameworkCard({ framework }: { framework: Framework }) {
         </span>
       </div>
 
-      <p className="text-sm text-text-secondary leading-relaxed mb-4">
+      <p className="text-[13px] sm:text-sm text-text-secondary leading-relaxed mb-4">
         {description}
       </p>
 
       {install && (
         <div className="mt-auto">
-          <div className="flex items-center gap-1 bg-bg rounded-lg px-3 py-2">
-            <code className="flex-1 text-xs font-mono text-text-tertiary overflow-x-auto">
+          <div className="flex items-center gap-1 bg-bg rounded-lg px-3 py-2 min-w-0">
+            <code className="flex-1 text-[11px] sm:text-xs font-mono text-text-tertiary overflow-x-auto whitespace-nowrap">
               {install}
             </code>
             <CopyButton text={install} />
