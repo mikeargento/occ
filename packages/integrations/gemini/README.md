@@ -12,15 +12,18 @@ pip install occ-gemini
 
 ## Quick Start
 
-### Wrap a Model (recommended)
+### Wrap a Client (recommended)
 
 ```python
-import google.generativeai as genai
-from occ_gemini import wrap_model
+from google import genai
+from occ_gemini import wrap_client
 
-model = genai.GenerativeModel("gemini-pro")
-safe_model = wrap_model(model)
-response = safe_model.generate_content("What's the weather?")
+client = genai.Client(api_key="...")
+safe_client = wrap_client(client)
+response = safe_client.models.generate_content(
+    model="gemini-2.0-flash",
+    contents="What's the weather?",
+)
 # proof.jsonl now contains signed proof entries for any function calls
 ```
 
@@ -37,10 +40,20 @@ def get_weather(location: str) -> str:
 ### Custom Signer
 
 ```python
-from occ_gemini import OCCSigner, wrap_model
+from occ_gemini import OCCSigner, wrap_client
 
 signer = OCCSigner(state_dir="/tmp/.occ", proof_file="audit.jsonl")
-safe_model = wrap_model(model, signer=signer)
+safe_client = wrap_client(client, signer=signer)
+```
+
+### Legacy API (wrap_model)
+
+`wrap_model` also accepts a `google.genai.Client` or a legacy `google.generativeai.GenerativeModel`:
+
+```python
+from occ_gemini import wrap_model
+
+safe_client = wrap_model(client)
 ```
 
 ## Proof Format

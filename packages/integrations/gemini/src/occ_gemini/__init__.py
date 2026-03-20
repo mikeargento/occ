@@ -3,8 +3,8 @@
 #
 # occ-gemini — OCC cryptographic proof signing for Google Gemini
 #
-# Wraps GenerativeModel function calls with Ed25519-signed proofs
-# in proof.jsonl. Also provides an `occ_tool` decorator for custom
+# Wraps Gemini Client.models.generate_content calls with Ed25519-signed
+# proofs in proof.jsonl. Also provides an `occ_tool` decorator for custom
 # function declarations.
 
 """OCC proof signing integration for Google Gemini."""
@@ -15,13 +15,14 @@ import functools
 import json
 from typing import Any, Callable, Optional, Sequence
 
-import google.generativeai as genai
-from google.generativeai.types import GenerateContentResponse
+from google import genai
+from google.genai import types
 
 from .signer import OCCSigner
 
 __all__ = [
     "OCCSigner",
+    "wrap_client",
     "wrap_model",
     "occ_tool",
 ]
@@ -95,31 +96,32 @@ def occ_tool(
     return decorator
 
 
-class _OccGenerativeModel:
+class _OccModelsModule:
     """
-    Wraps a ``google.generativeai.GenerativeModel`` to intercept function
-    call responses and produce OCC proof entries.
+    Wraps a ``google.genai.Client.models`` module to intercept
+    generate_content calls and produce OCC proof entries for
+    any function calls in the response.
     """
 
     def __init__(
         self,
-        model: genai.GenerativeModel,
+        models: Any,
         signer: Optional[OCCSigner] = None,
     ) -> None:
-        self._model = model
+        self._models = models
         self._signer = signer or _get_default_signer()
 
     def __getattr__(self, name: str) -> Any:
-        """Proxy all attribute access to the underlying model."""
-        return getattr(self._model, name)
+        """Proxy all attribute access to the underlying models module."""
+        return getattr(self._models, name)
 
     def generate_content(
         self,
         *args: Any,
         **kwargs: Any,
-    ) -> GenerateContentResponse:
+    ) -> Any:
         """Generate content and sign any function calls in the response."""
-        response = self._model.generate_content(*args, **kwargs)
+        response = self._models.generate_content(*args, **kwargs)
         self._sign_function_calls(response)
         return response
 
@@ -127,13 +129,13 @@ class _OccGenerativeModel:
         self,
         *args: Any,
         **kwargs: Any,
-    ) -> GenerateContentResponse:
+    ) -> Any:
         """Async generate content and sign any function calls."""
-        response = await self._model.generate_content_async(*args, **kwargs)
+        response = await self._models.generate_content_async(*args, **kwargs)
         self._sign_function_calls(response)
         return response
 
-    def _sign_function_calls(self, response: GenerateContentResponse) -> None:
+    def _sign_function_calls(self, response: Any) -> None:
         """Extract function calls from the response and sign each one."""
         try:
             for candidate in response.candidates:
@@ -148,27 +150,134 @@ class _OccGenerativeModel:
                             output_data={"status": "called"},
                         )
         except (AttributeError, IndexError, TypeError):
-            # Response may not have function calls — that's fine
+            # Response may not have function calls -- that's fine
             pass
 
 
-def wrap_model(
-    model: genai.GenerativeModel,
-    signer: Optional[OCCSigner] = None,
-) -> _OccGenerativeModel:
+class _OccClient:
     """
-    Wrap a Gemini ``GenerativeModel`` with OCC proof signing.
+    Wraps a ``google.genai.Client`` to intercept model calls and
+    produce OCC proof entries.
+    """
+
+    def __init__(
+        self,
+        client: genai.Client,
+        signer: Optional[OCCSigner] = None,
+    ) -> None:
+        self._client = client
+        self._signer = signer or _get_default_signer()
+        self._models = _OccModelsModule(client.models, signer=self._signer)
+
+    @property
+    def models(self) -> _OccModelsModule:
+        return self._models
+
+    def __getattr__(self, name: str) -> Any:
+        """Proxy all other attribute access to the underlying client."""
+        return getattr(self._client, name)
+
+
+def wrap_client(
+    client: genai.Client,
+    signer: Optional[OCCSigner] = None,
+) -> _OccClient:
+    """
+    Wrap a Gemini ``Client`` with OCC proof signing.
 
     Every function call in the model's response produces a signed proof entry.
 
     Usage::
+
+        from google import genai
+        from occ_gemini import wrap_client
+
+        client = genai.Client(api_key="...")
+        safe_client = wrap_client(client)
+        response = safe_client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents="What's the weather?",
+        )
+        # proof.jsonl now contains signed proof entries for any function calls
+    """
+    return _OccClient(client, signer=signer)
+
+
+def wrap_model(
+    model: Any,
+    signer: Optional[OCCSigner] = None,
+) -> Any:
+    """
+    Wrap a Gemini model or client with OCC proof signing.
+
+    Accepts either a ``google.genai.Client`` (new API) or a legacy
+    ``google.generativeai.GenerativeModel`` and wraps it so that
+    function calls in responses produce signed proof entries.
+
+    Usage (new API)::
+
+        from google import genai
+        from occ_gemini import wrap_model
+
+        client = genai.Client(api_key="...")
+        safe_client = wrap_model(client)
+        response = safe_client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents="What's the weather?",
+        )
+
+    Usage (legacy API, deprecated)::
 
         import google.generativeai as genai
         from occ_gemini import wrap_model
 
         model = genai.GenerativeModel("gemini-pro")
         safe_model = wrap_model(model)
-        response = safe_model.generate_content("What's the weather?")
-        # proof.jsonl now contains signed proof entries for any function calls
     """
-    return _OccGenerativeModel(model, signer=signer)
+    if isinstance(model, genai.Client):
+        return _OccClient(model, signer=signer)
+
+    # Legacy google.generativeai.GenerativeModel support
+    _signer = signer or _get_default_signer()
+
+    class _LegacyOccModel:
+        def __init__(self, inner: Any) -> None:
+            self._inner = inner
+            self._signer = _signer
+
+        def __getattr__(self, name: str) -> Any:
+            return getattr(self._inner, name)
+
+        def generate_content(self, *args: Any, **kwargs: Any) -> Any:
+            response = self._inner.generate_content(*args, **kwargs)
+            try:
+                for candidate in response.candidates:
+                    for part in candidate.content.parts:
+                        if hasattr(part, "function_call") and part.function_call:
+                            fc = part.function_call
+                            self._signer.sign_tool_call(
+                                tool_name=fc.name,
+                                input_data=dict(fc.args) if fc.args else {},
+                                output_data={"status": "called"},
+                            )
+            except (AttributeError, IndexError, TypeError):
+                pass
+            return response
+
+        async def generate_content_async(self, *args: Any, **kwargs: Any) -> Any:
+            response = await self._inner.generate_content_async(*args, **kwargs)
+            try:
+                for candidate in response.candidates:
+                    for part in candidate.content.parts:
+                        if hasattr(part, "function_call") and part.function_call:
+                            fc = part.function_call
+                            self._signer.sign_tool_call(
+                                tool_name=fc.name,
+                                input_data=dict(fc.args) if fc.args else {},
+                                output_data={"status": "called"},
+                            )
+            except (AttributeError, IndexError, TypeError):
+                pass
+            return response
+
+    return _LegacyOccModel(model)
