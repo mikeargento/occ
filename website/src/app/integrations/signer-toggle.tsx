@@ -84,20 +84,24 @@ export function SignerDescription({ mode }: { mode: "local" | "tee" }) {
   );
 }
 
-const localBash = `npx occ-mcp-proxy --wrap npx <server>`;
-const teeBash = `npx occ-mcp-proxy --wrap --signer occ-cloud npx <server>`;
+const localBash = `npx occ-mcp-proxy --wrap npx -y @modelcontextprotocol/server-filesystem ~/Desktop`;
+const teeBash = `npx occ-mcp-proxy --wrap --signer occ-cloud npx -y @modelcontextprotocol/server-filesystem ~/Desktop`;
 
 const localConfig = `{
   "command": "npx",
   "args": ["occ-mcp-proxy", "--wrap",
-    "npx", "<your-server>"]
+    "npx", "-y",
+    "@modelcontextprotocol/server-filesystem",
+    "/home"]
 }`;
 
 const teeConfig = `{
   "command": "npx",
   "args": ["occ-mcp-proxy", "--wrap",
     "--signer", "occ-cloud",
-    "npx", "<your-server>"]
+    "npx", "-y",
+    "@modelcontextprotocol/server-filesystem",
+    "/home"]
 }`;
 
 export function InteractiveSignerSection() {
