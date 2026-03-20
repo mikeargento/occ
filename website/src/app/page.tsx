@@ -592,7 +592,7 @@ function FrameworkCard({ framework }: { framework: Framework }) {
 
   return (
     <div
-      className={`group rounded-xl border p-6 flex flex-col transition-all duration-300 ${
+      className={`group rounded-xl border p-6 flex flex-col min-h-[180px] transition-all duration-300 ${
         isMCP
           ? "border-emerald-500/30 bg-emerald-500/[0.03] hover:border-emerald-500/50"
           : "border-border-subtle bg-bg-elevated hover:border-border"
