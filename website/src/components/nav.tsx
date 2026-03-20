@@ -7,11 +7,9 @@ import { useTheme } from "./theme-provider";
 
 const links: { href: string; label: string; external?: boolean; indicator?: boolean }[] = [
   { href: "/studio", label: "Studio" },
-  { href: "/explorer", label: "Explorer" },
-  { href: "/agent", label: "Agent" },
   { href: "/docs", label: "Docs" },
   { href: "/api-reference", label: "API" },
-  { href: "https://github.com/mikeargento/occ", label: "GitHub", external: true },
+  { href: "/explorer", label: "Explorer" },
 ];
 
 export function Nav() {
@@ -21,13 +19,13 @@ export function Nav() {
 
   return (
     <header className="sticky top-0 z-50 bg-bg/80 backdrop-blur-xl">
-      <div className="mx-auto max-w-7xl px-6">
+      <div className="mx-auto max-w-6xl px-6">
         <nav className="flex h-16 items-center justify-between">
           <Link
             href="/"
             className="flex items-center gap-2 text-text"
           >
-            <span className="text-xl font-extrabold tracking-[-0.01em]" style={{ fontFamily: '"acumin-variable", "acumin-pro", sans-serif' }}>ProofStudio</span>
+            <span className="text-[22px] tracking-[-0.02em]" style={{ fontFamily: '"acumin-variable", "acumin-pro", sans-serif', fontWeight: 900 }}>OCC.WTF</span>
           </Link>
 
           {/* Desktop */}

@@ -5,11 +5,11 @@ import Link from "next/link";
 export function Footer() {
   return (
     <footer className="pb-16">
-      <div className="mx-auto max-w-7xl px-6 pt-16">
+      <div className="mx-auto max-w-6xl px-6 pt-16">
         <div className="flex flex-col md:flex-row md:justify-between gap-12">
           <div className="max-w-md">
             <div className="text-xl font-extrabold tracking-[-0.01em] mb-5" style={{ fontFamily: '"acumin-variable", "acumin-pro", sans-serif' }}>
-              ProofStudio
+              OCC
             </div>
             <p className="text-sm text-text-tertiary leading-relaxed">
               Cryptographic proof for any digital artifact<br />
@@ -47,6 +47,7 @@ export function Footer() {
               <ul className="space-y-3">
                 <li><a href="https://github.com/mikeargento/occ" target="_blank" rel="noopener" className="text-sm text-text-secondary hover:text-text transition-colors">GitHub</a></li>
                 <li><a href="https://npmjs.com/package/occproof" target="_blank" rel="noopener" className="text-sm text-text-secondary hover:text-text transition-colors">npm</a></li>
+                <li><a href="https://buymeacoffee.com/mikeargento" target="_blank" rel="noopener" className="text-sm text-text-secondary hover:text-text transition-colors">☕ Buy Me a Coffee</a></li>
               </ul>
             </div>
           </div>

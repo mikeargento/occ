@@ -131,7 +131,7 @@ export default function ExplorerPage() {
         Proof Explorer
       </h1>
       <p className="mt-3 text-text-secondary text-lg">
-        Every proof committed through ProofStudio lives here. Drop a file to find its proof.
+        Every proof committed through OCC lives here. Drop a file to find its proof.
       </p>
 
       {/* ── File Hasher ── */}
@@ -164,7 +164,7 @@ export default function ExplorerPage() {
 
             {lookupResults !== null && lookupResults.length === 0 && (
               <div className="mt-4 py-3 px-4 rounded-lg bg-bg-subtle/50 text-sm text-text-secondary">
-                No proofs found for this file. It hasn&apos;t been committed through ProofStudio yet.
+                No proofs found for this file. It hasn&apos;t been committed through OCC yet.
               </div>
             )}
 

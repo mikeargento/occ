@@ -1,488 +1,636 @@
 "use client";
 
 import Link from "next/link";
+import React from "react";
 import { ScrollReveal } from "@/components/scroll-reveal";
-import { useState, useEffect, useCallback } from "react";
+import { InteractiveSignerSection } from "./integrations/signer-toggle";
+import { CopyButton } from "./integrations/copy-button";
 
-const TEE_ENDPOINT = "https://nitro.occproof.com";
-const ENCLAVE_MEASUREMENT =
-  "1acdac0aa2d72178cc8ed9d77a7e07c63fa47c2db9db186eed48ca5ea126f45da98acbc22531aac2c837bee4cc542dee";
+/* eslint-disable @next/next/no-img-element */
 
-function Section({
-  children,
-  className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
+/* ── Logo helper ── */
+
+function Logo({ src, alt, invert }: { src: string; alt: string; invert?: boolean }) {
   return (
-    <section className={`py-28 sm:py-32 ${className}`}>
-      <div className="mx-auto max-w-6xl px-6">
-        {children}
-      </div>
-    </section>
+    <img
+      src={src}
+      alt={alt}
+      className={`w-9 h-9${invert ? " dark:invert" : ""}`}
+    />
   );
 }
 
-/* ── Use Case Icons (24x24, stroke-based) ── */
-const icons = {
-  sparkles: (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 3l1.5 5.5L19 10l-5.5 1.5L12 17l-1.5-5.5L5 10l5.5-1.5L12 3z" />
-      <path d="M19 15l.5 2 2 .5-2 .5-.5 2-.5-2-2-.5 2-.5.5-2z" />
-    </svg>
-  ),
-  terminal: (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="4 17 10 11 4 5" />
-      <line x1="12" y1="19" x2="20" y2="19" />
-    </svg>
-  ),
-  image: (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-      <circle cx="8.5" cy="8.5" r="1.5" />
-      <polyline points="21 15 16 10 5 21" />
-    </svg>
-  ),
-  beaker: (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M9 3h6v7l5 8a1 1 0 01-.9 1.5H4.9A1 1 0 014 18l5-8V3z" />
-      <line x1="9" y1="3" x2="15" y2="3" />
-      <path d="M7 15h10" />
-    </svg>
-  ),
-  shield: (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-      <polyline points="9 12 11 14 15 10" />
-    </svg>
-  ),
-  arrows: (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="17 1 21 5 17 9" />
-      <line x1="3" y1="5" x2="21" y2="5" />
-      <polyline points="7 23 3 19 7 15" />
-      <line x1="21" y1="19" x2="3" y2="19" />
-    </svg>
-  ),
+const logos = {
+  mcp: <Logo src="/logos/mcp.svg" alt="MCP" />,
+  claude: <Logo src="/logos/anthropic.svg" alt="Anthropic" invert />,
+  cursor: <Logo src="/logos/cursor.svg" alt="Cursor" invert />,
+  openai: <Logo src="/logos/openai.svg" alt="OpenAI" invert />,
+  langchain: <Logo src="/logos/langchain.svg" alt="LangChain" invert />,
+  vercel: <Logo src="/logos/vercel.svg" alt="Vercel" invert />,
+  crewai: <Logo src="/logos/crewai.svg" alt="CrewAI" />,
+  google: <Logo src="/logos/google.svg" alt="Google" />,
+  llamaindex: <Logo src="/logos/llamaindex.svg" alt="LlamaIndex" />,
+  autogen: <Logo src="/logos/autogen.svg" alt="AutoGen" />,
+  mastra: <Logo src="/logos/mastra.svg" alt="Mastra" invert />,
+  cloudflare: <Logo src="/logos/cloudflare.svg" alt="Cloudflare" />,
+  github: <Logo src="/logos/github.svg" alt="GitHub" invert />,
+  composio: <Logo src="/logos/composio.svg" alt="Composio" invert />,
+  agentops: <Logo src="/logos/agentops.svg" alt="AgentOps" invert />,
+  julep: <Logo src="/logos/julep.svg" alt="Julep" invert />,
+  relevanceai: <Logo src="/logos/relevanceai.svg" alt="Relevance AI" invert />,
+  letta: <Logo src="/logos/letta.svg" alt="Letta" invert />,
+  superagi: <Logo src="/logos/superagi.svg" alt="SuperAGI" invert />,
+  openclaw: <Logo src="/logos/openclaw.svg" alt="OpenClaw" />,
 };
 
-/* ── Enclave info row ── */
-function EnclaveRow({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
-  return (
-    <div className="flex items-center justify-between gap-3">
-      <span className="text-xs text-text-tertiary">{label}</span>
-      <span className={`text-xs text-text ${mono ? "font-mono" : "font-medium"}`}>{value}</span>
-    </div>
-  );
-}
+/* ── Unique logos for hero grid (deduplicated by company) ── */
+const heroLogos = [
+  { key: "mcp", logo: logos.mcp, available: true },
+  { key: "claude", logo: logos.claude, available: true },
+  { key: "cursor", logo: logos.cursor, available: true },
+  { key: "openai", logo: logos.openai, available: true },
+  { key: "langchain", logo: logos.langchain, available: true },
+  { key: "vercel", logo: logos.vercel, available: true },
+  { key: "crewai", logo: logos.crewai, available: true },
+  { key: "google", logo: logos.google, available: false },
+  { key: "llamaindex", logo: logos.llamaindex, available: false },
+  { key: "autogen", logo: logos.autogen, available: false },
+  { key: "cloudflare", logo: logos.cloudflare, available: false },
+  { key: "github", logo: logos.github, available: true },
+  { key: "paperclip", logo: <Logo src="/logos/paperclip.svg" alt="Paperclip" invert />, available: true },
+  { key: "composio", logo: logos.composio, available: true },
+  { key: "openclaw", logo: logos.openclaw, available: false },
+  { key: "mastra", logo: logos.mastra, available: false },
+];
 
-/* ── Live Enclave Panel ── */
-function EnclavePanel() {
-  const [health, setHealth] = useState<{
-    status: "checking" | "online" | "offline";
-    latencyMs: number | null;
-    checkedAt: Date | null;
-  }>({ status: "checking", latencyMs: null, checkedAt: null });
+/* ── Framework data ── */
 
-  const [keyInfo, setKeyInfo] = useState<{
-    publicKeyB64: string | null;
-    epochId: string | null;
-    counter: string | null;
-    measurement: string | null;
-  }>({ publicKeyB64: null, epochId: null, counter: null, measurement: null });
+type Framework = {
+  name: string;
+  description: string;
+  install?: string;
+  status: "available" | "coming-soon";
+  icon: string;
+  logo?: React.ReactNode;
+  snippet?: string;
+};
 
-  const checkHealth = useCallback(async () => {
-    setHealth((h) => ({ ...h, status: "checking" }));
-    const start = performance.now();
-    try {
-      const res = await fetch(`${TEE_ENDPOINT}/health`, { cache: "no-store" });
-      const latency = Math.round(performance.now() - start);
-      if (res.ok) {
-        setHealth({ status: "online", latencyMs: latency, checkedAt: new Date() });
-      } else {
-        setHealth({ status: "offline", latencyMs: null, checkedAt: new Date() });
-      }
-    } catch {
-      setHealth({ status: "offline", latencyMs: null, checkedAt: new Date() });
+const frameworks: Framework[] = [
+  {
+    name: "MCP (any server)",
+    description: "Wrap ANY MCP server with one command",
+    install: "npx occ-mcp-proxy --wrap npx <any-mcp-server>",
+    status: "available",
+    icon: "\u26a1",
+    logo: logos.mcp,
+    snippet: `npx occ-mcp-proxy --wrap npx @modelcontextprotocol/server-filesystem /home`,
+  },
+  {
+    name: "Claude Desktop",
+    description: "Wrap any MCP server with cryptographic proof",
+    install: "Add to claude_desktop_config.json",
+    status: "available",
+    icon: "\u2728",
+    logo: logos.claude,
+    snippet: `{
+  "mcpServers": {
+    "my-server": {
+      "command": "npx",
+      "args": [
+        "occ-mcp-proxy",
+        "--wrap",
+        "npx", "@modelcontextprotocol/server-filesystem", "/home"
+      ]
     }
-  }, []);
+  }
+}`,
+  },
+  {
+    name: "Cursor",
+    description: "Proof for every AI edit in your IDE",
+    install: "Add to .cursor/mcp.json",
+    status: "available",
+    icon: "\u270e",
+    logo: logos.cursor,
+  },
+  {
+    name: "OpenAI",
+    description: "Wrap OpenAI function calls with proof",
+    install: "npm install occ-openai",
+    status: "available",
+    icon: "\u25cb",
+    logo: logos.openai,
+    snippet: `import { occWrap } from 'occ-openai';
 
-  const fetchKeyInfo = useCallback(async () => {
-    try {
-      const res = await fetch(`${TEE_ENDPOINT}/key`, { cache: "no-store" });
-      if (res.ok) {
-        const data = await res.json();
-        setKeyInfo({
-          publicKeyB64: data.publicKeyB64 ?? null,
-          epochId: data.epochId ?? null,
-          counter: data.counter ?? null,
-          measurement: data.measurement ?? null,
-        });
-      }
-    } catch { /* health check covers status */ }
-  }, []);
+const tools = occWrap([
+  { name: 'search', fn: searchWeb },
+  { name: 'calculate', fn: calculate },
+]);
+// Every function call gets a cryptographic receipt.`,
+  },
+  {
+    name: "OpenAI Agents",
+    description: "Cryptographic receipts for agent tool use",
+    install: "pip install occ-openai-agents",
+    status: "available",
+    icon: "\u25cb",
+    logo: logos.openai,
+    snippet: `from occ_openai_agents import OccAgent
 
-  useEffect(() => {
-    checkHealth();
-    fetchKeyInfo();
-    const interval = setInterval(() => {
-      checkHealth();
-      fetchKeyInfo();
-    }, 30000);
-    return () => clearInterval(interval);
-  }, [checkHealth, fetchKeyInfo]);
+agent = OccAgent(
+    name="researcher",
+    tools=[search, summarize],
+)
+# Every tool invocation is signed.`,
+  },
+  {
+    name: "LangChain",
+    description: "OCC callback handler for LangChain",
+    install: "pip install occ-langchain",
+    status: "available",
+    icon: "\ud83e\udd9c",
+    logo: logos.langchain,
+    snippet: `from occ_langchain import OccCallbackHandler, occ_tool
 
-  const statusColor =
-    health.status === "online"
-      ? "bg-emerald-500"
-      : health.status === "checking"
-        ? "bg-amber-400"
-        : "bg-red-500";
+@occ_tool
+def search(query: str) -> str:
+    return web_search(query)
 
-  const statusLabel =
-    health.status === "online"
-      ? "Verified Enclave"
-      : health.status === "checking"
-        ? "Verifying..."
-        : "Enclave Unreachable";
+handler = OccCallbackHandler()
+chain.invoke(input, config={"callbacks": [handler]})`,
+  },
+  {
+    name: "LangGraph",
+    description: "Proof for every node execution",
+    status: "coming-soon",
+    icon: "\ud83e\udd9c",
+    logo: logos.langchain,
+  },
+  {
+    name: "Vercel AI SDK",
+    description: "Middleware for Vercel AI tool calls",
+    install: "npm install occ-vercel",
+    status: "available",
+    icon: "\u25b2",
+    logo: logos.vercel,
+    snippet: `import { occMiddleware } from 'occ-vercel';
+import { createAI } from 'ai';
 
-  const measurementMatch = keyInfo.measurement === ENCLAVE_MEASUREMENT;
+const ai = createAI({
+  middleware: [occMiddleware()],
+});
+// Proof for every tool call, automatically.`,
+  },
+  {
+    name: "CrewAI",
+    description: "OCC-wrapped tools for CrewAI agents",
+    install: "pip install occ-crewai",
+    status: "available",
+    icon: "\ud83d\udee0",
+    logo: logos.crewai,
+  },
+  {
+    name: "Google Gemini",
+    description: "Proof for Gemini function calling",
+    status: "coming-soon",
+    icon: "\u25c7",
+    logo: logos.google,
+  },
+  {
+    name: "Google ADK",
+    description: "Agent Development Kit integration",
+    status: "coming-soon",
+    icon: "\u25c7",
+    logo: logos.google,
+  },
+  {
+    name: "LlamaIndex",
+    description: "Tool-level proof for LlamaIndex agents",
+    status: "coming-soon",
+    icon: "\ud83e\udd99",
+    logo: logos.llamaindex,
+  },
+  {
+    name: "AutoGen",
+    description: "Multi-agent proof chains for AutoGen",
+    status: "coming-soon",
+    icon: "\u2699",
+    logo: logos.autogen,
+  },
+  {
+    name: "OpenClaw",
+    description: "Local AI assistant with 20+ messaging platforms",
+    status: "coming-soon",
+    icon: "🦞",
+    logo: logos.openclaw,
+  },
+  {
+    name: "Mastra",
+    description: "TypeScript AI framework integration",
+    status: "coming-soon",
+    icon: "\u25ce",
+    logo: logos.mastra,
+  },
+  {
+    name: "Cloudflare Workers AI",
+    description: "Edge-deployed AI with proof",
+    status: "coming-soon",
+    icon: "\u2601",
+    logo: logos.cloudflare,
+  },
+  {
+    name: "GitHub Actions",
+    description: "Verify proof chains in CI",
+    install: "uses: mikeargento/occ-verify-action@v1",
+    status: "available",
+    icon: "\u2699",
+    logo: logos.github,
+    snippet: `- name: Verify OCC proofs
+  uses: mikeargento/occ-verify-action@v1
+  with:
+    proof-path: ./proof.jsonl`,
+  },
+];
 
-  return (
-    <div className="rounded-xl border border-border-subtle bg-bg-elevated p-8">
-      {/* Status header */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-3">
-          <div className="relative flex h-2.5 w-2.5">
-            {health.status === "online" && (
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-            )}
-            <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${statusColor}`} />
-          </div>
-          <span className="text-sm font-semibold text-text">{statusLabel}</span>
-        </div>
-        {health.latencyMs !== null && (
-          <span className="text-xs font-mono text-text-tertiary">{health.latencyMs}ms</span>
-        )}
-      </div>
+/* ── Code examples for the bottom section ── */
 
-      {/* Info rows — grouped */}
-      <div className="space-y-6">
-        {/* Infrastructure */}
-        <div className="space-y-2.5">
-          <EnclaveRow label="Environment" value="AWS Nitro Enclave" />
-          <EnclaveRow label="Region" value="us-east-2" />
-          <EnclaveRow label="Endpoint" value="nitro.occproof.com" mono />
-        </div>
+const codeExamples = [
+  {
+    title: "Wrap any MCP server",
+    lang: "bash",
+    code: `npx occ-mcp-proxy --wrap npx @modelcontextprotocol/server-filesystem /home
 
-        <div className="border-t border-border-subtle" />
+# proof.jsonl appears in .occ/
+# Every tool call → Ed25519 signed receipt`,
+  },
+  {
+    title: "Python (LangChain)",
+    lang: "python",
+    code: `from occ import OccTool
 
-        {/* Cryptography */}
-        <div className="space-y-2.5">
-          <EnclaveRow label="Signing" value="Ed25519" />
-          <EnclaveRow label="Hash" value="SHA-256" />
-          <EnclaveRow label="Attestation" value="aws-nitro" />
-          <EnclaveRow label="Enforcement" value="measured-tee" />
-        </div>
+@occ_tool
+def search(query: str) -> str:
+    return web_search(query)
 
-        <div className="border-t border-border-subtle" />
+# Every call is signed.
+# Every denial is on the record.`,
+  },
+  {
+    title: "TypeScript (Vercel AI)",
+    lang: "typescript",
+    code: `import { occMiddleware } from 'occ-vercel';
 
-        {/* PCR0 Measurement */}
-        <div>
-          <div className="text-xs text-text-tertiary mb-2">Enclave Measurement</div>
-          <code className="block text-sm font-mono text-text-tertiary leading-relaxed break-all">
-            {ENCLAVE_MEASUREMENT}
-          </code>
-          {keyInfo.measurement && (
-            <div className="mt-2 flex items-center gap-2">
-              <div className={`w-1.5 h-1.5 rounded-full ${measurementMatch ? "bg-emerald-500" : "bg-red-500"}`} />
-              <span className={`text-xs ${measurementMatch ? "text-emerald-400" : "text-red-400"}`}>
-                {measurementMatch ? "Matches published build hash" : "Does not match published build hash"}
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
+const ai = createAI({
+  middleware: [occMiddleware()],
+});
 
-      {/* Footer */}
-      <div className="mt-8 pt-5 border-t border-border-subtle flex items-center justify-between">
-        <span className="text-xs text-text-tertiary">
-          {health.checkedAt
-            ? `Checked ${health.checkedAt.toLocaleTimeString()}`
-            : "Checking..."}
-        </span>
-        <button
-          onClick={() => { checkHealth(); fetchKeyInfo(); }}
-          disabled={health.status === "checking"}
-          className="text-xs font-medium text-text-tertiary hover:text-text transition-colors disabled:opacity-50"
-        >
-          Refresh
-        </button>
-      </div>
-    </div>
-  );
-}
+// Proof for every tool call, automatically.`,
+  },
+];
+
+/* ── Page ── */
 
 export default function Home() {
+  const available = frameworks.filter((f) => f.status === "available");
+  const comingSoon = frameworks.filter((f) => f.status === "coming-soon");
+
   return (
     <>
-      {/* ── Hero ── */}
-      <section className="relative flex items-center justify-center overflow-hidden pt-28 sm:pt-32 pb-12 sm:pb-16">
-        <div className="relative z-10 mx-auto max-w-5xl px-6 text-center">
-          <h1
-            className="hero-animate text-[clamp(2rem,6.5vw,4.5rem)] font-bold tracking-[-0.04em] leading-[1.08] whitespace-nowrap text-text"
-            style={{ animationDelay: "0ms" }}
-          >
-            Prove anything digital
-          </h1>
-
-          <p
-            className="hero-animate mt-7 sm:mt-8 text-[clamp(1.125rem,3.2vw,2.25rem)] font-bold tracking-[-0.02em] leading-[1.3] whitespace-nowrap text-text-secondary"
-            style={{ animationDelay: "120ms" }}
-          >
-            No blockchain. No ledgers. Just proof.
-          </p>
-
-          <div
-            className="hero-animate mt-10 sm:mt-12 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4"
-            style={{ animationDelay: "240ms" }}
-          >
-            <Link
-              href="/studio"
-              className="inline-flex h-12 w-full sm:w-auto items-center justify-center rounded-xl bg-emerald-600 px-8 text-sm font-semibold text-white transition-all hover:bg-emerald-500 active:scale-[0.98]"
-            >
-              Try ProofStudio
-            </Link>
-            <Link
-              href="/agent"
-              className="inline-flex h-12 w-full sm:w-auto items-center justify-center rounded-xl border border-border px-8 text-sm font-semibold text-text-secondary transition-all hover:text-text hover:border-text-tertiary active:scale-[0.98]"
-            >
-              OCC Agent
-            </Link>
+    <div className="noise-overlay" />
+    <div className="mx-auto max-w-6xl px-6 py-20 sm:py-28">
+      {/* Hero */}
+      <section className="relative mb-20 sm:mb-28">
+        <div className="hero-grid" />
+        <div className="hero-glow" />
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-12">
+          <div className="lg:max-w-xl">
+            <h1 className="hero-animate text-5xl sm:text-6xl font-bold tracking-[-0.04em] mb-6" style={{ animationDelay: "0ms" }}>
+              One proof format.<br />
+              Every AI framework.
+            </h1>
+            <p className="hero-animate text-text-secondary text-lg sm:text-xl leading-relaxed" style={{ animationDelay: "120ms" }}>
+              OCC runs beneath your tools, your agents, your entire stack.
+              Every action produces a cryptographic receipt.
+              If the receipt exists, it couldn&apos;t have happened any other way.
+            </p>
+          </div>
+          <div className="hero-animate grid grid-cols-4 gap-4 sm:gap-5 shrink-0" style={{ animationDelay: "200ms" }}>
+            {heroLogos.map((h) => (
+              <div
+                key={h.key}
+                className="flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-xl transition-all duration-300 bg-bg-elevated/50 hover:bg-bg-elevated"
+                title={h.key}
+              >
+                {h.logo}
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
+      {/* Signer Mode Toggle */}
+      <ScrollReveal>
+        <InteractiveSignerSection />
+      </ScrollReveal>
 
-      {/* ── How It Works ── */}
-      <Section className="!pt-16 sm:!pt-20">
+      {/* Available */}
+      <section className="mb-20 sm:mb-28">
         <ScrollReveal>
-          <div className="text-center mb-16">
-            <h2 className="text-base sm:text-3xl font-semibold tracking-[-0.03em] text-text-secondary max-w-3xl mx-auto sm:text-balance">
-              ProofStudio creates a cryptographic{" "}
-              <br className="sm:hidden" />container that holds exactly one{" "}
-              <br className="sm:hidden" />digital artifact or process.
-            </h2>
-          </div>
+        <div className="flex items-center gap-3 mb-10">
+          <h2 className="text-2xl font-semibold tracking-[-0.02em]">
+            Available now
+          </h2>
+          <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-400">
+            {available.length} integrations
+          </span>
+        </div>
         </ScrollReveal>
 
-        <div className="grid sm:grid-cols-3 gap-8 max-w-5xl mx-auto">
-
-          {[
-            {
-              step: "01",
-              title: "Drop a file",
-              desc: "Any file. It stays on your device.",
-              micro: "Most people try a photo first.",
-            },
-            {
-              step: "02",
-              title: "Lock it in",
-              desc: "This exact version gets sealed. Takes a second.",
-            },
-            {
-              step: "03",
-              title: "Take your proof",
-              desc: "Now you can prove this existed.",
-            },
-          ].map((item, i) => (
-            <ScrollReveal key={item.step} delay={i * 100} className="h-full">
-              <div className="relative rounded-xl border border-border-subtle bg-bg-elevated p-8 h-full">
-                <div className="text-2xl font-mono font-light text-text-tertiary mb-4">
-                  {item.step}
-                </div>
-                <h3 className="text-lg font-semibold mb-3">{item.title}</h3>
-                <p className="text-sm text-text-secondary leading-relaxed">
-                  {item.desc}
-                </p>
-                {item.micro && (
-                  <p className="text-xs text-text-tertiary mt-3 italic">
-                    {item.micro}
-                  </p>
-                )}
-              </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {available.map((f, i) => (
+            <ScrollReveal key={f.name} delay={i * 40}>
+              <FrameworkCard framework={f} />
             </ScrollReveal>
           ))}
         </div>
-      </Section>
+      </section>
 
+      {/* Coming Soon */}
+      <section className="mb-20 sm:mb-28">
+        <ScrollReveal>
+        <div className="flex items-center gap-3 mb-10">
+          <h2 className="text-2xl font-semibold tracking-[-0.02em]">
+            Coming soon
+          </h2>
+          <span className="inline-flex items-center rounded-full bg-bg-subtle px-2.5 py-0.5 text-xs font-medium text-text-tertiary">
+            {comingSoon.length} planned
+          </span>
+        </div>
+        </ScrollReveal>
 
-      {/* ── What You Get ── */}
-      <Section>
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          <ScrollReveal>
-            <EnclavePanel />
-          </ScrollReveal>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {comingSoon.map((f, i) => (
+            <ScrollReveal key={f.name} delay={i * 40}>
+              <FrameworkCard framework={f} />
+            </ScrollReveal>
+          ))}
+        </div>
+      </section>
 
-          <ScrollReveal delay={150}>
-            <div>
-              <h2 className="text-2xl sm:text-3xl font-semibold tracking-[-0.03em] mb-4">
-                Every proof is independently verifiable
-              </h2>
-              <p className="text-sm text-text-secondary leading-relaxed mb-6">
-                Proofs are produced inside the enclave and carry the artifact
-                digest, commit metadata, Ed25519 signature, and Nitro
-                attestation report. Verification requires nothing beyond the
-                proof itself.
+      {/* Code Examples */}
+      <section className="mb-20 sm:mb-28">
+        <ScrollReveal>
+        <h2 className="text-2xl font-semibold tracking-[-0.02em] mb-4">
+          Three lines to proof
+        </h2>
+        <p className="text-text-secondary text-base leading-relaxed max-w-xl mb-10">
+          No matter which framework you use, integration is the same pattern:
+          wrap, call, verify.
+        </p>
+        </ScrollReveal>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {codeExamples.map((ex, i) => (
+            <ScrollReveal key={ex.title} delay={i * 60}>
+            <div
+              className="rounded-xl border border-border-subtle bg-bg-elevated p-6 flex flex-col h-full transition-all duration-300 hover:border-border"
+            >
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-xs font-mono text-text-tertiary uppercase tracking-wider">
+                  {ex.lang}
+                </span>
+                <span className="text-text-tertiary">&middot;</span>
+                <span className="text-sm font-medium text-text-secondary">
+                  {ex.title}
+                </span>
+              </div>
+              <div className="relative flex-1">
+                <div className="absolute top-0 right-0">
+                  <CopyButton text={ex.code} />
+                </div>
+                <pre className="text-sm font-mono text-text-secondary leading-relaxed overflow-x-auto">
+                  <code>{ex.code}</code>
+                </pre>
+              </div>
+            </div>
+            </ScrollReveal>
+          ))}
+        </div>
+      </section>
+
+      {/* Universal Proof Format */}
+      <section className="mb-20 sm:mb-28">
+        <ScrollReveal>
+        <div className="rounded-xl border border-border-subtle bg-bg-elevated p-10 sm:p-14">
+          <h2 className="text-2xl font-semibold tracking-[-0.02em] mb-4">
+            Universal Proof Format
+          </h2>
+          <p className="text-text-secondary text-base leading-relaxed max-w-2xl mb-6">
+            Every integration produces the same{" "}
+            <code className="font-mono text-sm bg-bg-subtle px-1.5 py-0.5 rounded">
+              occ/1
+            </code>{" "}
+            proof format. Same Ed25519 signatures. Same verification algorithm.
+            Whether the proof was generated by a Python agent, a TypeScript MCP
+            server, or a CI pipeline — the output is identical and
+            interchangeable.
+          </p>
+          <pre className="text-sm font-mono text-text-secondary leading-relaxed bg-bg rounded-lg p-6 overflow-x-auto">
+            <code>{`{
+  "version": "occ/1",
+  "timestamp": "2026-03-19T...",
+  "tool": "search",
+  "input_digest": "sha256:...",
+  "output_digest": "sha256:...",
+  "signature": "ed25519:...",
+  "public_key": "ed25519:..."
+}`}</code>
+          </pre>
+        </div>
+        </ScrollReveal>
+      </section>
+
+      {/* Orchestrators */}
+      <section className="mb-20 sm:mb-28">
+        <ScrollReveal>
+        <div className="flex items-center gap-3 mb-4">
+          <h2 className="text-2xl font-semibold tracking-[-0.02em]">
+            Orchestrators
+          </h2>
+          <span className="inline-flex items-center rounded-full bg-bg-subtle px-2.5 py-0.5 text-xs font-medium text-text-tertiary">
+            Agent platforms
+          </span>
+        </div>
+        <p className="text-text-secondary text-base leading-relaxed max-w-xl mb-10">
+          OCC plugs into multi-agent orchestration platforms. Run agents through
+          any orchestrator — every tool call still gets a cryptographic receipt.
+        </p>
+        </ScrollReveal>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {([
+            {
+              name: "Paperclip",
+              description: "Agent control plane with task management, multi-agent orchestration, and cryptographic proof on every action",
+              status: "available" as const,
+              logo: <Logo src="/logos/paperclip.svg" alt="Paperclip" invert />,
+            },
+            {
+              name: "Composio",
+              description: "250+ tool integrations with cryptographic proof on every call",
+              status: "coming-soon" as const,
+              logo: logos.composio,
+            },
+            {
+              name: "LangSmith",
+              description: "Proof-enriched traces for LangChain observability",
+              status: "coming-soon" as const,
+              logo: logos.langchain,
+            },
+            {
+              name: "Julep",
+              description: "Stateful agent workflows with proof at every step",
+              status: "coming-soon" as const,
+              logo: logos.julep,
+            },
+            {
+              name: "AgentOps",
+              description: "Agent observability with cryptographic audit trails",
+              status: "coming-soon" as const,
+              logo: logos.agentops,
+            },
+            {
+              name: "Relevance AI",
+              description: "No-code agent builder with proof integration",
+              status: "coming-soon" as const,
+              logo: logos.relevanceai,
+            },
+            {
+              name: "Letta (MemGPT)",
+              description: "Long-term memory agents with proof chains",
+              status: "coming-soon" as const,
+              logo: logos.letta,
+            },
+            {
+              name: "SuperAGI",
+              description: "Autonomous agent framework with OCC receipts",
+              status: "coming-soon" as const,
+              logo: logos.superagi,
+            },
+          ] as const).map((o, i) => (
+            <ScrollReveal key={o.name} delay={i * 40}>
+            <div
+              className={`rounded-xl border p-5 flex flex-col h-full transition-all duration-300 hover:border-border ${
+                o.status === "available"
+                  ? "border-emerald-500/30 bg-emerald-500/[0.03]"
+                  : "border-border-subtle bg-bg-elevated"
+              }`}
+            >
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <div className="flex items-center gap-2">
+                  {o.logo && <div className="shrink-0">{o.logo}</div>}
+                  <h3 className="text-sm font-semibold">{o.name}</h3>
+                </div>
+                <span
+                  className={`shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                    o.status === "available"
+                      ? "bg-emerald-500/10 text-emerald-400"
+                      : "bg-bg-subtle text-text-tertiary"
+                  }`}
+                >
+                  {o.status === "available" ? "Available" : "Coming Soon"}
+                </span>
+              </div>
+              <p className="text-xs text-text-secondary leading-relaxed">
+                {o.description}
               </p>
-              <div className="space-y-3">
-                {[
-                  { title: "Content-addressed", desc: "SHA-256 digest locks the proof to specific artifact bytes." },
-                  { title: "Timestamped", desc: "RFC 3161 token from an independent timestamp authority." },
-                  { title: "Hardware-attested", desc: "Nitro attestation report binds the signature to a measured enclave image." },
-                  { title: "Device-authorized", desc: "WebAuthn assertion ties the commit to a hardware-bound passkey." },
-                  { title: "Causally ordered", desc: "Monotonic counter and hash chain make gaps, forks, and reordering detectable." },
-                ].map((item) => (
-                  <div key={item.title} className="flex gap-3 items-start">
-                    <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                    <div>
-                      <span className="text-sm font-semibold text-text">{item.title}</span>
-                      <span className="text-sm text-text-secondary ml-1">· {item.desc}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
             </div>
-          </ScrollReveal>
-        </div>
-      </Section>
-
-
-      {/* ── Use Cases ── */}
-      <Section>
-        <ScrollReveal>
-          <div className="text-center mb-16">
-            <h2 className="text-2xl sm:text-3xl font-semibold tracking-[-0.03em]">
-              What can you prove?
-            </h2>
-            <p className="mt-3 text-2xl sm:text-3xl font-semibold tracking-[-0.03em] text-text-secondary">
-              Everything.
-            </p>
-          </div>
-        </ScrollReveal>
-
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[
-            {
-              title: "AI Outputs",
-              desc: "Prove model responses, generated images, and predictions came from a specific boundary at a specific time.",
-              icon: icons.sparkles,
-            },
-            {
-              title: "Software Builds",
-              desc: "Prove a build artifact was produced by a specific CI/CD pipeline inside a measured environment.",
-              icon: icons.terminal,
-            },
-            {
-              title: "Media & Journalism",
-              desc: "Prove a photo or document existed in its current form at a specific moment, before edits, before distribution.",
-              icon: icons.image,
-            },
-            {
-              title: "Scientific & Medical Data",
-              desc: "Prove sensor readings, laboratory results, or medical records existed at capture time with sequence integrity.",
-              icon: icons.beaker,
-            },
-            {
-              title: "Security, Compliance & Audit",
-              desc: "Produce tamper-evident security logs and audit records where any modification breaks the proof chain.",
-              icon: icons.shield,
-            },
-            {
-              title: "Agent-to-Agent",
-              desc: "Pass proofs between systems so each can verify data integrity without trusting the transport.",
-              icon: icons.arrows,
-            },
-          ].map((item, i) => (
-            <ScrollReveal key={item.title} delay={i * 80}>
-              <div className="card-hover group rounded-xl border border-border-subtle bg-bg-elevated p-8 hover:border-border h-full">
-                <div className="mb-4 text-text-tertiary group-hover:text-text-secondary transition-colors">
-                  {item.icon}
-                </div>
-                <h3 className="text-base font-semibold mb-2">{item.title}</h3>
-                <p className="text-sm text-text-secondary leading-relaxed">{item.desc}</p>
-              </div>
             </ScrollReveal>
           ))}
         </div>
-      </Section>
+      </section>
 
-
-      {/* ── Powered by OCC ── */}
-      <Section>
-        <ScrollReveal>
-          <div className="max-w-2xl mx-auto text-center">
-            <div className="text-[11px] font-medium uppercase tracking-[0.2em] text-text-tertiary mb-6">
-              Powered by
-            </div>
-            <h2 className="text-2xl sm:text-3xl font-semibold tracking-[-0.02em] mb-6">
-              Origin Controlled Computing
-            </h2>
-            <p className="text-text-secondary leading-relaxed text-balance">
-              ProofStudio is built on the OCC protocol. Proof is produced by
-              the commit event itself. If the proof exists, the commit happened.
-              If it doesn&apos;t, it didn&apos;t.
-            </p>
-            <div className="mt-8">
-              <Link
-                href="/docs"
-                className="text-sm font-medium text-text-secondary hover:text-text transition-colors"
-              >
-                Read the protocol documentation →
-              </Link>
-            </div>
-          </div>
-        </ScrollReveal>
-      </Section>
-
-
-      {/* ── CTA ── */}
-      <Section className="pb-40">
-        <ScrollReveal>
-          <div className="text-center">
-            <h2 className="text-2xl sm:text-3xl font-semibold tracking-[-0.03em]">
-              Try it now
-            </h2>
-            <p className="mt-4 text-text-secondary max-w-lg mx-auto text-balance text-lg">
-              Drop a file, get a proof. Runs in your browser, verifiable by anyone.
-            </p>
-            <div className="mt-10 sm:mt-12 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-              <Link
-                href="/studio"
-                className="inline-flex h-12 w-full sm:w-auto items-center justify-center rounded-xl bg-emerald-600 px-8 text-sm font-semibold text-white transition-all hover:bg-emerald-500 active:scale-[0.98]"
-              >
-                Open Studio
-              </Link>
-              <Link
-                href="/api-reference"
-                className="inline-flex h-12 w-full sm:w-auto items-center justify-center rounded-xl border border-border px-8 text-sm font-semibold text-text-secondary transition-all hover:text-text hover:border-text-tertiary active:scale-[0.98]"
-              >
-                API Reference
-              </Link>
-              <a
-                href="https://github.com/mikeargento/occ"
-                target="_blank"
-                rel="noopener"
-                className="inline-flex h-12 w-full sm:w-auto items-center justify-center rounded-xl border border-border px-8 text-sm font-semibold text-text-secondary transition-all hover:text-text hover:border-text-tertiary active:scale-[0.98]"
-              >
-                GitHub
-              </a>
-            </div>
-          </div>
-        </ScrollReveal>
-      </Section>
+      {/* CTA */}
+      <ScrollReveal>
+      <section className="text-center">
+        <h2 className="text-2xl font-semibold tracking-[-0.02em] mb-4">
+          Don&apos;t see your framework?
+        </h2>
+        <p className="text-text-secondary text-base leading-relaxed max-w-lg mx-auto mb-8">
+          OCC is open source. Add proof to any tool-calling framework in
+          minutes. Contributions welcome.
+        </p>
+        <div className="flex items-center justify-center gap-4 flex-wrap">
+          <Link
+            href="/docs"
+            className="inline-flex items-center justify-center rounded-lg bg-text text-bg px-6 py-3 text-sm font-semibold transition-opacity hover:opacity-90"
+          >
+            Documentation
+          </Link>
+          <a
+            href="https://github.com/mikeargento/occ"
+            target="_blank"
+            rel="noopener"
+            className="inline-flex items-center justify-center rounded-lg border border-border-subtle px-6 py-3 text-sm font-semibold text-text-secondary hover:text-text hover:border-border transition-colors"
+          >
+            GitHub
+          </a>
+        </div>
+      </section>
+      </ScrollReveal>
+    </div>
     </>
+  );
+}
+
+/* ── Card component ── */
+
+function FrameworkCard({ framework }: { framework: Framework }) {
+  const { name, description, install, status, logo, snippet } = framework;
+  const isAvailable = status === "available";
+  const isMCP = name === "MCP (any server)";
+
+  return (
+    <div
+      className={`group rounded-xl border p-6 flex flex-col transition-all duration-300 ${
+        isMCP
+          ? "border-emerald-500/30 bg-emerald-500/[0.03] hover:border-emerald-500/50"
+          : "border-border-subtle bg-bg-elevated hover:border-border"
+      }`}
+    >
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div className="flex items-center gap-3">
+          <div className="shrink-0">
+            {logo}
+          </div>
+          <h3 className="text-base font-semibold">{name}</h3>
+        </div>
+        <span
+          className={`shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${
+            isAvailable
+              ? "bg-emerald-500/10 text-emerald-400"
+              : "bg-bg-subtle text-text-tertiary"
+          }`}
+        >
+          {isAvailable ? "Available" : "Coming Soon"}
+        </span>
+      </div>
+
+      <p className="text-sm text-text-secondary leading-relaxed mb-4">
+        {description}
+      </p>
+
+      {install && (
+        <div className="mt-auto">
+          <div className="flex items-center gap-1 bg-bg rounded-lg px-3 py-2">
+            <code className="flex-1 text-xs font-mono text-text-tertiary overflow-x-auto">
+              {install}
+            </code>
+            <CopyButton text={install} />
+          </div>
+        </div>
+      )}
+
+    </div>
   );
 }

@@ -121,7 +121,7 @@ export async function registerPasskey(): Promise<StoredCredential> {
     publicKey: {
       challenge: crypto.getRandomValues(new Uint8Array(32)),
       rp: {
-        name: "OCC Proof Studio",
+        name: "OCC",
         id: location.hostname,
       },
       user: {

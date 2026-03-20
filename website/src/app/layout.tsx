@@ -15,13 +15,13 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "ProofStudio - Prove anything digital",
-    template: "%s | ProofStudio",
+    default: "OCC - Prove anything digital",
+    template: "%s | OCC",
   },
   description:
     "Generate portable cryptographic proof for any file or computation. Drop an artifact, receive proof it existed in its current form at a specific moment. No blockchain required.",
   keywords: [
-    "ProofStudio",
+    "OCC",
     "cryptographic proof",
     "OCC",
     "Origin Controlled Computing",
@@ -34,14 +34,14 @@ export const metadata: Metadata = {
     "commit proof",
   ],
   openGraph: {
-    title: "ProofStudio - Prove anything digital",
+    title: "OCC - Prove anything digital",
     description: "Generate portable cryptographic proof for any file or computation. No blockchain required.",
     type: "website",
-    siteName: "ProofStudio",
+    siteName: "OCC",
   },
   twitter: {
     card: "summary_large_image",
-    title: "ProofStudio - Prove anything digital",
+    title: "OCC - Prove anything digital",
     description: "Generate portable cryptographic proof for any file or computation. No blockchain required.",
   },
   robots: { index: true, follow: true },

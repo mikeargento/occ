@@ -29,7 +29,7 @@ function buildBWVerifyTxt(originalFilename: string, p: OCCProof): string {
 1. PURPOSE
 ----------
 This file is a self-contained verification guide for the B&W conversion
-proof package created by ProofStudio (https://proofstudio.xyz/bw-demo).
+proof package created by OCC (https://occ.wtf/bw-demo).
 
 The grayscale conversion was performed INSIDE an AWS Nitro Enclave
 (Trusted Execution Environment). The proof's artifact digest is the
@@ -44,7 +44,7 @@ a complete, independent verification analysis.
 
 Proof system: OCC (Origin Controlled Computing)
 Protocol version: ${p.version}
-Learn more: https://proofstudio.xyz
+Learn more: https://occ.wtf
 
 
 2. FILES IN THIS PACKAGE
@@ -283,7 +283,7 @@ be performed by reading the proof.json directly.
 
 
 Powered by OCC (Origin Controlled Computing)
-https://proofstudio.xyz
+https://occ.wtf
 `;
 
   return txt;

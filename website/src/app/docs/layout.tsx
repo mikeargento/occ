@@ -13,14 +13,13 @@ const sections = [
   { href: "/docs/agent-sdk", label: "Agent SDK" },
   { href: "/docs/what-occ-is-not", label: "What OCC is Not" },
   { href: "/docs/faq", label: "FAQ" },
-  { href: "/docs/whitepaper", label: "Whitepaper" },
 ];
 
 export default function DocsLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   return (
-    <div className="mx-auto max-w-7xl px-6 py-16 sm:py-20">
+    <div className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
       {/* Mobile nav */}
       <div className="lg:hidden mb-10">
         <div className="rounded-xl border border-border-subtle bg-bg-elevated overflow-hidden">
@@ -39,8 +38,8 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
 
       <div className="flex gap-16">
         {/* Sidebar */}
-        <aside className="hidden lg:block w-60 shrink-0">
-          <div className="sticky top-24">
+        <aside className="hidden lg:block w-60 shrink-0 relative">
+          <div className="fixed top-20 w-60">
             <div className="text-[11px] font-medium uppercase tracking-[0.15em] text-text-tertiary mb-6">
               Documentation
             </div>
@@ -60,6 +59,9 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
               ))}
             </nav>
             <div className="mt-8 pt-4 border-t border-border-subtle">
+              <Link href="/docs/whitepaper" className="block text-sm text-text-secondary hover:text-text transition-colors px-4 py-2">
+                Whitepaper
+              </Link>
               <Link href="/api-reference" className="block text-sm text-text-secondary hover:text-text transition-colors px-4 py-2">
                 API Reference
               </Link>
