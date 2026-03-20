@@ -300,7 +300,6 @@ export default function Home() {
     <div className="mx-auto max-w-6xl px-6 py-20 sm:py-28">
       {/* Hero */}
       <section className="relative mb-20 sm:mb-28">
-        <div className="hero-grid" />
         <div className="hero-glow" />
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-12">
           <div className="lg:max-w-xl">
@@ -348,7 +347,7 @@ export default function Home() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {available.map((f, i) => (
-            <ScrollReveal key={f.name} delay={i * 40}>
+            <ScrollReveal key={f.name} delay={i * 40} className="h-full">
               <FrameworkCard framework={f} />
             </ScrollReveal>
           ))}
@@ -370,7 +369,7 @@ export default function Home() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {comingSoon.map((f, i) => (
-            <ScrollReveal key={f.name} delay={i * 40}>
+            <ScrollReveal key={f.name} delay={i * 40} className="h-full">
               <FrameworkCard framework={f} />
             </ScrollReveal>
           ))}
@@ -592,7 +591,7 @@ function FrameworkCard({ framework }: { framework: Framework }) {
 
   return (
     <div
-      className={`group rounded-xl border p-6 flex flex-col min-h-[180px] transition-all duration-300 ${
+      className={`group rounded-xl border p-6 flex flex-col h-full transition-all duration-300 ${
         isMCP
           ? "border-emerald-500/30 bg-emerald-500/[0.03] hover:border-emerald-500/50"
           : "border-border-subtle bg-bg-elevated hover:border-border"
