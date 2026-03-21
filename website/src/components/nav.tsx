@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useTheme } from "./theme-provider";
 
 const links: { href: string; label: string; external?: boolean; indicator?: boolean }[] = [
-  { href: "/studio", label: "Studio" },
+  { href: "/studio", label: "Policy Studio" },
   { href: "/docs", label: "Docs" },
   { href: "/api-reference", label: "API" },
   { href: "/explorer", label: "Explorer" },

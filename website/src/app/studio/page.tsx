@@ -244,7 +244,7 @@ export default function StudioPage() {
       {/* Header */}
       <div className="mb-10">
         <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-3">
-          Studio
+          Policy Studio
         </h1>
         <p className="text-text-secondary text-[15px] leading-relaxed">
           Build your AI control layer. Pick a framework, define the rules, get the code.
