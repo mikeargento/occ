@@ -9,7 +9,7 @@ export function Footer() {
         <div className="flex flex-col md:flex-row md:justify-between gap-12">
           <div className="max-w-md">
             <div className="text-xl font-black tracking-[-0.01em] mb-5 text-text" style={{ fontFamily: "var(--font-inter)" }}>
-              OCC
+              OCC.WTF
             </div>
             <p className="text-sm text-text-tertiary leading-relaxed">
               Cryptographic control for AI agents<br />

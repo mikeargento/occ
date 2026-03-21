@@ -550,7 +550,7 @@ export default function Home() {
       {/* Hero */}
       <section className="relative mb-16 sm:mb-28">
                 <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-12">
-          <div className="lg:max-w-xl">
+          <div className="lg:max-w-2xl">
             <h1 className="hero-animate text-3xl sm:text-5xl md:text-6xl font-bold tracking-[-0.04em] mb-6" style={{ animationDelay: "0ms" }}>
               Control what your<br />
               AI agents can do.
