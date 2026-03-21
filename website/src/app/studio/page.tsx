@@ -240,7 +240,7 @@ export default function StudioPage() {
     (policy.timeWindow.enabled && policy.timeWindow.start && policy.timeWindow.end);
 
   return (
-    <div className="mx-auto max-w-2xl px-6 py-12 sm:py-16">
+    <div className="mx-auto max-w-4xl px-6 py-12 sm:py-16">
       {/* Header */}
       <div className="mb-10">
         <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-3">
@@ -270,49 +270,49 @@ export default function StudioPage() {
             <h2 className="text-sm font-semibold text-text">Pick your framework</h2>
           </div>
 
-          {/* JS frameworks */}
-          <div className="mb-3">
-            <div className="text-[11px] uppercase tracking-[0.1em] text-text-tertiary mb-2 pl-10">JavaScript</div>
-            <div className="space-y-1 pl-10">
-              {JS_FRAMEWORKS.map(fw => (
-                <button
-                  key={fw.id}
-                  onClick={() => setSelectedFramework(fw)}
-                  className={`w-full text-left px-4 py-3 rounded-lg text-sm transition-all duration-150 cursor-pointer flex items-center gap-3 ${
-                    selectedFramework?.id === fw.id
-                      ? "bg-success/10 text-success border border-success/25"
-                      : "text-text-secondary hover:text-text hover:bg-bg-elevated border border-transparent"
-                  }`}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={fw.logo} alt="" width={20} height={20} className={`shrink-0 opacity-70 ${fw.invertLogo ? "dark:invert" : ""}`} />
-                  <span className="font-medium">{fw.name}</span>
-                  <span className="text-text-tertiary ml-auto font-mono text-xs">{fw.pkg}</span>
-                </button>
-              ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pl-10">
+            {/* JS frameworks */}
+            <div>
+              <div className="text-[11px] uppercase tracking-[0.1em] text-text-tertiary mb-2">JavaScript</div>
+              <div className="space-y-1">
+                {JS_FRAMEWORKS.map(fw => (
+                  <button
+                    key={fw.id}
+                    onClick={() => setSelectedFramework(fw)}
+                    className={`w-full text-left px-4 py-3 rounded-lg text-sm transition-all duration-150 cursor-pointer flex items-center gap-3 ${
+                      selectedFramework?.id === fw.id
+                        ? "bg-success/10 text-success border border-success/25"
+                        : "text-text-secondary hover:text-text hover:bg-bg-elevated border border-transparent"
+                    }`}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={fw.logo} alt="" width={20} height={20} className={`shrink-0 opacity-70 ${fw.invertLogo ? "dark:invert" : ""}`} />
+                    <span className="font-medium">{fw.name}</span>
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Python frameworks */}
-          <div>
-            <div className="text-[11px] uppercase tracking-[0.1em] text-text-tertiary mb-2 pl-10">Python</div>
-            <div className="space-y-1 pl-10">
-              {PYTHON_FRAMEWORKS.map(fw => (
-                <button
-                  key={fw.id}
-                  onClick={() => setSelectedFramework(fw)}
-                  className={`w-full text-left px-4 py-3 rounded-lg text-sm transition-all duration-150 cursor-pointer flex items-center gap-3 ${
-                    selectedFramework?.id === fw.id
-                      ? "bg-success/10 text-success border border-success/25"
-                      : "text-text-secondary hover:text-text hover:bg-bg-elevated border border-transparent"
-                  }`}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={fw.logo} alt="" width={20} height={20} className={`shrink-0 opacity-70 ${fw.invertLogo ? "dark:invert" : ""}`} />
-                  <span className="font-medium">{fw.name}</span>
-                  <span className="text-text-tertiary ml-auto font-mono text-xs">{fw.pkg}</span>
-                </button>
-              ))}
+            {/* Python frameworks */}
+            <div>
+              <div className="text-[11px] uppercase tracking-[0.1em] text-text-tertiary mb-2">Python</div>
+              <div className="space-y-1">
+                {PYTHON_FRAMEWORKS.map(fw => (
+                  <button
+                    key={fw.id}
+                    onClick={() => setSelectedFramework(fw)}
+                    className={`w-full text-left px-4 py-3 rounded-lg text-sm transition-all duration-150 cursor-pointer flex items-center gap-3 ${
+                      selectedFramework?.id === fw.id
+                        ? "bg-success/10 text-success border border-success/25"
+                        : "text-text-secondary hover:text-text hover:bg-bg-elevated border border-transparent"
+                    }`}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={fw.logo} alt="" width={20} height={20} className={`shrink-0 opacity-70 ${fw.invertLogo ? "dark:invert" : ""}`} />
+                    <span className="font-medium">{fw.name}</span>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </section>
