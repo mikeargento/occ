@@ -7,14 +7,92 @@
  */
 
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
+import { existsSync, readFileSync, statSync } from "node:fs";
+import { resolve, join, extname } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { ProxyEventBus } from "./events.js";
 import type { ToolRegistry } from "./tool-registry.js";
+import type { ProxyState } from "./state.js";
 import type { ProxyEvent } from "./types.js";
+
+const __dirname = fileURLToPath(new URL(".", import.meta.url));
+const DASHBOARD_DIR = resolve(__dirname, "../dashboard");
+
+function checkHasDashboard(): boolean {
+  const result = existsSync(DASHBOARD_DIR) && existsSync(join(DASHBOARD_DIR, "index.html"));
+  if (result) {
+    console.error(`  CommandCentral: found at ${DASHBOARD_DIR}`);
+  } else {
+    console.error(`  CommandCentral: not found at ${DASHBOARD_DIR}, using inline dashboard`);
+  }
+  return result;
+}
+
+const MIME_TYPES: Record<string, string> = {
+  ".html": "text/html; charset=utf-8",
+  ".js": "application/javascript; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".map": "application/json; charset=utf-8",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".svg": "image/svg+xml",
+  ".ico": "image/x-icon",
+  ".woff": "font/woff",
+  ".woff2": "font/woff2",
+  ".ttf": "font/ttf",
+  ".txt": "text/plain; charset=utf-8",
+};
+
+function serveDashboardFile(pathname: string, res: ServerResponse): boolean {
+
+  // Exact file match (for _next/ assets, etc.)
+  const exactPath = join(DASHBOARD_DIR, pathname);
+  if (existsSync(exactPath) && statSync(exactPath).isFile()) {
+    const ext = extname(exactPath);
+    const contentType = MIME_TYPES[ext] ?? "application/octet-stream";
+    const content = readFileSync(exactPath);
+    const isAsset = pathname.includes("/_next/");
+    res.writeHead(200, {
+      "Content-Type": contentType,
+      "Content-Length": content.length,
+      "Cache-Control": isAsset ? "public, max-age=31536000, immutable" : "no-cache",
+    });
+    res.end(content);
+    return true;
+  }
+
+  // Try with .html extension (/agents → agents.html)
+  if (!extname(pathname)) {
+    const htmlPath = exactPath + ".html";
+    if (existsSync(htmlPath)) {
+      const content = readFileSync(htmlPath);
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Content-Length": content.length, "Cache-Control": "no-cache" });
+      res.end(content);
+      return true;
+    }
+  }
+
+  // Dynamic route fallback: /section/anything → /section/__.html
+  const parts = pathname.split("/").filter(Boolean);
+  if (parts.length >= 2) {
+    const fallbackPath = join(DASHBOARD_DIR, parts[0]!, "__.html");
+    if (existsSync(fallbackPath)) {
+      const content = readFileSync(fallbackPath);
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Content-Length": content.length, "Cache-Control": "no-cache" });
+      res.end(content);
+      return true;
+    }
+  }
+
+  return false;
+}
 
 export interface WrapDashboardOpts {
   port: number;
   events: ProxyEventBus;
   registry: ToolRegistry;
+  state: ProxyState;
   signerMode: string;
   signerPublicKey?: string | undefined;
   proofPath: string;
@@ -34,11 +112,34 @@ export interface ProofEntry {
 
 const MAX_ENTRIES = 1000;
 
+/** Load existing proofs from disk so dashboard shows history across restarts. */
+function loadProofsFromDisk(proofPath: string): ProofEntry[] {
+  try {
+    if (!existsSync(proofPath)) return [];
+    const content = readFileSync(proofPath, "utf-8").trim();
+    if (!content) return [];
+    const lines = content.split("\n");
+    const entries: ProofEntry[] = [];
+    // Only load last MAX_ENTRIES lines
+    const start = Math.max(0, lines.length - MAX_ENTRIES);
+    for (let i = start; i < lines.length; i++) {
+      try {
+        entries.push(JSON.parse(lines[i]!) as ProofEntry);
+      } catch { /* skip malformed lines */ }
+    }
+    return entries;
+  } catch { return []; }
+}
+
 export function startWrapDashboard(opts: WrapDashboardOpts): {
   addProof: (entry: ProofEntry) => void;
   port: number;
 } {
-  const proofBuffer: ProofEntry[] = [];
+  const hasDashboard = checkHasDashboard();
+
+  // Load historical proofs from disk so dashboard shows them immediately
+  const historical = loadProofsFromDisk(opts.proofPath);
+  const proofBuffer: ProofEntry[] = [...historical];
   const sseClients: Set<ServerResponse> = new Set();
 
   // Push proof events to SSE clients
@@ -59,9 +160,15 @@ export function startWrapDashboard(opts: WrapDashboardOpts): {
 
   const corsHeaders: Record<string, string> = {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
   };
+
+  function sendJson(res: ServerResponse, status: number, body: unknown): void {
+    const json = JSON.stringify(body);
+    res.writeHead(status, { ...corsHeaders, "Content-Type": "application/json", "Content-Length": String(Buffer.byteLength(json)) });
+    res.end(json);
+  }
 
   const server = createServer((req: IncomingMessage, res: ServerResponse) => {
     const url = new URL(req.url ?? "/", `http://localhost:${opts.port}`);
@@ -86,8 +193,7 @@ export function startWrapDashboard(opts: WrapDashboardOpts): {
         description: t.description,
         source: t.source,
       }));
-      res.writeHead(200, { ...corsHeaders, "Content-Type": "application/json" });
-      res.end(JSON.stringify(tools));
+      sendJson(res, 200, { tools });
       return;
     }
 
@@ -115,12 +221,193 @@ export function startWrapDashboard(opts: WrapDashboardOpts): {
     }
 
     if (path === "/api/health") {
-      res.writeHead(200, { ...corsHeaders, "Content-Type": "application/json" });
-      res.end(JSON.stringify({ ok: true }));
+      sendJson(res, 200, { ok: true, proxyId: "occ-wrap", timestamp: Date.now() });
       return;
     }
 
-    // Serve dashboard HTML
+    if (path === "/api/status") {
+      sendJson(res, 200, {
+        ok: true,
+        proxyId: "occ-wrap",
+        mode: "live",
+        toolCount: opts.registry.listTools().length,
+        timestamp: Date.now(),
+      });
+      return;
+    }
+
+    // ── Agent routes (CommandCentral compatibility) ──
+    if (path === "/api/agents" && req.method === "GET") {
+      const agents = opts.state.getAgents().map((a) => ({
+        id: a.id,
+        name: a.name,
+        status: a.status,
+        policy: a.policy ?? null,
+        totalCalls: 0,
+        totalSpendCents: 0,
+      }));
+      sendJson(res, 200, { agents });
+      return;
+    }
+
+    if (path === "/api/agents" && req.method === "POST") {
+      const chunks: Buffer[] = [];
+      req.on("data", (c: Buffer) => chunks.push(c));
+      req.on("end", () => {
+        try {
+          const body = JSON.parse(Buffer.concat(chunks).toString());
+          const allTools = opts.registry.listTools().map((t) => t.name);
+          const agent = opts.state.createAgent(body.name ?? "agent", body.allowedTools ?? allTools);
+          sendJson(res, 201, { agent });
+        } catch (err) {
+          sendJson(res, 400, { error: "Invalid request" });
+        }
+      });
+      return;
+    }
+
+    if (path.startsWith("/api/agents/") && req.method === "GET" && path.split("/").length === 4) {
+      const agentId = decodeURIComponent(path.split("/")[3] ?? "");
+      const agent = opts.state.getAgent(agentId);
+      if (!agent) { sendJson(res, 404, { error: "Agent not found" }); return; }
+      sendJson(res, 200, {
+        agent,
+        context: { totalSpendCents: 0, toolCallCounts: {}, totalCalls: 0, startedAt: agent.createdAt },
+        auditCount: proofBuffer.length,
+      });
+      return;
+    }
+
+    if (path.startsWith("/api/agents/") && path.endsWith("/pause") && req.method === "PUT") {
+      const agentId = decodeURIComponent(path.split("/")[3] ?? "");
+      opts.state.pauseAgent(agentId);
+      sendJson(res, 200, { paused: true });
+      return;
+    }
+
+    if (path.startsWith("/api/agents/") && path.endsWith("/resume") && req.method === "PUT") {
+      const agentId = decodeURIComponent(path.split("/")[3] ?? "");
+      opts.state.resumeAgent(agentId);
+      sendJson(res, 200, { paused: false });
+      return;
+    }
+
+    if (path.startsWith("/api/agents/") && req.method === "DELETE" && !path.includes("/tools/")) {
+      const agentId = decodeURIComponent(path.split("/")[3] ?? "");
+      opts.state.deleteAgent(agentId);
+      sendJson(res, 200, { deleted: true });
+      return;
+    }
+
+    // Tool enable: PUT /api/agents/:id/tools/:toolName
+    if (path.includes("/tools/") && path.startsWith("/api/agents/") && req.method === "PUT") {
+      const parts = path.split("/");
+      const agentId = decodeURIComponent(parts[3] ?? "");
+      const toolName = decodeURIComponent(parts[5] ?? "");
+      const agent = opts.state.getAgent(agentId);
+      if (!agent) { sendJson(res, 404, { error: "Agent not found" }); return; }
+      const allowed = new Set(agent.policy.globalConstraints.allowedTools ?? []);
+      allowed.add(toolName);
+      agent.policy.globalConstraints.allowedTools = [...allowed];
+      opts.state.updateAgentPolicy(agentId, agent.policy);
+      sendJson(res, 200, { tool: toolName, enabled: true });
+      return;
+    }
+
+    // Tool disable: DELETE /api/agents/:id/tools/:toolName
+    if (path.includes("/tools/") && path.startsWith("/api/agents/") && req.method === "DELETE") {
+      const parts = path.split("/");
+      const agentId = decodeURIComponent(parts[3] ?? "");
+      const toolName = decodeURIComponent(parts[5] ?? "");
+      const agent = opts.state.getAgent(agentId);
+      if (!agent) { sendJson(res, 404, { error: "Agent not found" }); return; }
+      const allowed = new Set(agent.policy.globalConstraints.allowedTools ?? []);
+      allowed.delete(toolName);
+      agent.policy.globalConstraints.allowedTools = [...allowed];
+      opts.state.updateAgentPolicy(agentId, agent.policy);
+      sendJson(res, 200, { tool: toolName, enabled: false });
+      return;
+    }
+
+    // ── Policy ──
+    if (path === "/api/policy" && req.method === "GET") {
+      sendJson(res, 200, { policy: null });
+      return;
+    }
+
+    // ── Audit ──
+    if (path === "/api/audit" && req.method === "GET") {
+      const page = Number(url.searchParams.get("page") ?? "0");
+      const limit = Number(url.searchParams.get("limit") ?? "100");
+      const allEntries = proofBuffer.map((p, i) => ({
+        id: `wrap-${i}`,
+        agentId: "default",
+        timestamp: typeof p.timestamp === "string" ? new Date(p.timestamp).getTime() : p.timestamp,
+        tool: p.tool,
+        decision: p.denied
+          ? { allowed: false as const, reason: p.reason ?? "Policy denied", constraint: p.policyRule ?? "unknown" }
+          : { allowed: true as const },
+        proofDigestB64: p.proofDigestB64,
+      }));
+      allEntries.reverse(); // newest first
+      const paged = allEntries.slice(page * limit, page * limit + limit);
+      sendJson(res, 200, { entries: paged, total: allEntries.length, page, limit });
+      return;
+    }
+
+    // ── Single audit entry ──
+    if (path.startsWith("/api/audit/") && req.method === "GET") {
+      const auditId = decodeURIComponent(path.slice("/api/audit/".length));
+      const idx = auditId.startsWith("wrap-") ? parseInt(auditId.slice(5), 10) : -1;
+      const p = idx >= 0 && idx < proofBuffer.length ? proofBuffer[idx] : undefined;
+      if (!p) { sendJson(res, 404, { error: `Audit entry "${auditId}" not found` }); return; }
+      sendJson(res, 200, {
+        entry: {
+          id: auditId,
+          agentId: "default",
+          timestamp: typeof p.timestamp === "string" ? new Date(p.timestamp).getTime() : p.timestamp,
+          tool: p.tool,
+          decision: p.denied
+            ? { allowed: false as const, reason: p.reason ?? "Policy denied", constraint: p.policyRule ?? "unknown" }
+            : { allowed: true as const },
+          proofDigestB64: p.proofDigestB64,
+        },
+        receipt: p.receipt ?? null,
+      });
+      return;
+    }
+
+    // ── Connections ──
+    if (path === "/api/connections") {
+      sendJson(res, 200, []);
+      return;
+    }
+
+    // ── Keys ──
+    if (path === "/api/keys") {
+      sendJson(res, 200, []);
+      return;
+    }
+
+    // Serve CommandCentral dashboard if it exists
+    if (hasDashboard) {
+      // Root → index.html
+      if (path === "/" || path === "/index.html") {
+        const content = readFileSync(join(DASHBOARD_DIR, "index.html"));
+        res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Content-Length": content.length, "Cache-Control": "no-cache" });
+        res.end(content);
+        return;
+      }
+      // Try serving static file
+      if (serveDashboardFile(path, res)) return;
+      // SPA fallback — serve index.html for unmatched routes
+      const content = readFileSync(join(DASHBOARD_DIR, "index.html"));
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Content-Length": content.length, "Cache-Control": "no-cache" });
+      res.end(content);
+      return;
+    }
+
+    // Fallback: inline proof dashboard (no CommandCentral build)
     if (path === "/" || path === "/index.html") {
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
       res.end(getDashboardHtml());
@@ -131,19 +418,33 @@ export function startWrapDashboard(opts: WrapDashboardOpts): {
     res.end("Not found");
   });
 
-  server.listen(opts.port, () => {
-    // logged by caller
-  });
+  // Try the requested port, then next 4 ports if taken
+  let actualPort = opts.port;
+  const maxRetries = 5;
+  let attempt = 0;
+
+  function tryListen() {
+    server.listen(actualPort, () => {
+      // logged by caller
+    });
+  }
 
   server.on("error", (err: NodeJS.ErrnoException) => {
-    if (err.code === "EADDRINUSE") {
-      console.error(`  Dashboard: port ${opts.port} in use, skipping`);
+    if (err.code === "EADDRINUSE" && attempt < maxRetries) {
+      attempt++;
+      actualPort++;
+      console.error(`  Dashboard: port ${actualPort - 1} in use, trying ${actualPort}...`);
+      tryListen();
+    } else if (err.code === "EADDRINUSE") {
+      console.error(`  Dashboard: all ports ${opts.port}-${actualPort} in use, skipping`);
     } else {
       console.error(`  Dashboard error: ${err.message}`);
     }
   });
 
-  return { addProof, port: opts.port };
+  tryListen();
+
+  return { addProof, port: actualPort };
 }
 
 // ── Self-contained dashboard HTML ──

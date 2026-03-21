@@ -1,7 +1,7 @@
 {
   "name": "occ-mcp-proxy",
-  "version": "2.2.11",
-  "description": "Cryptographic proof for every AI tool call. Wrap any MCP server with Ed25519-signed receipts.",
+  "version": "2.3.0",
+  "description": "Policy enforcement for AI tool calls. Default-deny control for any MCP server.",
   "author": "Mike Argento",
   "license": "Apache-2.0",
   "type": "module",
