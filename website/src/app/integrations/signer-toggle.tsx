@@ -183,28 +183,29 @@ export function InteractiveSignerSection() {
       <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="rounded-xl border border-border-subtle p-5 bg-bg/50">
           <div className="flex items-center gap-2.5 mb-3">
-            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-500/10">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-emerald-400">
-                <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
+            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-500/10">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-blue-400">
+                <rect x="3" y="4" width="18" height="12" rx="2" />
+                <path d="M7 20h10M9 16v4M15 16v4" />
               </svg>
             </div>
             <div className="font-medium text-text text-sm">Local signing</div>
           </div>
           <ul className="space-y-2 text-text-secondary text-xs">
             <li className="flex items-start gap-2">
-              <span className="text-emerald-500 mt-0.5 shrink-0">&#x2713;</span>
+              <span className="text-blue-400 mt-0.5 shrink-0">&#x2713;</span>
               Ed25519 keypair on your disk
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-emerald-500 mt-0.5 shrink-0">&#x2713;</span>
+              <span className="text-blue-400 mt-0.5 shrink-0">&#x2713;</span>
               Zero network dependencies
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-emerald-500 mt-0.5 shrink-0">&#x2713;</span>
+              <span className="text-blue-400 mt-0.5 shrink-0">&#x2713;</span>
               You control the key
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-emerald-500 mt-0.5 shrink-0">&#x2713;</span>
+              <span className="text-blue-400 mt-0.5 shrink-0">&#x2713;</span>
               Good for development &amp; self-hosted
             </li>
           </ul>
@@ -212,11 +213,10 @@ export function InteractiveSignerSection() {
         <div className="rounded-xl border border-border-subtle p-5 bg-bg/50">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2.5">
-              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-500/10">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-blue-400">
-                  <rect x="4" y="4" width="16" height="16" rx="2" />
-                  <rect x="9" y="9" width="6" height="6" rx="1" />
-                  <path d="M4 9h5M15 9h5M4 15h5M15 15h5M9 4v5M9 15v5M15 4v5M15 15v5" />
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-500/10">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-emerald-400">
+                  <rect x="3" y="11" width="18" height="11" rx="2" />
+                  <path d="M7 11V7a5 5 0 0110 0v4" />
                 </svg>
               </div>
               <div className="font-medium text-text text-sm">TEE signing (Hardware)</div>
@@ -224,19 +224,19 @@ export function InteractiveSignerSection() {
           </div>
           <ul className="space-y-2 text-text-secondary text-xs">
             <li className="flex items-start gap-2">
-              <span className="text-blue-400 mt-0.5 shrink-0">&#x2713;</span>
+              <span className="text-emerald-500 mt-0.5 shrink-0">&#x2713;</span>
               AWS Nitro Enclave — sealed, auditable
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-blue-400 mt-0.5 shrink-0">&#x2713;</span>
+              <span className="text-emerald-500 mt-0.5 shrink-0">&#x2713;</span>
               Only a 32-byte hash crosses the network
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-blue-400 mt-0.5 shrink-0">&#x2713;</span>
+              <span className="text-emerald-500 mt-0.5 shrink-0">&#x2713;</span>
               Attestation certificate in every proof
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-blue-400 mt-0.5 shrink-0">&#x2713;</span>
+              <span className="text-emerald-500 mt-0.5 shrink-0">&#x2713;</span>
               Good for production &amp; compliance
             </li>
           </ul>
