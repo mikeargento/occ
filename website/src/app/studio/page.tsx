@@ -9,6 +9,7 @@ type Framework = {
   install: string;
   lang: "js" | "python";
   logo: string;
+  invertLogo?: boolean; // true for black logos that need dark:invert
 };
 
 interface PolicyRule {
@@ -26,20 +27,20 @@ interface PolicyState {
 // ─── Framework data ──────────────────────────────────────────────────────────
 
 const JS_FRAMEWORKS: Framework[] = [
-  { id: "openai", name: "OpenAI", pkg: "occ-openai", install: "npm install occ-openai", lang: "js", logo: "/logos/openai.svg" },
-  { id: "vercel", name: "Vercel AI", pkg: "occ-vercel", install: "npm install occ-vercel", lang: "js", logo: "/logos/vercel.svg" },
-  { id: "langgraph", name: "LangGraph", pkg: "occ-langgraph", install: "npm install occ-langgraph", lang: "js", logo: "/logos/langchain.svg" },
-  { id: "mastra", name: "Mastra", pkg: "occ-mastra", install: "npm install occ-mastra", lang: "js", logo: "/logos/mastra.svg" },
+  { id: "openai", name: "OpenAI", pkg: "occ-openai", install: "npm install occ-openai", lang: "js", logo: "/logos/openai.svg", invertLogo: true },
+  { id: "vercel", name: "Vercel AI", pkg: "occ-vercel", install: "npm install occ-vercel", lang: "js", logo: "/logos/vercel.svg", invertLogo: true },
+  { id: "langgraph", name: "LangGraph", pkg: "occ-langgraph", install: "npm install occ-langgraph", lang: "js", logo: "/logos/langchain.svg", invertLogo: true },
+  { id: "mastra", name: "Mastra", pkg: "occ-mastra", install: "npm install occ-mastra", lang: "js", logo: "/logos/mastra.svg", invertLogo: true },
   { id: "cloudflare", name: "Cloudflare Workers", pkg: "occ-cloudflare", install: "npm install occ-cloudflare", lang: "js", logo: "/logos/cloudflare.svg" },
 ];
 
 const PYTHON_FRAMEWORKS: Framework[] = [
-  { id: "openai-agents", name: "OpenAI Agents SDK", pkg: "occ-openai-agents", install: "pip install occ-openai-agents", lang: "python", logo: "/logos/openai.svg" },
-  { id: "langchain", name: "LangChain", pkg: "occ-langchain", install: "pip install occ-langchain", lang: "python", logo: "/logos/langchain.svg" },
+  { id: "openai-agents", name: "OpenAI Agents SDK", pkg: "occ-openai-agents", install: "pip install occ-openai-agents", lang: "python", logo: "/logos/openai.svg", invertLogo: true },
+  { id: "langchain", name: "LangChain", pkg: "occ-langchain", install: "pip install occ-langchain", lang: "python", logo: "/logos/langchain.svg", invertLogo: true },
   { id: "crewai", name: "CrewAI", pkg: "occ-crewai", install: "pip install occ-crewai", lang: "python", logo: "/logos/crewai.svg" },
-  { id: "gemini", name: "Google Gemini", pkg: "occ-gemini", install: "pip install occ-gemini", lang: "python", logo: "/logos/gemini.svg" },
-  { id: "google-adk", name: "Google ADK", pkg: "occ-google-adk", install: "pip install occ-google-adk", lang: "python", logo: "/logos/gemini.svg" },
-  { id: "llamaindex", name: "LlamaIndex", pkg: "occ-llamaindex", install: "pip install occ-llamaindex", lang: "python", logo: "/logos/llamaindex.svg" },
+  { id: "gemini", name: "Google Gemini", pkg: "occ-gemini", install: "pip install occ-gemini", lang: "python", logo: "/logos/google.svg" },
+  { id: "google-adk", name: "Google ADK", pkg: "occ-google-adk", install: "pip install occ-google-adk", lang: "python", logo: "/logos/google.svg" },
+  { id: "llamaindex", name: "LlamaIndex", pkg: "occ-llamaindex", install: "pip install occ-llamaindex", lang: "python", logo: "/logos/llamaindex.svg", invertLogo: true },
   { id: "autogen", name: "AutoGen", pkg: "occ-autogen", install: "pip install occ-autogen", lang: "python", logo: "/logos/autogen.svg" },
 ];
 
@@ -227,7 +228,7 @@ export default function StudioPage() {
                   }`}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={fw.logo} alt="" width={20} height={20} className="shrink-0 dark:invert opacity-70" />
+                  <img src={fw.logo} alt="" width={20} height={20} className={`shrink-0 opacity-70 ${fw.invertLogo ? "dark:invert" : ""}`} />
                   <span className="font-medium">{fw.name}</span>
                   <span className="text-text-tertiary ml-auto font-mono text-xs">{fw.pkg}</span>
                 </button>
@@ -250,7 +251,7 @@ export default function StudioPage() {
                   }`}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={fw.logo} alt="" width={20} height={20} className="shrink-0 dark:invert opacity-70" />
+                  <img src={fw.logo} alt="" width={20} height={20} className={`shrink-0 opacity-70 ${fw.invertLogo ? "dark:invert" : ""}`} />
                   <span className="font-medium">{fw.name}</span>
                   <span className="text-text-tertiary ml-auto font-mono text-xs">{fw.pkg}</span>
                 </button>
