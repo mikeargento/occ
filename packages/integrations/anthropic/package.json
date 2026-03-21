@@ -1,0 +1,42 @@
+{
+  "name": "occ-anthropic",
+  "version": "0.1.0",
+  "description": "OCC cryptographic proof signing for Anthropic Node SDK tool calls",
+  "author": "Mike Argento",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "occproof": "^1.0.2",
+    "occ-stub": "^1.0.0",
+    "@noble/ed25519": "^2.1.0",
+    "@noble/hashes": "^1.4.0"
+  },
+  "peerDependencies": {
+    "@anthropic-ai/sdk": ">=0.20.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@anthropic-ai/sdk": ">=0.20.0",
+    "typescript": "^5.4.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
