@@ -211,16 +211,20 @@ export function InteractiveSignerSection() {
           </ul>
         </div>
         <div className="rounded-xl border border-border-subtle p-5 bg-bg/50">
-          <div className="flex items-center gap-2.5 mb-3">
-            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-500/10">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-blue-400">
-                <rect x="2" y="2" width="20" height="8" rx="2" ry="2" />
-                <rect x="2" y="14" width="20" height="8" rx="2" ry="2" />
-                <line x1="6" y1="6" x2="6.01" y2="6" />
-                <line x1="6" y1="18" x2="6.01" y2="18" />
-              </svg>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2.5">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-500/10">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-blue-400">
+                  <rect x="2" y="2" width="20" height="8" rx="2" ry="2" />
+                  <rect x="2" y="14" width="20" height="8" rx="2" ry="2" />
+                  <line x1="6" y1="6" x2="6.01" y2="6" />
+                  <line x1="6" y1="18" x2="6.01" y2="18" />
+                </svg>
+              </div>
+              <div className="font-medium text-text text-sm">TEE signing (Hardware)</div>
             </div>
-            <div className="font-medium text-text text-sm">TEE signing (Hardware)</div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logos/aws.svg" alt="AWS" className="h-5 opacity-50" />
           </div>
           <ul className="space-y-2 text-text-secondary text-xs">
             <li className="flex items-start gap-2">
