@@ -2,7 +2,7 @@
 
 ## What OCC Is
 
-A system where AI actions are only executable if they are authorized by a previously committed, cryptographically bound policy.
+A system where computations are only executable if they are authorized by a previously committed, cryptographically bound policy.
 
 It's not an audit log, not a receipt, not a blockchain. It's the authorization mechanism itself.
 

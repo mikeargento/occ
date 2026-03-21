@@ -1,7 +1,7 @@
 # OCC — Origin Controlled Computing
 
 ## What This Is
-A system where AI actions are only executable if they are authorized by a previously committed, cryptographically bound policy.
+A system where computations are only executable if they are authorized by a previously committed, cryptographically bound policy.
 
 Proof = authorization. No valid proof, no action executes. The proof that authorizes an action is the same object that proves it happened.
 
