@@ -32,7 +32,7 @@
 import { sha256 } from "@noble/hashes/sha256";
 import { canonicalize } from "./canonical.js";
 import type { HostCapabilities } from "./host.js";
-import type { OCCPolicy, OCCProof, SignedBody, AgencyEnvelope, Attribution } from "./types.js";
+import type { OCCPolicy, OCCProof, SignedBody, AgencyEnvelope, Attribution, PolicyBinding } from "./types.js";
 
 // ---------------------------------------------------------------------------
 // Constructor class
@@ -124,6 +124,7 @@ export class Constructor {
     prevProofHashB64?: string;
     agency?: AgencyEnvelope;
     attribution?: Attribution;
+    policy?: PolicyBinding;
   }): Promise<OCCProof> {
     const { digestB64, metadata, prevProofHashB64 } = input;
 
@@ -136,7 +137,7 @@ export class Constructor {
     }
 
     // Delegate to the internal commit flow, skipping step 4 (hashing)
-    return this.#commitInternal({ digestB64, metadata, prevProofHashB64, agency: input.agency, attribution: input.attribution });
+    return this.#commitInternal({ digestB64, metadata, prevProofHashB64, agency: input.agency, attribution: input.attribution, policy: input.policy });
   }
 
   /**
@@ -156,6 +157,7 @@ export class Constructor {
     prevProofHashB64?: string;
     agency?: AgencyEnvelope;
     attribution?: Attribution;
+    policy?: PolicyBinding;
   }): Promise<OCCProof> {
     const { bytes, metadata, prevProofHashB64 } = input;
 
@@ -164,7 +166,7 @@ export class Constructor {
     const digestB64 = toBase64(digest);
 
     // Delegate to shared internal flow (steps 1-3, 5-10)
-    return this.#commitInternal({ digestB64, metadata, prevProofHashB64, agency: input.agency, attribution: input.attribution });
+    return this.#commitInternal({ digestB64, metadata, prevProofHashB64, agency: input.agency, attribution: input.attribution, policy: input.policy });
   }
 
   // ------------------------------------------------------------------
@@ -177,8 +179,9 @@ export class Constructor {
     prevProofHashB64: string | undefined;
     agency: AgencyEnvelope | undefined;
     attribution: Attribution | undefined;
+    policy: PolicyBinding | undefined;
   }): Promise<OCCProof> {
-    const { digestB64, metadata, prevProofHashB64, agency, attribution } = input;
+    const { digestB64, metadata, prevProofHashB64, agency, attribution, policy } = input;
 
     // ------------------------------------------------------------------
     // Step 1: Monotonic counter (optional, policy-gated)
@@ -255,6 +258,11 @@ export class Constructor {
     // Include actor identity in signed body when agency is present
     if (agency !== undefined) {
       signedBody.actor = agency.actor;
+    }
+
+    // Include policy binding in signed body when present (cryptographically sealed)
+    if (policy !== undefined) {
+      signedBody.policy = policy;
     }
 
     // Include attribution in signed body when present (cryptographically sealed)
@@ -337,6 +345,7 @@ export class Constructor {
       };
 
       if (agency !== undefined) proof.agency = agency;
+      if (policy !== undefined) proof.policy = policy;
       if (attribution !== undefined) proof.attribution = attribution;
       if (metadata !== undefined) proof.metadata = metadata;
       return proof;
@@ -360,6 +369,7 @@ export class Constructor {
     };
 
     if (agency !== undefined) proof.agency = agency;
+    if (policy !== undefined) proof.policy = policy;
     if (attribution !== undefined) proof.attribution = attribution;
     if (metadata !== undefined) proof.metadata = metadata;
     return proof;

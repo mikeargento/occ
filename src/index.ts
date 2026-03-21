@@ -16,6 +16,7 @@ export type {
   SignedBody,
   EnforcementTier,
   Attribution,
+  PolicyBinding,
   SlotAllocation,
   ActorIdentity,
   AuthorizationPayload,
@@ -32,6 +33,19 @@ export { Constructor } from "./constructor.js";
 // Verifier (read path)
 export { verify, resetEpochLinkState } from "./verifier.js";
 export type { VerifyResult } from "./verifier.js";
+
+// Policy parsing, hashing, and validation
+export {
+  parsePolicy,
+  hashPolicy,
+  createPolicyBinding,
+  validateAction,
+} from "./policy.js";
+export type {
+  PolicyDocument,
+  PolicyRules,
+  ActionValidationResult,
+} from "./policy.js";
 
 // Canonical serialization
 export { canonicalize, canonicalizeToString, constantTimeEqual } from "./canonical.js";

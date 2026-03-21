@@ -122,6 +122,11 @@ export async function verify(opts: {
     signedBody.actor = proof.agency.actor;
   }
 
+  // Include policy binding in signed body when present
+  if (proof.policy !== undefined) {
+    signedBody.policy = proof.policy;
+  }
+
   // Include attribution in signed body when present
   if (proof.attribution !== undefined) {
     signedBody.attribution = proof.attribution;

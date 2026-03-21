@@ -17,6 +17,7 @@ import type { ToolRegistry } from "./tool-registry.js";
 import type { ProxyState } from "./state.js";
 import type { ProxyEventBus } from "./events.js";
 import type { InterceptResult } from "./types.js";
+import type { PolicyBinding } from "occproof";
 import type { LocalSigner } from "./local-signer.js";
 
 /** Callback for writing proof entries (used in --wrap mode). */
@@ -54,6 +55,7 @@ export class Interceptor {
   #localSigner: LocalSigner | undefined;
   #proofWriter: ProofWriterFn | undefined;
   #auditForwarder: AuditForwarderFn | undefined;
+  #policyBinding: PolicyBinding | undefined;
 
   constructor(
     registry: ToolRegistry,
@@ -64,6 +66,7 @@ export class Interceptor {
       localSigner?: LocalSigner | undefined;
       proofWriter?: ProofWriterFn | undefined;
       auditForwarder?: AuditForwarderFn | undefined;
+      policyBinding?: PolicyBinding | undefined;
     },
   ) {
     this.#registry = registry;
@@ -73,6 +76,12 @@ export class Interceptor {
     this.#localSigner = opts.localSigner;
     this.#proofWriter = opts.proofWriter;
     this.#auditForwarder = opts.auditForwarder;
+    this.#policyBinding = opts.policyBinding;
+  }
+
+  /** Update the policy binding at runtime (e.g. when a new policy is loaded). */
+  setPolicyBinding(binding: PolicyBinding | undefined): void {
+    this.#policyBinding = binding;
   }
 
   /**
@@ -111,7 +120,7 @@ export class Interceptor {
           denied: true,
           reason,
           constraint,
-        });
+        }, this.#policyBinding);
         proofDigestB64 = digestB64;
 
         receiptJson = exportReceipt({
@@ -271,7 +280,7 @@ export class Interceptor {
           tool: toolName,
           adapter: "occ-agent",
           runtime: "occ-agent",
-        });
+        }, this.#policyBinding);
         proofDigestB64 = digestB64;
 
         receiptJson = exportReceipt({

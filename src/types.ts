@@ -319,6 +319,19 @@ export interface OCCProof {
   slotAllocation?: SlotAllocation;
 
   /**
+   * Optional policy binding — cryptographic proof that a specific policy
+   * document governed this action.
+   *
+   * Contains the SHA-256 hash of the policy document, plus optional
+   * human-readable name and version. INCLUDED in the Ed25519 signed body
+   * so the policy binding is tamper-evident and cryptographically sealed.
+   *
+   * Verifiers can confirm the policy hash matches a known-good policy
+   * document, establishing what rules the agent was operating under.
+   */
+  policy?: PolicyBinding;
+
+  /**
    * Optional human-readable attribution claim.
    *
    * A free-form human claim associated with the artifact and commit event.
@@ -475,6 +488,29 @@ export interface VerificationPolicy {
    * not just TEE-enforced signing with freshness.
    */
   requireSlot?: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// Policy binding — cryptographic link between proof and governing policy
+// ---------------------------------------------------------------------------
+
+/**
+ * Binds an OCCProof to the policy document that governed the action.
+ *
+ * The digestB64 is the SHA-256 hash of the raw policy document bytes
+ * (UTF-8 encoded). Any verifier can recompute this from the original
+ * policy document to confirm the binding.
+ *
+ * Included in the Ed25519 signed body — tamper-evident and
+ * cryptographically sealed by the signer.
+ */
+export interface PolicyBinding {
+  /** SHA-256 hash of the policy document (Base64-standard, RFC 4648 §4). */
+  digestB64: string;
+  /** Human-readable name of the policy (e.g. "Financial Agent"). */
+  name?: string;
+  /** Version identifier of the policy document. */
+  version?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -716,6 +752,13 @@ export interface SignedBody {
    * actor authorized this specific commitment.
    */
   actor?: ActorIdentity;
+
+  /**
+   * Policy binding — sealed into the signed body.
+   * Present only when a policy document was active at commit time.
+   * Canonical serialization includes this when present.
+   */
+  policy?: PolicyBinding;
 
   /**
    * Human-readable attribution claim — sealed into the signed body.

@@ -13,12 +13,12 @@
  * Nitro Enclave commit service.
  */
 
-import { Constructor, type OCCProof } from "occproof";
+import { Constructor, type OCCProof, type PolicyBinding } from "occproof";
 import { StubHost } from "occ-stub";
 
 export interface LocalSigner {
   /** Commit a digest and return a full OCCProof. */
-  commitDigest(digestB64: string, metadata?: Record<string, unknown>): Promise<OCCProof>;
+  commitDigest(digestB64: string, metadata?: Record<string, unknown>, policy?: PolicyBinding): Promise<OCCProof>;
   /** The signer's public key (base64). */
   publicKeyB64: string;
 }
@@ -46,14 +46,15 @@ export async function createLocalSigner(statePath: string): Promise<LocalSigner>
 
   return {
     publicKeyB64,
-    async commitDigest(digestB64: string, metadata?: Record<string, unknown>): Promise<OCCProof> {
+    async commitDigest(digestB64: string, metadata?: Record<string, unknown>, policy?: PolicyBinding): Promise<OCCProof> {
       const prevHash = stub.getLastProofHash();
 
-      const commitInput: { digestB64: string; metadata?: Record<string, unknown>; prevProofHashB64?: string } = {
+      const commitInput: { digestB64: string; metadata?: Record<string, unknown>; prevProofHashB64?: string; policy?: PolicyBinding } = {
         digestB64,
       };
       if (metadata) commitInput.metadata = metadata;
       if (prevHash) commitInput.prevProofHashB64 = prevHash;
+      if (policy) commitInput.policy = policy;
 
       const proof = await constructor.commitDigest(commitInput);
 

@@ -164,30 +164,85 @@ async function runWrapMode(command: string, args: string[], signerMode: "local" 
   // 2. Create agent — with policy enforcement if --policy provided, otherwise allow-all
   const allToolNames = registry.listTools().map((t) => t.name);
 
+  // If --policy points to a .md file, parse it as a markdown policy document
+  // and create a cryptographic binding for the proof chain.
+  let policyBinding: import("occproof").PolicyBinding | undefined;
+
   if (policyPath) {
-    const policyJson = JSON.parse(readFileSync(resolve(policyPath), "utf-8"));
+    const resolvedPolicyPath = resolve(policyPath);
+    const policyRaw = readFileSync(resolvedPolicyPath, "utf-8");
 
-    // Ensure required fields have sensible defaults for AgentPolicy shape
-    const policy = {
-      version: policyJson.version ?? ("occ/policy/1" as const),
-      name: policyJson.name ?? "wrap-policy",
-      createdAt: policyJson.createdAt ?? Date.now(),
-      globalConstraints: policyJson.globalConstraints ?? {},
-      skills: policyJson.skills ?? {},
-      ...(policyJson.toolConstraints ? { toolConstraints: policyJson.toolConstraints } : {}),
-    };
+    if (resolvedPolicyPath.endsWith(".md")) {
+      // Markdown policy document — parse for rules + compute hash binding
+      const { parsePolicy, hashPolicy, validateAction } = await import("occproof");
+      const policyDoc = parsePolicy(policyRaw);
+      const digestB64 = hashPolicy(policyRaw);
 
-    // Create agent with all tools initially (policy enforcer handles allow/block)
-    const agent = state.createAgent("default", allToolNames);
-    state.updateAgentPolicy(agent.id, policy);
+      policyBinding = { digestB64 };
+      if (policyDoc.name !== "Unnamed Policy") policyBinding.name = policyDoc.name;
+      if (policyDoc.version !== "1.0") policyBinding.version = policyDoc.version;
 
-    console.error(`  Policy: ${resolve(policyPath)}`);
-    console.error(`  Policy name: ${policy.name}`);
-    if (policy.globalConstraints.allowedTools) {
-      console.error(`  Allowed tools: ${policy.globalConstraints.allowedTools.join(", ")}`);
-    }
-    if (policy.globalConstraints.blockedTools) {
-      console.error(`  Blocked tools: ${policy.globalConstraints.blockedTools.join(", ")}`);
+      // Build a JSON policy from the markdown rules for the policy-sdk enforcer
+      const allowedTools = policyDoc.rules.allowedTools;
+      const agent = state.createAgent("default", allToolNames);
+
+      if (allowedTools && allowedTools.length > 0) {
+        const globalConstraints: Record<string, unknown> = { allowedTools };
+        if (policyDoc.rules.maxActions !== undefined) {
+          globalConstraints.maxActions = policyDoc.rules.maxActions;
+        }
+        if (policyDoc.rules.rateLimit !== undefined) {
+          globalConstraints.rateLimit = { maxCalls: policyDoc.rules.rateLimit, windowMs: 60_000 };
+        }
+
+        const policy = {
+          version: "occ/policy/1" as const,
+          name: policyDoc.name,
+          createdAt: Date.now(),
+          globalConstraints,
+          skills: {},
+        };
+        state.updateAgentPolicy(agent.id, policy);
+      }
+
+      console.error(`  Policy: ${resolvedPolicyPath}`);
+      console.error(`  Policy name: ${policyDoc.name}`);
+      console.error(`  Policy hash: ${digestB64.slice(0, 16)}...`);
+      if (allowedTools) {
+        console.error(`  Allowed tools: ${allowedTools.join(", ")}`);
+      }
+    } else {
+      // JSON policy (existing behavior)
+      const policyJson = JSON.parse(policyRaw);
+
+      // Ensure required fields have sensible defaults for AgentPolicy shape
+      const policy = {
+        version: policyJson.version ?? ("occ/policy/1" as const),
+        name: policyJson.name ?? "wrap-policy",
+        createdAt: policyJson.createdAt ?? Date.now(),
+        globalConstraints: policyJson.globalConstraints ?? {},
+        skills: policyJson.skills ?? {},
+        ...(policyJson.toolConstraints ? { toolConstraints: policyJson.toolConstraints } : {}),
+      };
+
+      // Create agent with all tools initially (policy enforcer handles allow/block)
+      const agent = state.createAgent("default", allToolNames);
+      state.updateAgentPolicy(agent.id, policy);
+
+      // Also compute a binding for JSON policies so they appear in proofs
+      const { hashPolicy } = await import("occproof");
+      const digestB64 = hashPolicy(policyRaw);
+      policyBinding = { digestB64, name: policy.name };
+
+      console.error(`  Policy: ${resolvedPolicyPath}`);
+      console.error(`  Policy name: ${policy.name}`);
+      console.error(`  Policy hash: ${digestB64.slice(0, 16)}...`);
+      if (policy.globalConstraints.allowedTools) {
+        console.error(`  Allowed tools: ${policy.globalConstraints.allowedTools.join(", ")}`);
+      }
+      if (policy.globalConstraints.blockedTools) {
+        console.error(`  Blocked tools: ${policy.globalConstraints.blockedTools.join(", ")}`);
+      }
     }
   } else {
     state.createAgent("default", allToolNames);
@@ -275,7 +330,17 @@ async function runWrapMode(command: string, args: string[], signerMode: "local" 
   console.error("");
 
   // 6. Interceptor: sign everything, write to file
-  const interceptor = new Interceptor(registry, state, events, interceptorOpts);
+  const interceptor = new Interceptor(registry, state, events, { ...interceptorOpts, policyBinding });
+
+  // Emit policy-loaded event if a policy was loaded
+  if (policyBinding) {
+    events.emit({
+      type: "policy-loaded",
+      timestamp: Date.now(),
+      policyName: policyBinding.name ?? "unnamed",
+      policyDigestB64: policyBinding.digestB64,
+    });
+  }
 
   // 7. Start MCP server on stdio
   await startMcpServer(
