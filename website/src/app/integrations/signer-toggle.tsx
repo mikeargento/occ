@@ -133,7 +133,7 @@ export function InteractiveSignerSection() {
           <div className="text-[10px] font-mono text-text-tertiary uppercase tracking-wider mb-3">
             Terminal
           </div>
-          <pre className="text-sm font-mono text-text leading-relaxed mb-3">
+          <pre className="text-sm font-mono text-text leading-relaxed mb-3 whitespace-pre-wrap break-all">
             <code>{bashCmd}</code>
           </pre>
           <p className="text-xs text-text-tertiary leading-relaxed">
