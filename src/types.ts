@@ -507,6 +507,14 @@ export interface VerificationPolicy {
 export interface PolicyBinding {
   /** SHA-256 hash of the policy document (Base64-standard, RFC 4648 §4). */
   digestB64: string;
+  /**
+   * Digest of the OCC proof that committed this policy document.
+   * When present, the policy was authored through OCC (typically with
+   * biometric/passkey signing), making the authorship tamper-evident.
+   * Verifiers can look up this proof to confirm WHO authored the rules
+   * and WHEN they were signed — not just what the rules say.
+   */
+  authorProofDigestB64?: string;
   /** Human-readable name of the policy (e.g. "Financial Agent"). */
   name?: string;
   /** Version identifier of the policy document. */

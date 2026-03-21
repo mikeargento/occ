@@ -182,6 +182,27 @@ async function runWrapMode(command: string, args: string[], signerMode: "local" 
       if (policyDoc.name !== "Unnamed Policy") policyBinding.name = policyDoc.name;
       if (policyDoc.version !== "1.0") policyBinding.version = policyDoc.version;
 
+      // Check for an author proof alongside the policy (e.g. financial-agent.proof.json)
+      const authorProofPath = resolvedPolicyPath.replace(/\.md$/, ".proof.json");
+      try {
+        const authorProofRaw = readFileSync(authorProofPath, "utf-8");
+        const authorProof = JSON.parse(authorProofRaw);
+        if (authorProof?.artifact?.digestB64) {
+          // Verify the author proof hashes the same policy document
+          if (authorProof.artifact.digestB64 === digestB64) {
+            policyBinding.authorProofDigestB64 = authorProof.artifact.digestB64;
+            console.error(`  Policy author: verified (proof in ${authorProofPath})`);
+            if (authorProof.agency?.keyId) {
+              console.error(`  Author key ID: ${authorProof.agency.keyId}`);
+            }
+          } else {
+            console.error(`  ⚠ Policy author proof digest mismatch — ignoring author binding`);
+          }
+        }
+      } catch {
+        // No author proof file — that's fine, authorship is optional
+      }
+
       // Build a JSON policy from the markdown rules for the policy-sdk enforcer
       const allowedTools = policyDoc.rules.allowedTools;
       const agent = state.createAgent("default", allToolNames);
