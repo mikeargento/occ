@@ -1,27 +1,12 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
-import { FileDrop } from "@/components/file-drop";
-import { ProofViewer } from "@/components/proof-viewer";
-import { ProofMeta } from "@/components/proof-meta";
-import { hashFile, hashBytes, commitDigest, commitBatch, requestChallenge, formatFileSize, type OCCProof } from "@/lib/occ";
-import {
-  isWebAuthnAvailable,
-  isPlatformAuthenticatorAvailable,
-  getStoredCredential,
-  registerPasskey,
-  requestAssertion,
-  buildAgencyEnvelope,
-  type StoredCredential,
-} from "@/lib/webauthn";
-import { zipSync, unzipSync, strFromU8 } from "fflate";
+import { useState, useCallback, useRef } from "react";
+import { formatFileSize, type OCCProof } from "@/lib/occ";
 import { verifyAsync as ed25519Verify } from "@noble/ed25519";
 import { b64ToBytes, canonicalize } from "@/lib/canonical";
+import { unzipSync, strFromU8 } from "fflate";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
-
-type CreateStatus = "idle" | "hashing" | "challenging" | "authorizing" | "signing" | "done" | "error";
-type AuthorshipMode = "none" | "passkey";
 
 interface CheckResult {
   label: string;
@@ -29,31 +14,266 @@ interface CheckResult {
   detail: string;
 }
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
+type Framework = {
+  id: string;
+  name: string;
+  pkg: string;
+  install: string;
+  lang: "js" | "python";
+};
+
+interface PolicyRule {
+  enabled: boolean;
+  value: string | number;
+}
+
+interface PolicyState {
+  allowedTools: { enabled: boolean; tools: string[] };
+  maxActions: PolicyRule;
+  timeWindow: { enabled: boolean; start: string; end: string };
+  rateLimit: PolicyRule;
+}
+
+// ─── Framework data ──────────────────────────────────────────────────────────
+
+const JS_FRAMEWORKS: Framework[] = [
+  { id: "openai", name: "OpenAI", pkg: "occ-openai", install: "npm install occ-openai", lang: "js" },
+  { id: "vercel", name: "Vercel AI", pkg: "occ-vercel", install: "npm install occ-vercel", lang: "js" },
+  { id: "langgraph", name: "LangGraph", pkg: "occ-langgraph", install: "npm install occ-langgraph", lang: "js" },
+  { id: "mastra", name: "Mastra", pkg: "occ-mastra", install: "npm install occ-mastra", lang: "js" },
+  { id: "cloudflare", name: "Cloudflare Workers", pkg: "occ-cloudflare", install: "npm install occ-cloudflare", lang: "js" },
+];
+
+const PYTHON_FRAMEWORKS: Framework[] = [
+  { id: "openai-agents", name: "OpenAI Agents SDK", pkg: "occ-openai-agents", install: "pip install occ-openai-agents", lang: "python" },
+  { id: "langchain", name: "LangChain", pkg: "occ-langchain", install: "pip install occ-langchain", lang: "python" },
+  { id: "crewai", name: "CrewAI", pkg: "occ-crewai", install: "pip install occ-crewai", lang: "python" },
+  { id: "gemini", name: "Google Gemini", pkg: "occ-gemini", install: "pip install occ-gemini", lang: "python" },
+  { id: "google-adk", name: "Google ADK", pkg: "occ-google-adk", install: "pip install occ-google-adk", lang: "python" },
+  { id: "llamaindex", name: "LlamaIndex", pkg: "occ-llamaindex", install: "pip install occ-llamaindex", lang: "python" },
+  { id: "autogen", name: "AutoGen", pkg: "occ-autogen", install: "pip install occ-autogen", lang: "python" },
+];
+
+// ─── Code generation ─────────────────────────────────────────────────────────
+
+function generateCode(fw: Framework, policy: PolicyState): string {
+  const tools = policy.allowedTools.enabled ? policy.allowedTools.tools : [];
+  const toolsStr = tools.length > 0 ? tools : ["search"];
+
+  if (fw.lang === "python") {
+    return generatePythonCode(fw, toolsStr, policy);
+  }
+  return generateJSCode(fw, toolsStr, policy);
+}
+
+function generatePythonCode(fw: Framework, tools: string[], policy: PolicyState): string {
+  const pyPkg = fw.pkg.replace(/-/g, "_");
+  const toolsArray = `[${tools.map(t => `"${t}"`).join(", ")}]`;
+
+  // Build policy dict entries
+  const policyEntries: string[] = [
+    `        "allowed_tools": ${toolsArray}`,
+    `        "default_deny": True`,
+  ];
+  if (policy.maxActions.enabled && policy.maxActions.value) {
+    policyEntries.push(`        "max_actions": ${policy.maxActions.value}`);
+  }
+  if (policy.rateLimit.enabled && policy.rateLimit.value) {
+    policyEntries.push(`        "rate_limit": ${policy.rateLimit.value}`);
+  }
+  if (policy.timeWindow.enabled && policy.timeWindow.start && policy.timeWindow.end) {
+    policyEntries.push(`        "time_window": ("${policy.timeWindow.start}", "${policy.timeWindow.end}")`);
+  }
+  const policyBlock = policyEntries.join(",\n");
+
+  switch (fw.id) {
+    case "openai-agents":
+      return `from ${pyPkg} import OCCSigner, wrap_agent
+
+signer = OCCSigner(
+    policy={
+${policyBlock}
+    }
+)
+
+# Wrap your agent with OCC control
+agent = wrap_agent(your_agent, signer=signer)`;
+
+    case "langchain":
+      return `from ${pyPkg} import OCCSigner, wrap_tools
+
+signer = OCCSigner(
+    policy={
+${policyBlock}
+    }
+)
+
+# Wrap your existing tools with OCC control
+tools = wrap_tools(your_tools, signer=signer)`;
+
+    case "crewai":
+      return `from ${pyPkg} import OCCSigner, wrap_crew
+
+signer = OCCSigner(
+    policy={
+${policyBlock}
+    }
+)
+
+# Wrap your crew with OCC control
+crew = wrap_crew(your_crew, signer=signer)`;
+
+    case "gemini":
+      return `from ${pyPkg} import wrap_gemini, OCCSigner
+
+signer = OCCSigner(
+    policy={
+${policyBlock}
+    }
+)
+
+model = wrap_gemini(genai.GenerativeModel("gemini-pro"), signer=signer)`;
+
+    case "google-adk":
+      return `from ${pyPkg} import OCCSigner, wrap_agent
+
+signer = OCCSigner(
+    policy={
+${policyBlock}
+    }
+)
+
+agent = wrap_agent(your_adk_agent, signer=signer)`;
+
+    case "llamaindex":
+      return `from ${pyPkg} import OCCSigner, wrap_query_engine
+
+signer = OCCSigner(
+    policy={
+${policyBlock}
+    }
+)
+
+engine = wrap_query_engine(your_engine, signer=signer)`;
+
+    case "autogen":
+      return `from ${pyPkg} import OCCSigner, wrap_agent
+
+signer = OCCSigner(
+    policy={
+${policyBlock}
+    }
+)
+
+agent = wrap_agent(your_agent, signer=signer)`;
+
+    default:
+      return `from ${pyPkg} import OCCSigner, wrap_tools
+
+signer = OCCSigner(
+    policy={
+${policyBlock}
+    }
+)
+
+tools = wrap_tools(your_tools, signer=signer)`;
+  }
+}
+
+function generateJSCode(fw: Framework, tools: string[], policy: PolicyState): string {
+  const toolsArray = `[${tools.map(t => `'${t}'`).join(", ")}]`;
+
+  // Build policy object entries
+  const policyEntries: string[] = [
+    `    allowedTools: ${toolsArray}`,
+    `    defaultDeny: true`,
+  ];
+  if (policy.maxActions.enabled && policy.maxActions.value) {
+    policyEntries.push(`    maxActions: ${policy.maxActions.value}`);
+  }
+  if (policy.rateLimit.enabled && policy.rateLimit.value) {
+    policyEntries.push(`    rateLimit: ${policy.rateLimit.value}`);
+  }
+  if (policy.timeWindow.enabled && policy.timeWindow.start && policy.timeWindow.end) {
+    policyEntries.push(`    timeWindow: { start: '${policy.timeWindow.start}', end: '${policy.timeWindow.end}' }`);
+  }
+  const policyBlock = policyEntries.join(",\n");
+
+  switch (fw.id) {
+    case "openai":
+      return `import { wrapOpenAI } from '${fw.pkg}';
+
+const client = wrapOpenAI(new OpenAI(), {
+  policy: {
+${policyBlock}
+  }
+});`;
+
+    case "vercel":
+      return `import { wrapAI } from '${fw.pkg}';
+
+const ai = wrapAI({
+  policy: {
+${policyBlock}
+  }
+});`;
+
+    case "langgraph":
+      return `import { wrapGraph } from '${fw.pkg}';
+
+const graph = wrapGraph(yourGraph, {
+  policy: {
+${policyBlock}
+  }
+});`;
+
+    case "mastra":
+      return `import { wrapMastra } from '${fw.pkg}';
+
+const mastra = wrapMastra(yourMastra, {
+  policy: {
+${policyBlock}
+  }
+});`;
+
+    case "cloudflare":
+      return `import { wrapWorker } from '${fw.pkg}';
+
+export default wrapWorker(yourWorker, {
+  policy: {
+${policyBlock}
+  }
+});`;
+
+    default:
+      return `import { wrap } from '${fw.pkg}';
+
+const wrapped = wrap(yourClient, {
+  policy: {
+${policyBlock}
+  }
+});`;
+  }
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 /**
  * Convert DER-encoded ECDSA signature to IEEE P1363 (raw r||s) format.
- * WebAuthn returns DER, but WebCrypto subtle.verify expects P1363.
  */
 function derToP1363(der: Uint8Array, n: number = 32): Uint8Array {
-  // DER: 0x30 <len> 0x02 <rLen> <r> 0x02 <sLen> <s>
   if (der[0] !== 0x30) throw new Error("Not a DER sequence");
-  let offset = 2; // skip 0x30 + length byte
-  // Handle multi-byte length
+  let offset = 2;
   if (der[1]! & 0x80) offset = 2 + (der[1]! & 0x7f);
-
   if (der[offset] !== 0x02) throw new Error("Expected INTEGER tag for r");
   const rLen = der[offset + 1]!;
   const rStart = offset + 2;
   const rBytes = der.slice(rStart, rStart + rLen);
-
   const sOffset = rStart + rLen;
   if (der[sOffset] !== 0x02) throw new Error("Expected INTEGER tag for s");
   const sLen = der[sOffset + 1]!;
   const sStart = sOffset + 2;
   const sBytes = der.slice(sStart, sStart + sLen);
-
-  // Pad or trim to n bytes (strip leading zero padding from DER)
   const out = new Uint8Array(n * 2);
   const rTrimmed = rBytes[0] === 0 && rBytes.length > n ? rBytes.slice(1) : rBytes;
   const sTrimmed = sBytes[0] === 0 && sBytes.length > n ? sBytes.slice(1) : sBytes;
@@ -65,44 +285,22 @@ function derToP1363(der: Uint8Array, n: number = 32): Uint8Array {
 // ─── Studio Page ─────────────────────────────────────────────────────────────
 
 export default function StudioPage() {
-  // Create state
-  const [files, setFiles] = useState<File[]>([]);
-  const [proofs, setProofs] = useState<OCCProof[]>([]);
-  const [createStatus, setCreateStatus] = useState<CreateStatus>("idle");
-  const [createError, setCreateError] = useState<string | null>(null);
+  // Tab state
+  const [activeTab, setActiveTab] = useState<"build" | "verify">("build");
 
-  // Attribution state
-  const [attrName, setAttrName] = useState("");
-  const [attrTitle, setAttrTitle] = useState("");
-  const [attrMessage, setAttrMessage] = useState("");
+  // ── Build state ──
+  const [selectedFramework, setSelectedFramework] = useState<Framework | null>(null);
+  const [policy, setPolicy] = useState<PolicyState>({
+    allowedTools: { enabled: true, tools: [] },
+    maxActions: { enabled: false, value: "" as unknown as number },
+    timeWindow: { enabled: false, start: "09:00", end: "17:00" },
+    rateLimit: { enabled: false, value: "" as unknown as number },
+  });
+  const [toolInput, setToolInput] = useState("");
+  const [copiedInstall, setCopiedInstall] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(false);
 
-  // Destination folder state (File System Access API)
-  const [destDir, setDestDir] = useState<FileSystemDirectoryHandle | null>(null);
-  const [destDirName, setDestDirName] = useState<string | null>(null);
-  const [fsDirSupported, setFsDirSupported] = useState(false);
-  const [savedCount, setSavedCount] = useState(0);
-  const [expandedProofs, setExpandedProofs] = useState<Set<number>>(new Set());
-  const [builtZips, setBuiltZips] = useState<Uint8Array[]>([]);
-  const [downloadProgress, setDownloadProgress] = useState<number | null>(null); // 0-100 or null
-
-  // Check File System Access API support on mount
-  useEffect(() => {
-    setFsDirSupported(typeof window !== "undefined" && typeof (window as unknown as Record<string, unknown>).showDirectoryPicker === "function");
-  }, []);
-
-  // Authorship state
-  const [authorshipMode, setAuthorshipMode] = useState<AuthorshipMode>("none");
-  const [passkeyAvailable, setPasskeyAvailable] = useState(false);
-  const [storedCredential, setStoredCredential] = useState<StoredCredential | null>(null);
-  const [registering, setRegistering] = useState(false);
-
-  // Check WebAuthn availability on mount
-  useEffect(() => {
-    isPlatformAuthenticatorAvailable().then(setPasskeyAvailable);
-    setStoredCredential(getStoredCredential());
-  }, []);
-
-  // Verify state
+  // ── Verify state ──
   const [zipFile, setZipFile] = useState<File | null>(null);
   const [verifyResults, setVerifyResults] = useState<CheckResult[] | null>(null);
   const [verifying, setVerifying] = useState(false);
@@ -110,256 +308,42 @@ export default function StudioPage() {
   const zipInputRef = useRef<HTMLInputElement>(null);
   const [dragover, setDragover] = useState(false);
 
-  // ── Create handlers ──
+  // ── Build handlers ──
 
-  const handleFiles = useCallback((newFiles: File[]) => {
-    setFiles(prev => [...prev, ...newFiles]);
-    setProofs([]);
-    setBuiltZips([]);
-    setCreateError(null);
-    setCreateStatus("idle");
+  const addTool = useCallback((name: string) => {
+    const trimmed = name.trim().toLowerCase();
+    if (!trimmed) return;
+    setPolicy(prev => ({
+      ...prev,
+      allowedTools: {
+        ...prev.allowedTools,
+        tools: prev.allowedTools.tools.includes(trimmed)
+          ? prev.allowedTools.tools
+          : [...prev.allowedTools.tools, trimmed],
+      },
+    }));
+    setToolInput("");
   }, []);
 
-  const handleRemoveFile = useCallback((index: number) => {
-    setFiles(prev => prev.filter((_, i) => i !== index));
-    setProofs([]);
-    setBuiltZips([]);
-    setCreateError(null);
-    setCreateStatus("idle");
+  const removeTool = useCallback((name: string) => {
+    setPolicy(prev => ({
+      ...prev,
+      allowedTools: {
+        ...prev.allowedTools,
+        tools: prev.allowedTools.tools.filter(t => t !== name),
+      },
+    }));
   }, []);
 
-  const handleClearFiles = useCallback(() => {
-    setFiles([]);
-    setProofs([]);
-    setBuiltZips([]);
-    setCreateError(null);
-    setCreateStatus("idle");
-  }, []);
-
-  const handlePickDestination = async () => {
+  const copyToClipboard = useCallback(async (text: string, setter: (v: boolean) => void) => {
     try {
-      const dirHandle = await (window as unknown as { showDirectoryPicker: (opts?: { mode?: string }) => Promise<FileSystemDirectoryHandle> }).showDirectoryPicker({ mode: "readwrite" });
-      setDestDir(dirHandle);
-      setDestDirName(dirHandle.name);
-    } catch {
-      // User cancelled the picker
-    }
-  };
-
-  const handleClearDestination = useCallback(() => {
-    setDestDir(null);
-    setDestDirName(null);
+      await navigator.clipboard.writeText(text);
+      setter(true);
+      setTimeout(() => setter(false), 2000);
+    } catch { /* fallback: noop */ }
   }, []);
 
-  const handleRegisterPasskey = async () => {
-    setRegistering(true);
-    try {
-      const cred = await registerPasskey();
-      setStoredCredential(cred);
-    } catch (err) {
-      setCreateError(err instanceof Error ? err.message : "Passkey registration failed");
-    } finally {
-      setRegistering(false);
-    }
-  };
-
-  const handleGenerate = async () => {
-    if (files.length === 0) return;
-    setCreateError(null);
-    setVerifyResults(null);
-
-    const isBatch = files.length > 1;
-
-    try {
-      // Step 1: Hash all files
-      setCreateStatus("hashing");
-      const fileDigests: Array<{ digestB64: string; hashAlg: "sha256" }> = [];
-      for (const f of files) {
-        const digestB64 = await hashFile(f);
-        fileDigests.push({ digestB64, hashAlg: "sha256" });
-      }
-
-      // Step 2: Biometric authorization (once for entire batch)
-      let agency: ReturnType<typeof buildAgencyEnvelope> | undefined;
-
-      if (authorshipMode === "passkey" && storedCredential) {
-        setCreateStatus("challenging");
-        const challengeB64 = await requestChallenge();
-
-        setCreateStatus("authorizing");
-        const assertion = await requestAssertion(
-          challengeB64,
-          storedCredential.credentialIdB64
-        );
-
-        // Agency bound to first file's digest
-        agency = buildAgencyEnvelope(
-          storedCredential,
-          assertion,
-          fileDigests[0].digestB64,
-          challengeB64
-        );
-
-        // For batch commits, include batchContext so the enclave can
-        // validate agency once and apply actor identity to all proofs.
-        if (isBatch) {
-          agency.batchContext = {
-            batchSize: fileDigests.length,
-            batchIndex: 0,
-            batchDigests: fileDigests.map(d => d.digestB64),
-          };
-        }
-      }
-
-      // Build attribution object (only if any field is non-empty)
-      const attrObj: { name?: string; title?: string; message?: string } = {};
-      if (attrName.trim()) attrObj.name = attrName.trim();
-      if (attrTitle.trim()) attrObj.title = attrTitle.trim();
-      if (attrMessage.trim()) attrObj.message = attrMessage.trim();
-      const attribution = Object.keys(attrObj).length > 0 ? attrObj : undefined;
-
-      // Build metadata with verification details
-      const metadata: Record<string, unknown> = {
-        source: "occ-studio",
-      };
-      if (authorshipMode === "passkey" && storedCredential) {
-        metadata.userVerified = true;
-        metadata.authMethod = "platform-biometric";
-        metadata.deviceKey = storedCredential.keyId;
-      }
-
-      setCreateStatus("signing");
-
-      let generatedProofs: OCCProof[];
-
-      if (isBatch) {
-        // Batch mode: one commit request, multiple digests
-        const batchId = crypto.randomUUID();
-        metadata.authorizationMode = "batch";
-        metadata.batchId = batchId;
-        metadata.batchSize = files.length;
-        metadata.fileNames = files.map(f => f.name);
-
-        generatedProofs = await commitBatch(fileDigests, metadata, agency, attribution);
-      } else {
-        // Single file mode
-        metadata.fileName = files[0].name;
-        const result = await commitDigest(
-          fileDigests[0].digestB64,
-          metadata,
-          agency,
-          attribution
-        );
-        generatedProofs = [result];
-      }
-
-      setProofs(generatedProofs);
-
-      // Index proofs in explorer (fire-and-forget)
-      fetch("/api/proofs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ proofs: generatedProofs }),
-      }).catch(() => {});
-
-      // Pre-build all zips so downloads are instant
-      const zips: Uint8Array[] = [];
-      for (let i = 0; i < files.length; i++) {
-        if (files[i] && generatedProofs[i]) {
-          zips[i] = await buildProofZip(files[i], generatedProofs[i]);
-        }
-      }
-      setBuiltZips(zips);
-
-      // Auto-save to destination folder if set
-      if (destDir) {
-        let saved = 0;
-        for (let i = 0; i < files.length; i++) {
-          if (zips[i] && files[i]) {
-            try {
-              const fileName = `${files[i].name}.proof.zip`.replace(/^\./, "");
-              const fileHandle = await destDir.getFileHandle(fileName, { create: true });
-              const writable = await fileHandle.createWritable();
-              await writable.write(zips[i].buffer.slice(zips[i].byteOffset, zips[i].byteOffset + zips[i].byteLength) as ArrayBuffer);
-              await writable.close();
-              saved++;
-            } catch {
-              // If folder write fails, user can still download manually
-            }
-          }
-        }
-        setSavedCount(saved);
-      }
-
-      setCreateStatus("done");
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    } catch (err) {
-      setCreateError(err instanceof Error ? err.message : "Unknown error");
-      setCreateStatus("error");
-    }
-  };
-
-  /** Build a proof.zip for a single file+proof pair */
-  const buildProofZip = async (f: File, p: OCCProof): Promise<Uint8Array> => {
-    const originalData = new Uint8Array(await f.arrayBuffer());
-    const proofJson = JSON.stringify(p, null, 2);
-
-    // Use level 0 (store) for the original file — most artifacts (images,
-    // video, audio, DNG) are already compressed, so re-compressing just
-    // wastes CPU. Proof JSON is tiny and compresses fast.
-    // If the original file is named "proof.json", rename it to avoid collision
-    const safeFileName = f.name === "proof.json" ? "original_proof.json" : f.name;
-    return zipSync({
-      [safeFileName]: [originalData, { level: 0 }],
-      "proof.json": new TextEncoder().encode(proofJson),
-    });
-  };
-
-  const downloadBlob = (data: Uint8Array, filename: string) => {
-    const blob = new Blob([data.buffer as ArrayBuffer], { type: "application/zip" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  /** Download proof.zip for a specific file index */
-  const handleDownloadZip = async (index: number) => {
-    const f = files[index];
-    if (!f) return;
-    // Use cached zip if available, otherwise build on demand
-    const zipped = builtZips[index] ?? (proofs[index] ? await buildProofZip(f, proofs[index]) : null);
-    if (!zipped) return;
-    downloadBlob(zipped, `${f.name}.proof.zip`.replace(/^\./, ""));
-  };
-
-  /** Download all proof.zips bundled into a single ZIP */
-  const handleDownloadAll = async () => {
-    setDownloadProgress(0);
-    const folder = `batch-${new Date().toISOString().slice(0, 10)}`;
-    const entries: Record<string, Uint8Array> = {};
-    const total = files.length;
-    for (let i = 0; i < total; i++) {
-      if (files[i]) {
-        const zipped = builtZips[i] ?? (proofs[i] ? await buildProofZip(files[i], proofs[i]) : null);
-        if (zipped) {
-          entries[`${folder}/${files[i].name}.proof.zip`.replace(/^\./, "")] = zipped;
-        }
-      }
-      setDownloadProgress(Math.round(((i + 1) / total) * 90));
-    }
-    // level 0 (store) — nested .proof.zips are already compressed
-    const bundled = zipSync(entries, { level: 0 });
-    setDownloadProgress(100);
-    downloadBlob(bundled, `${folder}.zip`);
-    setTimeout(() => setDownloadProgress(null), 1200);
-  };
-
-  // ── Verify handlers ──
+  // ── Verify handlers (exact copy from original) ──
 
   const handleZipFile = useCallback((f: File) => {
     setZipFile(f);
@@ -377,7 +361,6 @@ export default function StudioPage() {
     if (!zipFile) return;
     setVerifying(true);
     setVerifyResults(null);
-    setProofs([]);
 
     const checks: CheckResult[] = [];
 
@@ -454,6 +437,7 @@ export default function StudioPage() {
         : { label: "Measurement", status: "fail", detail: "Missing measurement" });
 
       // Digest
+      const { hashBytes } = await import("@/lib/occ");
       const computedDigest = await hashBytes(originalBytes);
       checks.push(computedDigest === vProof.artifact?.digestB64
         ? { label: "Artifact digest match", status: "pass", detail: "SHA-256 of original file matches proof.artifact.digestB64" }
@@ -469,7 +453,6 @@ export default function StudioPage() {
         } else if (sigBytes.length !== 64) {
           checks.push({ label: "Ed25519 signature", status: "fail", detail: `Signature is ${sigBytes.length} bytes; expected 64` });
         } else {
-          // Reconstruct the signed body exactly as occ-core does
           const signedBody: Record<string, unknown> = {
             version: vProof.version,
             artifact: vProof.artifact,
@@ -481,11 +464,9 @@ export default function StudioPage() {
           if (vProof.environment.attestation) {
             signedBody.attestationFormat = vProof.environment.attestation.format;
           }
-          // Include actor in signed body when agency is present
           if (vProof.agency) {
             signedBody.actor = vProof.agency.actor;
           }
-          // Include attribution in signed body when present
           if (vProof.attribution) {
             signedBody.attribution = vProof.attribution;
           }
@@ -524,7 +505,6 @@ export default function StudioPage() {
       if (vProof.agency) {
         const { actor, authorization } = vProof.agency;
 
-        // Structural checks
         checks.push(actor.keyId && actor.publicKeyB64 && actor.algorithm === "ES256" && actor.provider
           ? { label: "Actor identity", status: "pass", detail: `${actor.provider} - ${actor.keyId.slice(0, 16)}…` }
           : { label: "Actor identity", status: "fail", detail: "Missing or invalid actor fields" });
@@ -533,8 +513,6 @@ export default function StudioPage() {
           ? { label: "Agency purpose", status: "pass", detail: authorization.purpose }
           : { label: "Agency purpose", status: "fail", detail: `Expected "occ/commit-authorize/v1", got "${authorization.purpose}"` });
 
-        // Artifact hash binding (batch-aware: agency binds to first digest,
-        // batchContext.batchDigests lists all authorized digests)
         const bc = vProof.agency.batchContext;
         const artifactBindingOk =
           authorization.artifactHash === vProof.artifact.digestB64 ||
@@ -548,15 +526,12 @@ export default function StudioPage() {
               : "authorization.artifactHash matches proof.artifact.digestB64" }
           : { label: "Agency artifact binding", status: "fail", detail: "artifactHash does not match proof artifact digest" });
 
-        // actorKeyId consistency
         checks.push(authorization.actorKeyId === actor.keyId
           ? { label: "Agency key ID binding", status: "pass", detail: "authorization.actorKeyId matches actor.keyId" }
           : { label: "Agency key ID binding", status: "fail", detail: "actorKeyId does not match actor.keyId" });
 
-        // P-256 signature verification via WebCrypto
         try {
           const pubKeyDer = b64ToBytes(actor.publicKeyB64);
-          // Compute keyId = hex(SHA-256(SPKI DER pubkey bytes))
           const keyIdHash = await crypto.subtle.digest("SHA-256", pubKeyDer as unknown as BufferSource);
           const computedKeyId = Array.from(new Uint8Array(keyIdHash))
             .map((b) => b.toString(16).padStart(2, "0"))
@@ -566,7 +541,6 @@ export default function StudioPage() {
             ? { label: "Actor keyId derivation", status: "pass", detail: "keyId = SHA-256(SPKI pubkey) matches" }
             : { label: "Actor keyId derivation", status: "fail", detail: "keyId does not match SHA-256 of public key" });
 
-          // Import P-256 SPKI key
           const cryptoKey = await crypto.subtle.importKey(
             "spki",
             pubKeyDer as unknown as BufferSource,
@@ -580,7 +554,6 @@ export default function StudioPage() {
 
           let p256Valid: boolean;
           if (isWebAuthnFormat) {
-            // WebAuthn: verify over authenticatorData || SHA-256(clientDataJSON)
             const wa = authorization as unknown as Record<string, string>;
             const authData = b64ToBytes(wa.authenticatorDataB64);
             const clientDataHash = await crypto.subtle.digest(
@@ -591,7 +564,6 @@ export default function StudioPage() {
             signedData.set(authData, 0);
             signedData.set(new Uint8Array(clientDataHash), authData.length);
 
-            // Check UP/UV flags
             if (authData.length >= 33) {
               const flags = authData[32];
               const UP = (flags & 0x01) !== 0;
@@ -601,7 +573,6 @@ export default function StudioPage() {
                 : { label: "Biometric verification", status: "fail", detail: `Flags: UP=${UP}, UV=${UV}` });
             }
 
-            // WebAuthn signatures are DER-encoded; WebCrypto expects P1363 (raw r||s)
             const sigP1363 = sigBytesRaw[0] === 0x30 ? derToP1363(sigBytesRaw) : sigBytesRaw;
 
             p256Valid = await crypto.subtle.verify(
@@ -615,7 +586,6 @@ export default function StudioPage() {
               ? { label: "Device authorization (WebAuthn)", status: "pass", detail: "Proof authorized by device key" }
               : { label: "Device authorization (WebAuthn)", status: "fail", detail: "WebAuthn signature verification failed" });
           } else {
-            // Direct: verify over canonical JSON payload
             const canonicalPayload: Record<string, unknown> = {
               actorKeyId: authorization.actorKeyId,
               artifactHash: authorization.artifactHash,
@@ -623,7 +593,6 @@ export default function StudioPage() {
               purpose: authorization.purpose,
               timestamp: authorization.timestamp,
             };
-            // Include protocolVersion when present (backward-compatible)
             if ("protocolVersion" in authorization && (authorization as Record<string, unknown>).protocolVersion !== undefined) {
               canonicalPayload.protocolVersion = (authorization as Record<string, unknown>).protocolVersion;
             }
@@ -670,19 +639,14 @@ export default function StudioPage() {
     setVerifying(false);
   };
 
-  const busy = createStatus === "hashing" || createStatus === "challenging" || createStatus === "authorizing" || createStatus === "signing";
   const allPass = verifyResults?.every((r) => r.status === "pass" || r.status === "info");
   const anyFail = verifyResults?.some((r) => r.status === "fail");
 
-  // Tab state
-  const [activeTab, setActiveTab] = useState<"create" | "verify">("create");
-
-  const [showProofDetails, setShowProofDetails] = useState(false);
-
-  // Step progress for proof creation
-  const allSteps: { key: CreateStatus; label: string }[] = authorshipMode === "passkey"
-    ? [{ key: "hashing", label: "Hash" }, { key: "challenging", label: "Challenge" }, { key: "authorizing", label: "Authorize" }, { key: "signing", label: "Sign" }]
-    : [{ key: "hashing", label: "Hash" }, { key: "signing", label: "Sign" }];
+  // Derived: has any rules been configured?
+  const hasRules = policy.allowedTools.tools.length > 0 ||
+    (policy.maxActions.enabled && policy.maxActions.value) ||
+    (policy.rateLimit.enabled && policy.rateLimit.value) ||
+    (policy.timeWindow.enabled && policy.timeWindow.start && policy.timeWindow.end);
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-12 sm:py-16">
@@ -692,22 +656,22 @@ export default function StudioPage() {
           Studio
         </h1>
         <p className="text-text-secondary text-[15px] leading-relaxed">
-          Drop one file or many. Get cryptographic proof, locally.
+          Build your AI control layer. Verify cryptographic proofs.
         </p>
       </div>
 
-      {/* ── Tab bar (all screen sizes) ── */}
+      {/* Tab bar */}
       <div className="mb-8">
         <div className="flex gap-1 p-1 rounded-xl bg-bg-elevated border border-border-subtle">
           <button
-            onClick={() => setActiveTab("create")}
+            onClick={() => setActiveTab("build")}
             className={`flex-1 h-11 rounded-lg text-sm font-sans font-semibold transition-all duration-200 cursor-pointer ${
-              activeTab === "create"
+              activeTab === "build"
                 ? "bg-bg text-success shadow-sm"
                 : "text-text-tertiary hover:text-text-secondary"
             }`}
           >
-            Create
+            Build
           </button>
           <button
             onClick={() => setActiveTab("verify")}
@@ -722,298 +686,300 @@ export default function StudioPage() {
         </div>
       </div>
 
-      {/* ═══════════════════ CREATE TAB ═══════════════════ */}
-      {activeTab === "create" && (
-        <>
-          {/* ── State C: Proof generated → hero download ── */}
-          {createStatus === "done" && proofs.length > 0 ? (
-            <div className="space-y-6 animate-slide-up">
-              <div className="text-center py-8">
-                <div className="w-16 h-16 rounded-2xl bg-success/10 border border-success/20 flex items-center justify-center mx-auto mb-5 animate-success-pulse">
-                  <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-success">
-                    <path d="M7 14.5l5 5L21 9" />
+      {/* ═══════════════════ BUILD TAB ═══════════════════ */}
+      {activeTab === "build" && (
+        <div className="space-y-8">
+
+          {/* ── Step 1: Pick your framework ── */}
+          <section>
+            <div className="flex items-center gap-3 mb-4">
+              <span className={`inline-flex w-7 h-7 items-center justify-center rounded-full text-xs font-semibold shrink-0 ${
+                selectedFramework
+                  ? "bg-success/15 text-success"
+                  : "bg-bg-elevated border border-border-subtle text-text-secondary"
+              }`}>
+                {selectedFramework ? (
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M2 6.5l3 3L10 3" />
                   </svg>
-                </div>
-                <div className="text-lg font-semibold text-text mb-1">
-                  {proofs.length === 1 ? "Proof created" : `${proofs.length} proofs created`}
-                </div>
-                {savedCount > 0 && destDirName && (
-                  <p className="text-sm text-text-tertiary">
-                    Saved to {destDirName}
-                  </p>
-                )}
-              </div>
+                ) : "1"}
+              </span>
+              <h2 className="text-sm font-semibold text-text">Pick your framework</h2>
+            </div>
 
-              {/* Hero download button */}
-              {proofs.length === 1 ? (
-                <button
-                  onClick={() => handleDownloadZip(0)}
-                  className="w-full h-14 rounded-xl bg-success text-bg text-base font-semibold hover:bg-success/85 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-3"
-                >
-                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M9 2v10M5.5 8.5L9 12l3.5-3.5" />
-                    <path d="M2.5 13v2a1 1 0 001 1h11a1 1 0 001-1v-2" />
-                  </svg>
-                  Download {files[0]?.name ? `${files[0].name}.proof.zip` : "proof.zip"}
-                </button>
-              ) : (
-                <button
-                  onClick={handleDownloadAll}
-                  disabled={downloadProgress !== null}
-                  className="relative w-full h-14 rounded-xl bg-success text-bg text-base font-semibold hover:bg-success/85 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-3 overflow-hidden disabled:opacity-90 disabled:cursor-wait"
-                >
-                  {downloadProgress !== null && (
-                    <span
-                      className="absolute inset-0 bg-black/15 origin-left transition-transform duration-150 ease-linear"
-                      style={{ transform: `scaleX(${downloadProgress / 100})` }}
-                    />
-                  )}
-                  <span className="relative flex items-center gap-3">
-                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M9 2v10M5.5 8.5L9 12l3.5-3.5" />
-                      <path d="M2.5 13v2a1 1 0 001 1h11a1 1 0 001-1v-2" />
-                    </svg>
-                    {downloadProgress !== null && downloadProgress < 100
-                      ? `Bundling ${downloadProgress}%`
-                      : downloadProgress === 100
-                      ? "Done"
-                      : `Download all ${proofs.length} proofs`}
-                  </span>
-                </button>
-              )}
-
-              {proofs.length === 1 && proofs[0]?.artifact?.digestB64 && (
-                <a
-                  href={`/explorer/${encodeURIComponent(proofs[0].artifact.digestB64)}`}
-                  className="w-full text-center text-sm text-emerald-600 dark:text-emerald-400 hover:underline transition-colors py-2 block"
-                >
-                  View on Explorer →
-                </a>
-              )}
-
-              <button
-                onClick={() => { handleClearFiles(); setShowProofDetails(false); }}
-                className="w-full text-center text-sm text-text-tertiary hover:text-text-secondary transition-colors py-2 cursor-pointer"
-              >
-                Start over
-              </button>
-
-              {/* Proof details disclosure */}
-              <div className="pt-4">
-                <button
-                  onClick={() => setShowProofDetails(prev => !prev)}
-                  className="w-full flex items-center justify-between px-4 py-3 rounded-xl border border-border-subtle bg-bg-elevated text-sm text-text-secondary hover:text-text hover:border-border transition-colors cursor-pointer"
-                >
-                  <span className="font-medium">Proof details</span>
-                  <svg
-                    width="12" height="12" viewBox="0 0 12 12" fill="currentColor"
-                    className={`transition-transform duration-200 ${showProofDetails ? "rotate-90" : ""}`}
+            {/* JS frameworks */}
+            <div className="mb-3">
+              <div className="text-[11px] uppercase tracking-[0.1em] text-text-tertiary mb-2 pl-10">JavaScript</div>
+              <div className="space-y-1 pl-10">
+                {JS_FRAMEWORKS.map(fw => (
+                  <button
+                    key={fw.id}
+                    onClick={() => setSelectedFramework(fw)}
+                    className={`w-full text-left px-4 py-3 rounded-lg text-sm transition-all duration-150 cursor-pointer ${
+                      selectedFramework?.id === fw.id
+                        ? "bg-success/10 text-success border border-success/25"
+                        : "text-text-secondary hover:text-text hover:bg-bg-elevated border border-transparent"
+                    }`}
                   >
-                    <path d="M4.5 1.5l5 4.5-5 4.5" />
-                  </svg>
-                </button>
-
-                <div className={`grid transition-all duration-300 ease-in-out ${
-                  showProofDetails ? "grid-rows-[1fr] opacity-100 mt-4" : "grid-rows-[0fr] opacity-0"
-                }`}>
-                  <div className="overflow-hidden space-y-4">
-                    {proofs.map((p, idx) => (
-                      <div key={idx} className="space-y-3">
-                        {proofs.length > 1 && (
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-text">{files[idx]?.name || `Proof ${idx + 1}`}</span>
-                            <div className="flex items-center gap-3">
-                              <a
-                                href={`/explorer/${encodeURIComponent(p.artifact.digestB64)}`}
-                                className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline transition-colors"
-                              >
-                                Explorer →
-                              </a>
-                              <button
-                                onClick={() => handleDownloadZip(idx)}
-                                className="text-xs text-text-tertiary hover:text-text transition-colors cursor-pointer"
-                              >
-                                Download
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                        <ProofMeta proof={p} fileName={files[idx]?.name} fileSize={files[idx]?.size} />
-                        {proofs.length === 1 && <ProofViewer proof={p} />}
-                        <div className="grid sm:grid-cols-2 gap-3">
-                          <InfoCard title="Artifact" items={[
-                            { label: "Hash Algorithm", value: p.artifact.hashAlg },
-                            { label: "Digest", value: p.artifact.digestB64 },
-                          ]} />
-                          <InfoCard title="Commit" items={[
-                            { label: "Nonce", value: p.commit.nonceB64 },
-                            ...(p.commit.counter ? [{ label: "Counter", value: p.commit.counter }] : []),
-                            ...(p.commit.epochId ? [{ label: "Epoch", value: p.commit.epochId }] : []),
-                            ...(p.commit.prevB64 ? [{ label: "Chain Link", value: p.commit.prevB64 }] : []),
-                          ]} />
-                          <InfoCard title="Environment" items={[
-                            { label: "Enforcement", value: p.environment.enforcement },
-                            { label: "Measurement", value: p.environment.measurement },
-                            ...(p.environment.attestation ? [{ label: "Attestation", value: p.environment.attestation.format }] : []),
-                          ]} />
-                          <InfoCard title="Signer" items={[
-                            { label: "Public Key", value: p.signer.publicKeyB64 },
-                            { label: "Signature", value: p.signer.signatureB64 },
-                          ]} />
-                          {p.agency && (
-                            <InfoCard title="Agency" items={[
-                              { label: "Actor", value: p.agency.actor.keyId },
-                              { label: "Provider", value: p.agency.actor.provider },
-                              { label: "Algorithm", value: p.agency.actor.algorithm },
-                              { label: "Purpose", value: p.agency.authorization.purpose },
-                            ]} />
-                          )}
-                          {p.attribution && (
-                            <InfoCard title="Attribution" items={[
-                              ...(p.attribution.name ? [{ label: "Name", value: p.attribution.name }] : []),
-                              ...(p.attribution.title ? [{ label: "Title", value: p.attribution.title }] : []),
-                              ...(p.attribution.message ? [{ label: "Message", value: p.attribution.message }] : []),
-                            ]} />
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                    <span className="font-medium">{fw.name}</span>
+                    <span className="text-text-tertiary ml-2 font-mono text-xs">{fw.pkg}</span>
+                  </button>
+                ))}
               </div>
             </div>
-          ) : (
-            /* ── State A & B: File selection + generation ── */
-            <div className="space-y-4">
-              <FileDrop
-                multiple
-                onFiles={handleFiles}
-                files={files}
-                onRemoveFile={handleRemoveFile}
-                onClearAll={handleClearFiles}
-                disabled={busy}
-              />
 
-              {/* Options (visible when files selected) */}
-              {files.length > 0 && (
-                <div className="space-y-4">
-                  {/* Signing mode — segmented control */}
-                  <div>
-                    <div className="text-xs text-text-tertiary mb-2">Signing</div>
-                    <div className="flex gap-1 p-1 rounded-xl bg-bg-elevated border border-border-subtle">
-                      <button
-                        onClick={() => setAuthorshipMode("none")}
-                        className={`flex-1 h-9 rounded-lg text-xs font-sans font-semibold transition-all duration-200 cursor-pointer ${
-                          authorshipMode === "none"
-                            ? "bg-bg text-success shadow-sm"
-                            : "text-text-tertiary hover:text-text-secondary"
-                        }`}
-                      >
-                        Standard
-                      </button>
-                      <button
-                        onClick={() => setAuthorshipMode("passkey")}
-                        className={`flex-1 h-9 rounded-lg text-xs font-sans font-semibold transition-all duration-200 cursor-pointer ${
-                          authorshipMode === "passkey"
-                            ? "bg-bg text-success shadow-sm"
-                            : "text-text-tertiary hover:text-text-secondary"
-                        }`}
-                      >
-                        Biometric
-                      </button>
-                    </div>
-                  </div>
-                  {authorshipMode === "passkey" && !storedCredential && (
-                    <button onClick={handleRegisterPasskey} disabled={registering} className="w-full h-10 rounded-xl border border-border text-xs font-semibold text-text-secondary hover:text-text hover:border-text-tertiary transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-                      {registering ? "Registering…" : "Register Passkey"}
-                    </button>
-                  )}
-                  {authorshipMode === "passkey" && storedCredential && (
-                    <div className="flex items-center gap-2 text-xs text-success">
-                      <span className="inline-flex w-4 h-4 items-center justify-center rounded-full bg-success/20 text-[10px]">✓</span>
-                      <span>Device registered</span>
-                      <span className="text-text-tertiary font-mono ml-1">{storedCredential.keyId.slice(0, 12)}…</span>
-                    </div>
-                  )}
-
-                  {/* Attribution */}
-                  <div className="rounded-xl border border-border-subtle bg-bg-elevated p-5">
-                    <div className="text-sm font-medium text-text mb-3">Attribution</div>
-                    <div className="rounded-lg border border-border-subtle overflow-hidden divide-y divide-border-subtle">
-                      <input type="text" placeholder="Name" value={attrName} onChange={(e) => setAttrName(e.target.value)} className="w-full h-11 bg-bg px-3 text-base sm:text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:bg-bg-elevated transition-colors" />
-                      <input type="text" placeholder="Title" value={attrTitle} onChange={(e) => setAttrTitle(e.target.value)} className="w-full h-11 bg-bg px-3 text-base sm:text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:bg-bg-elevated transition-colors" />
-                      <textarea placeholder="Message" value={attrMessage} onChange={(e) => setAttrMessage(e.target.value)} rows={2} className="w-full bg-bg px-3 py-2.5 text-base sm:text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:bg-bg-elevated transition-colors resize-none" />
-                    </div>
-                    <p className="text-[11px] text-text-tertiary mt-2 leading-relaxed">Sealed into the proof and travels with the artifact.</p>
-                  </div>
-
-                  {/* Save-to-folder */}
-                  {fsDirSupported && (
-                    <div className="rounded-xl border border-border-subtle bg-bg-elevated p-5">
-                      <div className="text-sm font-medium text-text mb-3">Save To</div>
-                      {destDir ? (
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-text-tertiary shrink-0"><path d="M2 4.5V12a1 1 0 001 1h10a1 1 0 001-1V6.5a1 1 0 00-1-1H8.5L7 4H3a1 1 0 00-1 .5z" /></svg>
-                            <span className="text-sm text-text truncate">{destDirName}</span>
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0 ml-2">
-                            <button onClick={handlePickDestination} className="text-xs text-text-secondary hover:text-text transition-colors cursor-pointer">Change</button>
-                            <button onClick={handleClearDestination} className="text-xs text-text-tertiary hover:text-text transition-colors cursor-pointer">Clear</button>
-                          </div>
-                        </div>
-                      ) : (
-                        <button onClick={handlePickDestination} className="w-full h-10 rounded-xl border border-border-subtle text-xs font-medium text-text-secondary hover:text-text hover:border-text-tertiary transition-colors cursor-pointer">Choose folder…</button>
-                      )}
-                      <p className="text-[11px] text-text-tertiary mt-2">{destDir ? "Proof files will be saved here automatically." : "Pick a folder to auto-save proof.zip files. Otherwise they download to your default location."}</p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Make a Proof button (only when files selected) */}
-              {files.length > 0 && (
-                <button
-                  onClick={handleGenerate}
-                  disabled={files.length === 0 || busy || proofs.length > 0 || (authorshipMode === "passkey" && !storedCredential)}
-                  className={`
-                    relative w-full h-12 rounded-xl text-sm font-semibold tracking-wide transition-all duration-200 shrink-0 overflow-hidden
-                    ${busy
-                      ? "bg-bg-subtle text-text cursor-not-allowed border border-border-subtle"
-                      : files.length === 0 || (authorshipMode === "passkey" && !storedCredential)
-                      ? "bg-bg-subtle text-text-tertiary/50 cursor-not-allowed border border-border-subtle"
-                      : "bg-text text-bg hover:opacity-90 active:scale-[0.98] cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]"
-                    }
-                  `}
-                >
-                  {busy && (
-                    <div className="absolute inset-0 overflow-hidden rounded-xl">
-                      <div className="h-full bg-text/10 animate-progress-fill" />
-                    </div>
-                  )}
-                  <span className="relative z-10">
-                    {createStatus === "hashing"
-                      ? "Hashing…"
-                      : createStatus === "challenging"
-                      ? "Requesting challenge…"
-                      : createStatus === "authorizing"
-                      ? "Waiting for authorization…"
-                      : createStatus === "signing"
-                      ? "Committing in enclave…"
-                      : files.length > 1 ? `Make ${files.length} Proofs` : "Make a Proof"}
-                  </span>
-                </button>
-              )}
-
-              {createError && (
-                <div className="rounded-xl border border-error/30 bg-error/5 p-4">
-                  <div className="text-sm text-error font-medium mb-1">Error</div>
-                  <div className="text-sm text-text-secondary">{createError}</div>
-                </div>
-              )}
+            {/* Python frameworks */}
+            <div>
+              <div className="text-[11px] uppercase tracking-[0.1em] text-text-tertiary mb-2 pl-10">Python</div>
+              <div className="space-y-1 pl-10">
+                {PYTHON_FRAMEWORKS.map(fw => (
+                  <button
+                    key={fw.id}
+                    onClick={() => setSelectedFramework(fw)}
+                    className={`w-full text-left px-4 py-3 rounded-lg text-sm transition-all duration-150 cursor-pointer ${
+                      selectedFramework?.id === fw.id
+                        ? "bg-success/10 text-success border border-success/25"
+                        : "text-text-secondary hover:text-text hover:bg-bg-elevated border border-transparent"
+                    }`}
+                  >
+                    <span className="font-medium">{fw.name}</span>
+                    <span className="text-text-tertiary ml-2 font-mono text-xs">{fw.pkg}</span>
+                  </button>
+                ))}
+              </div>
             </div>
+          </section>
+
+          {/* ── Step 2: Define your rules ── */}
+          {selectedFramework && (
+            <section className="animate-slide-up">
+              <div className="flex items-center gap-3 mb-4">
+                <span className={`inline-flex w-7 h-7 items-center justify-center rounded-full text-xs font-semibold shrink-0 ${
+                  hasRules
+                    ? "bg-success/15 text-success"
+                    : "bg-bg-elevated border border-border-subtle text-text-secondary"
+                }`}>
+                  {hasRules ? (
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M2 6.5l3 3L10 3" />
+                    </svg>
+                  ) : "2"}
+                </span>
+                <h2 className="text-sm font-semibold text-text">Define your rules</h2>
+              </div>
+
+              <div className="pl-10 space-y-3">
+                {/* Default deny indicator */}
+                <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-bg-elevated border border-border-subtle">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-text-tertiary shrink-0">
+                    <rect x="2" y="6" width="10" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+                    <path d="M4.5 6V4.5a2.5 2.5 0 015 0V6" stroke="currentColor" strokeWidth="1.5" />
+                  </svg>
+                  <span className="text-xs text-text-secondary">Default deny — only listed tools are allowed</span>
+                </div>
+
+                {/* Allowed tools */}
+                <div className="rounded-xl border border-border-subtle bg-bg-elevated p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="text-sm font-medium text-text">Allowed tools</label>
+                  </div>
+                  <div className="flex gap-2 mb-2">
+                    <input
+                      type="text"
+                      value={toolInput}
+                      onChange={e => setToolInput(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === "Enter") { e.preventDefault(); addTool(toolInput); }
+                      }}
+                      placeholder="e.g. search, send_email"
+                      className="flex-1 h-9 bg-bg rounded-lg border border-border-subtle px-3 text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:border-success/40 transition-colors"
+                    />
+                    <button
+                      onClick={() => addTool(toolInput)}
+                      disabled={!toolInput.trim()}
+                      className="h-9 px-3 rounded-lg text-xs font-semibold bg-bg border border-border-subtle text-text-secondary hover:text-text hover:border-border transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      Add
+                    </button>
+                  </div>
+                  {policy.allowedTools.tools.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-3">
+                      {policy.allowedTools.tools.map(tool => (
+                        <span
+                          key={tool}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-success/10 text-success text-xs font-mono"
+                        >
+                          {tool}
+                          <button
+                            onClick={() => removeTool(tool)}
+                            className="hover:text-success/70 cursor-pointer text-[10px] leading-none"
+                          >
+                            x
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {policy.allowedTools.tools.length === 0 && (
+                    <p className="text-[11px] text-text-tertiary mt-1">No tools allowed yet. With default-deny, no tool calls will be permitted.</p>
+                  )}
+                </div>
+
+                {/* Max actions */}
+                <div className="rounded-xl border border-border-subtle bg-bg-elevated p-4">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-text">Max actions</label>
+                    <button
+                      onClick={() => setPolicy(prev => ({ ...prev, maxActions: { ...prev.maxActions, enabled: !prev.maxActions.enabled } }))}
+                      className={`relative w-9 h-5 rounded-full transition-colors duration-200 cursor-pointer ${
+                        policy.maxActions.enabled ? "bg-success" : "bg-bg-subtle border border-border-subtle"
+                      }`}
+                    >
+                      <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                        policy.maxActions.enabled ? "translate-x-4" : ""
+                      }`} />
+                    </button>
+                  </div>
+                  {policy.maxActions.enabled && (
+                    <div className="mt-3">
+                      <input
+                        type="number"
+                        min="1"
+                        value={policy.maxActions.value || ""}
+                        onChange={e => setPolicy(prev => ({ ...prev, maxActions: { ...prev.maxActions, value: parseInt(e.target.value) || ("" as unknown as number) } }))}
+                        placeholder="e.g. 50"
+                        className="w-full h-9 bg-bg rounded-lg border border-border-subtle px-3 text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:border-success/40 transition-colors"
+                      />
+                      <p className="text-[11px] text-text-tertiary mt-1.5">Budget envelope — total tool calls allowed per session</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Rate limit */}
+                <div className="rounded-xl border border-border-subtle bg-bg-elevated p-4">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-text">Rate limit</label>
+                    <button
+                      onClick={() => setPolicy(prev => ({ ...prev, rateLimit: { ...prev.rateLimit, enabled: !prev.rateLimit.enabled } }))}
+                      className={`relative w-9 h-5 rounded-full transition-colors duration-200 cursor-pointer ${
+                        policy.rateLimit.enabled ? "bg-success" : "bg-bg-subtle border border-border-subtle"
+                      }`}
+                    >
+                      <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                        policy.rateLimit.enabled ? "translate-x-4" : ""
+                      }`} />
+                    </button>
+                  </div>
+                  {policy.rateLimit.enabled && (
+                    <div className="mt-3">
+                      <input
+                        type="number"
+                        min="1"
+                        value={policy.rateLimit.value || ""}
+                        onChange={e => setPolicy(prev => ({ ...prev, rateLimit: { ...prev.rateLimit, value: parseInt(e.target.value) || ("" as unknown as number) } }))}
+                        placeholder="e.g. 10"
+                        className="w-full h-9 bg-bg rounded-lg border border-border-subtle px-3 text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:border-success/40 transition-colors"
+                      />
+                      <p className="text-[11px] text-text-tertiary mt-1.5">Maximum tool calls per minute</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Time window */}
+                <div className="rounded-xl border border-border-subtle bg-bg-elevated p-4">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-text">Time window</label>
+                    <button
+                      onClick={() => setPolicy(prev => ({ ...prev, timeWindow: { ...prev.timeWindow, enabled: !prev.timeWindow.enabled } }))}
+                      className={`relative w-9 h-5 rounded-full transition-colors duration-200 cursor-pointer ${
+                        policy.timeWindow.enabled ? "bg-success" : "bg-bg-subtle border border-border-subtle"
+                      }`}
+                    >
+                      <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                        policy.timeWindow.enabled ? "translate-x-4" : ""
+                      }`} />
+                    </button>
+                  </div>
+                  {policy.timeWindow.enabled && (
+                    <div className="mt-3 flex items-center gap-2">
+                      <input
+                        type="time"
+                        value={policy.timeWindow.start}
+                        onChange={e => setPolicy(prev => ({ ...prev, timeWindow: { ...prev.timeWindow, start: e.target.value } }))}
+                        className="flex-1 h-9 bg-bg rounded-lg border border-border-subtle px-3 text-sm text-text focus:outline-none focus:border-success/40 transition-colors"
+                      />
+                      <span className="text-xs text-text-tertiary">to</span>
+                      <input
+                        type="time"
+                        value={policy.timeWindow.end}
+                        onChange={e => setPolicy(prev => ({ ...prev, timeWindow: { ...prev.timeWindow, end: e.target.value } }))}
+                        className="flex-1 h-9 bg-bg rounded-lg border border-border-subtle px-3 text-sm text-text focus:outline-none focus:border-success/40 transition-colors"
+                      />
+                    </div>
+                  )}
+                  {policy.timeWindow.enabled && (
+                    <p className="text-[11px] text-text-tertiary mt-1.5">Tools only available during this window</p>
+                  )}
+                </div>
+              </div>
+            </section>
           )}
-        </>
+
+          {/* ── Step 3: Generated code ── */}
+          {selectedFramework && (
+            <section className="animate-slide-up">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="inline-flex w-7 h-7 items-center justify-center rounded-full text-xs font-semibold bg-bg-elevated border border-border-subtle text-text-secondary shrink-0">
+                  3
+                </span>
+                <h2 className="text-sm font-semibold text-text">Drop this into your project</h2>
+              </div>
+
+              <div className="pl-10 space-y-4">
+                {/* Install command */}
+                <div className="rounded-xl border border-border-subtle bg-bg-elevated overflow-hidden">
+                  <div className="flex items-center justify-between px-4 py-2.5 border-b border-border-subtle">
+                    <span className="text-[11px] uppercase tracking-[0.1em] text-text-tertiary">Install</span>
+                    <button
+                      onClick={() => copyToClipboard(selectedFramework.install, setCopiedInstall)}
+                      className="text-xs text-text-tertiary hover:text-text transition-colors cursor-pointer"
+                    >
+                      {copiedInstall ? "Copied" : "Copy"}
+                    </button>
+                  </div>
+                  <div className="px-4 py-3">
+                    <code className="text-sm font-mono text-success">{selectedFramework.install}</code>
+                  </div>
+                </div>
+
+                {/* Generated code */}
+                <div className="rounded-xl border border-border-subtle bg-bg-elevated overflow-hidden">
+                  <div className="flex items-center justify-between px-4 py-2.5 border-b border-border-subtle">
+                    <span className="text-[11px] uppercase tracking-[0.1em] text-text-tertiary">
+                      {selectedFramework.lang === "python" ? "Python" : "JavaScript"}
+                    </span>
+                    <button
+                      onClick={() => copyToClipboard(generateCode(selectedFramework, policy), setCopiedCode)}
+                      className="text-xs text-text-tertiary hover:text-text transition-colors cursor-pointer"
+                    >
+                      {copiedCode ? "Copied" : "Copy"}
+                    </button>
+                  </div>
+                  <pre className="px-4 py-3 overflow-x-auto">
+                    <code className="text-sm font-mono text-text leading-relaxed whitespace-pre">{generateCode(selectedFramework, policy)}</code>
+                  </pre>
+                </div>
+
+                {/* Explanation */}
+                <div className="rounded-lg border border-border-subtle px-4 py-3">
+                  <p className="text-xs text-text-secondary leading-relaxed">
+                    The proof IS the authorization. Your agent constructs a cryptographic proof for every tool call — if it cannot build a valid proof that satisfies the policy, the action does not execute. No proof, no action.
+                  </p>
+                </div>
+              </div>
+            </section>
+          )}
+        </div>
       )}
 
       {/* ═══════════════════ VERIFY TAB ═══════════════════ */}
@@ -1159,24 +1125,6 @@ export default function StudioPage() {
           )}
         </div>
       )}
-    </div>
-  );
-}
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function InfoCard({ title, items }: { title: string; items: { label: string; value: string }[] }) {
-  return (
-    <div className="rounded-xl border border-border-subtle bg-bg-elevated p-4 min-w-0 overflow-hidden card-hover">
-      <div className="text-xs font-semibold uppercase tracking-[0.15em] text-text-secondary mb-3 pb-2 border-b border-border-subtle">{title}</div>
-      <div className="space-y-2.5">
-        {items.map((item) => (
-          <div key={item.label}>
-            <span className="text-[11px] text-text-tertiary uppercase tracking-wide">{item.label}</span>
-            <div className="text-sm font-mono text-text break-all mt-0.5 leading-relaxed">{item.value}</div>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
