@@ -555,10 +555,8 @@ export default function Home() {
               Control what your<br />
               AI agents can do.
             </h1>
-            <p className="hero-animate text-text-secondary text-base sm:text-lg md:text-xl leading-relaxed" style={{ animationDelay: "120ms" }}>
-              OCC is the cryptographic primitive that makes AI control possible.
-              Every action requires a valid proof to execute — no proof, no action.
-              The proof that authorizes it is the same object that proves it happened.
+            <p className="hero-animate text-text-secondary text-base sm:text-lg md:text-xl leading-relaxed italic" style={{ animationDelay: "120ms" }}>
+              Origin Controlled Computing is a system where AI actions are only executable if they are authorized by a previously committed, cryptographically bound policy.
             </p>
             <InstallButton />
           </div>
@@ -574,6 +572,7 @@ export default function Home() {
             ))}
           </div>
         </div>
+
       </section>
 
       {/* Signer Mode Toggle */}

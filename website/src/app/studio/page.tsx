@@ -135,6 +135,70 @@ function generateJSCode(fw: Framework, tools: string[], policy: PolicyState): st
   return `import { ${importName} } from '${pkg}';\n\n${wrapBlock}`;
 }
 
+// ─── Starter Packs ───────────────────────────────────────────────────────────
+
+interface StarterPack {
+  id: string;
+  name: string;
+  description: string;
+  tools: string[];
+  maxActions?: number;
+  rateLimit?: number;
+  timeWindow?: { start: string; end: string };
+}
+
+const STARTER_PACKS: StarterPack[] = [
+  {
+    id: "personal-assistant",
+    name: "Personal Assistant",
+    description: "Read email, calendar, contacts. Draft but can't send.",
+    tools: ["search_web", "search_calendar", "read_email", "draft_email", "read_contacts", "set_reminder", "read_weather", "read_news", "calculate", "read_file", "search_notes"],
+    maxActions: 200,
+    rateLimit: 30,
+  },
+  {
+    id: "devops-monitor",
+    name: "DevOps Monitor",
+    description: "Read logs and metrics. Can't deploy, restart, or modify.",
+    tools: ["read_logs", "search_logs", "read_metrics", "read_alerts", "list_deployments", "read_deployment_status", "read_container_status", "read_cluster_health", "send_slack_message", "create_incident_ticket"],
+    maxActions: 1000,
+    rateLimit: 60,
+  },
+  {
+    id: "code-reviewer",
+    name: "Code Reviewer",
+    description: "Read repos and comment on PRs. Can't merge or push.",
+    tools: ["read_file", "list_files", "search_code", "read_pr", "comment_pr", "read_issues", "read_ci_status"],
+    maxActions: 500,
+    rateLimit: 30,
+  },
+  {
+    id: "customer-support",
+    name: "Customer Support",
+    description: "Read tickets and draft replies. Can't issue refunds.",
+    tools: ["read_ticket", "search_tickets", "draft_reply", "read_customer", "search_knowledge_base", "add_internal_note", "update_ticket_status"],
+    maxActions: 300,
+    rateLimit: 20,
+  },
+  {
+    id: "data-analyst",
+    name: "Data Analyst",
+    description: "Query databases and generate reports. Can't modify data.",
+    tools: ["run_query", "read_table", "list_tables", "read_dashboard", "export_csv", "create_chart", "search_docs"],
+    maxActions: 500,
+    rateLimit: 15,
+  },
+  {
+    id: "social-media",
+    name: "Social Media",
+    description: "Draft posts and read analytics. Approval required to publish.",
+    tools: ["draft_post", "read_analytics", "read_mentions", "read_comments", "search_trends", "schedule_post", "read_inbox"],
+    maxActions: 100,
+    rateLimit: 10,
+    timeWindow: { start: "09:00", end: "18:00" },
+  },
+];
+
 // ─── Studio Page ─────────────────────────────────────────────────────────────
 
 export default function StudioPage() {
@@ -149,6 +213,17 @@ export default function StudioPage() {
   const [copiedInstall, setCopiedInstall] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
+  const [activePreset, setActivePreset] = useState<string | null>(null);
+
+  const applyPreset = useCallback((pack: StarterPack) => {
+    setActivePreset(pack.id);
+    setPolicy({
+      allowedTools: { enabled: true, tools: [...pack.tools] },
+      maxActions: { enabled: !!pack.maxActions, value: pack.maxActions || ("" as unknown as number) },
+      rateLimit: { enabled: !!pack.rateLimit, value: pack.rateLimit || ("" as unknown as number) },
+      timeWindow: { enabled: !!pack.timeWindow, start: pack.timeWindow?.start || "09:00", end: pack.timeWindow?.end || "17:00" },
+    });
+  }, []);
 
   const generatePolicyMarkdown = useCallback((fw: Framework, pol: PolicyState): string => {
     const lines: string[] = [];
@@ -341,6 +416,45 @@ export default function StudioPage() {
             </div>
 
             <div className="pl-10 space-y-3">
+              {/* Starter packs */}
+              <div className="rounded-xl border border-border-subtle bg-bg-elevated p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <label className="text-sm font-medium text-text">Start from a preset</label>
+                  {activePreset && (
+                    <button
+                      onClick={() => {
+                        setActivePreset(null);
+                        setPolicy({
+                          allowedTools: { enabled: true, tools: [] },
+                          maxActions: { enabled: false, value: "" as unknown as number },
+                          timeWindow: { enabled: false, start: "09:00", end: "17:00" },
+                          rateLimit: { enabled: false, value: "" as unknown as number },
+                        });
+                      }}
+                      className="text-xs text-text-tertiary hover:text-text transition-colors cursor-pointer"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {STARTER_PACKS.map(pack => (
+                    <button
+                      key={pack.id}
+                      onClick={() => applyPreset(pack)}
+                      className={`text-left px-3 py-2.5 rounded-lg text-xs transition-all duration-150 cursor-pointer border ${
+                        activePreset === pack.id
+                          ? "bg-success/10 border-success/25 text-success"
+                          : "border-border-subtle text-text-secondary hover:text-text hover:bg-bg"
+                      }`}
+                    >
+                      <div className="font-semibold mb-0.5">{pack.name}</div>
+                      <div className="text-[10px] opacity-70 leading-snug">{pack.description}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Default deny indicator */}
               <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-bg-elevated border border-border-subtle">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-text-tertiary shrink-0">
