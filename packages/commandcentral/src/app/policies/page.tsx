@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { getPolicy } from "@/lib/api";
 import type { AgentPolicy } from "@/lib/types";
@@ -8,6 +8,7 @@ import { Card } from "@/components/shared/card";
 import { Badge } from "@/components/shared/badge";
 import { EmptyState } from "@/components/shared/empty-state";
 import { formatTimestamp, formatCents } from "@/lib/format";
+import { PolicyImport } from "@/components/policy-import";
 
 export default function PoliciesPage() {
   const [policy, setPolicy] = useState<AgentPolicy | null>(null);
@@ -16,7 +17,8 @@ export default function PoliciesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetchPolicy = useCallback(() => {
+    setLoading(true);
     getPolicy()
       .then((res) => {
         setPolicy(res.policy);
@@ -26,6 +28,10 @@ export default function PoliciesPage() {
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    fetchPolicy();
+  }, [fetchPolicy]);
 
   return (
     <div className="max-w-4xl mx-auto px-8 py-8">
@@ -48,6 +54,9 @@ export default function PoliciesPage() {
           New Policy
         </Link>
       </div>
+
+      {/* Import zone */}
+      <PolicyImport onApplied={fetchPolicy} />
 
       {loading && <div className="skeleton h-[160px] rounded-xl" />}
 
