@@ -143,6 +143,63 @@ export default function StudioPage() {
   const [toolInput, setToolInput] = useState("");
   const [copiedInstall, setCopiedInstall] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
+  const [downloaded, setDownloaded] = useState(false);
+
+  const generatePolicyMarkdown = useCallback((fw: Framework, pol: PolicyState): string => {
+    const lines: string[] = [];
+    lines.push(`# Policy: ${fw.name} Agent`);
+    lines.push(`version: 1.0`);
+    lines.push(``);
+
+    // Allowed Tools
+    lines.push(`## Allowed Tools`);
+    if (pol.allowedTools.tools.length > 0) {
+      pol.allowedTools.tools.forEach(t => lines.push(`- ${t}`));
+    } else {
+      lines.push(`<!-- default-deny: no tools allowed -->`);
+    }
+    lines.push(``);
+
+    // Limits — only if at least one is enabled
+    const hasLimits = (pol.maxActions.enabled && pol.maxActions.value) || (pol.rateLimit.enabled && pol.rateLimit.value);
+    if (hasLimits) {
+      lines.push(`## Limits`);
+      if (pol.maxActions.enabled && pol.maxActions.value) {
+        lines.push(`- max_actions: ${pol.maxActions.value}`);
+      }
+      if (pol.rateLimit.enabled && pol.rateLimit.value) {
+        lines.push(`- rate_limit: ${pol.rateLimit.value}/min`);
+      }
+      lines.push(``);
+    }
+
+    // Time Window — only if enabled
+    if (pol.timeWindow.enabled && pol.timeWindow.start && pol.timeWindow.end) {
+      const startH = parseInt(pol.timeWindow.start.split(":")[0], 10);
+      const endH = parseInt(pol.timeWindow.end.split(":")[0], 10);
+      lines.push(`## Time Window`);
+      lines.push(`- hours: ${startH}-${endH}`);
+      lines.push(``);
+    }
+
+    return lines.join("\n");
+  }, []);
+
+  const downloadPolicy = useCallback(() => {
+    if (!selectedFramework) return;
+    const md = generatePolicyMarkdown(selectedFramework, policy);
+    const blob = new Blob([md], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${selectedFramework.id}-policy.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setDownloaded(true);
+    setTimeout(() => setDownloaded(false), 2000);
+  }, [selectedFramework, policy, generatePolicyMarkdown]);
 
   const addTool = useCallback((name: string) => {
     const trimmed = name.trim().toLowerCase();
@@ -486,6 +543,34 @@ export default function StudioPage() {
                   The proof is the authorization. Your agent constructs a cryptographic proof for every tool call — if it cannot build a valid proof that satisfies the policy, the action does not execute. No proof, no action.
                 </p>
               </div>
+            </div>
+          </section>
+        )}
+
+        {/* ── Step 4: Export your rules ── */}
+        {selectedFramework && (
+          <section className="animate-slide-up">
+            <div className="flex items-center gap-3 mb-4">
+              <span className="inline-flex w-7 h-7 items-center justify-center rounded-full text-xs font-semibold bg-bg-elevated border border-border-subtle text-text-secondary shrink-0">
+                4
+              </span>
+              <h2 className="text-sm font-semibold text-text">Export your rules</h2>
+            </div>
+
+            <div className="pl-10 space-y-3">
+              <button
+                onClick={downloadPolicy}
+                className="inline-flex items-center gap-2 h-10 px-5 rounded-xl text-sm font-semibold bg-success text-white hover:bg-success/90 transition-colors cursor-pointer"
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                  <path d="M7 2v7.5M4 7l3 3 3-3" />
+                  <path d="M2 10.5v1a1.5 1.5 0 001.5 1.5h7a1.5 1.5 0 001.5-1.5v-1" />
+                </svg>
+                {downloaded ? "Downloaded!" : "Download policy.md"}
+              </button>
+              <p className="text-[11px] text-text-tertiary">
+                Import this file in your OCC Agent dashboard to apply these rules.
+              </p>
             </div>
           </section>
         )}
