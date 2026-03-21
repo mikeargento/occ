@@ -183,12 +183,6 @@ export function InteractiveSignerSection() {
       <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="rounded-xl border border-border-subtle p-5 bg-bg/50">
           <div className="flex items-center gap-2.5 mb-3">
-            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-500/10">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-blue-400">
-                <rect x="3" y="4" width="18" height="12" rx="2" />
-                <path d="M7 20h10M9 16v4M15 16v4" />
-              </svg>
-            </div>
             <div className="font-medium text-text text-sm">Local signing</div>
           </div>
           <ul className="space-y-2 text-text-secondary text-xs">
@@ -213,12 +207,6 @@ export function InteractiveSignerSection() {
         <div className="rounded-xl border border-border-subtle p-5 bg-bg/50">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2.5">
-              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-500/10">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-emerald-400">
-                  <rect x="3" y="11" width="18" height="11" rx="2" />
-                  <path d="M7 11V7a5 5 0 0110 0v4" />
-                </svg>
-              </div>
               <div className="font-medium text-text text-sm">TEE signing (Hardware)</div>
             </div>
           </div>
