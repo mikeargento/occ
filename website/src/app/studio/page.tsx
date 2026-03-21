@@ -245,7 +245,7 @@ export default function StudioPage() {
     (policy.timeWindow.enabled && policy.timeWindow.start && policy.timeWindow.end);
 
   return (
-    <div className="mx-auto max-w-4xl px-6 py-12 sm:py-16">
+    <div className="mx-auto max-w-6xl px-6 py-12 sm:py-16">
       {/* Header */}
       <div className="mb-10">
         <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-3">
@@ -275,45 +275,45 @@ export default function StudioPage() {
             <h2 className="text-sm font-semibold text-text">Pick your framework</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pl-10">
-            {/* JS frameworks */}
+          <div className="space-y-8 pl-10">
+            {/* Row 1: JavaScript */}
             <div>
-              <div className="text-[11px] uppercase tracking-[0.1em] text-text-tertiary mb-2">JavaScript</div>
-              <div className="space-y-1">
+              <div className="text-[11px] uppercase tracking-[0.1em] text-success mb-2">JavaScript</div>
+              <div className="flex flex-wrap gap-3">
                 {JS_FRAMEWORKS.map(fw => (
                   <button
                     key={fw.id}
                     onClick={() => setSelectedFramework(fw)}
-                    className={`w-full text-left px-4 py-3 rounded-lg text-sm transition-all duration-150 cursor-pointer flex items-center gap-3 ${
+                    className={`px-4 py-2.5 rounded-lg text-sm transition-all duration-150 cursor-pointer flex items-center gap-2.5 ${
                       selectedFramework?.id === fw.id
                         ? "bg-success/10 text-success border border-success/25"
-                        : "text-text-secondary hover:text-text hover:bg-bg-elevated border border-transparent"
+                        : "text-text-secondary hover:text-text hover:bg-bg-elevated border border-border-subtle"
                     }`}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={fw.logo} alt="" width={20} height={20} className={`shrink-0 opacity-70 ${fw.invertLogo ? "dark:invert" : ""}`} />
+                    <img src={fw.logo} alt="" width={18} height={18} className={`shrink-0 opacity-70 ${fw.invertLogo ? "dark:invert" : ""}`} />
                     <span className="font-medium">{fw.name}</span>
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Python frameworks */}
+            {/* Row 2: Python */}
             <div>
-              <div className="text-[11px] uppercase tracking-[0.1em] text-text-tertiary mb-2">Python</div>
-              <div className="space-y-1">
+              <div className="text-[11px] uppercase tracking-[0.1em] text-success mb-2">Python</div>
+              <div className="flex flex-wrap gap-3">
                 {PYTHON_FRAMEWORKS.map(fw => (
                   <button
                     key={fw.id}
                     onClick={() => setSelectedFramework(fw)}
-                    className={`w-full text-left px-4 py-3 rounded-lg text-sm transition-all duration-150 cursor-pointer flex items-center gap-3 ${
+                    className={`px-4 py-2.5 rounded-lg text-sm transition-all duration-150 cursor-pointer flex items-center gap-2.5 ${
                       selectedFramework?.id === fw.id
                         ? "bg-success/10 text-success border border-success/25"
-                        : "text-text-secondary hover:text-text hover:bg-bg-elevated border border-transparent"
+                        : "text-text-secondary hover:text-text hover:bg-bg-elevated border border-border-subtle"
                     }`}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={fw.logo} alt="" width={20} height={20} className={`shrink-0 opacity-70 ${fw.invertLogo ? "dark:invert" : ""}`} />
+                    <img src={fw.logo} alt="" width={18} height={18} className={`shrink-0 opacity-70 ${fw.invertLogo ? "dark:invert" : ""}`} />
                     <span className="font-medium">{fw.name}</span>
                   </button>
                 ))}

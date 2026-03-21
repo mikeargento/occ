@@ -62,7 +62,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`dark ${inter.variable} ${jetbrainsMono.variable}`}>
       <head />
-      <body className="font-serif antialiased overflow-x-hidden">
+      <body className="font-serif antialiased">
         <ThemeProvider>
           <Nav />
           <main className="min-h-screen">{children}</main>
