@@ -548,8 +548,9 @@ export default function Home() {
     <div className="noise-overlay" />
     <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-28">
       {/* Hero */}
-      <section className="relative mb-16 sm:mb-28">
-                <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-12">
+      <section className="relative mb-20 sm:mb-32">
+        <div className="hero-glow" />
+                <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-12 lg:gap-16">
           <div className="lg:max-w-2xl">
             <h1 className="hero-animate text-5xl sm:text-6xl lg:text-7xl font-bold tracking-[-0.04em] mb-6" style={{ animationDelay: "0ms" }}>
               Control what your<br />
@@ -564,7 +565,7 @@ export default function Home() {
             {heroLogos.map((h) => (
               <div
                 key={h.key}
-                className="flex items-center justify-center w-14 h-14 sm:w-20 sm:h-20 rounded-xl transition-all duration-300 bg-bg-elevated/50 hover:bg-bg-elevated"
+                className="flex items-center justify-center w-14 h-14 sm:w-20 sm:h-20 rounded-xl transition-all duration-150 bg-bg-elevated/50 hover:bg-bg-elevated hover:scale-105 border border-transparent hover:border-border-subtle"
                 title={h.key}
               >
                 {h.logo}
@@ -603,9 +604,9 @@ export default function Home() {
       </section>
 
       {/* Live Proof Explorer */}
-      <section className="mb-20 sm:mb-28">
+      <section className="mb-20 sm:mb-32">
         <ScrollReveal>
-        <div className="rounded-xl border border-border-subtle bg-bg-elevated p-6 sm:p-10 md:p-14">
+        <div className="rounded-2xl border border-border bg-bg-elevated/80 backdrop-blur-sm p-6 sm:p-10 md:p-14 shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-semibold tracking-[-0.02em]">
               Live Proofs
@@ -630,7 +631,7 @@ export default function Home() {
       </section>
 
       {/* Orchestrators */}
-      <section className="mb-20 sm:mb-28">
+      <section className="mb-20 sm:mb-32">
         <ScrollReveal>
         <div className="flex items-center gap-3 mb-4">
           <h2 className="text-2xl font-semibold tracking-[-0.02em]">
@@ -771,10 +772,10 @@ function FrameworkCard({ framework }: { framework: Framework }) {
 
   return (
     <div
-      className={`group rounded-xl border p-6 flex flex-col h-full transition-all duration-300 ${
+      className={`group rounded-2xl border p-6 flex flex-col h-full transition-all duration-150 ${
         isMCP
-          ? "border-emerald-500/30 bg-emerald-500/[0.03] hover:border-emerald-500/50"
-          : "border-border-subtle bg-bg-elevated hover:border-border"
+          ? "border-emerald-500/30 bg-emerald-500/[0.03] hover:border-emerald-500/50 hover:shadow-[0_4px_20px_rgba(34,197,94,0.08)]"
+          : "border-border-subtle bg-bg-elevated/80 hover:border-border hover:bg-bg-elevated hover:shadow-[0_4px_20px_rgba(0,0,0,0.2)]"
       }`}
     >
       <div className="flex items-start justify-between gap-3 mb-3">
@@ -801,7 +802,7 @@ function FrameworkCard({ framework }: { framework: Framework }) {
 
       {install && (
         <div className="mt-auto">
-          <div className="flex items-center gap-1 bg-bg rounded-lg px-3 py-2 min-w-0">
+          <div className="flex items-center gap-1 bg-bg/80 rounded-lg px-3 py-2 min-w-0 border border-border-subtle/50">
             <code className="flex-1 text-[11px] sm:text-xs font-mono text-text-tertiary overflow-x-auto whitespace-nowrap">
               {install}
             </code>

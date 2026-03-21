@@ -295,7 +295,34 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   z-index: 0;
 }
 
-/* Hero glow — removed */
+/* Hero glow */
+.hero-glow {
+  position: absolute;
+  top: -20%;
+  left: -10%;
+  width: 60%;
+  height: 140%;
+  background: radial-gradient(ellipse at center, rgba(34, 197, 94, 0.04) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Section glow */
+.section-glow {
+  position: relative;
+}
+.section-glow::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80%;
+  height: 60%;
+  background: radial-gradient(ellipse at center, rgba(34, 197, 94, 0.02) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
 
 /* Gradient text */
 .text-gradient {
@@ -314,12 +341,13 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 /* Proof terminal */
 .proof-terminal {
   border-radius: 12px;
-  border: 1px solid var(--c-border-subtle);
+  border: 1px solid var(--c-border);
   background: var(--bg-elevated);
   box-shadow:
-    0 4px 24px rgba(0, 0, 0, 0.3),
-    0 0 0 1px rgba(255, 255, 255, 0.03),
-    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    0 4px 24px rgba(0, 0, 0, 0.4),
+    0 8px 48px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
   transform: translateZ(0);
 }
 
@@ -339,15 +367,18 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
 /* Card hover */
 .card-hover {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-  transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.3s ease-out, border-color 0.3s ease-out;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.02);
+  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out, border-color 0.15s ease-out;
   transform: translateZ(0);
 }
 .card-hover:hover {
-  transform: translateY(-3px) translateX(2px) translateZ(0);
+  transform: translateY(-2px) translateZ(0);
   box-shadow:
-    0 8px 30px rgba(0, 0, 0, 0.3),
-    0 0 1px rgba(255, 255, 255, 0.05);
+    0 8px 30px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(255, 255, 255, 0.06);
+  border-color: var(--c-border) !important;
 }
 
 /* Noise texture overlay */

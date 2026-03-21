@@ -18,7 +18,7 @@ export function Nav() {
   const { theme, toggle } = useTheme();
 
   return (
-    <header className="sticky top-0 z-50 bg-bg/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 bg-bg/80 backdrop-blur-xl border-b border-border-subtle/50">
       <div className="mx-auto max-w-6xl px-6">
         <nav className="flex h-16 items-center justify-between">
           <Link
@@ -43,7 +43,7 @@ export function Nav() {
                   href={l.href}
                   target="_blank"
                   rel="noopener"
-                  className="text-sm font-semibold px-3 py-1.5 transition-colors text-text-tertiary hover:text-text"
+                  className="text-sm font-semibold px-3 py-1.5 transition-colors duration-150 text-text-tertiary hover:text-text"
                 >
                   {l.label}
                 </a>

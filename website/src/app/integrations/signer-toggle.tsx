@@ -111,7 +111,7 @@ export function InteractiveSignerSection() {
   const configCmd = mode === "local" ? localConfig : teeConfig;
 
   return (
-    <div className="rounded-xl border border-border-subtle bg-bg-elevated p-4 sm:p-8 md:p-10 mb-16 sm:mb-28 overflow-hidden">
+    <div className="rounded-2xl border border-border bg-bg-elevated/80 backdrop-blur-sm p-4 sm:p-8 md:p-10 mb-20 sm:mb-32 overflow-hidden shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
           <h2 className="text-xl font-semibold tracking-[-0.02em] mb-1">
