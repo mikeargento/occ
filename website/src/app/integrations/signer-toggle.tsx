@@ -224,7 +224,7 @@ export function InteractiveSignerSection() {
               <div className="font-medium text-text text-sm">TEE signing (Hardware)</div>
             </div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logos/aws.svg" alt="AWS" className="h-5 opacity-50" />
+            <img src="/logos/aws.svg" alt="AWS" className="h-6 opacity-60" />
           </div>
           <ul className="space-y-2 text-text-secondary text-xs">
             <li className="flex items-start gap-2">
