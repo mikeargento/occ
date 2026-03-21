@@ -20,6 +20,7 @@ import type {
 } from "@/lib/types";
 import { Card } from "@/components/shared/card";
 import { Badge } from "@/components/shared/badge";
+import { PolicyImport } from "@/components/policy-import";
 import { formatCents, formatNumber, formatRelativeTime } from "@/lib/format";
 
 export default function AgentDetailPage() {
@@ -173,6 +174,12 @@ export default function AgentDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6 overflow-hidden">
         {/* Left column */}
         <div className="space-y-6 min-w-0 overflow-hidden">
+          {/* Import Policy */}
+          <section>
+            <SectionHeader title="Import Policy" />
+            <PolicyImport agentId={agentId} onApplied={refresh} />
+          </section>
+
           {/* Tool Access */}
           <section>
             <SectionHeader

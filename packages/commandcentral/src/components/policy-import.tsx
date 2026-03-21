@@ -171,7 +171,7 @@ function toAgentPolicy(parsed: ParsedPolicy): AgentPolicy {
   };
 }
 
-export function PolicyImport({ onApplied }: { onApplied: () => void }) {
+export function PolicyImport({ onApplied, agentId }: { onApplied: () => void; agentId?: string }) {
   const [dragging, setDragging] = useState(false);
   const [parsed, setParsed] = useState<ParsedPolicy | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
@@ -250,7 +250,10 @@ export function PolicyImport({ onApplied }: { onApplied: () => void }) {
         typeof window !== "undefined"
           ? localStorage.getItem("occ-proxy-url") || ""
           : "";
-      const res = await fetch(`${baseUrl}/api/policy`, {
+      const endpoint = agentId
+        ? `/api/agents/${encodeURIComponent(agentId)}/policy`
+        : "/api/policy";
+      const res = await fetch(`${baseUrl}${endpoint}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(policy),
