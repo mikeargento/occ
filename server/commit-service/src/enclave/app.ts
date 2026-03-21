@@ -43,7 +43,7 @@ import { sha256 } from "@noble/hashes/sha256";
 import { getPublicKeyAsync, signAsync, verifyAsync, utils } from "@noble/ed25519";
 import { canonicalize, canonicalizeToString } from "occproof";
 import { Constructor } from "occproof";
-import type { HostCapabilities, OCCProof, SignedBody, SlotAllocation, ActorIdentity, AgencyEnvelope, AuthorizationPayload, WebAuthnAuthorization } from "occproof";
+import type { HostCapabilities, OCCProof, SignedBody, SlotAllocation, ActorIdentity, AgencyEnvelope, AuthorizationPayload, WebAuthnAuthorization, PolicyBinding } from "occproof";
 import type { EnclaveRequest, EnclaveResponse } from "../parent/vsock-client.js";
 
 // ---------------------------------------------------------------------------
@@ -432,6 +432,7 @@ async function handleCommit(req: {
   metadata?: Record<string, unknown>;
   agency?: AgencyEnvelope;
   attribution?: { name?: string; title?: string; message?: string };
+  policy?: PolicyBinding;
 }): Promise<OCCProof> {
   // ── Slot consumption — OCC causal gate ──
   // The slot MUST exist before any artifact can be committed.
@@ -571,6 +572,12 @@ async function handleCommit(req: {
     }
   }
 
+  // Include policy binding in the signed body (cryptographically sealed)
+  // This binds the proof to the exact policy document that governed the action.
+  if (req.policy) {
+    signedBody.policy = req.policy;
+  }
+
   // Step 7: Canonicalize
   const canonicalBytes = canonicalize(signedBody);
 
@@ -613,6 +620,11 @@ async function handleCommit(req: {
   // Include full agency envelope (independently verifiable)
   if (req.agency) {
     proof.agency = req.agency;
+  }
+
+  // Include policy binding (sealed in signed body)
+  if (req.policy) {
+    proof.policy = req.policy;
   }
 
   // Include attribution (sealed in signed body)
@@ -787,7 +799,8 @@ async function handleRequest(req: Record<string, unknown>): Promise<unknown> {
       const digestB64 = (req as { digestB64: string }).digestB64;
       const agency = (req as { agency?: AgencyEnvelope }).agency;
       const attribution = (req as { attribution?: { name?: string; title?: string; message?: string } }).attribution;
-      const proof = await handleCommit({ slotId, digestB64, agency, attribution });
+      const policy = (req as { policy?: PolicyBinding }).policy;
+      const proof = await handleCommit({ slotId, digestB64, agency, attribution, policy });
       return { proof };
     }
     case "commit": {
@@ -805,12 +818,13 @@ async function handleRequest(req: Record<string, unknown>): Promise<unknown> {
         const proof = await handleCommit({ slotId, digestB64 });
         return { proof };
       }
-      // Single digest mode: { action: "commit", slotId, digestB64, agency?, attribution? }
+      // Single digest mode: { action: "commit", slotId, digestB64, agency?, attribution?, policy? }
       const digestB64 = (req as { digestB64: string }).digestB64;
       const agency = (req as { agency?: AgencyEnvelope }).agency;
       const attribution = (req as { attribution?: { name?: string; title?: string; message?: string } }).attribution;
+      const policy = (req as { policy?: PolicyBinding }).policy;
       const metadata = (req as { metadata?: Record<string, unknown> }).metadata;
-      const proof = await handleCommit({ slotId, digestB64, agency, attribution, metadata });
+      const proof = await handleCommit({ slotId, digestB64, agency, attribution, policy, metadata });
       return { proof };
     }
     case "convertBW": {

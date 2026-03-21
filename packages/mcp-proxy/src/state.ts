@@ -174,7 +174,7 @@ export class ProxyState {
   async loadPolicyWithLocalSigner(
     policy: AgentPolicy,
     signer: LocalSigner,
-  ): Promise<PolicyCommitment> {
+  ): Promise<PolicyCommitment & { proofHashB64: string }> {
     validatePolicy(policy);
     const policyDigestB64 = hashPolicy(policy);
     const occProof = await signer.commitDigest(policyDigestB64, {
@@ -183,6 +183,12 @@ export class ProxyState {
       policyName: policy.name,
       policyVersion: policy.version,
     });
+
+    // Compute the proof's canonical hash for authorProofDigestB64
+    const { canonicalize } = await import("occproof");
+    const { sha256 } = await import("@noble/hashes/sha256");
+    const proofHashB64 = Buffer.from(sha256(canonicalize(occProof))).toString("base64");
+
     const commitment: PolicyCommitment = {
       policy,
       policyDigestB64,
@@ -196,7 +202,7 @@ export class ProxyState {
       policyName: policy.name,
       policyDigestB64: commitment.policyDigestB64,
     });
-    return commitment;
+    return { ...commitment, proofHashB64 };
   }
 
   loadPolicyLocal(policy: AgentPolicy): void {

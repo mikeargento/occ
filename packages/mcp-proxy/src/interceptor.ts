@@ -168,6 +168,41 @@ export class Interceptor {
     const context = this.#state.getContext(agentId);
     const now = Date.now();
 
+    // ── Policy proof gate: policy must be cryptographically committed ──
+    // If a policy binding exists but hasn't been committed as a proof
+    // (no authorProofDigestB64), the proxy is locked. No key = no power.
+    if (this.#policyBinding && !this.#policyBinding.authorProofDigestB64) {
+      const decision = {
+        allowed: false as const,
+        reason: "Policy not committed as proof — proxy locked until policy is cryptographically bound",
+        constraint: "policy.proof.required",
+      };
+
+      const { proofDigestB64 } = await this.#signDenial(toolName, args, decision.reason, decision.constraint, now);
+
+      const auditOpts: { skill?: string; proofDigestB64?: string } = {};
+      if (skill) auditOpts.skill = skill;
+      if (proofDigestB64) auditOpts.proofDigestB64 = proofDigestB64;
+
+      const auditId = context.addAudit(toolName, decision, auditOpts);
+      this.#events.emit({
+        type: "policy-violation",
+        timestamp: now,
+        tool: toolName,
+        ...(skill ? { skill } : {}),
+        agentId,
+        reason: decision.reason,
+        constraint: decision.constraint,
+        ...(proofDigestB64 ? { proofDigestB64 } : {}),
+      });
+      return {
+        content: [{ type: "text", text: `Policy violation: ${decision.reason}` }],
+        isError: true,
+        decision,
+        auditId,
+      };
+    }
+
     // ── Check if agent is paused ──
     if (this.#state.isAgentPaused(agentId)) {
       const decision = { allowed: false as const, reason: "Agent is paused", constraint: "agent.status" };

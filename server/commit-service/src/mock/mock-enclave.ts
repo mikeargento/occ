@@ -6,7 +6,7 @@ import { sha256 } from "@noble/hashes/sha256";
 import { signAsync } from "@noble/ed25519";
 import { canonicalize } from "occproof";
 import { Constructor } from "occproof";
-import type { HostCapabilities, OCCProof, SignedBody, AgencyEnvelope, AuthorizationPayload, WebAuthnAuthorization } from "occproof";
+import type { HostCapabilities, OCCProof, SignedBody, AgencyEnvelope, AuthorizationPayload, WebAuthnAuthorization, PolicyBinding } from "occproof";
 import { StubHost } from "@occ/stub";
 import type {
   EnclaveClient,
@@ -250,6 +250,11 @@ export class MockEnclave implements EnclaveClient {
         }
       }
 
+      // Include policy binding in signed body when present
+      if (req.policy) {
+        signedBody.policy = req.policy;
+      }
+
       const canonicalBytes = canonicalize(signedBody);
       const signatureBytes = await this.#stub.host.sign(canonicalBytes);
 
@@ -268,6 +273,7 @@ export class MockEnclave implements EnclaveClient {
       };
 
       if (req.agency) proof.agency = req.agency;
+      if (req.policy) proof.policy = req.policy;
       if (signedBody.attribution) proof.attribution = signedBody.attribution;
       if (req.metadata !== undefined) proof.metadata = req.metadata;
       proofs.push(proof);

@@ -2,7 +2,7 @@
 // Copyright 2024-2026 Mike Argento
 
 import { connect, type Socket } from "node:net";
-import type { AgencyEnvelope, OCCProof } from "occproof";
+import type { AgencyEnvelope, OCCProof, PolicyBinding } from "occproof";
 
 export interface CommitRequest {
   type: "commit";
@@ -13,6 +13,8 @@ export interface CommitRequest {
   agency?: AgencyEnvelope;
   /** Optional attribution — human-readable claim sealed into the proof. */
   attribution?: { name?: string; title?: string; message?: string };
+  /** Optional policy binding — cryptographically sealed into the proof. */
+  policy?: PolicyBinding;
 }
 
 /** OCC 2-RTT: single-artifact commit with pre-allocated slot. */
@@ -23,6 +25,8 @@ export interface CommitDigestRequest {
   metadata?: Record<string, unknown>;
   agency?: AgencyEnvelope;
   attribution?: { name?: string; title?: string; message?: string };
+  /** Optional policy binding — cryptographically sealed into the proof. */
+  policy?: PolicyBinding;
 }
 
 /** Pre-allocate a causal slot (nonce-first). */

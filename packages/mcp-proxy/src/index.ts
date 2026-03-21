@@ -330,6 +330,84 @@ async function runWrapMode(command: string, args: string[], signerMode: "local" 
     interceptorOpts.localSigner = localSigner;
   }
 
+  // 4b. Commit policy as proof slot 0 — the policy proof is the key
+  // that unlocks the agent's ability to act. No key = no power.
+  if (policyBinding) {
+    try {
+      if (interceptorOpts.localSigner) {
+        const proof = await interceptorOpts.localSigner.commitDigest(
+          policyBinding.digestB64,
+          {
+            kind: "policy-commitment",
+            policyName: policyBinding.name,
+            policyVersion: policyBinding.version,
+          },
+          policyBinding,
+        );
+
+        // Compute the proof's canonical hash — this becomes authorProofDigestB64
+        const { canonicalize: canonProof } = await import("occproof");
+        const { sha256: sha256Proof } = await import("@noble/hashes/sha256");
+        const proofHash = Buffer.from(sha256Proof(canonProof(proof))).toString("base64");
+        policyBinding.authorProofDigestB64 = proofHash;
+
+        console.error(`  Policy committed as slot 0 (counter: ${proof.commit.counter})`);
+        console.error(`  Policy proof: ${proofHash.slice(0, 16)}...`);
+
+        // Write the policy commitment to the proof log
+        proofWriter.append({
+          timestamp: new Date().toISOString(),
+          tool: "__policy_commitment",
+          args: { name: policyBinding.name, version: policyBinding.version, digestB64: policyBinding.digestB64 },
+          receipt: { proof },
+          proofDigestB64: proofHash,
+        });
+      } else if (interceptorOpts.occConfig) {
+        // Remote signer (occ-cloud or custom-tee)
+        const commitRes = await fetch(interceptorOpts.occConfig.apiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            digests: [{ digestB64: policyBinding.digestB64, hashAlg: "sha256" }],
+            metadata: {
+              kind: "policy-commitment",
+              policyName: policyBinding.name,
+              policyVersion: policyBinding.version,
+            },
+          }),
+        });
+
+        if (commitRes.ok) {
+          const proofs = (await commitRes.json()) as Array<{ commit?: { counter?: string } }>;
+          const proof = proofs[0];
+          if (proof) {
+            const { canonicalize: canonProof } = await import("occproof");
+            const { sha256: sha256Proof } = await import("@noble/hashes/sha256");
+            const proofHash = Buffer.from(sha256Proof(canonProof(proof))).toString("base64");
+            policyBinding.authorProofDigestB64 = proofHash;
+
+            console.error(`  Policy committed as slot 0 (counter: ${(proof.commit?.counter) ?? "?"})`);
+            console.error(`  Policy proof: ${proofHash.slice(0, 16)}...`);
+
+            proofWriter.append({
+              timestamp: new Date().toISOString(),
+              tool: "__policy_commitment",
+              args: { name: policyBinding.name, version: policyBinding.version, digestB64: policyBinding.digestB64 },
+              receipt: { proof },
+              proofDigestB64: proofHash,
+            });
+          }
+        } else {
+          console.error(`  WARNING: Failed to commit policy to remote signer (${commitRes.status})`);
+          console.error(`  Proxy will be locked — no actions will execute without committed policy`);
+        }
+      }
+    } catch (err) {
+      console.error(`  WARNING: Policy commitment failed: ${err instanceof Error ? err.message : String(err)}`);
+      console.error(`  Proxy will be locked — no actions will execute without committed policy`);
+    }
+  }
+
   console.error(`  Proof log: ${proofWriter.path}`);
 
   // 5. Start local dashboard
@@ -480,7 +558,7 @@ async function runDashboardMode(): Promise<void> {
   console.error("");
 
   // Start management API + dashboard
-  startManagementApi(config, state, events, registry, localSigner);
+  startManagementApi(config, state, events, registry, localSigner, interceptor);
 
   // Start MCP server (only when --mcp flag is passed)
   if (enableMcp) {

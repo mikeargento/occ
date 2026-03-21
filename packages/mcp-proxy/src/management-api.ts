@@ -13,6 +13,7 @@ import type { ProxyConfig, SignerMode } from "./config.js";
 import { OCC_CLOUD_URL } from "./config.js";
 import type { LocalSigner } from "./local-signer.js";
 import { createLocalSigner } from "./local-signer.js";
+import type { Interceptor } from "./interceptor.js";
 import { getDemoPageHtml } from "./demo-page.js";
 import { ConsensusEngine } from "./consensus.js";
 import { handleConsensusRoute } from "./consensus-api.js";
@@ -192,6 +193,7 @@ export function startManagementApi(
   events: ProxyEventBus,
   registry: ToolRegistry,
   localSigner?: LocalSigner,
+  interceptor?: Interceptor,
 ): void {
   primaryUrl = `http://localhost:${config.managementPort}`;
   const hasDashboard = existsSync(DASHBOARD_DIR);
@@ -375,20 +377,42 @@ export function startManagementApi(
           }
           try {
             let commitment;
+            let proofHashB64: string | undefined;
             if (localSigner) {
-              commitment = await state.loadPolicyWithLocalSigner(policy, localSigner);
+              const result = await state.loadPolicyWithLocalSigner(policy, localSigner);
+              commitment = result;
+              proofHashB64 = result.proofHashB64;
             } else {
               try {
                 commitment = await state.loadPolicy(policy, { apiUrl: config.teeUrl, apiKey: config.occApiKey });
+                // Compute proof hash for remote commitment
+                if (commitment.occProof) {
+                  const { canonicalize } = await import("occproof");
+                  const { sha256 } = await import("@noble/hashes/sha256");
+                  proofHashB64 = Buffer.from(sha256(canonicalize(commitment.occProof))).toString("base64");
+                }
               } catch {
                 state.loadPolicyLocal(policy);
                 commitment = state.policyCommitment!;
               }
             }
+
+            // Update interceptor's policyBinding with the committed proof hash
+            // This unlocks the proxy — the policy proof is the key
+            if (interceptor && proofHashB64) {
+              interceptor.setPolicyBinding({
+                digestB64: commitment.policyDigestB64,
+                authorProofDigestB64: proofHashB64,
+                name: policy.name,
+                version: policy.version,
+              });
+            }
+
             sendJson(res, 200, {
               policy: commitment.policy,
               policyDigestB64: commitment.policyDigestB64,
               committedAt: commitment.committedAt,
+              proofHashB64,
             });
           } catch (err) {
             sendError(res, 400, err instanceof Error ? err.message : "Policy load failed");

@@ -5,7 +5,7 @@
  * Parent EC2 instance — HTTPS API server
  *
  * Endpoints:
- *   POST /commit         — { digests: [{ digestB64, hashAlg }], metadata?, agency? }  (requires API key)
+ *   POST /commit         — { digests: [{ digestB64, hashAlg }], metadata?, agency?, policy? }  (requires API key)
  *   POST /allocate-slot  — {} → { slotId, slot }  (public — pre-allocates causal slot)
  *   POST /challenge      — {} → { challenge }  (public — issues enclave nonce for agency signing)
  *   POST /convert-bw     — { imageB64 }  (public demo — grayscale conversion inside TEE)
@@ -23,7 +23,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { verify } from "occproof";
-import type { OCCProof, VerificationPolicy, AgencyEnvelope } from "occproof";
+import type { OCCProof, VerificationPolicy, AgencyEnvelope, PolicyBinding } from "occproof";
 import { VsockClient, type EnclaveClient } from "./vsock-client.js";
 import { requestTimestamp } from "./tsa-client.js";
 
@@ -212,6 +212,7 @@ async function handleCommit(req: IncomingMessage, res: ServerResponse): Promise<
     prevProofId?: string;
     agency?: AgencyEnvelope;
     attribution?: { name?: string; title?: string; message?: string };
+    policy?: PolicyBinding;
   };
 
   try {
@@ -280,6 +281,7 @@ async function handleCommit(req: IncomingMessage, res: ServerResponse): Promise<
       digestB64: d.digestB64,
       agency: agencyForDigest,
       attribution: body.attribution,
+      policy: body.policy,
       metadata: body.metadata,
     });
 
