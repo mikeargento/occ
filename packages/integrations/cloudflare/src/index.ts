@@ -32,6 +32,13 @@ export interface OCCCloudflareOptions {
   measurement?: string;
   /** Agent identifier for metadata. Default: "cloudflare-worker" */
   agentId?: string;
+  /** Raw policy markdown content. Since Cloudflare Workers cannot use
+   *  node:fs, pass the policy content directly (e.g. from KV, D1, or
+   *  an environment variable). The policy is committed as slot 0 and
+   *  tools not in the allowedTools list will be blocked. */
+  policyContent?: string;
+  /** Pre-built policy binding (alternative to policyContent). */
+  policyBinding?: { digestB64: string; authorProofDigestB64?: string; name?: string; version?: string };
 }
 
 export interface ProofLogEntry {
@@ -56,11 +63,18 @@ export interface WrappedResult<T = unknown> {
 // In-memory signer (no filesystem, no occ-stub)
 // ---------------------------------------------------------------------------
 
+/** Policy binding state for the signer. */
+interface PolicyState {
+  binding: { digestB64: string; authorProofDigestB64?: string; name?: string; version?: string };
+  allowedTools?: Set<string>;
+}
+
 interface SignerState {
   constructor: Constructor;
   host: InMemoryHost;
   publicKeyB64: string;
   lastProofHash: string | undefined;
+  policy?: PolicyState;
 }
 
 class InMemoryHost implements HostCapabilities {
@@ -106,7 +120,10 @@ class InMemoryHost implements HostCapabilities {
 
 let signerPromise: Promise<SignerState> | undefined;
 
-async function getSigner(measurement: string): Promise<SignerState> {
+async function getSigner(measurement: string, opts?: {
+  policyContent?: string;
+  policyBinding?: { digestB64: string; authorProofDigestB64?: string; name?: string; version?: string };
+}): Promise<SignerState> {
   if (signerPromise) return signerPromise;
 
   signerPromise = (async () => {
@@ -122,7 +139,57 @@ async function getSigner(measurement: string): Promise<SignerState> {
     });
 
     const publicKeyB64 = uint8ToBase64(publicKey);
-    return { constructor, host, publicKeyB64, lastProofHash: undefined };
+    const state: SignerState = { constructor, host, publicKeyB64, lastProofHash: undefined };
+
+    // ── Policy enforcement: commit policy as slot 0 ──
+    if (opts?.policyContent) {
+      const policyMd = opts.policyContent;
+      const policyBytes = new TextEncoder().encode(policyMd);
+      const policyDigestB64 = uint8ToBase64(sha256(policyBytes));
+
+      // Parse allowed tools for enforcement
+      const allowedTools = new Set<string>();
+      const toolSection = policyMd.match(/##\s+Allowed\s+Tools[\s\S]*?(?=\n##|$)/i);
+      if (toolSection) {
+        const toolLines = toolSection[0].split("\n");
+        for (const line of toolLines) {
+          const match = line.match(/^[-*]\s+(.+)/);
+          if (match) allowedTools.add(match[1].trim());
+        }
+      }
+
+      // Extract name
+      const nameMatch = policyMd.match(/^#\s+Policy:\s*(.+)/m);
+      const name = nameMatch ? nameMatch[1].trim() : undefined;
+
+      // Commit the policy as a proof (slot 0)
+      const commitInput: {
+        digestB64: string;
+        metadata?: Record<string, unknown>;
+        prevProofHashB64?: string;
+      } = {
+        digestB64: policyDigestB64,
+        metadata: { kind: "policy-commitment", policyName: name, adapter: "occ-cloudflare" },
+      };
+      if (state.lastProofHash) commitInput.prevProofHashB64 = state.lastProofHash;
+
+      const policyProof = await constructor.commitDigest(commitInput);
+      const proofHash = uint8ToBase64(sha256(canonicalize(policyProof)));
+      state.lastProofHash = proofHash;
+
+      state.policy = {
+        binding: {
+          digestB64: policyDigestB64,
+          authorProofDigestB64: proofHash,
+          name,
+        },
+        allowedTools: allowedTools.size > 0 ? allowedTools : undefined,
+      };
+    } else if (opts?.policyBinding) {
+      state.policy = { binding: opts.policyBinding };
+    }
+
+    return state;
   })();
 
   return signerPromise;
@@ -154,9 +221,11 @@ async function signDigest(
     digestB64: string;
     metadata?: Record<string, unknown>;
     prevProofHashB64?: string;
+    policy?: { digestB64: string; authorProofDigestB64?: string; name?: string; version?: string };
   } = { digestB64, metadata };
 
   if (signer.lastProofHash) commitInput.prevProofHashB64 = signer.lastProofHash;
+  if (signer.policy?.binding) commitInput.policy = signer.policy.binding;
 
   const proof = await signer.constructor.commitDigest(commitInput);
 
@@ -195,10 +264,46 @@ export function occWrapTool<T extends { execute?: (...args: any[]) => any }>(
     return { ...tool, execute: async () => ({ result: undefined, proofs: [] }) } as any;
   }
 
+  const policyContent = options?.policyContent;
+  const policyBinding = options?.policyBinding;
+
   const wrappedExecute = async (...args: any[]): Promise<WrappedResult> => {
     const toolArgs = args[0] ?? {};
-    const signer = await getSigner(measurement);
+    const signer = await getSigner(measurement, { policyContent, policyBinding });
     const proofs: ProofLogEntry[] = [];
+
+    // ── Policy enforcement: block tools not in the allowlist ──
+    if (signer.policy?.allowedTools && !signer.policy.allowedTools.has(name)) {
+      const denialDigest = hashPayload({
+        tool: name,
+        args: toolArgs,
+        denied: true,
+        reason: `Tool "${name}" not in policy allowedTools`,
+      });
+
+      const denialProof = await signDigest(denialDigest, {
+        phase: "pre-execution",
+        tool: name,
+        agentId,
+        denied: true,
+        reason: `Tool "${name}" not in policy allowedTools`,
+      }, signer);
+
+      proofs.push({
+        timestamp: new Date().toISOString(),
+        phase: "pre-execution",
+        tool: name,
+        agentId,
+        args: toolArgs,
+        proofDigestB64: denialDigest,
+        receipt: denialProof,
+      });
+
+      return {
+        result: `[OCC] Tool "${name}" blocked by policy. Not in allowed tools list.` as unknown as any,
+        proofs,
+      };
+    }
 
     // Pre-execution proof
     const preDigest = hashPayload({ tool: name, args: toolArgs });
@@ -270,6 +375,9 @@ export function occWrapBinding<B extends Record<string, any>>(
   const measurement = options?.measurement ?? "occ-cloudflare:stub";
   const agentId = options?.agentId ?? "cloudflare-worker";
 
+  const policyContent = options?.policyContent;
+  const policyBinding = options?.policyBinding;
+
   return new Proxy(binding, {
     get(target, prop: string | symbol) {
       const original = target[prop as keyof B];
@@ -277,8 +385,41 @@ export function occWrapBinding<B extends Record<string, any>>(
 
       return async (...args: any[]): Promise<WrappedResult> => {
         const methodName = `${name}.${String(prop)}`;
-        const signer = await getSigner(measurement);
+        const signer = await getSigner(measurement, { policyContent, policyBinding });
         const proofs: ProofLogEntry[] = [];
+
+        // ── Policy enforcement: block tools not in the allowlist ──
+        if (signer.policy?.allowedTools && !signer.policy.allowedTools.has(methodName)) {
+          const denialDigest = hashPayload({
+            tool: methodName,
+            args: args.length === 1 ? args[0] : args,
+            denied: true,
+            reason: `Tool "${methodName}" not in policy allowedTools`,
+          });
+
+          const denialProof = await signDigest(denialDigest, {
+            phase: "pre-execution",
+            tool: methodName,
+            agentId,
+            denied: true,
+            reason: `Tool "${methodName}" not in policy allowedTools`,
+          }, signer);
+
+          proofs.push({
+            timestamp: new Date().toISOString(),
+            phase: "pre-execution",
+            tool: methodName,
+            agentId,
+            args: args.length === 1 ? args[0] : { _args: args },
+            proofDigestB64: denialDigest,
+            receipt: denialProof,
+          });
+
+          return {
+            result: `[OCC] Tool "${methodName}" blocked by policy. Not in allowed tools list.` as unknown as any,
+            proofs,
+          };
+        }
 
         // Pre-execution proof
         const preDigest = hashPayload({

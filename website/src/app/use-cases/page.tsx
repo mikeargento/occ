@@ -17,8 +17,8 @@ const useCases = [
   {
     title: "Agent Runs & Traces",
     subtitle: "Evaluations, red-teaming, tool-call logs",
-    description: "AI agents produce traces of tool calls, reasoning steps, and intermediate results. OCC can commit each step with proof chaining (prevB64), creating a tamper-evident sequence. If any step is inserted, deleted, or reordered, the chain breaks. Evaluators can verify the complete trace was produced by a specific agent environment.",
-    fields: "prevB64 provides chain integrity • epochId scopes to a single agent session • counter orders events",
+    description: "AI agents produce traces of tool calls, reasoning steps, and intermediate results. OCC commits each step with linked proofs (prevB64), creating a verifiable sequence. If any step is inserted, deleted, or reordered, verification fails. Evaluators can verify the complete trace was produced by a specific agent environment.",
+    fields: "prevB64 links sequential proofs • epochId scopes to a single agent session • counter orders events",
   },
   {
     title: "Software Pipeline Artifacts",
@@ -35,13 +35,13 @@ const useCases = [
   {
     title: "Scientific Instruments",
     subtitle: "Sensor readings, lab data, telescope output",
-    description: "Instruments that commit raw data through OCC produce proofs establishing that specific readings came from a specific instrument environment. Data integrity is verifiable from collection through analysis. The proof chain can establish that no readings were inserted or deleted between collection and publication.",
-    fields: "prevB64 chains sequential readings • measurement identifies the instrument boundary",
+    description: "Instruments that commit raw data through OCC produce proofs establishing that specific readings came from a specific instrument environment. Data integrity is verifiable from collection through analysis. Linked proofs establish that no readings were inserted or deleted between collection and publication.",
+    fields: "prevB64 links sequential readings • measurement identifies the instrument boundary",
   },
   {
     title: "Compliance & Audit Logs",
     subtitle: "Financial records, regulatory filings, access logs",
-    description: "OCC-committed logs produce a tamper-evident record where each entry is bound to the previous one. Any modification, insertion, or deletion breaks the proof chain. Auditors can verify the complete sequence offline without trusting the log storage system.",
+    description: "OCC-committed logs produce a verifiable record where each entry is bound to the previous one. Any modification, insertion, or deletion breaks the proof sequence. Auditors can verify the complete sequence offline without trusting the log storage system.",
     fields: "prevB64 provides sequential integrity • counter prevents gaps • timestamps establish time claims",
   },
   {

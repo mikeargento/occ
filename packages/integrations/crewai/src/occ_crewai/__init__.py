@@ -14,7 +14,7 @@ from __future__ import annotations
 from functools import wraps
 from typing import Any, Callable, Optional, Sequence, Type
 
-from .signer import OCCSigner
+from .signer import OCCSigner, ToolBlockedByPolicy
 
 __all__ = [
     "OCCSigner",

@@ -13,7 +13,7 @@ from __future__ import annotations
 import functools
 from typing import Any, Callable, Dict, Optional, Sequence, Union
 
-from .signer import OCCSigner
+from .signer import OCCSigner, ToolBlockedByPolicy
 
 __all__ = [
     "OCCSigner",

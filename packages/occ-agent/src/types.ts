@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // Copyright 2024-2026 Mike Argento
 
-import type { OCCProof } from "occproof";
+import type { OCCProof, PolicyBinding } from "occproof";
 
 /**
  * Canonical execution envelope — the structure committed through OCC.
@@ -50,6 +50,8 @@ export interface OccAgentConfig {
   apiKey?: string | undefined;
   /** Runtime identifier (default: "agent-skills") */
   runtime?: string | undefined;
+  /** Optional policy binding — sealed into every proof */
+  policy?: PolicyBinding | undefined;
 }
 
 /**

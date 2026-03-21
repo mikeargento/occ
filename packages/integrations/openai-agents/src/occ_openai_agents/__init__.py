@@ -16,7 +16,7 @@ import json
 from functools import wraps
 from typing import Any, Callable, Optional, TypeVar
 
-from .signer import OCCSigner
+from .signer import OCCSigner, ToolBlockedByPolicy
 
 __all__ = [
     "OCCSigner",

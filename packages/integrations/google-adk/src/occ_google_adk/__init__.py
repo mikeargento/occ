@@ -17,7 +17,7 @@ from google.adk.agents import Agent
 from google.adk.tools import BaseTool, FunctionTool
 from google.adk.events import Event
 
-from .signer import OCCSigner
+from .signer import OCCSigner, ToolBlockedByPolicy
 
 __all__ = [
     "OCCSigner",

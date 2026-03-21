@@ -34,6 +34,7 @@ export async function commitExecutionEnvelope(
         adapter: "occ-agent",
         runtime: envelope.runtime,
       },
+      ...(config.policy ? { policy: config.policy } : {}),
     }),
   });
 

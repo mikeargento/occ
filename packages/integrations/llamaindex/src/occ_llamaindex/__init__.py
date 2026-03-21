@@ -17,7 +17,7 @@ from llama_index.core.callbacks import CallbackManager, CBEventType, EventPayloa
 from llama_index.core.callbacks.base_handler import BaseCallbackHandler
 from llama_index.core.tools import BaseTool, ToolOutput, AsyncBaseTool
 
-from .signer import OCCSigner
+from .signer import OCCSigner, ToolBlockedByPolicy
 
 __all__ = [
     "OCCSigner",

@@ -18,7 +18,7 @@ from typing import Any, Callable, Optional, Sequence
 from google import genai
 from google.genai import types
 
-from .signer import OCCSigner
+from .signer import OCCSigner, ToolBlockedByPolicy
 
 __all__ = [
     "OCCSigner",

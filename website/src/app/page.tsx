@@ -125,16 +125,16 @@ type Framework = {
 const frameworks: Framework[] = [
   {
     name: "MCP (any server)",
-    description: "Wrap ANY MCP server with one command",
+    description: "Default-deny policy enforcement for ANY MCP server",
     install: "npx occ-mcp-proxy --wrap npx <any-mcp-server>",
     status: "available",
     icon: "\u26a1",
     logo: logos.mcp,
-    snippet: `npx occ-mcp-proxy --wrap npx @modelcontextprotocol/server-filesystem /home`,
+    snippet: `npx occ-mcp-proxy --wrap --policy policy.md npx @modelcontextprotocol/server-filesystem /home`,
   },
   {
     name: "Claude Desktop",
-    description: "Wrap any MCP server with cryptographic proof",
+    description: "Policy-enforced MCP servers in Claude Desktop",
     install: "Add to claude_desktop_config.json",
     status: "available",
     icon: "\u2728",
@@ -154,7 +154,7 @@ const frameworks: Framework[] = [
   },
   {
     name: "Cursor",
-    description: "Proof for every AI edit in your IDE",
+    description: "Policy-controlled AI edits in your IDE",
     install: "Add to .cursor/mcp.json",
     status: "available",
     icon: "\u270e",
@@ -174,7 +174,7 @@ const frameworks: Framework[] = [
   },
   {
     name: "OpenAI",
-    description: "Wrap OpenAI function calls with proof",
+    description: "Policy enforcement for OpenAI function calls",
     install: "npm install occ-openai",
     status: "available",
     icon: "\u25cb",
@@ -184,12 +184,12 @@ const frameworks: Framework[] = [
 const tools = occWrap([
   { name: 'search', fn: searchWeb },
   { name: 'calculate', fn: calculate },
-]);
-// Every function call gets a cryptographic receipt.`,
+], { policyPath: './policy.md' });
+// Unauthorized tools are blocked. Allowed tools get a proof.`,
   },
   {
     name: "OpenAI Agents",
-    description: "Cryptographic receipts for agent tool use",
+    description: "Policy-controlled agent tool execution",
     install: "pip install occ-openai-agents",
     status: "available",
     icon: "\u25cb",
@@ -199,12 +199,13 @@ const tools = occWrap([
 agent = OccAgent(
     name="researcher",
     tools=[search, summarize],
+    policy_path="./policy.md",
 )
-# Every tool invocation is signed.`,
+# Tools not in the policy are blocked before execution.`,
   },
   {
     name: "LangChain",
-    description: "OCC callback handler for LangChain",
+    description: "Policy enforcement for LangChain tool calls",
     install: "pip install occ-langchain",
     status: "available",
     icon: "\ud83e\udd9c",
@@ -220,7 +221,7 @@ chain.invoke(input, config={"callbacks": [handler]})`,
   },
   {
     name: "LangGraph",
-    description: "Proof for every node execution",
+    description: "Policy-controlled node execution in LangGraph",
     install: "npm install occ-langgraph",
     status: "available",
     icon: "\ud83e\udd9c",
@@ -229,11 +230,12 @@ chain.invoke(input, config={"callbacks": [handler]})`,
 
 const searchNode = occNode(async (state) => {
   return { results: await search(state.query) };
-}, 'search');`,
+}, 'search', { policyPath: './policy.md' });
+// Nodes not in the policy are blocked.`,
   },
   {
     name: "Vercel AI SDK",
-    description: "Middleware for Vercel AI tool calls",
+    description: "Policy enforcement middleware for Vercel AI",
     install: "npm install occ-vercel",
     status: "available",
     icon: "\u25b2",
@@ -242,13 +244,13 @@ const searchNode = occNode(async (state) => {
 import { createAI } from 'ai';
 
 const ai = createAI({
-  middleware: [occMiddleware()],
+  middleware: [occMiddleware({ policyPath: './policy.md' })],
 });
-// Proof for every tool call, automatically.`,
+// Unauthorized tools blocked. Allowed tools get a proof.`,
   },
   {
     name: "CrewAI",
-    description: "OCC-wrapped tools for CrewAI agents",
+    description: "Policy-enforced tools for CrewAI agents",
     install: "pip install occ-crewai",
     status: "available",
     icon: "\ud83d\udee0",
@@ -256,19 +258,22 @@ const ai = createAI({
   },
   {
     name: "Google Gemini",
-    description: "Proof for Gemini function calling",
+    description: "Policy enforcement for Gemini function calling",
     install: "pip install occ-gemini",
     status: "available",
     icon: "\u25c7",
     logo: logos.google,
     snippet: `from occ_gemini import wrap_model
 
-model = wrap_model(genai.GenerativeModel('gemini-pro'))
-# Every function call gets a signed receipt.`,
+model = wrap_model(
+    genai.GenerativeModel('gemini-pro'),
+    policy_path='./policy.md',
+)
+# Unauthorized function calls are blocked.`,
   },
   {
     name: "Google ADK",
-    description: "Agent Development Kit integration",
+    description: "Policy-controlled Google ADK agents",
     install: "pip install occ-google-adk",
     status: "available",
     icon: "\u25c7",
@@ -281,19 +286,22 @@ def search(query: str) -> str:
   },
   {
     name: "LlamaIndex",
-    description: "Tool-level proof for LlamaIndex agents",
+    description: "Policy enforcement for LlamaIndex agents",
     install: "pip install occ-llamaindex",
     status: "available",
     icon: "\ud83e\udd99",
     logo: logos.llamaindex,
     snippet: `from occ_llamaindex import OccTool, wrap_tools
 
-safe_tools = wrap_tools([search_tool, calc_tool])
-# Every tool call is signed.`,
+safe_tools = wrap_tools(
+    [search_tool, calc_tool],
+    policy_path='./policy.md',
+)
+# Only policy-authorized tools execute.`,
   },
   {
     name: "AutoGen",
-    description: "Multi-agent proof chains for AutoGen",
+    description: "Policy-enforced multi-agent AutoGen workflows",
     install: "pip install occ-autogen",
     status: "available",
     icon: "\u2699",
@@ -306,7 +314,7 @@ def calculator(expression: str) -> str:
   },
   {
     name: "OpenClaw",
-    description: "Local AI assistant with 20+ messaging platforms",
+    description: "Policy-controlled local AI with 20+ platforms",
     install: "pip install occ-openclaw",
     status: "available",
     icon: "🦞",
@@ -319,7 +327,7 @@ def send_message(text: str) -> str:
   },
   {
     name: "Mastra",
-    description: "TypeScript AI framework integration",
+    description: "Policy enforcement for Mastra AI agents",
     install: "npm install occ-mastra",
     status: "available",
     icon: "\u25ce",
@@ -333,7 +341,7 @@ const tools = occWrapTools({
   },
   {
     name: "Cloudflare Workers",
-    description: "Edge-deployed AI with proof",
+    description: "Policy enforcement at the edge on Cloudflare Workers",
     install: "npm install occ-cloudflare",
     status: "available",
     icon: "\u2601",
@@ -345,7 +353,7 @@ const { result, proofs } = await wrapped.execute(args);`,
   },
   {
     name: "GitHub Actions",
-    description: "Verify proof chains in CI",
+    description: "Verify execution proofs in CI",
     install: "uses: mikeargento/occ-verify-action@v1",
     status: "available",
     icon: "\u2699",
@@ -623,7 +631,7 @@ export default function Home() {
           </div>
           <p className="text-text-secondary text-base leading-relaxed max-w-2xl mb-6">
             Every agent action that executes through OCC produces a proof.
-            The proof authorized the action and is the tamper-proof record that it happened. Click to expand.
+            The proof authorized the action and is the verifiable record that it happened. Click to expand.
           </p>
           <LiveProofFeed />
         </div>
@@ -642,8 +650,9 @@ export default function Home() {
           </span>
         </div>
         <p className="text-text-secondary text-base leading-relaxed max-w-xl mb-10">
-          OCC plugs into multi-agent orchestration platforms. Run agents through
-          any orchestrator — every tool call requires authorization and produces a proof.
+          OCC plugs into multi-agent orchestration platforms. Define a policy,
+          and every tool call must be authorized by it. Revoke a permission, and the proof record updates accordingly.
+          The proof that allowed the action and the proof that it happened are the same object.
         </p>
         </ScrollReveal>
 
@@ -651,7 +660,7 @@ export default function Home() {
           {([
             {
               name: "Paperclip",
-              description: "Agent control plane with task management, multi-agent orchestration, and cryptographic authorization on every action",
+              description: "Agent control plane with policy enforcement, revocation, and TEE-attested proofs on every action",
               status: "available" as const,
               logo: <Logo src="/logos/paperclip.svg" alt="Paperclip" invert />,
             },
