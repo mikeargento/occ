@@ -26,9 +26,20 @@ No accounts. No external services. Works offline.
 
 ---
 
+## What OCC is NOT
+
+- **Not a blockchain** — no consensus, no distributed ledger, no token. Proofs are locally verifiable within a single process, not a replicated public history.
+- **Not a watermark** — the proof is a separate document, not embedded in content
+- **Not DRM** — no runtime access control or encrypted containers
+- **Not proof of truth** — proves what was authorized and what happened, not whether content is accurate
+
+For detailed technical documentation, see [occ.wtf/docs](https://occ.wtf/docs).
+
+---
+
 ## Integrations
 
-OCC has policy enforcement built into every major AI framework. All integrations block unauthorized tools before execution and produce signed proofs for allowed actions.
+OCC has policy enforcement built into 16 framework integrations across JavaScript and Python. All of them block unauthorized tools before execution and produce signed proofs for allowed actions.
 
 ### JavaScript / TypeScript
 
@@ -142,51 +153,9 @@ The policy is committed as a signed proof before any actions can execute. Every 
 
 ---
 
-## Orchestrators
-
-OCC is built into [Paperclip](https://github.com/mikeargento/occ/tree/main/packages/paperclip) — an agent control plane with policy enforcement, revocation, and TEE-attested proofs on every action.
-
----
-
-## Architecture
-
-```
-occ/
-  src/                        Core library (occproof on npm)
-  packages/
-    mcp-proxy/                MCP proxy — default-deny, per-agent policies
-    commandcentral/           Dashboard UI
-    policy-sdk/               Policy enforcement engine
-    occ-agent/                Agent SDK — tool wrapping with proofs
-    integrations/             All 17 framework integrations
-      anthropic/              JS — occ-anthropic
-      occ-openai/             JS — occ-openai
-      vercel-ai/              JS — occ-vercel
-      langgraph/              JS — occ-langgraph
-      mastra/                 JS — occ-mastra
-      cloudflare/             JS — occ-cloudflare
-      github-actions/         JS — occ-verify-action
-      anthropic-python/       Python — occ-anthropic
-      openai-agents/          Python — occ-openai-agents
-      langchain/              Python — occ-langchain
-      crewai/                 Python — occ-crewai
-      gemini/                 Python — occ-gemini
-      google-adk/             Python — occ-google-adk
-      llamaindex/             Python — occ-llamaindex
-      autogen/                Python — occ-autogen
-      openclaw/               Python — occ-openclaw
-    paperclip/                Agent orchestrator (MIT fork)
-  server/
-    commit-service/           TEE commit service (AWS Nitro Enclave)
-  website/                    occ.wtf — Next.js
-  cli/                        CLI tool
-```
-
----
-
 ## Two Signing Modes
 
-Every integration supports both modes. Switch anytime.
+Every integration supports both modes. Switching modes commits a new proof so the transition is recorded in the proof history.
 
 | | Local Signing | TEE (Hardware) |
 |---|---|---|
@@ -199,7 +168,7 @@ Local signing is the default. Add `OCC_MODE=tee` to use hardware attestation.
 
 ---
 
-## Proof Format
+## Proof Format (`occ/1`)
 
 Every proof is a self-contained JSON document. No server needed to verify.
 
@@ -257,6 +226,26 @@ Policy Studio for creating and testing policies: **[occ.wtf/studio](https://occ.
 
 ---
 
+## Architecture
+
+```
+occ/
+  src/                        Core library (occproof on npm)
+  packages/
+    mcp-proxy/                MCP proxy — default-deny, per-agent policies
+    commandcentral/           Dashboard UI
+    policy-sdk/               Policy enforcement engine
+    occ-agent/                Agent SDK — tool wrapping with proofs
+    integrations/             16 framework integrations (7 JS + 9 Python)
+    paperclip/                Agent orchestrator (see below)
+  server/
+    commit-service/           TEE commit service (AWS Nitro Enclave)
+  website/                    occ.wtf — Next.js
+  cli/                        CLI tool
+```
+
+---
+
 ## Build & Test
 
 ```sh
@@ -269,17 +258,6 @@ npm test
 
 ---
 
-## What OCC is NOT
-
-- **Not a blockchain** — no consensus, no distributed ledger, no token
-- **Not a watermark** — the proof is a separate document, not embedded in content
-- **Not DRM** — no runtime access control or encrypted containers
-- **Not proof of truth** — proves what was authorized and what happened, not whether content is accurate
-
-For detailed technical documentation, see [occ.wtf/docs](https://occ.wtf/docs).
-
----
-
 ## Cryptography
 
 | Primitive | Algorithm | Library |
@@ -288,6 +266,14 @@ For detailed technical documentation, see [occ.wtf/docs](https://occ.wtf/docs).
 | Signatures | Ed25519 | `@noble/ed25519` |
 
 Audited, zero-dependency, pure TypeScript.
+
+---
+
+## See Also
+
+- **[Paperclip](https://github.com/mikeargento/occ/tree/main/packages/paperclip)** — an open-source agent control plane (MIT) with built-in OCC policy enforcement, revocation, and TEE-attested proofs. OCC is wired into the Paperclip runtime so every agent action is policy-controlled and cryptographically recorded.
+- **[occ.wtf](https://occ.wtf)** — project site, documentation, and live proof explorer
+- **[occ.wtf/docs](https://occ.wtf/docs)** — full technical documentation
 
 ---
 
