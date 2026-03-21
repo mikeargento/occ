@@ -128,7 +128,7 @@ export function InteractiveSignerSection() {
 
       <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Terminal command */}
-        <div className="relative rounded-xl border border-border-subtle overflow-hidden">
+        <div className="relative rounded-xl border border-border-subtle overflow-hidden flex flex-col">
           <div className="flex items-center justify-between px-4 py-2.5 border-b border-border-subtle bg-bg-subtle/30">
             <div className="flex items-center gap-2">
               <div className="flex gap-1.5">
@@ -140,12 +140,12 @@ export function InteractiveSignerSection() {
             </div>
             <CopyInline text={bashCmd} />
           </div>
-          <div className="p-4 bg-bg">
+          <div className="p-4 bg-bg flex-1 flex items-start">
             <pre className="text-sm font-mono text-emerald-400 leading-relaxed whitespace-pre-wrap break-all">
               <span className="text-text-tertiary select-none">$ </span><code>{bashCmd}</code>
             </pre>
           </div>
-          <div className="px-4 py-3 border-t border-border-subtle/50 bg-bg">
+          <div className="px-4 py-3 border-t border-border-subtle/50 bg-bg mt-auto">
             <p className="text-xs text-text-tertiary leading-relaxed">
               {mode === "local"
                 ? "Wraps any MCP server. Proofs written to ./proof.jsonl. No network calls."
@@ -155,7 +155,7 @@ export function InteractiveSignerSection() {
         </div>
 
         {/* Claude Desktop config */}
-        <div className="relative rounded-xl border border-border-subtle overflow-hidden">
+        <div className="relative rounded-xl border border-border-subtle overflow-hidden flex flex-col">
           <div className="flex items-center justify-between px-4 py-2.5 border-b border-border-subtle bg-bg-subtle/30">
             <div className="flex items-center gap-2">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-text-tertiary">
@@ -166,12 +166,12 @@ export function InteractiveSignerSection() {
             </div>
             <CopyInline text={configCmd} />
           </div>
-          <div className="p-4 bg-bg">
+          <div className="p-4 bg-bg flex-1 flex items-start">
             <pre className="text-sm font-mono text-text-secondary leading-relaxed">
               <code>{configCmd}</code>
             </pre>
           </div>
-          <div className="px-4 py-3 border-t border-border-subtle/50 bg-bg">
+          <div className="px-4 py-3 border-t border-border-subtle/50 bg-bg mt-auto">
             <p className="text-xs text-text-tertiary leading-relaxed">
               Add to <code className="text-[11px] font-mono text-text-tertiary">mcpServers</code> in your config. Claude routes all tool calls through the proxy.
             </p>
