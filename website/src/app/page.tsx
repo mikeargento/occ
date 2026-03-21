@@ -552,13 +552,13 @@ export default function Home() {
                 <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-12">
           <div className="lg:max-w-xl">
             <h1 className="hero-animate text-3xl sm:text-5xl md:text-6xl font-bold tracking-[-0.04em] mb-6" style={{ animationDelay: "0ms" }}>
-              One proof format.<br />
-              Every AI framework.
+              Control what your<br />
+              AI agents can do.
             </h1>
             <p className="hero-animate text-text-secondary text-base sm:text-lg md:text-xl leading-relaxed" style={{ animationDelay: "120ms" }}>
-              OCC runs beneath your tools, your agents, your entire stack.
-              Every action produces a cryptographic receipt.
-              If the receipt exists, it couldn&apos;t have happened any other way.
+              OCC is the cryptographic primitive that makes AI control possible.
+              Every action requires a valid proof to execute — no proof, no action.
+              The proof that authorizes it is the same object that proves it happened.
             </p>
             <InstallButton />
           </div>
@@ -622,11 +622,8 @@ export default function Home() {
             </Link>
           </div>
           <p className="text-text-secondary text-base leading-relaxed max-w-2xl mb-6">
-            Every integration produces the same{" "}
-            <code className="font-mono text-sm bg-bg-subtle px-1.5 py-0.5 rounded">
-              occ/1
-            </code>{" "}
-            proof format. These are real proofs committed through OCC — click to expand.
+            Every agent action that executes through OCC produces a proof.
+            The proof authorized the action and is the tamper-proof record that it happened. Click to expand.
           </p>
           <LiveProofFeed />
         </div>
@@ -646,7 +643,7 @@ export default function Home() {
         </div>
         <p className="text-text-secondary text-base leading-relaxed max-w-xl mb-10">
           OCC plugs into multi-agent orchestration platforms. Run agents through
-          any orchestrator — every tool call still gets a cryptographic receipt.
+          any orchestrator — every tool call requires authorization and produces a proof.
         </p>
         </ScrollReveal>
 
@@ -654,49 +651,49 @@ export default function Home() {
           {([
             {
               name: "Paperclip",
-              description: "Agent control plane with task management, multi-agent orchestration, and cryptographic proof on every action",
+              description: "Agent control plane with task management, multi-agent orchestration, and cryptographic authorization on every action",
               status: "available" as const,
               logo: <Logo src="/logos/paperclip.svg" alt="Paperclip" invert />,
             },
             {
               name: "Composio",
-              description: "250+ tool integrations with cryptographic proof on every call",
+              description: "250+ tool integrations with cryptographic control on every call",
               status: "coming-soon" as const,
               logo: logos.composio,
             },
             {
               name: "LangSmith",
-              description: "Proof-enriched traces for LangChain observability",
+              description: "Controlled traces with cryptographic authorization for LangChain",
               status: "coming-soon" as const,
               logo: logos.langchain,
             },
             {
               name: "Julep",
-              description: "Stateful agent workflows with proof at every step",
+              description: "Stateful agent workflows with cryptographic control at every step",
               status: "coming-soon" as const,
               logo: logos.julep,
             },
             {
               name: "AgentOps",
-              description: "Agent observability with cryptographic audit trails",
+              description: "Agent observability with cryptographic control and audit",
               status: "coming-soon" as const,
               logo: logos.agentops,
             },
             {
               name: "Relevance AI",
-              description: "No-code agent builder with proof integration",
+              description: "No-code agent builder with cryptographic control",
               status: "coming-soon" as const,
               logo: logos.relevanceai,
             },
             {
               name: "Letta (MemGPT)",
-              description: "Long-term memory agents with proof chains",
+              description: "Long-term memory agents with cryptographic control",
               status: "coming-soon" as const,
               logo: logos.letta,
             },
             {
               name: "SuperAGI",
-              description: "Autonomous agent framework with OCC receipts",
+              description: "Autonomous agent framework with OCC control layer",
               status: "coming-soon" as const,
               logo: logos.superagi,
             },
@@ -740,8 +737,8 @@ export default function Home() {
           Don&apos;t see your framework?
         </h2>
         <p className="text-text-secondary text-base leading-relaxed max-w-lg mx-auto mb-8">
-          OCC is open source. Add proof to any tool-calling framework in
-          minutes. Contributions welcome.
+          OCC is open source. Add cryptographic control to any tool-calling
+          framework in minutes. Contributions welcome.
         </p>
         <div className="flex items-center justify-center gap-4 flex-wrap">
           <Link
