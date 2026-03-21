@@ -27,6 +27,7 @@ interface PolicyState {
 // ─── Framework data ──────────────────────────────────────────────────────────
 
 const JS_FRAMEWORKS: Framework[] = [
+  { id: "anthropic-js", name: "Anthropic", pkg: "occ-anthropic", install: "npm install occ-anthropic", lang: "js", logo: "/logos/anthropic.svg", invertLogo: true },
   { id: "openai", name: "OpenAI", pkg: "occ-openai", install: "npm install occ-openai", lang: "js", logo: "/logos/openai.svg", invertLogo: true },
   { id: "vercel", name: "Vercel AI", pkg: "occ-vercel", install: "npm install occ-vercel", lang: "js", logo: "/logos/vercel.svg", invertLogo: true },
   { id: "langgraph", name: "LangGraph", pkg: "occ-langgraph", install: "npm install occ-langgraph", lang: "js", logo: "/logos/langchain.svg", invertLogo: true },
@@ -35,6 +36,7 @@ const JS_FRAMEWORKS: Framework[] = [
 ];
 
 const PYTHON_FRAMEWORKS: Framework[] = [
+  { id: "anthropic-py", name: "Anthropic", pkg: "occ-anthropic", install: "pip install occ-anthropic", lang: "python", logo: "/logos/anthropic.svg", invertLogo: true },
   { id: "openai-agents", name: "OpenAI Agents SDK", pkg: "occ-openai-agents", install: "pip install occ-openai-agents", lang: "python", logo: "/logos/openai.svg", invertLogo: true },
   { id: "langchain", name: "LangChain", pkg: "occ-langchain", install: "pip install occ-langchain", lang: "python", logo: "/logos/langchain.svg", invertLogo: true },
   { id: "crewai", name: "CrewAI", pkg: "occ-crewai", install: "pip install occ-crewai", lang: "python", logo: "/logos/crewai.svg" },
@@ -42,6 +44,7 @@ const PYTHON_FRAMEWORKS: Framework[] = [
   { id: "google-adk", name: "Google ADK", pkg: "occ-google-adk", install: "pip install occ-google-adk", lang: "python", logo: "/logos/google.svg" },
   { id: "llamaindex", name: "LlamaIndex", pkg: "occ-llamaindex", install: "pip install occ-llamaindex", lang: "python", logo: "/logos/llamaindex.svg", invertLogo: true },
   { id: "autogen", name: "AutoGen", pkg: "occ-autogen", install: "pip install occ-autogen", lang: "python", logo: "/logos/autogen.svg" },
+  { id: "openclaw", name: "OpenClaw", pkg: "occ-openclaw", install: "pip install occ-openclaw", lang: "python", logo: "/logos/openclaw.svg" },
 ];
 
 // ─── Code generation ─────────────────────────────────────────────────────────
@@ -76,6 +79,7 @@ function generatePythonCode(fw: Framework, tools: string[], policy: PolicyState)
   const policyBlock = policyEntries.join(",\n");
 
   const wrapperMap: Record<string, [string, string]> = {
+    "anthropic-py": ["wrap_client", "client = wrap_client(anthropic.Anthropic(), signer=signer)"],
     "openai-agents": ["wrap_agent", "agent = wrap_agent(your_agent, signer=signer)"],
     "langchain": ["wrap_tools", "tools = wrap_tools(your_tools, signer=signer)"],
     "crewai": ["wrap_crew", "crew = wrap_crew(your_crew, signer=signer)"],
@@ -118,6 +122,7 @@ function generateJSCode(fw: Framework, tools: string[], policy: PolicyState): st
   const policyBlock = policyEntries.join(",\n");
 
   const wrapperMap: Record<string, [string, string, string]> = {
+    "anthropic-js": ["wrapAnthropic", "occ-anthropic", "const client = wrapAnthropic(new Anthropic(), {\n  policy: {\n" + policyBlock + "\n  }\n});"],
     "openai": ["wrapOpenAI", "occ-openai", "const client = wrapOpenAI(new OpenAI(), {\n  policy: {\n" + policyBlock + "\n  }\n});"],
     "vercel": ["wrapAI", "occ-vercel", "const ai = wrapAI({\n  policy: {\n" + policyBlock + "\n  }\n});"],
     "langgraph": ["wrapGraph", "occ-langgraph", "const graph = wrapGraph(yourGraph, {\n  policy: {\n" + policyBlock + "\n  }\n});"],
