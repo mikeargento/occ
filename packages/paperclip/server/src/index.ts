@@ -30,6 +30,7 @@ import { heartbeatService, reconcilePersistedRuntimeServicesOnStartup } from "./
 import { createStorageServiceFromConfig } from "./storage/index.js";
 import { printStartupBanner } from "./startup-banner.js";
 import { getBoardClaimWarningUrl, initializeBoardClaimChallenge } from "./board-claim.js";
+import { ensureMasterKeyFromDb } from "./secrets/db-master-key.js";
 
 type BetterAuthSessionUser = {
   id: string;
@@ -398,6 +399,11 @@ export async function startServer(): Promise<StartedServer> {
     startupDbInfo = { mode: "embedded-postgres", dataDir, port };
   }
   
+  // In containerized environments (Railway), persist the secrets master key in
+  // the database so it survives container restarts. Must run after DB is ready
+  // but before any code touches the secrets provider.
+  await ensureMasterKeyFromDb(activeDatabaseConnectionString);
+
   if (config.deploymentMode === "local_trusted" && !isLoopbackHost(config.host)) {
     throw new Error(
       `local_trusted mode requires loopback host binding (received: ${config.host}). ` +
