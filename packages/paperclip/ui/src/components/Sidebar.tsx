@@ -74,7 +74,7 @@ export function Sidebar() {
           {/* New Issue button aligned with nav items */}
           <button
             onClick={() => openNewIssue()}
-            className="flex items-center gap-2.5 px-3 py-[7px] text-[13px] font-medium text-muted-foreground hover:bg-accent/50 hover:text-foreground rounded-lg transition-all duration-150"
+            className="flex items-center gap-2.5 px-3 py-[7px] text-sm font-medium text-muted-foreground hover:bg-accent/50 hover:text-foreground rounded-lg transition-all duration-150"
           >
             <SquarePen className="h-[15px] w-[15px] opacity-70 shrink-0" />
             <span className="truncate">New Issue</span>

@@ -156,16 +156,6 @@
   label {
     touch-action: manipulation;
   }
-  /* Refined inputs */
-  input[type="text"],
-  input[type="email"],
-  input[type="password"],
-  input[type="search"],
-  input[type="url"],
-  input[type="number"],
-  textarea {
-    font-size: 13px;
-  }
 }
 
 @media (pointer: coarse) {

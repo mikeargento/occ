@@ -334,7 +334,7 @@ export function Dashboard() {
               </h3>
               {recentIssues.length === 0 ? (
                 <div className="border border-border/60 rounded-xl bg-card/20 p-4">
-                  <p className="text-[13px] text-muted-foreground">No tasks yet.</p>
+                  <p className="text-sm text-muted-foreground">No tasks yet.</p>
                 </div>
               ) : (
                 <div className="border border-border/60 rounded-xl divide-y divide-border/40 overflow-hidden bg-card/20">

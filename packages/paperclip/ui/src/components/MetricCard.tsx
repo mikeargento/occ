@@ -27,7 +27,7 @@ export function MetricCard({ icon: Icon, value, label, description, to, onClick 
           <p className="text-2xl sm:text-3xl font-semibold tracking-[-0.02em] tabular-nums text-foreground">
             {value}
           </p>
-          <p className="text-xs sm:text-[13px] font-medium text-muted-foreground mt-1.5">
+          <p className="text-xs sm:text-sm font-medium text-muted-foreground mt-1.5">
             {label}
           </p>
           {description && (

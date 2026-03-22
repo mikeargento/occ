@@ -56,7 +56,7 @@ export function ActiveAgentsPanel({ companyId }: ActiveAgentsPanelProps) {
       </h3>
       {runs.length === 0 ? (
         <div className="rounded-xl border border-border/60 bg-card/30 p-4">
-          <p className="text-[13px] text-muted-foreground">No recent agent runs.</p>
+          <p className="text-sm text-muted-foreground">No recent agent runs.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
