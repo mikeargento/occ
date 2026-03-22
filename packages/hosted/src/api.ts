@@ -86,7 +86,12 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
       if (!agent) return json(res, { error: "Not found" }, 404);
       return json(res, {
         agent: { id: agent.id, name: agent.name, status: agent.paused ? "paused" : "active", createdAt: new Date(agent.created_at).getTime(), policy: null },
-        context: { allowedTools: agent.allowed_tools ?? [] },
+        context: {
+          allowedTools: agent.allowed_tools ?? [],
+          totalSpendCents: 0,
+          toolCallCounts: {},
+          recentDenials: [],
+        },
         auditCount: agent.total_calls ?? 0,
       });
     }
