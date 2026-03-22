@@ -132,7 +132,8 @@ export function Sidebar() {
           rel="noopener noreferrer"
           className="flex items-center gap-2 px-2 py-1.5 text-[11px] text-muted-foreground/50 hover:text-muted-foreground transition-all duration-150 rounded-lg hover:bg-accent/30"
         >
-          <span className="text-[10px] font-black tracking-[-0.02em]">OCC</span>
+          <img src="/occ-logo.png" alt="OCC" className="h-3.5 w-3.5 dark:block hidden opacity-50" />
+          <img src="/occ-logo-black.png" alt="OCC" className="h-3.5 w-3.5 dark:hidden block opacity-50" />
           <span>occ.wtf</span>
         </a>
       </div>

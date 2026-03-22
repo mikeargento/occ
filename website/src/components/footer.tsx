@@ -1,15 +1,26 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
+import { useTheme } from "./theme-provider";
 
 export function Footer() {
+  const { theme } = useTheme();
+
   return (
     <footer className="pb-16">
       <div className="mx-auto max-w-6xl px-6 pt-16">
         <div className="flex flex-col md:flex-row md:justify-between gap-12">
           <div className="max-w-md">
-            <div className="text-[22px] font-black tracking-[-0.02em] mb-5 text-text">
-              OCC
+            <div className="flex items-center gap-2.5 mb-5">
+              <Image
+                src={theme === "dark" ? "/logo-dark.png" : "/logo.png"}
+                alt="OCC"
+                width={24}
+                height={24}
+                className="shrink-0"
+              />
+              <span className="text-[22px] font-black tracking-[-0.02em] text-text">OCC</span>
             </div>
             <p className="text-sm text-text-tertiary leading-relaxed">
               Cryptographic control for AI agents<br />

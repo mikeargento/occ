@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useTheme } from "./theme-provider";
@@ -24,6 +25,14 @@ export function Nav() {
             href="/"
             className="flex items-center gap-2 text-text"
           >
+            <Image
+              src={theme === "dark" ? "/logo-dark.png" : "/logo.png"}
+              alt="OCC"
+              width={28}
+              height={28}
+              className="shrink-0"
+              priority
+            />
             <span className="text-[22px] tracking-[-0.02em] font-black text-text">OCC</span>
           </Link>
 
