@@ -268,10 +268,9 @@ export function CompanyRail() {
 
   return (
     <div className="flex flex-col items-center w-[72px] shrink-0 h-full bg-background border-r border-border/20">
-      {/* OCC logo */}
+      {/* OCC wordmark */}
       <div className="flex items-center justify-center h-12 w-full shrink-0">
-        <img src="/occ-logo.png" alt="OCC" className="h-6 w-6 dark:block hidden" />
-        <img src="/occ-logo-black.png" alt="OCC" className="h-6 w-6 dark:hidden block" />
+        <span className="text-[11px] font-black tracking-[-0.03em] text-foreground/70">OCC.WTF</span>
       </div>
 
       {/* Company list */}
