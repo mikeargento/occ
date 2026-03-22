@@ -47,7 +47,7 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="w-60 h-full min-h-0 border-r border-border/60 bg-background flex flex-col">
+    <aside className="w-60 h-full min-h-0 border-r border-border/20 bg-background flex flex-col">
       {/* Top bar: Company name (bold) + Search — aligned with top sections (no visible border) */}
       <div className="flex items-center gap-1 px-3 h-12 shrink-0">
         {selectedCompany?.brandColor && (
@@ -125,7 +125,7 @@ export function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="shrink-0 border-t border-border/40 px-4 py-3">
+      <div className="shrink-0 border-t border-border/20 px-4 py-3">
         <a
           href="https://occ.wtf"
           target="_blank"

@@ -12,7 +12,7 @@ interface EmptyStateProps {
 export function EmptyState({ icon: Icon, message, action, onAction }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
-      <div className="flex items-center justify-center h-14 w-14 rounded-2xl bg-accent/60 border border-border/40 mb-5">
+      <div className="flex items-center justify-center h-14 w-14 rounded-2xl bg-white/[0.03] border border-border/20 mb-5">
         <Icon className="h-6 w-6 text-muted-foreground/60" />
       </div>
       <p className="text-sm text-muted-foreground max-w-[280px] leading-relaxed mb-5">{message}</p>

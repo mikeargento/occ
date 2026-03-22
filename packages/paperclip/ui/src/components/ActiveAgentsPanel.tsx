@@ -55,7 +55,7 @@ export function ActiveAgentsPanel({ companyId }: ActiveAgentsPanelProps) {
         Agents
       </h3>
       {runs.length === 0 ? (
-        <div className="rounded-xl border border-border/60 bg-card/30 p-4">
+        <div className="rounded-xl border border-border/30 bg-card/20 p-4">
           <p className="text-sm text-muted-foreground">No recent agent runs.</p>
         </div>
       ) : (
@@ -93,8 +93,8 @@ function AgentRunCard({
     <div className={cn(
       "flex h-[320px] flex-col overflow-hidden rounded-xl border transition-all duration-200",
       isActive
-        ? "border-emerald-500/20 bg-emerald-500/[0.03] shadow-[0_8px_32px_rgba(52,211,153,0.06)]"
-        : "border-border/60 bg-card/40",
+        ? "border-emerald-500/15 bg-emerald-500/[0.02] shadow-[0_8px_40px_rgba(52,211,153,0.06)]"
+        : "border-border/30 bg-card/30",
     )}>
       <div className="border-b border-border/60 px-3 py-3">
         <div className="flex items-start justify-between gap-2">

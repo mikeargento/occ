@@ -267,7 +267,7 @@ export function CompanyRail() {
   );
 
   return (
-    <div className="flex flex-col items-center w-[72px] shrink-0 h-full bg-background border-r border-border/40">
+    <div className="flex flex-col items-center w-[72px] shrink-0 h-full bg-background border-r border-border/20">
       {/* OCC logo */}
       <div className="flex items-center justify-center h-12 w-full shrink-0">
         <img src="/occ-logo.png" alt="OCC" className="h-6 w-6 dark:block hidden" />
@@ -305,7 +305,7 @@ export function CompanyRail() {
       </div>
 
       {/* Separator before add button */}
-      <div className="w-8 h-px bg-border mx-auto shrink-0" />
+      <div className="w-8 h-px bg-border/30 mx-auto shrink-0" />
 
       {/* Add company button */}
       <div className="flex items-center justify-center py-2 shrink-0">
@@ -313,7 +313,7 @@ export function CompanyRail() {
           <TooltipTrigger asChild>
             <button
               onClick={() => openOnboarding()}
-              className="flex items-center justify-center w-11 h-11 rounded-[22px] hover:rounded-[14px] border-2 border-dashed border-border text-muted-foreground hover:border-foreground/30 hover:text-foreground transition-[border-color,color,border-radius] duration-150"
+              className="flex items-center justify-center w-11 h-11 rounded-[22px] hover:rounded-[14px] border-2 border-dashed border-border/40 text-muted-foreground/50 hover:border-foreground/20 hover:text-foreground/70 transition-[border-color,color,border-radius] duration-200"
               aria-label="Add company"
             >
               <Plus className="h-5 w-5" />

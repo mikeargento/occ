@@ -312,7 +312,7 @@ export function Dashboard() {
                 <h3 className="text-[11px] font-semibold text-muted-foreground/60 uppercase tracking-[0.06em] mb-3">
                   Recent Activity
                 </h3>
-                <div className="border border-border/60 rounded-xl divide-y divide-border/40 overflow-hidden bg-card/20">
+                <div className="border border-border/30 rounded-xl divide-y divide-border/20 overflow-hidden bg-card/15">
                   {recentActivity.map((event) => (
                     <ActivityRow
                       key={event.id}
@@ -333,11 +333,11 @@ export function Dashboard() {
                 Recent Tasks
               </h3>
               {recentIssues.length === 0 ? (
-                <div className="border border-border/60 rounded-xl bg-card/20 p-4">
+                <div className="border border-border/30 rounded-xl bg-card/15 p-4">
                   <p className="text-sm text-muted-foreground">No tasks yet.</p>
                 </div>
               ) : (
-                <div className="border border-border/60 rounded-xl divide-y divide-border/40 overflow-hidden bg-card/20">
+                <div className="border border-border/30 rounded-xl divide-y divide-border/20 overflow-hidden bg-card/15">
                   {recentIssues.slice(0, 10).map((issue) => (
                     <Link
                       key={issue.id}

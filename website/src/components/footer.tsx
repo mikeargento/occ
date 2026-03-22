@@ -13,6 +13,7 @@ export function Footer() {
               Cryptographic control for AI agents<br />
               Patent Pending
             </p>
+            <a href="https://buymeacoffee.com/mikeargento" target="_blank" rel="noopener" className="inline-block mt-4 text-sm text-text-secondary hover:text-text transition-colors">Buy Me a Coffee</a>
           </div>
 
           <div className="grid grid-cols-2 gap-10 sm:grid-cols-3 sm:gap-16">
@@ -44,7 +45,6 @@ export function Footer() {
               <ul className="space-y-3">
                 <li><a href="https://github.com/mikeargento/occ" target="_blank" rel="noopener" className="text-sm text-text-secondary hover:text-text transition-colors">GitHub</a></li>
                 <li><a href="https://npmjs.com/package/occproof" target="_blank" rel="noopener" className="text-sm text-text-secondary hover:text-text transition-colors">npm</a></li>
-                <li><a href="https://buymeacoffee.com/mikeargento" target="_blank" rel="noopener" className="text-sm text-text-secondary hover:text-text transition-colors">☕ Buy Me a Coffee</a></li>
               </ul>
             </div>
           </div>
