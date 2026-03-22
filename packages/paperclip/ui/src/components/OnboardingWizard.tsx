@@ -160,15 +160,14 @@ export function OnboardingWizard() {
         },
       });
 
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.agents.list(companyId),
-      });
-
-      // 4. Close and navigate
+      // 4. Refresh data and navigate
       setSelectedCompanyId(companyId);
+      await queryClient.refetchQueries({ queryKey: queryKeys.companies.all });
+      await queryClient.refetchQueries({ queryKey: queryKeys.agents.list(companyId) });
+
       reset();
       closeOnboarding();
-      navigate(companyPrefix ? `/${companyPrefix}` : "/");
+      navigate(companyPrefix ? `/${companyPrefix}/dashboard` : "/");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
