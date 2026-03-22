@@ -125,15 +125,15 @@ export function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="shrink-0 border-t border-border px-4 py-3">
+      <div className="shrink-0 border-t border-border/20 px-4 py-3 flex items-center justify-between">
+        <span className="text-[9px] font-black tracking-[-0.02em] opacity-70">OCC.WTF</span>
         <a
           href="https://buymeacoffee.com/mikeargento"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-accent/50"
+          className="text-[9px] text-muted-foreground hover:text-foreground transition-colors"
         >
-          <span>☕</span>
-          <span>Support OCC Agent</span>
+          ☕
         </a>
       </div>
     </aside>

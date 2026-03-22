@@ -270,7 +270,7 @@ export function CompanyRail() {
     <div className="flex flex-col items-center w-[72px] shrink-0 h-full bg-background border-r border-border">
       {/* OCC Agent icon - aligned with top sections (implied line, no visible border) */}
       <div className="flex items-center justify-center h-12 w-full shrink-0">
-        <span className="text-xs font-bold tracking-tight text-foreground font-mono">OCC</span>
+        <span className="text-[11px] font-black tracking-[-0.03em] text-foreground/70">OCC.WTF</span>
       </div>
 
       {/* Company list */}
