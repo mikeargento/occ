@@ -43,6 +43,56 @@ export const logger = pino({
   ],
 }));
 
+/**
+ * Recursively redact values that look like secrets (API keys, tokens, passwords)
+ * from request bodies before they are written to logs.
+ */
+function redactSecrets(obj: unknown): unknown {
+  if (obj === null || obj === undefined) return obj;
+  if (typeof obj === "string") return obj;
+  if (Array.isArray(obj)) return obj.map(redactSecrets);
+  if (typeof obj !== "object") return obj;
+
+  const result: Record<string, unknown> = {};
+  for (const [key, val] of Object.entries(obj as Record<string, unknown>)) {
+    // Redact any key that looks like it holds a secret value
+    const lk = key.toLowerCase();
+    if (
+      lk.includes("secret") ||
+      lk.includes("password") ||
+      lk.includes("token") ||
+      lk.includes("api_key") ||
+      lk.includes("apikey") ||
+      lk === "authorization"
+    ) {
+      result[key] = "[REDACTED]";
+      continue;
+    }
+    // Redact string values that look like API keys
+    if (typeof val === "string" && /^(sk-|sk-ant-|key-|ghp_|gho_|glpat-)/i.test(val)) {
+      result[key] = "[REDACTED]";
+      continue;
+    }
+    // Redact env binding objects that contain plain secret values
+    if (
+      typeof val === "object" &&
+      val !== null &&
+      "type" in val &&
+      (val as Record<string, unknown>).type === "plain" &&
+      "value" in val &&
+      typeof (val as Record<string, unknown>).value === "string"
+    ) {
+      const strVal = (val as Record<string, unknown>).value as string;
+      if (/^(sk-|sk-ant-|key-|ghp_|gho_|glpat-)/i.test(strVal)) {
+        result[key] = { type: "plain", value: "[REDACTED]" };
+        continue;
+      }
+    }
+    result[key] = redactSecrets(val);
+  }
+  return result;
+}
+
 export const httpLogger = pinoHttp({
   logger,
   customLogLevel(_req, res, err) {
@@ -64,7 +114,7 @@ export const httpLogger = pinoHttp({
       if (ctx) {
         return {
           errorContext: ctx.error,
-          reqBody: ctx.reqBody,
+          reqBody: redactSecrets(ctx.reqBody),
           reqParams: ctx.reqParams,
           reqQuery: ctx.reqQuery,
         };
@@ -72,7 +122,7 @@ export const httpLogger = pinoHttp({
       const props: Record<string, unknown> = {};
       const { body, params, query } = req as any;
       if (body && typeof body === "object" && Object.keys(body).length > 0) {
-        props.reqBody = body;
+        props.reqBody = redactSecrets(body);
       }
       if (params && typeof params === "object" && Object.keys(params).length > 0) {
         props.reqParams = params;

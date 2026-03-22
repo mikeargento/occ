@@ -11,6 +11,24 @@ export interface ErrorContext {
   reqQuery?: unknown;
 }
 
+/** Strip values from env bindings that may contain secrets */
+function redactBody(body: unknown): unknown {
+  if (!body || typeof body !== "object") return body;
+  const obj = body as Record<string, unknown>;
+  if (!obj.adapterConfig || typeof obj.adapterConfig !== "object") return body;
+  const ac = obj.adapterConfig as Record<string, unknown>;
+  if (!ac.env || typeof ac.env !== "object") return body;
+  const redactedEnv: Record<string, unknown> = {};
+  for (const [key, binding] of Object.entries(ac.env as Record<string, unknown>)) {
+    if (typeof binding === "object" && binding !== null && "value" in binding) {
+      redactedEnv[key] = { ...(binding as Record<string, unknown>), value: "[REDACTED]" };
+    } else {
+      redactedEnv[key] = binding;
+    }
+  }
+  return { ...obj, adapterConfig: { ...ac, env: redactedEnv } };
+}
+
 function attachErrorContext(
   req: Request,
   res: Response,
@@ -21,7 +39,7 @@ function attachErrorContext(
     error: payload,
     method: req.method,
     url: req.originalUrl,
-    reqBody: req.body,
+    reqBody: redactBody(req.body),
     reqParams: req.params,
     reqQuery: req.query,
   } satisfies ErrorContext;
