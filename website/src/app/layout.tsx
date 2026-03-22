@@ -61,7 +61,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`dark ${inter.variable} ${jetbrainsMono.variable}`}>
-      <head />
+      <head>
+        <link rel="stylesheet" href="https://use.typekit.net/svq0oqy.css" />
+      </head>
       <body className="font-serif antialiased">
         <ThemeProvider>
           <Nav />
