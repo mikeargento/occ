@@ -287,10 +287,10 @@ export function Layout() {
               <CompanyRail />
               {isInstanceSettingsRoute ? <InstanceSidebar /> : <Sidebar />}
             </div>
-            <div className="border-t border-r border-border/30 px-3 py-2 bg-background">
+            <div className="border-t border-r border-border px-3 py-2 bg-background">
               <div className="flex items-center gap-1">
                 <a
-                  href="https://occ.wtf/docs"
+                  href="https://proofstudio.xyz/docs"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors text-foreground/80 hover:bg-accent/50 hover:text-foreground flex-1 min-w-0"
@@ -345,10 +345,10 @@ export function Layout() {
                 {isInstanceSettingsRoute ? <InstanceSidebar /> : <Sidebar />}
               </div>
             </div>
-            <div className="border-t border-r border-border/30 px-3 py-2">
+            <div className="border-t border-r border-border px-3 py-2">
               <div className="flex items-center gap-1">
                 <a
-                  href="https://occ.wtf/docs"
+                  href="https://proofstudio.xyz/docs"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors text-foreground/80 hover:bg-accent/50 hover:text-foreground flex-1 min-w-0"

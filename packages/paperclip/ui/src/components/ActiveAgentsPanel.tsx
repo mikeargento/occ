@@ -51,15 +51,15 @@ export function ActiveAgentsPanel({ companyId }: ActiveAgentsPanelProps) {
 
   return (
     <div>
-      <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground/60">
+      <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
         Agents
       </h3>
       {runs.length === 0 ? (
-        <div className="rounded-xl border border-border/30 bg-card/20 p-4">
+        <div className="rounded-xl border border-border p-4">
           <p className="text-sm text-muted-foreground">No recent agent runs.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
           {runs.map((run) => (
             <AgentRunCard
               key={run.id}
@@ -91,22 +91,22 @@ function AgentRunCard({
 }) {
   return (
     <div className={cn(
-      "flex h-[320px] flex-col overflow-hidden rounded-xl border transition-all duration-200",
+      "flex h-[320px] flex-col overflow-hidden rounded-xl border shadow-sm",
       isActive
-        ? "border-emerald-500/15 bg-emerald-500/[0.02] shadow-[0_8px_40px_rgba(52,211,153,0.06)]"
-        : "border-border/30 bg-card/30",
+        ? "border-cyan-500/25 bg-cyan-500/[0.04] shadow-[0_16px_40px_rgba(6,182,212,0.08)]"
+        : "border-border bg-background/70",
     )}>
       <div className="border-b border-border/60 px-3 py-3">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               {isActive ? (
-                <span className="relative flex h-2 w-2 shrink-0">
-                  <span className="absolute inline-flex h-full w-full animate-pulse rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                <span className="relative flex h-2.5 w-2.5 shrink-0">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-70" />
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-cyan-500" />
                 </span>
               ) : (
-                <span className="inline-flex h-2 w-2 rounded-full bg-muted-foreground/30" />
+                <span className="inline-flex h-2.5 w-2.5 rounded-full bg-muted-foreground/35" />
               )}
               <Identity name={run.agentName} size="sm" className="[&>span:last-child]:!text-[11px]" />
             </div>
@@ -117,7 +117,7 @@ function AgentRunCard({
 
           <Link
             to={`/agents/${run.agentId}/runs/${run.id}`}
-            className="inline-flex items-center gap-1 rounded-lg border border-border/50 bg-accent/40 px-2 py-1 text-[10px] text-muted-foreground transition-all duration-150 hover:text-foreground hover:bg-accent/70"
+            className="inline-flex items-center gap-1 rounded-full border border-border/70 bg-background/70 px-2 py-1 text-[10px] text-muted-foreground transition-colors hover:text-foreground"
           >
             <ExternalLink className="h-2.5 w-2.5" />
           </Link>
@@ -129,7 +129,7 @@ function AgentRunCard({
               to={`/issues/${issue?.identifier ?? run.issueId}`}
               className={cn(
                 "line-clamp-2 hover:underline",
-                isActive ? "text-emerald-700 dark:text-emerald-300" : "text-muted-foreground hover:text-foreground",
+                isActive ? "text-cyan-700 dark:text-cyan-300" : "text-muted-foreground hover:text-foreground",
               )}
               title={issue?.title ? `${issue?.identifier ?? run.issueId.slice(0, 8)} - ${issue.title}` : issue?.identifier ?? run.issueId.slice(0, 8)}
             >

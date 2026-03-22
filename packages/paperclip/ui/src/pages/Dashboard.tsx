@@ -186,7 +186,7 @@ export function Dashboard() {
   const hasNoAgents = agents !== undefined && agents.length === 0;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {error && <p className="text-sm text-destructive">{error.message}</p>}
 
       {hasNoAgents && (
@@ -198,7 +198,7 @@ export function Dashboard() {
             </p>
           </div>
           <button
-            onClick={() => openOnboarding({ companyId: selectedCompanyId! })}
+            onClick={() => openOnboarding({ initialStep: 2, companyId: selectedCompanyId! })}
             className="text-sm font-medium text-amber-700 hover:text-amber-900 dark:text-amber-300 dark:hover:text-amber-100 underline underline-offset-2 shrink-0"
           >
             Create one here
@@ -229,7 +229,7 @@ export function Dashboard() {
             </div>
           ) : null}
 
-          <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 xl:grid-cols-4 gap-1 sm:gap-2">
             <MetricCard
               icon={Bot}
               value={data.agents.active + data.agents.running + data.agents.paused + data.agents.error}
@@ -305,14 +305,14 @@ export function Dashboard() {
             itemClassName="rounded-lg border bg-card p-4 shadow-sm"
           />
 
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-2 gap-4">
             {/* Recent Activity */}
             {recentActivity.length > 0 && (
               <div className="min-w-0">
-                <h3 className="text-[11px] font-semibold text-muted-foreground/60 uppercase tracking-[0.06em] mb-3">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
                   Recent Activity
                 </h3>
-                <div className="border border-border/30 rounded-xl divide-y divide-border/20 overflow-hidden bg-card/15">
+                <div className="border border-border divide-y divide-border overflow-hidden">
                   {recentActivity.map((event) => (
                     <ActivityRow
                       key={event.id}
@@ -329,15 +329,15 @@ export function Dashboard() {
 
             {/* Recent Tasks */}
             <div className="min-w-0">
-              <h3 className="text-[11px] font-semibold text-muted-foreground/60 uppercase tracking-[0.06em] mb-3">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
                 Recent Tasks
               </h3>
               {recentIssues.length === 0 ? (
-                <div className="border border-border/30 rounded-xl bg-card/15 p-4">
+                <div className="border border-border p-4">
                   <p className="text-sm text-muted-foreground">No tasks yet.</p>
                 </div>
               ) : (
-                <div className="border border-border/30 rounded-xl divide-y divide-border/20 overflow-hidden bg-card/15">
+                <div className="border border-border divide-y divide-border overflow-hidden">
                   {recentIssues.slice(0, 10).map((issue) => (
                     <Link
                       key={issue.id}
