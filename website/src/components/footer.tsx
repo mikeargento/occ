@@ -9,7 +9,7 @@ export function Footer() {
         <div className="flex flex-col md:flex-row md:justify-between gap-12">
           <div className="max-w-md">
             <div className="text-[22px] font-black tracking-[-0.02em] mb-5 text-text">
-              OCC.WTF
+              OCC
             </div>
             <p className="text-sm text-text-tertiary leading-relaxed">
               Cryptographic control for AI agents<br />
