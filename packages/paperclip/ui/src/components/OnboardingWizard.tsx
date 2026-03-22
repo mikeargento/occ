@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useLocation, useNavigate, useParams } from "@/lib/router";
+import { useLocation, useParams } from "@/lib/router";
 import { useDialog } from "../context/DialogContext";
 import { useCompany } from "../context/CompanyContext";
 import { companiesApi } from "../api/companies";
@@ -54,7 +54,6 @@ export function OnboardingWizard() {
   const { companies, setSelectedCompanyId, loading: companiesLoading } =
     useCompany();
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
   const location = useLocation();
   const { companyPrefix } = useParams<{ companyPrefix?: string }>();
   const [routeDismissed, setRouteDismissed] = useState(false);
@@ -160,14 +159,10 @@ export function OnboardingWizard() {
         },
       });
 
-      // 4. Refresh data and navigate
-      setSelectedCompanyId(companyId);
-      await queryClient.refetchQueries({ queryKey: queryKeys.companies.all });
-      await queryClient.refetchQueries({ queryKey: queryKeys.agents.list(companyId) });
-
-      reset();
-      closeOnboarding();
-      navigate(companyPrefix ? `/${companyPrefix}/dashboard` : "/");
+      // 4. Navigate with a full page load to avoid stale React state race
+      // The companies list hasn't re-rendered yet after refetch, so Layout
+      // would clobber selectedCompanyId. A hard navigation ensures clean state.
+      window.location.href = companyPrefix ? `/${companyPrefix}/dashboard` : "/";
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
