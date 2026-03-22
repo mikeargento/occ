@@ -1,28 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
-import { useTheme } from "./theme-provider";
 
 export function Footer() {
-  const { theme } = useTheme();
-
   return (
     <footer className="pb-16">
       <div className="mx-auto max-w-6xl px-6 pt-16">
         <div className="flex flex-col md:flex-row md:justify-between gap-12">
           <div className="max-w-md">
-            <div className="mb-5">
-              <Image
-                src={theme === "dark" ? "/logo-dark.png" : "/logo.png"}
-                alt="OCC"
-                width={28}
-                height={28}
-              />
-            </div>
             <p className="text-sm text-text-tertiary leading-relaxed">
+              <span className="font-bold text-text">Origin Controlled Computing</span><br />
               Cryptographic control for AI agents<br />
-              Origin Controlled Computing<br />
               Patent Pending
             </p>
           </div>
