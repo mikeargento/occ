@@ -37,25 +37,27 @@ export async function handleApi(req, res, url) {
     if (path === "/agents" && method === "GET") {
         const agents = await db.getAgents(userId);
         const summaries = agents.map((a) => ({
-            agentId: a.id,
+            id: a.id,
             name: a.name,
-            allowedTools: a.allowed_tools ?? [],
-            paused: a.paused,
-            totalCalls: a.total_calls,
-            allowedCount: a.allowed_count,
-            deniedCount: a.denied_count,
+            policy: null,
+            createdAt: new Date(a.created_at).getTime(),
+            status: a.paused ? "paused" : "active",
+            totalCalls: a.total_calls ?? 0,
+            totalSpendCents: 0,
+            auditCount: a.total_calls ?? 0,
         }));
         // If no agents, create a default one
         if (summaries.length === 0) {
             await db.upsertAgent(userId, { id: "default-agent", name: "default-agent" });
             summaries.push({
-                agentId: "default-agent",
+                id: "default-agent",
                 name: "default-agent",
-                allowedTools: [],
-                paused: false,
+                policy: null,
+                createdAt: Date.now(),
+                status: "active",
                 totalCalls: 0,
-                allowedCount: 0,
-                deniedCount: 0,
+                totalSpendCents: 0,
+                auditCount: 0,
             });
         }
         return json(res, { agents: summaries });
@@ -64,7 +66,7 @@ export async function handleApi(req, res, url) {
         const body = JSON.parse(await readBody(req));
         const id = body.name?.toLowerCase().replace(/[^a-z0-9-]/g, "-") ?? "agent-" + Date.now();
         await db.upsertAgent(userId, { id, name: body.name ?? id, allowedTools: body.allowedTools });
-        return json(res, { agent: { agentId: id, name: body.name ?? id } }, 201);
+        return json(res, { agent: { id, name: body.name ?? id, status: "active", createdAt: Date.now() } }, 201);
     }
     // /agents/:id
     const agentMatch = path.match(/^\/agents\/([^/]+)$/);
@@ -75,9 +77,9 @@ export async function handleApi(req, res, url) {
             if (!agent)
                 return json(res, { error: "Not found" }, 404);
             return json(res, {
-                agent: { agentId: agent.id, name: agent.name, allowedTools: agent.allowed_tools, paused: agent.paused },
-                context: { allowedTools: agent.allowed_tools },
-                auditCount: agent.total_calls,
+                agent: { id: agent.id, name: agent.name, status: agent.paused ? "paused" : "active", createdAt: new Date(agent.created_at).getTime(), policy: null },
+                context: { allowedTools: agent.allowed_tools ?? [] },
+                auditCount: agent.total_calls ?? 0,
             });
         }
         if (method === "DELETE") {
