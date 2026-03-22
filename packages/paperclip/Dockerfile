@@ -30,7 +30,7 @@ FROM base AS build
 WORKDIR /app
 COPY --from=deps /app /app
 COPY . .
-RUN pnpm -r build
+RUN pnpm --filter @occ-agent/server... --filter @occ-agent/ui... build
 RUN test -f server/dist/index.js || (echo "ERROR: server build output missing" && exit 1)
 
 FROM base AS production
