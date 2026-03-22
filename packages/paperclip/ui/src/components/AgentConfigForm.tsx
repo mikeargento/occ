@@ -774,6 +774,7 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
 
               <Field label="Environment variables" hint={help.envVars}>
                 <EnvVarEditor
+                  adapterType={adapterType}
                   value={
                     isCreate
                       ? ((val!.envBindings ?? EMPTY_ENV) as Record<string, EnvBinding>)
@@ -1226,12 +1227,28 @@ function AdapterTypeDropdown({
   );
 }
 
+/** Suggested env var keys per adapter type */
+const ADAPTER_ENV_SUGGESTIONS: Record<string, string[]> = {
+  claude_local: ["ANTHROPIC_API_KEY"],
+  codex_local: ["OPENAI_API_KEY"],
+  opencode_local: ["OPENAI_API_KEY"],
+  gemini_local: ["GEMINI_API_KEY"],
+  cursor: ["CURSOR_API_KEY"],
+  pi_local: ["PI_API_KEY"],
+  openclaw_gateway: [],
+  hermes_local: [],
+  http: [],
+  process: [],
+};
+
 function EnvVarEditor({
+  adapterType,
   value,
   secrets,
   onCreateSecret,
   onChange,
 }: {
+  adapterType: string;
   value: Record<string, EnvBinding>;
   secrets: CompanySecret[];
   onCreateSecret: (name: string, value: string) => Promise<CompanySecret>;
@@ -1243,6 +1260,8 @@ function EnvVarEditor({
     plainValue: string;
     secretId: string;
   };
+
+  const suggestions = ADAPTER_ENV_SUGGESTIONS[adapterType] ?? [];
 
   function toRows(rec: Record<string, EnvBinding> | null | undefined): Row[] {
     if (!rec || typeof rec !== "object") {
@@ -1391,12 +1410,28 @@ function EnvVarEditor({
           !row.secretId;
         return (
           <div key={i} className="flex items-center gap-1.5">
-            <input
-              className={cn(inputClass, "flex-[2]")}
-              placeholder="KEY"
-              value={row.key}
-              onChange={(e) => updateRow(i, { key: e.target.value })}
-            />
+            {suggestions.length > 0 && !row.key ? (
+              <select
+                className={cn(inputClass, "flex-[2] bg-background")}
+                value=""
+                onChange={(e) => updateRow(i, { key: e.target.value })}
+              >
+                <option value="">Select variable...</option>
+                {suggestions
+                  .filter((s) => !rows.some((r, idx) => idx !== i && r.key === s))
+                  .map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                <option value="__custom">Custom...</option>
+              </select>
+            ) : (
+              <input
+                className={cn(inputClass, "flex-[2]")}
+                placeholder="KEY"
+                value={row.key === "__custom" ? "" : row.key}
+                onChange={(e) => updateRow(i, { key: e.target.value })}
+              />
+            )}
             <select
               className={cn(inputClass, "flex-[1] bg-background")}
               value={row.source}
