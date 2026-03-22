@@ -5,9 +5,10 @@ import { useBreadcrumbs } from "../context/BreadcrumbContext";
 import { companiesApi } from "../api/companies";
 import { accessApi } from "../api/access";
 import { assetsApi } from "../api/assets";
+import { secretsApi } from "../api/secrets";
 import { queryKeys } from "../lib/queryKeys";
 import { Button } from "@/components/ui/button";
-import { Settings, Check } from "lucide-react";
+import { Settings, Check, Eye, EyeOff, RotateCw, Trash2, Plus } from "lucide-react";
 import { CompanyPatternIcon } from "../components/CompanyPatternIcon";
 import {
   Field,
@@ -461,6 +462,11 @@ export function CompanySettings() {
         </div>
       </div>
 
+      {/* API Keys */}
+      {selectedCompanyId && (
+        <CompanyApiKeys companyId={selectedCompanyId} />
+      )}
+
       {/* Danger Zone */}
       <div className="space-y-4">
         <div className="text-xs font-medium text-destructive uppercase tracking-wide">
@@ -514,6 +520,270 @@ export function CompanySettings() {
         </div>
       </div>
 
+    </div>
+  );
+}
+
+const KNOWN_API_KEYS = [
+  { value: "ANTHROPIC_API_KEY", label: "Anthropic (Claude)" },
+  { value: "OPENAI_API_KEY", label: "OpenAI (Codex / GPT)" },
+  { value: "GEMINI_API_KEY", label: "Google (Gemini)" },
+  { value: "CURSOR_API_KEY", label: "Cursor" },
+] as const;
+
+function CompanyApiKeys({ companyId }: { companyId: string }) {
+  const queryClient = useQueryClient();
+  const [newKeyName, setNewKeyName] = useState("");
+  const [newKeyValue, setNewKeyValue] = useState("");
+  const [showNewValue, setShowNewValue] = useState(false);
+  const [rotateId, setRotateId] = useState<string | null>(null);
+  const [rotateValue, setRotateValue] = useState("");
+  const [showRotateValue, setShowRotateValue] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const { data: secrets = [], isLoading } = useQuery({
+    queryKey: ["company-secrets", companyId],
+    queryFn: () => secretsApi.list(companyId),
+  });
+
+  // Filter to only show secrets that match known API key names
+  const apiKeySecrets = secrets.filter((s) =>
+    KNOWN_API_KEYS.some((k) => k.value === s.name)
+  );
+  const availableKeys = KNOWN_API_KEYS.filter(
+    (k) => !secrets.some((s) => s.name === k.value)
+  );
+
+  const createMutation = useMutation({
+    mutationFn: (data: { name: string; value: string }) =>
+      secretsApi.create(companyId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["company-secrets", companyId] });
+      setNewKeyName("");
+      setNewKeyValue("");
+      setShowNewValue(false);
+      setError(null);
+    },
+    onError: (err) => {
+      setError(err instanceof Error ? err.message : "Failed to save key");
+    },
+  });
+
+  const rotateMutation = useMutation({
+    mutationFn: ({ id, value }: { id: string; value: string }) =>
+      secretsApi.rotate(id, { value }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["company-secrets", companyId] });
+      setRotateId(null);
+      setRotateValue("");
+      setShowRotateValue(false);
+      setError(null);
+    },
+    onError: (err) => {
+      setError(err instanceof Error ? err.message : "Failed to rotate key");
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => secretsApi.remove(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["company-secrets", companyId] });
+      setError(null);
+    },
+    onError: (err) => {
+      setError(err instanceof Error ? err.message : "Failed to delete key");
+    },
+  });
+
+  function handleCreate() {
+    if (!newKeyName || !newKeyValue) return;
+    createMutation.mutate({ name: newKeyName, value: newKeyValue });
+  }
+
+  function handleRotate(id: string) {
+    if (!rotateValue) return;
+    rotateMutation.mutate({ id, value: rotateValue });
+  }
+
+  function handleDelete(id: string, name: string) {
+    if (!window.confirm(`Delete ${name}? All agents using this key will stop working.`)) return;
+    deleteMutation.mutate(id);
+  }
+
+  const labelFor = (name: string) =>
+    KNOWN_API_KEYS.find((k) => k.value === name)?.label ?? name;
+
+  return (
+    <div className="space-y-4">
+      <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+        API Keys
+      </div>
+      <div className="space-y-3 rounded-md border border-border px-4 py-4">
+        <p className="text-xs text-muted-foreground">
+          API keys set here are inherited by all agents in this company. Agent-level keys override these defaults.
+        </p>
+
+        {/* Existing keys */}
+        {isLoading && (
+          <p className="text-xs text-muted-foreground">Loading...</p>
+        )}
+        {apiKeySecrets.map((secret) => (
+          <div
+            key={secret.id}
+            className="flex items-center gap-2 rounded-md border border-border bg-muted/20 px-3 py-2"
+          >
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-medium">{labelFor(secret.name)}</div>
+              <div className="text-xs text-muted-foreground font-mono">{secret.name}</div>
+            </div>
+            {rotateId === secret.id ? (
+              <div className="flex items-center gap-1.5">
+                <div className="relative">
+                  <input
+                    type={showRotateValue ? "text" : "password"}
+                    className="w-56 rounded-md border border-border bg-transparent px-2.5 py-1 text-xs font-mono outline-none pr-7"
+                    placeholder="New key value"
+                    value={rotateValue}
+                    onChange={(e) => setRotateValue(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    onClick={() => setShowRotateValue(!showRotateValue)}
+                  >
+                    {showRotateValue ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                  </button>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleRotate(secret.id)}
+                  disabled={!rotateValue || rotateMutation.isPending}
+                >
+                  {rotateMutation.isPending ? "..." : "Save"}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => { setRotateId(null); setRotateValue(""); setShowRotateValue(false); }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setRotateId(secret.id)}
+                  title="Rotate key"
+                >
+                  <RotateCw className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => handleDelete(secret.id, secret.name)}
+                  className="text-muted-foreground hover:text-destructive"
+                  title="Delete key"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            )}
+          </div>
+        ))}
+
+        {/* Also show non-API-key secrets if any */}
+        {secrets.filter((s) => !KNOWN_API_KEYS.some((k) => k.value === s.name)).map((secret) => (
+          <div
+            key={secret.id}
+            className="flex items-center gap-2 rounded-md border border-border bg-muted/20 px-3 py-2"
+          >
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-medium font-mono">{secret.name}</div>
+              {secret.description && (
+                <div className="text-xs text-muted-foreground">{secret.description}</div>
+              )}
+            </div>
+            <div className="flex items-center gap-1">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setRotateId(secret.id)}
+                title="Rotate"
+              >
+                <RotateCw className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => handleDelete(secret.id, secret.name)}
+                className="text-muted-foreground hover:text-destructive"
+                title="Delete"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          </div>
+        ))}
+
+        {/* Add new key */}
+        {availableKeys.length > 0 && (
+          <div className="flex items-center gap-1.5 pt-1">
+            <select
+              className="flex-[2] rounded-md border border-border bg-background px-2.5 py-1.5 text-sm outline-none"
+              value={newKeyName}
+              onChange={(e) => setNewKeyName(e.target.value)}
+            >
+              <option value="">Add API key...</option>
+              {availableKeys.map((k) => (
+                <option key={k.value} value={k.value}>
+                  {k.label}
+                </option>
+              ))}
+            </select>
+            {newKeyName && (
+              <>
+                <div className="relative flex-[3]">
+                  <input
+                    type={showNewValue ? "text" : "password"}
+                    className="w-full rounded-md border border-border bg-transparent px-2.5 py-1.5 text-sm font-mono outline-none pr-8"
+                    placeholder="sk-ant-..."
+                    value={newKeyValue}
+                    onChange={(e) => setNewKeyValue(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    onClick={() => setShowNewValue(!showNewValue)}
+                  >
+                    {showNewValue ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                  </button>
+                </div>
+                <Button
+                  size="sm"
+                  onClick={handleCreate}
+                  disabled={!newKeyValue || createMutation.isPending}
+                >
+                  <Plus className="h-3.5 w-3.5 mr-1" />
+                  {createMutation.isPending ? "Saving..." : "Add"}
+                </Button>
+              </>
+            )}
+          </div>
+        )}
+
+        {error && (
+          <p className="text-xs text-destructive">{error}</p>
+        )}
+
+        {apiKeySecrets.length === 0 && !isLoading && (
+          <p className="text-xs text-muted-foreground/60 pt-1">
+            No API keys configured. Add one to enable AI agents.
+          </p>
+        )}
+      </div>
     </div>
   );
 }
