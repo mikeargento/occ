@@ -125,7 +125,7 @@ export default function ExplorerPage() {
   }, [searchQuery]);
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-16 sm:py-24">
+    <div className="mx-auto max-w-6xl px-6 py-16 sm:py-24">
       {/* Header */}
       <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-text">
         Proof Explorer

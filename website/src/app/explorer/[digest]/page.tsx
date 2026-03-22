@@ -61,7 +61,7 @@ export default function ProofDetailPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-4xl px-6 py-16 sm:py-24">
+      <div className="mx-auto max-w-6xl px-6 py-16 sm:py-24">
         <div className="text-text-tertiary animate-pulse">Loading proof...</div>
       </div>
     );
@@ -69,7 +69,7 @@ export default function ProofDetailPage() {
 
   if (error) {
     return (
-      <div className="mx-auto max-w-4xl px-6 py-16 sm:py-24">
+      <div className="mx-auto max-w-6xl px-6 py-16 sm:py-24">
         <div className="text-error">{error}</div>
         <Link href="/explorer" className="text-sm text-text-secondary hover:text-text mt-2 inline-block">
           &larr; Back to Explorer
@@ -80,7 +80,7 @@ export default function ProofDetailPage() {
 
   if (!results || results.length === 0) {
     return (
-      <div className="mx-auto max-w-4xl px-6 py-16 sm:py-24">
+      <div className="mx-auto max-w-6xl px-6 py-16 sm:py-24">
         <h1 className="text-2xl font-bold text-text">Proof Not Found</h1>
         <p className="mt-2 text-text-secondary">
           No proof exists for this artifact digest.
@@ -107,7 +107,7 @@ export default function ProofDetailPage() {
   const allKeys = [...orderedKeys, ...remainingKeys].filter((k) => proofAny[k] !== undefined);
 
   return (
-    <div className="mx-auto max-w-4xl px-6 py-16 sm:py-24">
+    <div className="mx-auto max-w-6xl px-6 py-16 sm:py-24">
       {/* Breadcrumb */}
       <Link href="/explorer" className="text-sm text-text-tertiary hover:text-text transition-colors">
         &larr; Explorer
