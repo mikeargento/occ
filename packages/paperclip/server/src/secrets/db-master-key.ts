@@ -18,10 +18,9 @@
  */
 
 import { randomBytes } from "node:crypto";
-import postgres from "postgres";
+import { sql } from "drizzle-orm";
 import { logger } from "../middleware/logger.js";
 
-const SYSTEM_KV_TABLE = "system_kv";
 const MASTER_KEY_ID = "secrets_master_key";
 
 function isContainerizedEnvironment(): boolean {
@@ -37,8 +36,10 @@ function isContainerizedEnvironment(): boolean {
  * Ensures the secrets master key is available via env var for containerized
  * deployments. No-op if the env var is already set or if not running in a
  * container environment.
+ *
+ * @param db - Drizzle database instance (already connected)
  */
-export async function ensureMasterKeyFromDb(databaseUrl: string): Promise<void> {
+export async function ensureMasterKeyFromDb(db: { execute: (query: any) => Promise<any> }): Promise<void> {
   // 1. If the env var is already set, nothing to do.
   if (process.env.PAPERCLIP_SECRETS_MASTER_KEY?.trim()) {
     return;
@@ -49,12 +50,10 @@ export async function ensureMasterKeyFromDb(databaseUrl: string): Promise<void> 
     return;
   }
 
-  const sql = postgres(databaseUrl, { max: 1, onnotice: () => {} });
-
   try {
     // Ensure the system_kv table exists (idempotent).
-    await sql.unsafe(`
-      CREATE TABLE IF NOT EXISTS ${SYSTEM_KV_TABLE} (
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS system_kv (
         key   TEXT PRIMARY KEY,
         value TEXT NOT NULL,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -63,13 +62,13 @@ export async function ensureMasterKeyFromDb(databaseUrl: string): Promise<void> 
     `);
 
     // Try to read an existing key from the DB.
-    const rows = await sql.unsafe(
-      `SELECT value FROM ${SYSTEM_KV_TABLE} WHERE key = $1`,
-      [MASTER_KEY_ID],
-    );
+    const rows = await db.execute(sql`
+      SELECT value FROM system_kv WHERE key = ${MASTER_KEY_ID}
+    `);
 
-    if (rows.length > 0 && typeof rows[0].value === "string" && rows[0].value.trim()) {
-      process.env.PAPERCLIP_SECRETS_MASTER_KEY = rows[0].value.trim();
+    const existing = rows?.[0]?.value;
+    if (typeof existing === "string" && existing.trim()) {
+      process.env.PAPERCLIP_SECRETS_MASTER_KEY = existing.trim();
       logger.info("Loaded secrets master key from database (persisted across deploys)");
       return;
     }
@@ -77,16 +76,15 @@ export async function ensureMasterKeyFromDb(databaseUrl: string): Promise<void> 
     // No key in DB — generate one and persist it.
     const generated = randomBytes(32).toString("base64");
 
-    await sql.unsafe(
-      `INSERT INTO ${SYSTEM_KV_TABLE} (key, value)
-       VALUES ($1, $2)
-       ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()`,
-      [MASTER_KEY_ID, generated],
-    );
+    await db.execute(sql`
+      INSERT INTO system_kv (key, value)
+      VALUES (${MASTER_KEY_ID}, ${generated})
+      ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()
+    `);
 
     process.env.PAPERCLIP_SECRETS_MASTER_KEY = generated;
     logger.info("Generated and stored new secrets master key in database");
-  } finally {
-    await sql.end();
+  } catch (err) {
+    logger.error("Failed to ensure master key from DB — secrets may not persist across deploys", { error: String(err) });
   }
 }

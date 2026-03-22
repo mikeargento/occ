@@ -402,7 +402,7 @@ export async function startServer(): Promise<StartedServer> {
   // In containerized environments (Railway), persist the secrets master key in
   // the database so it survives container restarts. Must run after DB is ready
   // but before any code touches the secrets provider.
-  await ensureMasterKeyFromDb(activeDatabaseConnectionString);
+  await ensureMasterKeyFromDb(db);
 
   if (config.deploymentMode === "local_trusted" && !isLoopbackHost(config.host)) {
     throw new Error(
