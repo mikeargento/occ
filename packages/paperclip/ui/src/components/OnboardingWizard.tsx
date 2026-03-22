@@ -1,64 +1,28 @@
-import { useEffect, useState, useRef, useCallback, useMemo } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import type { AdapterEnvironmentTestResult } from "@paperclipai/shared";
+import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate, useParams } from "@/lib/router";
 import { useDialog } from "../context/DialogContext";
 import { useCompany } from "../context/CompanyContext";
 import { companiesApi } from "../api/companies";
-import { goalsApi } from "../api/goals";
 import { agentsApi } from "../api/agents";
-import { issuesApi } from "../api/issues";
 import { secretsApi } from "../api/secrets";
 import { queryKeys } from "../lib/queryKeys";
 import { Dialog, DialogPortal } from "@/components/ui/dialog";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger
-} from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { cn } from "../lib/utils";
-import {
-  extractModelName,
-  extractProviderIdWithFallback
-} from "../lib/model-utils";
 import { getUIAdapter } from "../adapters";
 import { defaultCreateValues } from "./agent-config-defaults";
-import { parseOnboardingGoalInput } from "../lib/onboarding-goal";
 import {
-  DEFAULT_CODEX_LOCAL_BYPASS_APPROVALS_AND_SANDBOX,
-  DEFAULT_CODEX_LOCAL_MODEL
-} from "@paperclipai/adapter-codex-local";
-import { DEFAULT_CURSOR_LOCAL_MODEL } from "@paperclipai/adapter-cursor-local";
-import { DEFAULT_GEMINI_LOCAL_MODEL } from "@paperclipai/adapter-gemini-local";
-import { resolveRouteOnboardingOptions } from "../lib/onboarding-route";
-import { AsciiArtAnimation } from "./AsciiArtAnimation";
-import { ChoosePathButton } from "./PathInstructionsModal";
-import { HintIcon } from "./agent-config-primitives";
-import { OpenCodeLogoIcon } from "./OpenCodeLogoIcon";
+  isOnboardingPath,
+} from "../lib/onboarding-route";
 import {
   Building2,
-  Bot,
-  Code,
-  Gem,
   Key,
-  ListTodo,
-  Rocket,
-  ArrowLeft,
-  ArrowRight,
-  Terminal,
-  Sparkles,
-  MousePointer2,
-  Check,
-  Loader2,
-  FolderOpen,
-  ChevronDown,
   Eye,
   EyeOff,
-  X
+  Loader2,
+  X,
 } from "lucide-react";
 
-type Step = 1 | 2 | 3 | 4 | 5;
 type AdapterType =
   | "claude_local"
   | "codex_local"
@@ -70,241 +34,64 @@ type AdapterType =
   | "http"
   | "openclaw_gateway";
 
-const DEFAULT_TASK_DESCRIPTION = `Setup yourself as the CEO. Use the ceo persona found here: 
-
-https://github.com/mikeargento/occ/blob/main/default/ceo/AGENTS.md
-
-Ensure you have a folder agents/ceo and then download this AGENTS.md, and sibling HEARTBEAT.md, SOUL.md, and TOOLS.md. and set that AGENTS.md as the path to your agents instruction file
-
-After that, hire yourself a Founding Engineer agent and then plan the roadmap and tasks for your new company.`;
+function providerToAdapterType(provider: string): AdapterType {
+  switch (provider) {
+    case "ANTHROPIC_API_KEY":
+      return "claude_local";
+    case "OPENAI_API_KEY":
+      return "codex_local";
+    case "GEMINI_API_KEY":
+      return "gemini_local";
+    case "CURSOR_API_KEY":
+      return "cursor";
+    default:
+      return "claude_local";
+  }
+}
 
 export function OnboardingWizard() {
   const { onboardingOpen, onboardingOptions, closeOnboarding } = useDialog();
-  const { companies, setSelectedCompanyId, loading: companiesLoading } = useCompany();
+  const { companies, setSelectedCompanyId, loading: companiesLoading } =
+    useCompany();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const location = useLocation();
   const { companyPrefix } = useParams<{ companyPrefix?: string }>();
   const [routeDismissed, setRouteDismissed] = useState(false);
 
-  const routeOnboardingOptions =
-    companyPrefix && companiesLoading
-      ? null
-      : resolveRouteOnboardingOptions({
-          pathname: location.pathname,
-          companyPrefix,
-          companies,
-        });
+  // Check if the current route is an onboarding path
+  const isRouteOnboarding =
+    !companyPrefix || !companiesLoading
+      ? isOnboardingPath(location.pathname)
+      : false;
   const effectiveOnboardingOpen =
-    onboardingOpen || (routeOnboardingOptions !== null && !routeDismissed);
-  const effectiveOnboardingOptions = onboardingOpen
-    ? onboardingOptions
-    : routeOnboardingOptions ?? {};
+    onboardingOpen || (isRouteOnboarding && !routeDismissed);
 
-  const initialStep = effectiveOnboardingOptions.initialStep ?? 1;
-  const existingCompanyId = effectiveOnboardingOptions.companyId;
+  // Existing company passed in via options (e.g. from Dashboard "Create one here")
+  const existingCompanyId = onboardingOptions.companyId;
 
-  const [step, setStep] = useState<Step>(initialStep);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [modelOpen, setModelOpen] = useState(false);
-  const [modelSearch, setModelSearch] = useState("");
 
-  // Step 1
+  // Company
   const [companyName, setCompanyName] = useState("");
-  const [companyGoal, setCompanyGoal] = useState("");
 
-  // Step 2 — API Keys
+  // API Key
   const [apiKeyProvider, setApiKeyProvider] = useState("ANTHROPIC_API_KEY");
   const [apiKeyValue, setApiKeyValue] = useState("");
-  const [apiKeySaving, setApiKeySaving] = useState(false);
-  const [apiKeySaved, setApiKeySaved] = useState<Array<{ name: string; maskedValue: string }>>([]);
   const [apiKeyShowValue, setApiKeyShowValue] = useState(false);
-
-  // Step 3 — Agent
-  const [agentName, setAgentName] = useState("CEO");
-  const [adapterType, setAdapterType] = useState<AdapterType>("claude_local");
-  const [cwd, setCwd] = useState("");
-  const [model, setModel] = useState("");
-  const [command, setCommand] = useState("");
-  const [args, setArgs] = useState("");
-  const [url, setUrl] = useState("");
-  const [adapterEnvResult, setAdapterEnvResult] =
-    useState<AdapterEnvironmentTestResult | null>(null);
-  const [adapterEnvError, setAdapterEnvError] = useState<string | null>(null);
-  const [adapterEnvLoading, setAdapterEnvLoading] = useState(false);
-  const [forceUnsetAnthropicApiKey, setForceUnsetAnthropicApiKey] =
-    useState(false);
-  const [unsetAnthropicLoading, setUnsetAnthropicLoading] = useState(false);
-  const [showMoreAdapters, setShowMoreAdapters] = useState(false);
-
-  // Step 4 — Task
-  const [taskTitle, setTaskTitle] = useState("Create your CEO HEARTBEAT.md");
-  const [taskDescription, setTaskDescription] = useState(
-    DEFAULT_TASK_DESCRIPTION
-  );
-
-  // Auto-grow textarea for task description
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const autoResizeTextarea = useCallback(() => {
-    const el = textareaRef.current;
-    if (!el) return;
-    el.style.height = "auto";
-    el.style.height = el.scrollHeight + "px";
-  }, []);
-
-  // Created entity IDs — pre-populate from existing company when skipping step 1
-  const [createdCompanyId, setCreatedCompanyId] = useState<string | null>(
-    existingCompanyId ?? null
-  );
-  const [createdCompanyPrefix, setCreatedCompanyPrefix] = useState<
-    string | null
-  >(null);
-  const [createdAgentId, setCreatedAgentId] = useState<string | null>(null);
-  const [createdIssueRef, setCreatedIssueRef] = useState<string | null>(null);
 
   useEffect(() => {
     setRouteDismissed(false);
   }, [location.pathname]);
 
-  // Sync step and company when onboarding opens with options.
-  // Keep this independent from company-list refreshes so Step 1 completion
-  // doesn't get reset after creating a company.
-  useEffect(() => {
-    if (!effectiveOnboardingOpen) return;
-    const cId = effectiveOnboardingOptions.companyId ?? null;
-    setStep(effectiveOnboardingOptions.initialStep ?? 1);
-    setCreatedCompanyId(cId);
-    setCreatedCompanyPrefix(null);
-  }, [
-    effectiveOnboardingOpen,
-    effectiveOnboardingOptions.companyId,
-    effectiveOnboardingOptions.initialStep
-  ]);
-
-  // Backfill issue prefix for an existing company once companies are loaded.
-  useEffect(() => {
-    if (!effectiveOnboardingOpen || !createdCompanyId || createdCompanyPrefix) return;
-    const company = companies.find((c) => c.id === createdCompanyId);
-    if (company) setCreatedCompanyPrefix(company.issuePrefix);
-  }, [effectiveOnboardingOpen, createdCompanyId, createdCompanyPrefix, companies]);
-
-  // Resize textarea when step 4 is shown or description changes
-  useEffect(() => {
-    if (step === 4) autoResizeTextarea();
-  }, [step, taskDescription, autoResizeTextarea]);
-
-  const {
-    data: adapterModels,
-    error: adapterModelsError,
-    isLoading: adapterModelsLoading,
-    isFetching: adapterModelsFetching
-  } = useQuery({
-    queryKey: createdCompanyId
-      ? queryKeys.agents.adapterModels(createdCompanyId, adapterType)
-      : ["agents", "none", "adapter-models", adapterType],
-    queryFn: () => agentsApi.adapterModels(createdCompanyId!, adapterType),
-    enabled: Boolean(createdCompanyId) && effectiveOnboardingOpen && step === 3
-  });
-  const isLocalAdapter =
-    adapterType === "claude_local" ||
-    adapterType === "codex_local" ||
-    adapterType === "gemini_local" ||
-    adapterType === "opencode_local" ||
-    adapterType === "cursor";
-  const effectiveAdapterCommand =
-    command.trim() ||
-    (adapterType === "codex_local"
-      ? "codex"
-      : adapterType === "gemini_local"
-        ? "gemini"
-      : adapterType === "cursor"
-      ? "agent"
-      : adapterType === "opencode_local"
-      ? "opencode"
-      : "claude");
-
-  useEffect(() => {
-    if (step !== 3) return;
-    setAdapterEnvResult(null);
-    setAdapterEnvError(null);
-  }, [step, adapterType, cwd, model, command, args, url]);
-
-  const selectedModel = (adapterModels ?? []).find((m) => m.id === model);
-  const hasAnthropicApiKeyOverrideCheck =
-    adapterEnvResult?.checks.some(
-      (check) =>
-        check.code === "claude_anthropic_api_key_overrides_subscription"
-    ) ?? false;
-  const shouldSuggestUnsetAnthropicApiKey =
-    adapterType === "claude_local" &&
-    adapterEnvResult?.status === "fail" &&
-    hasAnthropicApiKeyOverrideCheck;
-  const filteredModels = useMemo(() => {
-    const query = modelSearch.trim().toLowerCase();
-    return (adapterModels ?? []).filter((entry) => {
-      if (!query) return true;
-      const provider = extractProviderIdWithFallback(entry.id, "");
-      return (
-        entry.id.toLowerCase().includes(query) ||
-        entry.label.toLowerCase().includes(query) ||
-        provider.toLowerCase().includes(query)
-      );
-    });
-  }, [adapterModels, modelSearch]);
-  const groupedModels = useMemo(() => {
-    if (adapterType !== "opencode_local") {
-      return [
-        {
-          provider: "models",
-          entries: [...filteredModels].sort((a, b) => a.id.localeCompare(b.id))
-        }
-      ];
-    }
-    const groups = new Map<string, Array<{ id: string; label: string }>>();
-    for (const entry of filteredModels) {
-      const provider = extractProviderIdWithFallback(entry.id);
-      const bucket = groups.get(provider) ?? [];
-      bucket.push(entry);
-      groups.set(provider, bucket);
-    }
-    return Array.from(groups.entries())
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([provider, entries]) => ({
-        provider,
-        entries: [...entries].sort((a, b) => a.id.localeCompare(b.id))
-      }));
-  }, [filteredModels, adapterType]);
-
   function reset() {
-    setStep(1);
     setLoading(false);
     setError(null);
     setCompanyName("");
-    setCompanyGoal("");
     setApiKeyProvider("ANTHROPIC_API_KEY");
     setApiKeyValue("");
-    setApiKeySaving(false);
-    setApiKeySaved([]);
     setApiKeyShowValue(false);
-    setAgentName("CEO");
-    setAdapterType("claude_local");
-    setCwd("");
-    setModel("");
-    setCommand("");
-    setArgs("");
-    setUrl("");
-    setAdapterEnvResult(null);
-    setAdapterEnvError(null);
-    setAdapterEnvLoading(false);
-    setForceUnsetAnthropicApiKey(false);
-    setUnsetAnthropicLoading(false);
-    setTaskTitle("Create your CEO HEARTBEAT.md");
-    setTaskDescription(DEFAULT_TASK_DESCRIPTION);
-    setCreatedCompanyId(null);
-    setCreatedCompanyPrefix(null);
-    setCreatedAgentId(null);
-    setCreatedIssueRef(null);
   }
 
   function handleClose() {
@@ -312,299 +99,78 @@ export function OnboardingWizard() {
     closeOnboarding();
   }
 
-  function buildAdapterConfig(): Record<string, unknown> {
-    const adapter = getUIAdapter(adapterType);
-    const config = adapter.buildAdapterConfig({
-      ...defaultCreateValues,
-      adapterType,
-      cwd,
-      model:
-        adapterType === "codex_local"
-          ? model || DEFAULT_CODEX_LOCAL_MODEL
-          : adapterType === "gemini_local"
-            ? model || DEFAULT_GEMINI_LOCAL_MODEL
-          : adapterType === "cursor"
-          ? model || DEFAULT_CURSOR_LOCAL_MODEL
-          : model,
-      command,
-      args,
-      url,
-      dangerouslySkipPermissions: adapterType === "claude_local",
-      dangerouslyBypassSandbox:
-        adapterType === "codex_local"
-          ? DEFAULT_CODEX_LOCAL_BYPASS_APPROVALS_AND_SANDBOX
-          : defaultCreateValues.dangerouslyBypassSandbox
-    });
-    if (adapterType === "claude_local" && forceUnsetAnthropicApiKey) {
-      const env =
-        typeof config.env === "object" &&
-        config.env !== null &&
-        !Array.isArray(config.env)
-          ? { ...(config.env as Record<string, unknown>) }
-          : {};
-      env.ANTHROPIC_API_KEY = { type: "plain", value: "" };
-      config.env = env;
-    }
-    return config;
-  }
-
-  async function runAdapterEnvironmentTest(
-    adapterConfigOverride?: Record<string, unknown>
-  ): Promise<AdapterEnvironmentTestResult | null> {
-    if (!createdCompanyId) {
-      setAdapterEnvError(
-        "Create or select a company before testing adapter environment."
-      );
-      return null;
-    }
-    setAdapterEnvLoading(true);
-    setAdapterEnvError(null);
+  async function handleGetStarted() {
+    setLoading(true);
+    setError(null);
     try {
-      const result = await agentsApi.testEnvironment(
-        createdCompanyId,
+      // 1. Create or reuse company
+      let companyId = existingCompanyId ?? null;
+      let companyPrefix: string | null = null;
+
+      if (!companyId) {
+        if (!companyName.trim()) {
+          setError("Company name is required.");
+          setLoading(false);
+          return;
+        }
+        const company = await companiesApi.create({
+          name: companyName.trim(),
+        });
+        companyId = company.id;
+        companyPrefix = company.issuePrefix;
+        setSelectedCompanyId(company.id);
+        queryClient.invalidateQueries({ queryKey: queryKeys.companies.all });
+      } else {
+        // Backfill prefix from existing companies list
+        const existing = companies.find((c) => c.id === companyId);
+        if (existing) companyPrefix = existing.issuePrefix;
+      }
+
+      // 2. Save API key as company secret (if provided)
+      if (apiKeyValue.trim()) {
+        await secretsApi.create(companyId, {
+          name: apiKeyProvider,
+          value: apiKeyValue.trim(),
+          provider: "local_encrypted",
+        });
+      }
+
+      // 3. Auto-create CEO agent with adapter based on API key provider
+      const adapterType = providerToAdapterType(apiKeyProvider);
+      const adapter = getUIAdapter(adapterType);
+      const adapterConfig = adapter.buildAdapterConfig({
+        ...defaultCreateValues,
         adapterType,
-        {
-          adapterConfig: adapterConfigOverride ?? buildAdapterConfig()
-        }
-      );
-      setAdapterEnvResult(result);
-      return result;
-    } catch (err) {
-      setAdapterEnvError(
-        err instanceof Error ? err.message : "Adapter environment test failed"
-      );
-      return null;
-    } finally {
-      setAdapterEnvLoading(false);
-    }
-  }
+        dangerouslySkipPermissions: adapterType === "claude_local",
+      });
 
-  async function handleStep1Next() {
-    setLoading(true);
-    setError(null);
-    try {
-      const company = await companiesApi.create({ name: companyName.trim() });
-      setCreatedCompanyId(company.id);
-      setCreatedCompanyPrefix(company.issuePrefix);
-      setSelectedCompanyId(company.id);
-      queryClient.invalidateQueries({ queryKey: queryKeys.companies.all });
-
-      if (companyGoal.trim()) {
-        const parsedGoal = parseOnboardingGoalInput(companyGoal);
-        await goalsApi.create(company.id, {
-          title: parsedGoal.title,
-          ...(parsedGoal.description
-            ? { description: parsedGoal.description }
-            : {}),
-          level: "company",
-          status: "active"
-        });
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.goals.list(company.id)
-        });
-      }
-
-      setStep(2);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create company");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleStep2Next() {
-    // API Keys step — just advance to Agent step
-    setStep(3);
-  }
-
-  async function handleStep3Next_Agent() {
-    if (!createdCompanyId) return;
-    setLoading(true);
-    setError(null);
-
-    // Auto-select adapter based on which API key was saved
-    const savedKeyName = apiKeySaved[0]?.name;
-    let effectiveAdapter = adapterType;
-    if (savedKeyName === "ANTHROPIC_API_KEY") effectiveAdapter = "claude_local";
-    else if (savedKeyName === "OPENAI_API_KEY") effectiveAdapter = "codex_local";
-    else if (savedKeyName === "GEMINI_API_KEY") effectiveAdapter = "gemini_local";
-    else if (savedKeyName === "CURSOR_API_KEY") effectiveAdapter = "cursor";
-    setAdapterType(effectiveAdapter);
-
-    try {
-      if (effectiveAdapter === "opencode_local") {
-        const selectedModelId = model.trim();
-        if (!selectedModelId) {
-          setError(
-            "OpenCode requires an explicit model in provider/model format."
-          );
-          return;
-        }
-        if (adapterModelsError) {
-          setError(
-            adapterModelsError instanceof Error
-              ? adapterModelsError.message
-              : "Failed to load OpenCode models."
-          );
-          return;
-        }
-        if (adapterModelsLoading || adapterModelsFetching) {
-          setError(
-            "OpenCode models are still loading. Please wait and try again."
-          );
-          return;
-        }
-        const discoveredModels = adapterModels ?? [];
-        if (!discoveredModels.some((entry) => entry.id === selectedModelId)) {
-          setError(
-            discoveredModels.length === 0
-              ? "No OpenCode models discovered. Run `opencode models` and authenticate providers."
-              : `Configured OpenCode model is unavailable: ${selectedModelId}`
-          );
-          return;
-        }
-      }
-
-      if (isLocalAdapter) {
-        const result = adapterEnvResult ?? (await runAdapterEnvironmentTest());
-        if (!result) return;
-      }
-
-      const agent = await agentsApi.create(createdCompanyId, {
-        name: agentName.trim(),
+      await agentsApi.create(companyId, {
+        name: "CEO",
         role: "ceo",
         adapterType,
-        adapterConfig: buildAdapterConfig(),
+        adapterConfig,
         runtimeConfig: {
           heartbeat: {
             enabled: true,
             intervalSec: 3600,
             wakeOnDemand: true,
             cooldownSec: 10,
-            maxConcurrentRuns: 1
-          }
-        }
+            maxConcurrentRuns: 1,
+          },
+        },
       });
-      setCreatedAgentId(agent.id);
+
       queryClient.invalidateQueries({
-        queryKey: queryKeys.agents.list(createdCompanyId)
+        queryKey: queryKeys.agents.list(companyId),
       });
-      setStep(4);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create agent");
-    } finally {
-      setLoading(false);
-    }
-  }
 
-  async function handleSaveApiKey() {
-    if (!createdCompanyId || !apiKeyValue.trim()) return;
-    setApiKeySaving(true);
-    setError(null);
-    try {
-      await secretsApi.create(createdCompanyId, {
-        name: apiKeyProvider,
-        value: apiKeyValue.trim(),
-        provider: "local_encrypted"
-      });
-      const masked = apiKeyValue.trim().slice(0, 4) + "..." + apiKeyValue.trim().slice(-4);
-      setApiKeySaved((prev) => [...prev, { name: apiKeyProvider, maskedValue: masked }]);
-      setApiKeyValue("");
-      setApiKeyShowValue(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save API key");
-    } finally {
-      setApiKeySaving(false);
-    }
-  }
-
-  async function handleUnsetAnthropicApiKey() {
-    if (!createdCompanyId || unsetAnthropicLoading) return;
-    setUnsetAnthropicLoading(true);
-    setError(null);
-    setAdapterEnvError(null);
-    setForceUnsetAnthropicApiKey(true);
-
-    const configWithUnset = (() => {
-      const config = buildAdapterConfig();
-      const env =
-        typeof config.env === "object" &&
-        config.env !== null &&
-        !Array.isArray(config.env)
-          ? { ...(config.env as Record<string, unknown>) }
-          : {};
-      env.ANTHROPIC_API_KEY = { type: "plain", value: "" };
-      config.env = env;
-      return config;
-    })();
-
-    try {
-      if (createdAgentId) {
-        await agentsApi.update(
-          createdAgentId,
-          { adapterConfig: configWithUnset },
-          createdCompanyId
-        );
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.agents.list(createdCompanyId)
-        });
-      }
-
-      const result = await runAdapterEnvironmentTest(configWithUnset);
-      if (result?.status === "fail") {
-        setError(
-          "Retried with ANTHROPIC_API_KEY unset in adapter config, but the environment test is still failing."
-        );
-      }
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to unset ANTHROPIC_API_KEY and retry."
-      );
-    } finally {
-      setUnsetAnthropicLoading(false);
-    }
-  }
-
-  async function handleStep4Next() {
-    if (!createdCompanyId || !createdAgentId) return;
-    setError(null);
-    setStep(5);
-  }
-
-  async function handleLaunch() {
-    if (!createdCompanyId || !createdAgentId) return;
-    setLoading(true);
-    setError(null);
-    try {
-      let issueRef = createdIssueRef;
-      if (!issueRef) {
-        const issue = await issuesApi.create(createdCompanyId, {
-          title: taskTitle.trim(),
-          ...(taskDescription.trim()
-            ? { description: taskDescription.trim() }
-            : {}),
-          assigneeAgentId: createdAgentId,
-          status: "todo"
-        });
-        issueRef = issue.identifier ?? issue.id;
-        setCreatedIssueRef(issueRef);
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.issues.list(createdCompanyId)
-        });
-      }
-
-      setSelectedCompanyId(createdCompanyId);
+      // 4. Close and navigate
+      setSelectedCompanyId(companyId);
       reset();
       closeOnboarding();
-      navigate(
-        createdCompanyPrefix
-          ? `/${createdCompanyPrefix}/issues/${issueRef}`
-          : `/issues/${issueRef}`
-      );
+      navigate(companyPrefix ? `/${companyPrefix}` : "/");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create task");
+      setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -613,15 +179,14 @@ export function OnboardingWizard() {
   function handleKeyDown(e: React.KeyboardEvent) {
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
-      if (step === 1 && companyName.trim()) handleStep1Next();
-      else if (step === 2) handleStep2Next();
-      else if (step === 3 && agentName.trim()) handleStep3Next_Agent();
-      else if (step === 4 && taskTitle.trim()) handleStep4Next();
-      else if (step === 5) handleLaunch();
+      if (companyName.trim() || existingCompanyId) handleGetStarted();
     }
   }
 
   if (!effectiveOnboardingOpen) return null;
+
+  // If an existing company was passed in, we skip the company name field
+  const needsCompany = !existingCompanyId;
 
   return (
     <Dialog
@@ -634,11 +199,11 @@ export function OnboardingWizard() {
       }}
     >
       <DialogPortal>
-        {/* Plain div instead of DialogOverlay — Radix's overlay wraps in
-            RemoveScroll which blocks wheel events on our custom (non-DialogContent)
-            scroll container. A plain div preserves the background without scroll-locking. */}
         <div className="fixed inset-0 z-50 bg-background" />
-        <div className="fixed inset-0 z-50 flex" onKeyDown={handleKeyDown}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          onKeyDown={handleKeyDown}
+        >
           {/* Close button */}
           <button
             onClick={handleClose}
@@ -648,490 +213,124 @@ export function OnboardingWizard() {
             <span className="sr-only">Close</span>
           </button>
 
-          {/* Left half — form */}
-          <div
-            className={cn(
-              "w-full flex flex-col overflow-y-auto transition-[width] duration-500 ease-in-out",
-              step === 1 ? "md:w-1/2" : "md:w-full"
-            )}
-          >
-            <div className="w-full max-w-lg mx-auto my-auto px-8 py-12 shrink-0">
-              {/* Progress tabs */}
-              <div className="flex items-center gap-0 mb-8 border-b border-border">
-                {(
-                  [
-                    { step: 1 as Step, label: "Company", icon: Building2 },
-                    { step: 2 as Step, label: "API Keys", icon: Key },
-                    { step: 3 as Step, label: "Agent", icon: Bot },
-                    { step: 4 as Step, label: "Task", icon: ListTodo },
-                    { step: 5 as Step, label: "Launch", icon: Rocket }
-                  ] as const
-                ).map(({ step: s, label, icon: Icon }) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => setStep(s)}
-                    className={cn(
-                      "flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 -mb-px transition-colors cursor-pointer",
-                      s === step
-                        ? "border-foreground text-foreground"
-                        : "border-transparent text-muted-foreground hover:text-foreground/70 hover:border-border"
-                    )}
+          <div className="w-full max-w-md px-8">
+            {/* Header */}
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold">Set up your workspace</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                {needsCompany
+                  ? "Create a company and configure your AI provider to get started."
+                  : "Configure your AI provider to get started."}
+              </p>
+            </div>
+
+            <div className="space-y-5">
+              {/* Company name */}
+              {needsCompany && (
+                <div className="group">
+                  <label className="text-xs text-muted-foreground mb-1 block group-focus-within:text-foreground transition-colors">
+                    <Building2 className="h-3.5 w-3.5 inline mr-1.5 -mt-0.5" />
+                    Company name
+                  </label>
+                  <input
+                    className="w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50"
+                    placeholder="Acme Corp"
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
+                    autoFocus
+                  />
+                </div>
+              )}
+
+              {/* API Key provider + value */}
+              <div className="space-y-3">
+                <div className="group">
+                  <label className="text-xs text-muted-foreground mb-1 block group-focus-within:text-foreground transition-colors">
+                    <Key className="h-3.5 w-3.5 inline mr-1.5 -mt-0.5" />
+                    AI Provider
+                  </label>
+                  <select
+                    className="w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
+                    value={apiKeyProvider}
+                    onChange={(e) => setApiKeyProvider(e.target.value)}
                   >
-                    <Icon className="h-3.5 w-3.5" />
-                    {label}
-                  </button>
-                ))}
-              </div>
+                    <option value="ANTHROPIC_API_KEY">
+                      Anthropic (Claude)
+                    </option>
+                    <option value="OPENAI_API_KEY">OpenAI</option>
+                    <option value="GEMINI_API_KEY">Google (Gemini)</option>
+                    <option value="CURSOR_API_KEY">Cursor</option>
+                  </select>
+                </div>
 
-              {/* Step content */}
-              {step === 1 && (
-                <div className="space-y-5">
-                  <div className="flex items-center gap-3 mb-1">
-                    <div className="bg-muted/50 p-2">
-                      <Building2 className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium">Name your company</h3>
-                      <p className="text-xs text-muted-foreground">
-                        This is the organization your agents will work for.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="mt-3 group">
-                    <label
-                      className={cn(
-                        "text-xs mb-1 block transition-colors",
-                        companyName.trim()
-                          ? "text-foreground"
-                          : "text-muted-foreground group-focus-within:text-foreground"
-                      )}
-                    >
-                      Company name
-                    </label>
+                <div className="group">
+                  <label className="text-xs text-muted-foreground mb-1 block group-focus-within:text-foreground transition-colors">
+                    API key
+                  </label>
+                  <div className="relative">
                     <input
-                      className="w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50"
-                      placeholder="Acme Corp"
-                      value={companyName}
-                      onChange={(e) => setCompanyName(e.target.value)}
-                      autoFocus
+                      type={apiKeyShowValue ? "text" : "password"}
+                      className="w-full rounded-md border border-border bg-transparent px-3 py-2 pr-9 text-sm font-mono outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50"
+                      placeholder="sk-..."
+                      value={apiKeyValue}
+                      onChange={(e) => setApiKeyValue(e.target.value)}
+                      autoFocus={!needsCompany}
                     />
-                  </div>
-                  <div className="group">
-                    <label
-                      className={cn(
-                        "text-xs mb-1 block transition-colors",
-                        companyGoal.trim()
-                          ? "text-foreground"
-                          : "text-muted-foreground group-focus-within:text-foreground"
-                      )}
+                    <button
+                      type="button"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      onClick={() => setApiKeyShowValue((v) => !v)}
+                      tabIndex={-1}
                     >
-                      Mission / goal (optional)
-                    </label>
-                    <textarea
-                      className="w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50 resize-none min-h-[60px]"
-                      placeholder="What is this company trying to achieve?"
-                      value={companyGoal}
-                      onChange={(e) => setCompanyGoal(e.target.value)}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {step === 2 && (
-                <div className="space-y-5">
-                  <div className="flex items-center gap-3 mb-1">
-                    <div className="bg-muted/50 p-2">
-                      <Key className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium">Add an API key</h3>
-                      <p className="text-xs text-muted-foreground">
-                        Your API key is encrypted and stored securely. All agents in this company will use it automatically.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">
-                      Provider
-                    </label>
-                    <select
-                      className="w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
-                      value={apiKeyProvider}
-                      onChange={(e) => setApiKeyProvider(e.target.value)}
-                    >
-                      <option value="ANTHROPIC_API_KEY">Anthropic (Claude)</option>
-                      <option value="OPENAI_API_KEY">OpenAI</option>
-                      <option value="GEMINI_API_KEY">Google (Gemini)</option>
-                      <option value="CURSOR_API_KEY">Cursor</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">
-                      API key
-                    </label>
-                    <div className="relative">
-                      <input
-                        type={apiKeyShowValue ? "text" : "password"}
-                        className="w-full rounded-md border border-border bg-transparent px-3 py-2 pr-9 text-sm font-mono outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50"
-                        placeholder="sk-..."
-                        value={apiKeyValue}
-                        onChange={(e) => setApiKeyValue(e.target.value)}
-                        autoFocus
-                      />
-                      <button
-                        type="button"
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                        onClick={() => setApiKeyShowValue((v) => !v)}
-                        tabIndex={-1}
-                      >
-                        {apiKeyShowValue ? (
-                          <EyeOff className="h-3.5 w-3.5" />
-                        ) : (
-                          <Eye className="h-3.5 w-3.5" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-
-                  <Button
-                    size="sm"
-                    disabled={!apiKeyValue.trim() || apiKeySaving}
-                    onClick={handleSaveApiKey}
-                  >
-                    {apiKeySaving ? (
-                      <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
-                    ) : (
-                      <Check className="h-3.5 w-3.5 mr-1" />
-                    )}
-                    {apiKeySaving ? "Saving..." : "Save"}
-                  </Button>
-
-                  {apiKeySaved.length > 0 && (
-                    <div className="space-y-1.5">
-                      <p className="text-xs text-muted-foreground font-medium">Saved keys</p>
-                      {apiKeySaved.map((saved) => (
-                        <div
-                          key={saved.name}
-                          className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm"
-                        >
-                          <Check className="h-3.5 w-3.5 text-green-500 shrink-0" />
-                          <span className="font-medium text-xs">{saved.name}</span>
-                          <span className="text-xs text-muted-foreground font-mono ml-auto">
-                            {saved.maskedValue}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {step === 3 && (
-                <div className="space-y-5">
-                  <div className="flex items-center gap-3 mb-1">
-                    <div className="bg-muted/50 p-2">
-                      <Bot className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium">Name your first agent</h3>
-                      <p className="text-xs text-muted-foreground">
-                        {apiKeySaved.length > 0
-                          ? `This agent will use your ${apiKeySaved.map(k => {
-                              if (k.name === "ANTHROPIC_API_KEY") return "Claude";
-                              if (k.name === "OPENAI_API_KEY") return "OpenAI";
-                              if (k.name === "GEMINI_API_KEY") return "Gemini";
-                              if (k.name === "CURSOR_API_KEY") return "Cursor";
-                              return k.name;
-                            }).join(", ")} API key automatically.`
-                          : "You can configure the AI provider later in settings."}
-                      </p>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">
-                      Agent name
-                    </label>
-                    <input
-                      className="w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50"
-                      placeholder="CEO"
-                      value={agentName}
-                      onChange={(e) => setAgentName(e.target.value)}
-                      autoFocus
-                    />
-                  </div>
-                </div>
-              )}
-
-              {step === 4 && (
-                <div className="space-y-5">
-                  <div className="flex items-center gap-3 mb-1">
-                    <div className="bg-muted/50 p-2">
-                      <ListTodo className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium">Give it something to do</h3>
-                      <p className="text-xs text-muted-foreground">
-                        Give your agent a small task to start with — a bug fix,
-                        a research question, writing a script.
-                      </p>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">
-                      Task title
-                    </label>
-                    <input
-                      className="w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50"
-                      placeholder="e.g. Research competitor pricing"
-                      value={taskTitle}
-                      onChange={(e) => setTaskTitle(e.target.value)}
-                      autoFocus
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground mb-1 block">
-                      Description (optional)
-                    </label>
-                    <textarea
-                      ref={textareaRef}
-                      className="w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50 resize-none min-h-[120px] max-h-[300px] overflow-y-auto"
-                      placeholder="Add more detail about what the agent should do..."
-                      value={taskDescription}
-                      onChange={(e) => setTaskDescription(e.target.value)}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {step === 5 && (
-                <div className="space-y-5">
-                  <div className="flex items-center gap-3 mb-1">
-                    <div className="bg-muted/50 p-2">
-                      <Rocket className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium">Ready to launch</h3>
-                      <p className="text-xs text-muted-foreground">
-                        Everything is set up. Launching now will create the
-                        starter task, wake the agent, and open the issue.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="border border-border divide-y divide-border">
-                    <div className="flex items-center gap-3 px-3 py-2.5">
-                      <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">
-                          {companyName}
-                        </p>
-                        <p className="text-xs text-muted-foreground">Company</p>
-                      </div>
-                      <Check className="h-4 w-4 text-green-500 shrink-0" />
-                    </div>
-                    <div className="flex items-center gap-3 px-3 py-2.5">
-                      <Bot className="h-4 w-4 text-muted-foreground shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">
-                          {agentName}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {getUIAdapter(adapterType).label}
-                        </p>
-                      </div>
-                      <Check className="h-4 w-4 text-green-500 shrink-0" />
-                    </div>
-                    <div className="flex items-center gap-3 px-3 py-2.5">
-                      <ListTodo className="h-4 w-4 text-muted-foreground shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">
-                          {taskTitle}
-                        </p>
-                        <p className="text-xs text-muted-foreground">Task</p>
-                      </div>
-                      <Check className="h-4 w-4 text-green-500 shrink-0" />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Error */}
-              {error && (
-                <div className="mt-3">
-                  <p className="text-xs text-destructive">{error}</p>
-                </div>
-              )}
-
-              {/* Footer navigation */}
-              <div className="flex items-center justify-between mt-8">
-                <div>
-                  {step > 1 && step > (onboardingOptions.initialStep ?? 1) && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setStep((step - 1) as Step)}
-                      disabled={loading}
-                    >
-                      <ArrowLeft className="h-3.5 w-3.5 mr-1" />
-                      Back
-                    </Button>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  {step === 1 && (
-                    <Button
-                      size="sm"
-                      disabled={!companyName.trim() || loading}
-                      onClick={handleStep1Next}
-                    >
-                      {loading ? (
-                        <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                      {apiKeyShowValue ? (
+                        <EyeOff className="h-3.5 w-3.5" />
                       ) : (
-                        <ArrowRight className="h-3.5 w-3.5 mr-1" />
+                        <Eye className="h-3.5 w-3.5" />
                       )}
-                      {loading ? "Creating..." : "Next"}
-                    </Button>
-                  )}
-                  {step === 2 && (
-                    <>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleStep2Next}
-                      >
-                        Skip
-                      </Button>
-                      <Button
-                        size="sm"
-                        disabled={apiKeySaving || (!apiKeyValue.trim() && apiKeySaved.length === 0)}
-                        onClick={async () => {
-                          if (apiKeyValue.trim()) {
-                            await handleSaveApiKey();
-                          }
-                          handleStep2Next();
-                        }}
-                      >
-                        {apiKeySaving ? (
-                          <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
-                        ) : (
-                          <ArrowRight className="h-3.5 w-3.5 mr-1" />
-                        )}
-                        {apiKeySaving ? "Saving..." : apiKeyValue.trim() ? "Save & Next" : "Next"}
-                      </Button>
-                    </>
-                  )}
-                  {step === 3 && (
-                    <Button
-                      size="sm"
-                      disabled={
-                        !agentName.trim() || loading || adapterEnvLoading
-                      }
-                      onClick={handleStep3Next_Agent}
-                    >
-                      {loading ? (
-                        <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
-                      ) : (
-                        <ArrowRight className="h-3.5 w-3.5 mr-1" />
-                      )}
-                      {loading ? "Creating..." : "Next"}
-                    </Button>
-                  )}
-                  {step === 4 && (
-                    <Button
-                      size="sm"
-                      disabled={!taskTitle.trim() || loading}
-                      onClick={handleStep4Next}
-                    >
-                      {loading ? (
-                        <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
-                      ) : (
-                        <ArrowRight className="h-3.5 w-3.5 mr-1" />
-                      )}
-                      {loading ? "Creating..." : "Next"}
-                    </Button>
-                  )}
-                  {step === 5 && (
-                    <Button size="sm" disabled={loading} onClick={handleLaunch}>
-                      {loading ? (
-                        <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
-                      ) : (
-                        <ArrowRight className="h-3.5 w-3.5 mr-1" />
-                      )}
-                      {loading ? "Creating..." : "Create & Open Issue"}
-                    </Button>
-                  )}
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground/70 mt-1.5">
+                    Your API key is encrypted. All agents inherit it
+                    automatically.
+                  </p>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Right half — ASCII art (hidden on mobile) */}
-          <div
-            className={cn(
-              "hidden md:block overflow-hidden bg-[#1a1a1a] transition-[width,opacity] duration-500 ease-in-out",
-              step === 1 ? "w-1/2 opacity-100" : "w-0 opacity-0"
+            {/* Error */}
+            {error && (
+              <div className="mt-3">
+                <p className="text-xs text-destructive">{error}</p>
+              </div>
             )}
-          >
-            <AsciiArtAnimation />
+
+            {/* Actions */}
+            <div className="mt-8 space-y-3">
+              <Button
+                className="w-full"
+                disabled={loading || (needsCompany && !companyName.trim())}
+                onClick={handleGetStarted}
+              >
+                {loading ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : null}
+                {loading ? "Setting up..." : "Get Started"}
+              </Button>
+
+              {apiKeyValue.trim() === "" && (
+                <button
+                  type="button"
+                  className="block mx-auto text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
+                  onClick={handleGetStarted}
+                  disabled={loading || (needsCompany && !companyName.trim())}
+                >
+                  Skip API key and configure later
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </DialogPortal>
     </Dialog>
-  );
-}
-
-function AdapterEnvironmentResult({
-  result
-}: {
-  result: AdapterEnvironmentTestResult;
-}) {
-  const statusLabel =
-    result.status === "pass"
-      ? "Passed"
-      : result.status === "warn"
-      ? "Warnings"
-      : "Failed";
-  const statusClass =
-    result.status === "pass"
-      ? "text-green-700 dark:text-green-300 border-green-300 dark:border-green-500/40 bg-green-50 dark:bg-green-500/10"
-      : result.status === "warn"
-      ? "text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-500/10"
-      : "text-red-700 dark:text-red-300 border-red-300 dark:border-red-500/40 bg-red-50 dark:bg-red-500/10";
-
-  return (
-    <div className={`rounded-md border px-2.5 py-2 text-[11px] ${statusClass}`}>
-      <div className="flex items-center justify-between gap-2">
-        <span className="font-medium">{statusLabel}</span>
-        <span className="opacity-80">
-          {new Date(result.testedAt).toLocaleTimeString()}
-        </span>
-      </div>
-      <div className="mt-1.5 space-y-1">
-        {result.checks.map((check, idx) => (
-          <div
-            key={`${check.code}-${idx}`}
-            className="leading-relaxed break-words"
-          >
-            <span className="font-medium uppercase tracking-wide opacity-80">
-              {check.level}
-            </span>
-            <span className="mx-1 opacity-60">·</span>
-            <span>{check.message}</span>
-            {check.detail && (
-              <span className="block opacity-75 break-all">
-                ({check.detail})
-              </span>
-            )}
-            {check.hint && (
-              <span className="block opacity-90 break-words">
-                Hint: {check.hint}
-              </span>
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
   );
 }

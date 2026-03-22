@@ -206,7 +206,7 @@ function OnboardingRoutePage() {
           <Button
             onClick={() =>
               matchedCompany
-                ? openOnboarding({ initialStep: 3, companyId: matchedCompany.id })
+                ? openOnboarding({ companyId: matchedCompany.id })
                 : openOnboarding()
             }
           >
