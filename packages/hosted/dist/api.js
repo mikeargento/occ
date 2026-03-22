@@ -92,6 +92,16 @@ export async function handleApi(req, res, url) {
             return json(res, { deleted: true });
         }
     }
+    // /agents/:id/policy
+    const policyMatch = path.match(/^\/agents\/([^/]+)\/policy$/);
+    if (policyMatch && method === "PUT") {
+        const agentId = decodeURIComponent(policyMatch[1]);
+        const body = JSON.parse(await readBody(req));
+        // Store the policy's allowed tools on the agent
+        const allowedTools = body?.globalConstraints?.allowedTools ?? [];
+        await db.upsertAgent(userId, { id: agentId, name: agentId, allowedTools });
+        return json(res, { policy: body });
+    }
     // /agents/:id/pause
     const pauseMatch = path.match(/^\/agents\/([^/]+)\/(pause|resume)$/);
     if (pauseMatch && method === "PUT") {
