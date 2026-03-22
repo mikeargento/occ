@@ -33,7 +33,6 @@ export function Nav() {
               className="shrink-0"
               priority
             />
-            <span className="text-[22px] tracking-[-0.02em] font-black text-text">OCC</span>
           </Link>
 
           {/* Desktop */}

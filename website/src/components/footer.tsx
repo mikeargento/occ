@@ -12,15 +12,13 @@ export function Footer() {
       <div className="mx-auto max-w-6xl px-6 pt-16">
         <div className="flex flex-col md:flex-row md:justify-between gap-12">
           <div className="max-w-md">
-            <div className="flex items-center gap-2.5 mb-5">
+            <div className="mb-5">
               <Image
                 src={theme === "dark" ? "/logo-dark.png" : "/logo.png"}
                 alt="OCC"
-                width={24}
-                height={24}
-                className="shrink-0"
+                width={28}
+                height={28}
               />
-              <span className="text-[22px] font-black tracking-[-0.02em] text-text">OCC</span>
             </div>
             <p className="text-sm text-text-tertiary leading-relaxed">
               Cryptographic control for AI agents<br />
