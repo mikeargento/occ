@@ -30,7 +30,6 @@ FROM base AS build
 WORKDIR /app
 COPY --from=deps /app /app
 COPY . .
-# bust cache: 2026-03-22-v2
 RUN pnpm --filter @occ-agent/server... --filter @occ-agent/ui... --filter '!@occ-agent/server' build
 
 FROM base AS production
