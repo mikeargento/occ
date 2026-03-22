@@ -8,6 +8,7 @@ import { companiesApi } from "../api/companies";
 import { goalsApi } from "../api/goals";
 import { agentsApi } from "../api/agents";
 import { issuesApi } from "../api/issues";
+import { secretsApi } from "../api/secrets";
 import { queryKeys } from "../lib/queryKeys";
 import { Dialog, DialogPortal } from "@/components/ui/dialog";
 import {
@@ -40,6 +41,7 @@ import {
   Bot,
   Code,
   Gem,
+  Key,
   ListTodo,
   Rocket,
   ArrowLeft,
@@ -51,10 +53,12 @@ import {
   Loader2,
   FolderOpen,
   ChevronDown,
+  Eye,
+  EyeOff,
   X
 } from "lucide-react";
 
-type Step = 1 | 2 | 3 | 4;
+type Step = 1 | 2 | 3 | 4 | 5;
 type AdapterType =
   | "claude_local"
   | "codex_local"
@@ -110,7 +114,14 @@ export function OnboardingWizard() {
   const [companyName, setCompanyName] = useState("");
   const [companyGoal, setCompanyGoal] = useState("");
 
-  // Step 2
+  // Step 2 — API Keys
+  const [apiKeyProvider, setApiKeyProvider] = useState("ANTHROPIC_API_KEY");
+  const [apiKeyValue, setApiKeyValue] = useState("");
+  const [apiKeySaving, setApiKeySaving] = useState(false);
+  const [apiKeySaved, setApiKeySaved] = useState<Array<{ name: string; maskedValue: string }>>([]);
+  const [apiKeyShowValue, setApiKeyShowValue] = useState(false);
+
+  // Step 3 — Agent
   const [agentName, setAgentName] = useState("CEO");
   const [adapterType, setAdapterType] = useState<AdapterType>("claude_local");
   const [cwd, setCwd] = useState("");
@@ -127,7 +138,7 @@ export function OnboardingWizard() {
   const [unsetAnthropicLoading, setUnsetAnthropicLoading] = useState(false);
   const [showMoreAdapters, setShowMoreAdapters] = useState(false);
 
-  // Step 3
+  // Step 4 — Task
   const [taskTitle, setTaskTitle] = useState("Create your CEO HEARTBEAT.md");
   const [taskDescription, setTaskDescription] = useState(
     DEFAULT_TASK_DESCRIPTION
@@ -178,9 +189,9 @@ export function OnboardingWizard() {
     if (company) setCreatedCompanyPrefix(company.issuePrefix);
   }, [effectiveOnboardingOpen, createdCompanyId, createdCompanyPrefix, companies]);
 
-  // Resize textarea when step 3 is shown or description changes
+  // Resize textarea when step 4 is shown or description changes
   useEffect(() => {
-    if (step === 3) autoResizeTextarea();
+    if (step === 4) autoResizeTextarea();
   }, [step, taskDescription, autoResizeTextarea]);
 
   const {
@@ -193,7 +204,7 @@ export function OnboardingWizard() {
       ? queryKeys.agents.adapterModels(createdCompanyId, adapterType)
       : ["agents", "none", "adapter-models", adapterType],
     queryFn: () => agentsApi.adapterModels(createdCompanyId!, adapterType),
-    enabled: Boolean(createdCompanyId) && effectiveOnboardingOpen && step === 2
+    enabled: Boolean(createdCompanyId) && effectiveOnboardingOpen && step === 3
   });
   const isLocalAdapter =
     adapterType === "claude_local" ||
@@ -214,7 +225,7 @@ export function OnboardingWizard() {
       : "claude");
 
   useEffect(() => {
-    if (step !== 2) return;
+    if (step !== 3) return;
     setAdapterEnvResult(null);
     setAdapterEnvError(null);
   }, [step, adapterType, cwd, model, command, args, url]);
@@ -271,6 +282,11 @@ export function OnboardingWizard() {
     setError(null);
     setCompanyName("");
     setCompanyGoal("");
+    setApiKeyProvider("ANTHROPIC_API_KEY");
+    setApiKeyValue("");
+    setApiKeySaving(false);
+    setApiKeySaved([]);
+    setApiKeyShowValue(false);
     setAgentName("CEO");
     setAdapterType("claude_local");
     setCwd("");
@@ -397,6 +413,11 @@ export function OnboardingWizard() {
   }
 
   async function handleStep2Next() {
+    // API Keys step — just advance to Agent step
+    setStep(3);
+  }
+
+  async function handleStep3Next_Agent() {
     if (!createdCompanyId) return;
     setLoading(true);
     setError(null);
@@ -458,11 +479,32 @@ export function OnboardingWizard() {
       queryClient.invalidateQueries({
         queryKey: queryKeys.agents.list(createdCompanyId)
       });
-      setStep(3);
+      setStep(4);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create agent");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleSaveApiKey() {
+    if (!createdCompanyId || !apiKeyValue.trim()) return;
+    setApiKeySaving(true);
+    setError(null);
+    try {
+      await secretsApi.create(createdCompanyId, {
+        name: apiKeyProvider,
+        value: apiKeyValue.trim(),
+        provider: "local_encrypted"
+      });
+      const masked = apiKeyValue.trim().slice(0, 4) + "..." + apiKeyValue.trim().slice(-4);
+      setApiKeySaved((prev) => [...prev, { name: apiKeyProvider, maskedValue: masked }]);
+      setApiKeyValue("");
+      setApiKeyShowValue(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save API key");
+    } finally {
+      setApiKeySaving(false);
     }
   }
 
@@ -515,10 +557,10 @@ export function OnboardingWizard() {
     }
   }
 
-  async function handleStep3Next() {
+  async function handleStep4Next() {
     if (!createdCompanyId || !createdAgentId) return;
     setError(null);
-    setStep(4);
+    setStep(5);
   }
 
   async function handleLaunch() {
@@ -562,9 +604,10 @@ export function OnboardingWizard() {
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
       if (step === 1 && companyName.trim()) handleStep1Next();
-      else if (step === 2 && agentName.trim()) handleStep2Next();
-      else if (step === 3 && taskTitle.trim()) handleStep3Next();
-      else if (step === 4) handleLaunch();
+      else if (step === 2) handleStep2Next();
+      else if (step === 3 && agentName.trim()) handleStep3Next_Agent();
+      else if (step === 4 && taskTitle.trim()) handleStep4Next();
+      else if (step === 5) handleLaunch();
     }
   }
 
@@ -602,15 +645,16 @@ export function OnboardingWizard() {
               step === 1 ? "md:w-1/2" : "md:w-full"
             )}
           >
-            <div className="w-full max-w-md mx-auto my-auto px-8 py-12 shrink-0">
+            <div className="w-full max-w-lg mx-auto my-auto px-8 py-12 shrink-0">
               {/* Progress tabs */}
               <div className="flex items-center gap-0 mb-8 border-b border-border">
                 {(
                   [
                     { step: 1 as Step, label: "Company", icon: Building2 },
-                    { step: 2 as Step, label: "Agent", icon: Bot },
-                    { step: 3 as Step, label: "Task", icon: ListTodo },
-                    { step: 4 as Step, label: "Launch", icon: Rocket }
+                    { step: 2 as Step, label: "API Keys", icon: Key },
+                    { step: 3 as Step, label: "Agent", icon: Bot },
+                    { step: 4 as Step, label: "Task", icon: ListTodo },
+                    { step: 5 as Step, label: "Launch", icon: Rocket }
                   ] as const
                 ).map(({ step: s, label, icon: Icon }) => (
                   <button
@@ -685,6 +729,97 @@ export function OnboardingWizard() {
               )}
 
               {step === 2 && (
+                <div className="space-y-5">
+                  <div className="flex items-center gap-3 mb-1">
+                    <div className="bg-muted/50 p-2">
+                      <Key className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <h3 className="font-medium">Add an API key</h3>
+                      <p className="text-xs text-muted-foreground">
+                        Your API key is encrypted and stored securely. All agents in this company will use it automatically.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">
+                      Provider
+                    </label>
+                    <select
+                      className="w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-ring"
+                      value={apiKeyProvider}
+                      onChange={(e) => setApiKeyProvider(e.target.value)}
+                    >
+                      <option value="ANTHROPIC_API_KEY">Anthropic (Claude)</option>
+                      <option value="OPENAI_API_KEY">OpenAI</option>
+                      <option value="GEMINI_API_KEY">Google (Gemini)</option>
+                      <option value="CURSOR_API_KEY">Cursor</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">
+                      API key
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={apiKeyShowValue ? "text" : "password"}
+                        className="w-full rounded-md border border-border bg-transparent px-3 py-2 pr-9 text-sm font-mono outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground/50"
+                        placeholder="sk-..."
+                        value={apiKeyValue}
+                        onChange={(e) => setApiKeyValue(e.target.value)}
+                        autoFocus
+                      />
+                      <button
+                        type="button"
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                        onClick={() => setApiKeyShowValue((v) => !v)}
+                        tabIndex={-1}
+                      >
+                        {apiKeyShowValue ? (
+                          <EyeOff className="h-3.5 w-3.5" />
+                        ) : (
+                          <Eye className="h-3.5 w-3.5" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  <Button
+                    size="sm"
+                    disabled={!apiKeyValue.trim() || apiKeySaving}
+                    onClick={handleSaveApiKey}
+                  >
+                    {apiKeySaving ? (
+                      <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                    ) : (
+                      <Check className="h-3.5 w-3.5 mr-1" />
+                    )}
+                    {apiKeySaving ? "Saving..." : "Save"}
+                  </Button>
+
+                  {apiKeySaved.length > 0 && (
+                    <div className="space-y-1.5">
+                      <p className="text-xs text-muted-foreground font-medium">Saved keys</p>
+                      {apiKeySaved.map((saved) => (
+                        <div
+                          key={saved.name}
+                          className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm"
+                        >
+                          <Check className="h-3.5 w-3.5 text-green-500 shrink-0" />
+                          <span className="font-medium text-xs">{saved.name}</span>
+                          <span className="text-xs text-muted-foreground font-mono ml-auto">
+                            {saved.maskedValue}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {step === 3 && (
                 <div className="space-y-5">
                   <div className="flex items-center gap-3 mb-1">
                     <div className="bg-muted/50 p-2">
@@ -1160,7 +1295,7 @@ export function OnboardingWizard() {
                 </div>
               )}
 
-              {step === 3 && (
+              {step === 4 && (
                 <div className="space-y-5">
                   <div className="flex items-center gap-3 mb-1">
                     <div className="bg-muted/50 p-2">
@@ -1201,7 +1336,7 @@ export function OnboardingWizard() {
                 </div>
               )}
 
-              {step === 4 && (
+              {step === 5 && (
                 <div className="space-y-5">
                   <div className="flex items-center gap-3 mb-1">
                     <div className="bg-muted/50 p-2">
@@ -1290,26 +1425,40 @@ export function OnboardingWizard() {
                     </Button>
                   )}
                   {step === 2 && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleStep2Next}
+                      >
+                        Skip
+                      </Button>
+                      <Button
+                        size="sm"
+                        disabled={apiKeySaving || (!apiKeyValue.trim() && apiKeySaved.length === 0)}
+                        onClick={async () => {
+                          if (apiKeyValue.trim()) {
+                            await handleSaveApiKey();
+                          }
+                          handleStep2Next();
+                        }}
+                      >
+                        {apiKeySaving ? (
+                          <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                        ) : (
+                          <ArrowRight className="h-3.5 w-3.5 mr-1" />
+                        )}
+                        {apiKeySaving ? "Saving..." : apiKeyValue.trim() ? "Save & Next" : "Next"}
+                      </Button>
+                    </>
+                  )}
+                  {step === 3 && (
                     <Button
                       size="sm"
                       disabled={
                         !agentName.trim() || loading || adapterEnvLoading
                       }
-                      onClick={handleStep2Next}
-                    >
-                      {loading ? (
-                        <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
-                      ) : (
-                        <ArrowRight className="h-3.5 w-3.5 mr-1" />
-                      )}
-                      {loading ? "Creating..." : "Next"}
-                    </Button>
-                  )}
-                  {step === 3 && (
-                    <Button
-                      size="sm"
-                      disabled={!taskTitle.trim() || loading}
-                      onClick={handleStep3Next}
+                      onClick={handleStep3Next_Agent}
                     >
                       {loading ? (
                         <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
@@ -1320,6 +1469,20 @@ export function OnboardingWizard() {
                     </Button>
                   )}
                   {step === 4 && (
+                    <Button
+                      size="sm"
+                      disabled={!taskTitle.trim() || loading}
+                      onClick={handleStep4Next}
+                    >
+                      {loading ? (
+                        <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                      ) : (
+                        <ArrowRight className="h-3.5 w-3.5 mr-1" />
+                      )}
+                      {loading ? "Creating..." : "Next"}
+                    </Button>
+                  )}
+                  {step === 5 && (
                     <Button size="sm" disabled={loading} onClick={handleLaunch}>
                       {loading ? (
                         <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
