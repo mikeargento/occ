@@ -29,6 +29,7 @@ RUN pnpm install --frozen-lockfile
 FROM base AS build
 WORKDIR /app
 COPY --from=deps /app /app
+ARG RAILWAY_GIT_COMMIT_SHA
 COPY . .
 RUN pnpm --filter @occ-agent/server... --filter @occ-agent/ui... --filter '!@occ-agent/server' build
 
