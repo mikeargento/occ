@@ -7,7 +7,7 @@ import { handleMcp } from "./mcp.js";
 import { db } from "./db.js";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
-const DASHBOARD_DIR = resolve(__dirname, "../../commandcentral/out");
+const DASHBOARD_DIR = resolve(__dirname, "../dashboard");
 const PORT = parseInt(process.env.PORT ?? "3100", 10);
 
 const MIME_TYPES: Record<string, string> = {
