@@ -9,11 +9,11 @@ export function Footer() {
         <div className="flex flex-col md:flex-row md:justify-between gap-12">
           <div className="max-w-md">
             <p className="text-sm text-text-tertiary leading-relaxed">
-              <span className="font-bold text-text">Origin Controlled Computing</span><br />
+              Origin Controlled Computing<br />
               Control wtf your AI agents can do.<br />
-              Patent Pending
+              Patent Pending<br />
+              <a href="https://buymeacoffee.com/mikeargento" target="_blank" rel="noopener" className="text-text-tertiary hover:text-text transition-colors">Buy Me a Coffee</a>
             </p>
-            <a href="https://buymeacoffee.com/mikeargento" target="_blank" rel="noopener" className="inline-block mt-4 text-sm text-text-secondary hover:text-text transition-colors">Buy Me a Coffee</a>
           </div>
 
           <div className="grid grid-cols-2 gap-10 sm:grid-cols-3 sm:gap-16">
