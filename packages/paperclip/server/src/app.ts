@@ -32,6 +32,7 @@ import { pluginUiStaticRoutes } from "./routes/plugin-ui-static.js";
 import { proxyControlRoutes } from "./routes/proxy-control.js";
 import { applyUiBranding } from "./ui-branding.js";
 import { logger } from "./middleware/logger.js";
+import { mcpRoutes } from "./mcp/index.js";
 import { DEFAULT_LOCAL_PLUGIN_DIR, pluginLoader } from "./services/plugin-loader.js";
 import { createPluginWorkerManager } from "./services/plugin-worker-manager.js";
 import { createPluginJobScheduler } from "./services/plugin-job-scheduler.js";
@@ -124,6 +125,9 @@ export async function createApp(
     app.all("/api/auth/*authPath", opts.betterAuthHandler);
   }
   app.use(llmRoutes(db));
+
+  // MCP server endpoint — lets users connect any AI to their dashboard
+  app.use(mcpRoutes(db));
 
   // Mount API routes
   const api = Router();

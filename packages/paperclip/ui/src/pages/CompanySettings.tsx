@@ -8,7 +8,7 @@ import { assetsApi } from "../api/assets";
 import { secretsApi } from "../api/secrets";
 import { queryKeys } from "../lib/queryKeys";
 import { Button } from "@/components/ui/button";
-import { Settings, Check, Eye, EyeOff, RotateCw, Trash2, Plus } from "lucide-react";
+import { Settings, Check, Eye, EyeOff, RotateCw, Trash2, Plus, Plug, Copy, CheckCircle } from "lucide-react";
 import { CompanyPatternIcon } from "../components/CompanyPatternIcon";
 import {
   Field,
@@ -462,6 +462,11 @@ export function CompanySettings() {
         </div>
       </div>
 
+      {/* Connect Your AI */}
+      {selectedCompanyId && (
+        <ConnectYourAI companyId={selectedCompanyId} />
+      )}
+
       {/* API Keys */}
       {selectedCompanyId && (
         <CompanyApiKeys companyId={selectedCompanyId} />
@@ -520,6 +525,118 @@ export function CompanySettings() {
         </div>
       </div>
 
+    </div>
+  );
+}
+
+function ConnectYourAI({ companyId }: { companyId: string }) {
+  const [copied, setCopied] = useState(false);
+  const [copiedDelightId, setCopiedDelightId] = useState(0);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["mcp-config", companyId],
+    queryFn: async () => {
+      const res = await fetch(`/mcp/config/${companyId}`, {
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to load connection config");
+      return res.json() as Promise<{
+        token: string;
+        url: string;
+        snippet: { mcpServers: { "occ-agent": { url: string } } };
+      }>;
+    },
+  });
+
+  const snippetJson = data
+    ? JSON.stringify(data.snippet, null, 2)
+    : "";
+
+  async function handleCopy() {
+    if (!snippetJson) return;
+    try {
+      await navigator.clipboard.writeText(snippetJson);
+      setCopied(true);
+      setCopiedDelightId((prev) => prev + 1);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* clipboard may not be available */
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+          Connect Your AI
+        </div>
+      </div>
+      <div className="space-y-3 rounded-md border border-border px-4 py-4">
+        <div className="flex items-center gap-2">
+          <Plug className="h-4 w-4 text-emerald-500" />
+          <span className="text-sm font-medium">
+            Use your own AI with OCC Agent
+          </span>
+        </div>
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          Connect Claude Desktop, Cursor, Windsurf, or any MCP-compatible AI to
+          your OCC Agent dashboard. Your AI subscription powers the compute.
+          OCC Agent is the control plane.
+        </p>
+
+        {isLoading && (
+          <p className="text-xs text-muted-foreground">Loading connection config...</p>
+        )}
+
+        {data && (
+          <>
+            <div className="relative">
+              <pre className="rounded-lg border border-border bg-muted/30 px-3 py-3 font-mono text-xs leading-relaxed overflow-x-auto select-all">
+                {snippetJson}
+              </pre>
+              <button
+                onClick={handleCopy}
+                className="absolute top-2 right-2 flex items-center gap-1 rounded-md bg-background/80 border border-border/50 px-2 py-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {copied ? (
+                  <>
+                    <CheckCircle key={copiedDelightId} className="h-3 w-3 text-emerald-500" />
+                    <span className="text-emerald-500">Copied</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-3 w-3" />
+                    Copy
+                  </>
+                )}
+              </button>
+            </div>
+
+            <div className="space-y-2 pt-1">
+              <p className="text-[11px] text-muted-foreground/70 font-medium uppercase tracking-wide">
+                How to connect
+              </p>
+              <ol className="text-xs text-muted-foreground space-y-1.5 list-decimal list-inside">
+                <li>
+                  Copy the snippet above
+                </li>
+                <li>
+                  <strong>Claude Desktop:</strong> Paste into{" "}
+                  <code className="rounded bg-muted px-1 py-0.5 text-[11px]">
+                    claude_desktop_config.json
+                  </code>
+                </li>
+                <li>
+                  <strong>Cursor / Windsurf:</strong> Add as an MCP server in settings
+                </li>
+                <li>
+                  Your AI can now create issues, manage agents, and view your dashboard
+                </li>
+              </ol>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
