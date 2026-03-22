@@ -31,6 +31,7 @@ WORKDIR /app
 COPY --from=deps /app /app
 ARG RAILWAY_GIT_COMMIT_SHA
 COPY . .
+RUN rm -rf server/ui-dist
 RUN pnpm --filter @occ-agent/server... --filter @occ-agent/ui... --filter '!@occ-agent/server' build
 
 FROM base AS production
