@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useTheme } from "./theme-provider";
@@ -23,16 +22,9 @@ export function Nav() {
         <nav className="flex h-16 items-center justify-between">
           <Link
             href="/"
-            className="flex items-center gap-2 text-text"
+            className="text-[20px] tracking-[-0.02em] font-black text-text"
           >
-            <Image
-              src={theme === "dark" ? "/logo-dark.png" : "/logo.png"}
-              alt="OCC"
-              width={28}
-              height={28}
-              className="shrink-0"
-              priority
-            />
+            OCC.WTF
           </Link>
 
           {/* Desktop */}
