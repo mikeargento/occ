@@ -30,8 +30,7 @@ FROM base AS build
 WORKDIR /app
 COPY --from=deps /app /app
 COPY . .
-RUN pnpm --filter @occ-agent/server... --filter @occ-agent/ui... build
-RUN test -f server/dist/index.js || (echo "ERROR: server build output missing" && exit 1)
+RUN pnpm --filter @occ-agent/server... --filter @occ-agent/ui... --filter '!@occ-agent/server' build
 
 FROM base AS production
 WORKDIR /app
@@ -54,4 +53,4 @@ ENV NODE_ENV=production \
 EXPOSE 3100
 
 USER node
-CMD ["node", "--import", "./server/node_modules/tsx/dist/loader.mjs", "server/dist/index.js"]
+CMD ["node", "--import", "./server/node_modules/tsx/dist/loader.mjs", "server/src/index.ts"]
