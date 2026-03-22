@@ -515,7 +515,7 @@ importers:
         version: 1.0.0
       occproof:
         specifier: ^1.0.2
-        version: 1.0.2
+        version: 1.2.0
       open:
         specifier: ^11.0.0
         version: 11.0.0
@@ -4883,8 +4883,8 @@ packages:
     resolution: {integrity: sha512-qyWr4lYFmULdeLS7uqhMyu9S++yCMiqljbyHQ6yengm4kwQpmKOtz600kJpMJc7jGScn36pBML/ZDYTSDXadEw==}
     engines: {node: '>=20.0.0'}
 
-  occproof@1.0.2:
-    resolution: {integrity: sha512-VrzL7jVuil6DiLpBSbxPrjnFjR1EopNhf89Js0peunqEYznrh+GauF+X5tyb7BB12Q7mLCHAJzdtW+vy+V8hDA==}
+  occproof@1.2.0:
+    resolution: {integrity: sha512-MC+tMlQSakpwoHbd/IhguXAewhIUT4Kk71mZyUSaZVdBkNSa2vH1VmkHfhedCf5Z7ybjSt9w50hpliXXC17h4A==}
 
   on-exit-leak-free@2.1.2:
     resolution: {integrity: sha512-0eJJY6hXLGf1udHwfNftBqH+g73EU4B504nZeKpz1sYRKafAghwxEJunB2O7rDZkL4PGfsMVnTXZ2EjibbqcsA==}
@@ -10956,9 +10956,9 @@ snapshots:
   occ-stub@1.0.0:
     dependencies:
       '@noble/ed25519': 2.3.0
-      occproof: 1.0.2
+      occproof: 1.2.0
 
-  occproof@1.0.2:
+  occproof@1.2.0:
     dependencies:
       '@noble/ed25519': 2.3.0
       '@noble/hashes': 1.8.0
