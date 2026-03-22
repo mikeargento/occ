@@ -1,8 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
-  <style>
-    .bg { fill: #22c55e; }
-    .fg { fill: #ffffff; }
-  </style>
-  <rect class="bg" width="24" height="24" rx="5"/>
-  <text class="fg" x="12" y="17" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="700" text-anchor="middle">OCC</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <!-- Dark background with slight rounding -->
+  <rect width="32" height="32" rx="6" fill="#111111"/>
+  <!-- Three vertical bars — abstract "OCC" monogram -->
+  <!-- The left bar is rounded on both ends (the O) -->
+  <rect x="6" y="7" width="5" height="18" rx="2.5" fill="#34d399"/>
+  <!-- Middle bar -->
+  <rect x="13.5" y="7" width="5" height="18" rx="1" fill="#34d399"/>
+  <!-- Right bar -->
+  <rect x="21" y="7" width="5" height="18" rx="1" fill="#34d399"/>
 </svg>
