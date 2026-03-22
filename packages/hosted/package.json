@@ -1,0 +1,30 @@
+{
+  "name": "@occ/hosted",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.1",
+    "@noble/hashes": "^1.4.0",
+    "better-auth": "^1.2.0",
+    "occ-agent": "^1.0.0",
+    "occ-policy-sdk": "^1.0.0",
+    "occ-stub": "^1.0.0",
+    "occproof": "^1.2.0",
+    "pg": "^8.13.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/pg": "^8.11.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.4.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

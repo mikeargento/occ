@@ -25,7 +25,7 @@
   --color-info: #60a5fa;
 
   /* Typography */
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-sans: "neue-haas-grotesk-display", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-jetbrains), "SF Mono", ui-monospace, monospace;
 }
 

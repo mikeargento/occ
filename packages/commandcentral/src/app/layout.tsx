@@ -1,15 +1,9 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/sidebar";
 import { ProxyProvider } from "@/lib/use-proxy";
 import { ThemeProvider } from "@/components/theme-provider";
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-});
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
@@ -18,8 +12,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "OCC Agent",
-  description: "Control plane for autonomous AI agents",
+  title: "OCC — Control wtf your AI agents can do",
+  description: "Control wtf your AI agents can do. Cryptographic control plane for autonomous AI agents.",
 };
 
 export default function RootLayout({
@@ -28,7 +22,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`dark ${inter.variable} ${jetbrainsMono.variable}`}>
+    <html lang="en" className={`dark ${jetbrainsMono.variable}`}>
+      <head>
+        <link rel="stylesheet" href="https://use.typekit.net/svq0oqy.css" />
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='black'/></svg>" />
+      </head>
       <body>
         <ThemeProvider>
           <ProxyProvider>
