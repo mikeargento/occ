@@ -14,6 +14,7 @@ export function createExecutionEnvelope(opts: {
   runtime: string;
   inputHashB64: string;
   outputHashB64: string;
+  agentId?: string | undefined;
 }): ExecutionEnvelope {
   return {
     type: "tool-execution",
@@ -24,6 +25,7 @@ export function createExecutionEnvelope(opts: {
     inputHashB64: opts.inputHashB64,
     outputHashB64: opts.outputHashB64,
     timestamp: Date.now(),
+    ...(opts.agentId ? { agentId: opts.agentId } : {}),
   };
 }
 

@@ -663,51 +663,10 @@ export function startManagementApi(
           }
         }
 
-        // ── Connections ──
+        // ── Connections (downstream MCP servers) ──
         if (method === "GET" && route === "/connections") {
-          const connections = await connectionManager.listConnections();
-          sendJson(res, 200, { connections });
+          sendJson(res, 200, registry.listServers());
           return;
-        }
-
-        const connMatch = route.match(/^\/connections\/([^/]+)(\/.*)?$/);
-        if (connMatch) {
-          const connId = decodeURIComponent(connMatch[1]!);
-          const subpath = connMatch[2] ?? "";
-
-          if (method === "POST" && subpath === "/test") {
-            const result = await connectionManager.testConnection(connId);
-            sendJson(res, 200, result);
-            return;
-          }
-
-          if (method === "POST" && subpath === "") {
-            const raw = await readBody(req);
-            let body: { apiKey?: string; config?: Record<string, string> };
-            try {
-              body = JSON.parse(raw.toString("utf-8")) as { apiKey?: string; config?: Record<string, string> };
-            } catch {
-              sendError(res, 400, "Invalid JSON body");
-              return;
-            }
-            if (!body.apiKey) {
-              sendError(res, 400, "apiKey is required");
-              return;
-            }
-            try {
-              const conn = await connectionManager.connect(connId, body.apiKey, body.config);
-              sendJson(res, 200, { connection: conn });
-            } catch (err) {
-              sendError(res, 400, err instanceof Error ? err.message : "Connection failed");
-            }
-            return;
-          }
-
-          if (method === "DELETE" && subpath === "") {
-            await connectionManager.disconnect(connId);
-            sendJson(res, 200, { disconnected: true });
-            return;
-          }
         }
 
         // ── Consensus ──

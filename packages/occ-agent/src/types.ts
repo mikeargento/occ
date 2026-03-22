@@ -18,6 +18,8 @@ export interface ExecutionEnvelope {
   inputHashB64: string;
   outputHashB64: string;
   timestamp: number;
+  /** Agent that initiated this execution (hashed into proof digest). */
+  agentId?: string | undefined;
 }
 
 /**

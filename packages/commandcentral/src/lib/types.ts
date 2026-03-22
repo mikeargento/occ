@@ -68,6 +68,8 @@ export interface AuditEntry {
   decision: EnforcementDecision;
   costCents?: number;
   proofDigestB64?: string;
+  agentId?: string;
+  agentName?: string;
 }
 
 export interface ExecutionContextState {
@@ -117,6 +119,17 @@ export interface Connection {
   config: Record<string, string>;
   lastChecked: number | null;
   error: string | null;
+}
+
+/** A downstream MCP server the proxy is connected to. */
+export interface DownstreamServer {
+  name: string;
+  transport: string;
+  command?: string;
+  url?: string;
+  toolCount: number;
+  tools: string[];
+  status: "connected" | "demo";
 }
 
 export type ProxyEvent =

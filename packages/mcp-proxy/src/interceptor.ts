@@ -84,6 +84,16 @@ export class Interceptor {
     this.#policyBinding = binding;
   }
 
+  /** Forward a proof to occ.wtf Explorer. Silent on failure. */
+  #forwardToExplorer(proof: unknown): void {
+    if (!proof) return;
+    fetch("https://occ.wtf/api/proofs", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ proof }),
+    }).catch(() => {});
+  }
+
   /**
    * Sign a denial and write it to proof log.
    * Uses the same signer + counter sequence as allowed actions.
@@ -94,6 +104,7 @@ export class Interceptor {
     reason: string,
     constraint: string,
     now: number,
+    agentId?: string,
   ): Promise<{ proofDigestB64?: string | undefined; receiptJson?: string | undefined }> {
     let proofDigestB64: string | undefined;
     let receiptJson: string | undefined;
@@ -108,6 +119,7 @@ export class Interceptor {
         runtime: "occ-agent",
         inputHashB64,
         outputHashB64,
+        agentId,
       });
 
       if (this.#localSigner) {
@@ -115,6 +127,7 @@ export class Interceptor {
         const proof = await this.#localSigner.commitDigest(digestB64, {
           kind: "tool-denial",
           tool: toolName,
+          agentId,
           adapter: "occ-agent",
           runtime: "occ-agent",
           denied: true,
@@ -128,6 +141,7 @@ export class Interceptor {
           executionEnvelope: envelope,
           occProof: proof,
         });
+        this.#forwardToExplorer(proof);
       } else if (this.#occConfig) {
         const commitResult = await commitExecutionEnvelope(envelope, this.#occConfig);
         proofDigestB64 = commitResult.digestB64;
@@ -137,6 +151,7 @@ export class Interceptor {
           executionEnvelope: envelope,
           occProof: commitResult.proof,
         });
+        this.#forwardToExplorer(commitResult.proof);
       }
     } catch {
       // Signing is best-effort — don't fail the denial response
@@ -178,7 +193,7 @@ export class Interceptor {
         constraint: "policy.proof.required",
       };
 
-      const { proofDigestB64 } = await this.#signDenial(toolName, args, decision.reason, decision.constraint, now);
+      const { proofDigestB64 } = await this.#signDenial(toolName, args, decision.reason, decision.constraint, now, agentId);
 
       const auditOpts: { skill?: string; proofDigestB64?: string } = {};
       if (skill) auditOpts.skill = skill;
@@ -208,7 +223,7 @@ export class Interceptor {
       const decision = { allowed: false as const, reason: "Agent is paused", constraint: "agent.status" };
 
       // Sign the denial — same counter sequence as allowed actions
-      const { proofDigestB64 } = await this.#signDenial(toolName, args, decision.reason, decision.constraint, now);
+      const { proofDigestB64 } = await this.#signDenial(toolName, args, decision.reason, decision.constraint, now, agentId);
 
       const auditOpts: { skill?: string; proofDigestB64?: string } = {};
       if (skill) auditOpts.skill = skill;
@@ -246,7 +261,7 @@ export class Interceptor {
 
       if (!decision.allowed) {
         // Sign the denial — same counter sequence as allowed actions
-        const { proofDigestB64 } = await this.#signDenial(toolName, args, decision.reason, decision.constraint, now);
+        const { proofDigestB64 } = await this.#signDenial(toolName, args, decision.reason, decision.constraint, now, agentId);
 
         const auditOpts: { skill?: string; proofDigestB64?: string } = {};
         if (skill) auditOpts.skill = skill;
@@ -305,6 +320,7 @@ export class Interceptor {
         runtime: "occ-agent",
         inputHashB64,
         outputHashB64,
+        agentId,
       });
 
       if (this.#localSigner) {
@@ -313,6 +329,7 @@ export class Interceptor {
         const proof = await this.#localSigner.commitDigest(digestB64, {
           kind: "tool-execution",
           tool: toolName,
+          agentId,
           adapter: "occ-agent",
           runtime: "occ-agent",
         }, this.#policyBinding);
@@ -323,6 +340,9 @@ export class Interceptor {
           executionEnvelope: envelope,
           occProof: proof,
         });
+
+        // Forward to occ.wtf Explorer
+        this.#forwardToExplorer(proof);
       } else if (this.#occConfig) {
         // Remote signing: HTTP POST to commit service
         const commitResult = await commitExecutionEnvelope(envelope, this.#occConfig);
@@ -333,6 +353,9 @@ export class Interceptor {
           executionEnvelope: envelope,
           occProof: commitResult.proof,
         });
+
+        // Forward to occ.wtf Explorer
+        this.#forwardToExplorer(commitResult.proof);
       }
     } catch {
       // OCC commit is best-effort — don't fail the tool call

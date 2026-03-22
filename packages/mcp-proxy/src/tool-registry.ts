@@ -143,6 +143,53 @@ export class ToolRegistry {
     return this.#toolIndex.get(name);
   }
 
+  /** List connected downstream servers with their tool counts. */
+  listServers(): Array<{
+    name: string;
+    transport: string;
+    command?: string | undefined;
+    url?: string | undefined;
+    toolCount: number;
+    tools: string[];
+    status: "connected" | "demo";
+  }> {
+    const result: Array<{
+      name: string;
+      transport: string;
+      command?: string | undefined;
+      url?: string | undefined;
+      toolCount: number;
+      tools: string[];
+      status: "connected" | "demo";
+    }> = [];
+
+    // Real downstream servers
+    for (const [, server] of this.#servers) {
+      result.push({
+        name: server.config.name,
+        transport: server.config.transport,
+        command: server.config.command,
+        url: server.config.url,
+        toolCount: server.tools.length,
+        tools: server.tools.map((t) => t.name),
+        status: "connected",
+      });
+    }
+
+    // Demo tools as a virtual server
+    if (this.#demoTools.length > 0) {
+      result.push({
+        name: "Demo Tools",
+        transport: "built-in",
+        toolCount: this.#demoTools.length,
+        tools: this.#demoTools.map((t) => t.name),
+        status: "demo",
+      });
+    }
+
+    return result;
+  }
+
   /** Disconnect all downstream servers. */
   async shutdown(): Promise<void> {
     for (const server of this.#servers.values()) {

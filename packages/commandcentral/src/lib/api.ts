@@ -5,6 +5,7 @@ import type {
   AuditEntry,
   Connection,
   DiscoveredTool,
+  DownstreamServer,
   ExecutionContextState,
   StoredKey,
 } from "./types";
@@ -157,29 +158,10 @@ export async function getAuditEntry(auditId: string, agentId = "default-agent"):
   return apiFetch(`/audit/${encodeURIComponent(auditId)}?agentId=${encodeURIComponent(agentId)}`);
 }
 
-// ── Connections ──
+// ── Connections (downstream MCP servers) ──
 
-export async function listConnections(): Promise<Connection[]> {
+export async function listConnections(): Promise<DownstreamServer[]> {
   return apiFetch("/connections");
-}
-
-export async function connectService(
-  id: string,
-  apiKey: string,
-  config?: Record<string, string>,
-): Promise<Connection> {
-  return apiFetch(`/connections/${encodeURIComponent(id)}`, {
-    method: "PUT",
-    body: JSON.stringify({ apiKey, config }),
-  });
-}
-
-export async function disconnectService(id: string): Promise<void> {
-  await apiFetch(`/connections/${encodeURIComponent(id)}`, { method: "DELETE" });
-}
-
-export async function testConnection(id: string): Promise<{ ok: boolean; error?: string }> {
-  return apiFetch(`/connections/${encodeURIComponent(id)}/test`, { method: "POST" });
 }
 
 // ── Keys ──

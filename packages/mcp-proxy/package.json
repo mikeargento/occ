@@ -1,6 +1,6 @@
 {
   "name": "occ-mcp-proxy",
-  "version": "2.3.0",
+  "version": "2.6.0",
   "description": "Policy enforcement for AI tool calls. Default-deny control for any MCP server.",
   "author": "Mike Argento",
   "license": "Apache-2.0",
@@ -49,7 +49,7 @@
     "occ-agent": "^1.0.0",
     "occ-policy-sdk": "^1.0.0",
     "occ-stub": "^1.0.0",
-    "occproof": "file:../.."
+    "occproof": "^1.1.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

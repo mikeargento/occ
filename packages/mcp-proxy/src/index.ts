@@ -30,6 +30,20 @@ if (verifyIdx !== -1) {
   process.exit(0);
 }
 
+// ── Forward proofs to occ.wtf Explorer ──
+const OCC_EXPLORER_URL = "https://occ.wtf/api/proofs";
+
+function postToExplorer(occProof: unknown): void {
+  if (!occProof) return;
+  fetch(OCC_EXPLORER_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ proof: occProof }),
+  }).catch(() => {
+    // Silent fail — Explorer is optional, don't break the proxy
+  });
+}
+
 // ── Detect mode ──
 const wrapIdx = process.argv.indexOf("--wrap");
 
@@ -316,18 +330,23 @@ async function runWrapMode(command: string, args: string[], signerMode: "local" 
     const OCC_CLOUD_URL = "https://nitro.occproof.com/commit";
     console.error(`  Signer: OCC Cloud (nitro.occproof.com)`);
     interceptorOpts.occConfig = { apiUrl: OCC_CLOUD_URL, runtime: "occ-agent" };
+    state.setRemoteSigner({ apiUrl: OCC_CLOUD_URL, runtime: "occ-agent" });
   } else if (signerMode === "custom-tee") {
     const url = teeUrl!;
     let hostname: string;
     try { hostname = new URL(url).hostname; } catch { hostname = url; }
     console.error(`  Signer: Custom TEE (${hostname})`);
     interceptorOpts.occConfig = { apiUrl: url, runtime: "occ-agent" };
+    state.setRemoteSigner({ apiUrl: url, runtime: "occ-agent" });
   } else {
     const { createLocalSigner } = await import("./local-signer.js");
     const localSigner = await createLocalSigner(signerStatePath);
     signerPublicKey = localSigner.publicKeyB64;
     console.error(`  Signer: ${signerPublicKey.slice(0, 16)}...`);
     interceptorOpts.localSigner = localSigner;
+
+    // Wire signer to state so control-plane changes generate OCC proofs
+    state.setLocalSigner(localSigner);
   }
 
   // 4b. Commit policy as proof slot 0 — the policy proof is the key
@@ -362,6 +381,7 @@ async function runWrapMode(command: string, args: string[], signerMode: "local" 
           receipt: { proof },
           proofDigestB64: proofHash,
         });
+        postToExplorer(proof);
       } else if (interceptorOpts.occConfig) {
         // Remote signer (occ-cloud or custom-tee)
         const commitRes = await fetch(interceptorOpts.occConfig.apiUrl, {
@@ -396,6 +416,7 @@ async function runWrapMode(command: string, args: string[], signerMode: "local" 
               receipt: { proof },
               proofDigestB64: proofHash,
             });
+            postToExplorer(proof);
           }
         } else {
           console.error(`  WARNING: Failed to commit policy to remote signer (${commitRes.status})`);
@@ -411,6 +432,7 @@ async function runWrapMode(command: string, args: string[], signerMode: "local" 
   console.error(`  Proof log: ${proofWriter.path}`);
 
   // 5. Start local dashboard
+  let dashboardRef: { setOnPolicyUpdate: (fn: (binding: import("occproof").PolicyBinding) => void) => void } | undefined;
   if (dashboardPort > 0) {
     const { startWrapDashboard } = await import("./wrap-dashboard.js");
     const dashboard = startWrapDashboard({
@@ -421,8 +443,11 @@ async function runWrapMode(command: string, args: string[], signerMode: "local" 
       signerMode,
       signerPublicKey,
       proofPath: proofWriter.path,
+      localSigner: interceptorOpts.localSigner,
+      policyBinding,
     });
     dashboardAddProof = dashboard.addProof;
+    dashboardRef = dashboard;
     console.error(`  Dashboard: http://localhost:${dashboard.port}`);
   }
 
@@ -430,6 +455,35 @@ async function runWrapMode(command: string, args: string[], signerMode: "local" 
 
   // 6. Interceptor: sign everything, write to file
   const interceptor = new Interceptor(registry, state, events, { ...interceptorOpts, policyBinding });
+
+  // Wire dashboard policy updates to interceptor (must happen after interceptor is created)
+  if (dashboardRef) {
+    dashboardRef.setOnPolicyUpdate((binding) => {
+      policyBinding = binding;
+      interceptor.setPolicyBinding(binding);
+      console.error(`  Policy updated via dashboard: ${binding.name ?? "unnamed"} (${binding.digestB64.slice(0, 16)}...)`);
+    });
+  }
+
+  // Wire control-plane proofs to the proof log + Explorer
+  state.onControlProof = (proof) => {
+    if (dashboardAddProof) {
+      dashboardAddProof({
+        timestamp: new Date().toISOString(),
+        tool: `__${proof.kind}`,
+        args: { agentId: proof.agentId, ...proof.detail },
+        proofDigestB64: proof.proofDigestB64,
+      });
+    }
+    proofWriter.append({
+      timestamp: new Date().toISOString(),
+      tool: `__${proof.kind}`,
+      args: { agentId: proof.agentId, ...proof.detail },
+      proofDigestB64: proof.proofDigestB64,
+    });
+    // Forward to occ.wtf Explorer
+    postToExplorer(proof.occProof);
+  };
 
   // Emit policy-loaded event if a policy was loaded
   if (policyBinding) {
@@ -511,12 +565,15 @@ async function runDashboardMode(): Promise<void> {
   if (config.signerMode === "local") {
     localSigner = await createLocalSigner(config.signerStatePath);
     console.error(`  Signer: local (${localSigner.publicKeyB64.slice(0, 12)}...)`);
+    state.setLocalSigner(localSigner);
   } else if (config.signerMode === "occ-cloud") {
     console.error(`  Signer: OCC Cloud (nitro.occproof.com)`);
+    state.setRemoteSigner({ apiUrl: "https://nitro.occproof.com/commit", runtime: "occ-agent" });
   } else {
     let hostname: string;
     try { hostname = new URL(config.teeUrl).hostname; } catch { hostname = config.teeUrl; }
     console.error(`  Signer: Custom TEE (${hostname})`);
+    state.setRemoteSigner({ apiUrl: config.teeUrl, runtime: "occ-agent" });
   }
 
   const auditForwarder = (entry: {
@@ -555,6 +612,28 @@ async function runDashboardMode(): Promise<void> {
   // Auto-create default agent (default-deny: no tools enabled)
   const defaultAgent = state.createAgent(config.defaultAgentName ?? "default-agent");
   console.error(`  Agent: ${defaultAgent.name} (default-deny)`);
+
+  // Wire control-plane proofs to audit log + event bus + Explorer (management mode)
+  state.onControlProof = (proof) => {
+    // Store in the agent's audit log so it shows up in the dashboard
+    const agentId = proof.agentId || defaultAgent.id;
+    const ctx = state.getContext(agentId);
+    ctx.addAudit(`__${proof.kind}`, { allowed: true }, { proofDigestB64: proof.proofDigestB64 });
+
+    // Push to SSE clients
+    events.emit({
+      type: "tool-executed",
+      timestamp: Date.now(),
+      agentId,
+      tool: `__${proof.kind}`,
+      costCents: 0,
+      proofDigestB64: proof.proofDigestB64,
+    });
+
+    // Forward to occ.wtf Explorer
+    postToExplorer(proof.occProof);
+  };
+
   console.error("");
 
   // Start management API + dashboard

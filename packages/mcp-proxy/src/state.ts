@@ -46,8 +46,71 @@ export class ProxyState {
 
   #events: ProxyEventBus;
 
+  /** Optional local signer — when set, control-plane changes generate OCC proofs. */
+  #localSigner?: LocalSigner;
+
+  /** Optional remote signer URL (TEE) — used when no local signer. */
+  #remoteSigner?: { apiUrl: string; runtime: string };
+
+  /** Callback for when a control-plane proof is generated. */
+  onControlProof?: (proof: { kind: string; agentId: string; detail: Record<string, unknown>; proofDigestB64: string; occProof: unknown }) => void;
+
   constructor(events: ProxyEventBus) {
     this.#events = events;
+  }
+
+  /** Attach a local signer so control-plane changes generate OCC proofs. */
+  setLocalSigner(signer: LocalSigner): void {
+    this.#localSigner = signer;
+  }
+
+  /** Attach a remote signer (TEE) for control-plane proofs. */
+  setRemoteSigner(config: { apiUrl: string; runtime: string }): void {
+    this.#remoteSigner = config;
+  }
+
+  /**
+   * Sign a control-plane change as an OCC proof.
+   * Non-blocking — fires and logs but doesn't block the caller.
+   */
+  #signControlChange(kind: string, agentId: string, detail: Record<string, unknown>): void {
+    if (!this.#localSigner && !this.#remoteSigner) return;
+
+    const payload = JSON.stringify({ kind, agentId, detail, timestamp: Date.now() });
+    import("@noble/hashes/sha256").then(async ({ sha256 }) => {
+      const digestB64 = Buffer.from(sha256(new TextEncoder().encode(payload))).toString("base64");
+
+      let proof: unknown;
+
+      if (this.#localSigner) {
+        // Local signing
+        const occProof = await this.#localSigner.commitDigest(digestB64, {
+          kind, agentId, ...detail,
+        });
+        proof = occProof;
+      } else if (this.#remoteSigner) {
+        // Remote signing (TEE)
+        const res = await fetch(this.#remoteSigner.apiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            digests: [{ digestB64, hashAlg: "sha256" }],
+            metadata: { kind, agentId, ...detail },
+          }),
+        });
+        if (!res.ok) throw new Error(`TEE commit failed: ${res.status}`);
+        const proofs = await res.json() as unknown[];
+        proof = proofs[0];
+      }
+
+      if (proof) {
+        const { canonicalize } = await import("occproof");
+        const proofHash = Buffer.from(sha256(canonicalize(proof))).toString("base64");
+        this.onControlProof?.({ kind, agentId, detail, proofDigestB64: proofHash, occProof: proof });
+      }
+    }).catch((err) => {
+      console.error(`  Control proof failed (${kind}): ${err instanceof Error ? err.message : String(err)}`);
+    });
   }
 
   // ── Agent Instance Management ──
@@ -113,7 +176,7 @@ export class ProxyState {
     });
   }
 
-  /** Toggle a specific tool on/off for an agent. */
+  /** Toggle a specific tool on/off for an agent. Generates an OCC proof. */
   toggleTool(agentId: string, toolName: string, enabled: boolean): void {
     const agent = this.#agents.get(agentId);
     if (!agent) throw new Error(`Agent "${agentId}" not found`);
@@ -125,20 +188,30 @@ export class ProxyState {
     } else if (!enabled) {
       agent.policy.globalConstraints.allowedTools = allowed.filter((t) => t !== toolName);
     }
+
+    this.#signControlChange(
+      enabled ? "tool-enabled" : "tool-disabled",
+      agentId,
+      { tool: toolName, agentName: agent.name },
+    );
   }
 
-  /** Pause an agent (deny all calls). */
+  /** Pause an agent (deny all calls). Generates an OCC proof. */
   pauseAgent(agentId: string): void {
     const agent = this.#agents.get(agentId);
     if (!agent) throw new Error(`Agent "${agentId}" not found`);
     agent.status = "paused";
+
+    this.#signControlChange("agent-paused", agentId, { agentName: agent.name });
   }
 
-  /** Resume an agent. */
+  /** Resume an agent. Generates an OCC proof. */
   resumeAgent(agentId: string): void {
     const agent = this.#agents.get(agentId);
     if (!agent) throw new Error(`Agent "${agentId}" not found`);
     agent.status = "active";
+
+    this.#signControlChange("agent-resumed", agentId, { agentName: agent.name });
   }
 
   /** Get the policy for a specific agent. Returns null if agent doesn't exist. */

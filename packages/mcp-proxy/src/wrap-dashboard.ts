@@ -14,6 +14,8 @@ import type { ProxyEventBus } from "./events.js";
 import type { ToolRegistry } from "./tool-registry.js";
 import type { ProxyState } from "./state.js";
 import type { ProxyEvent } from "./types.js";
+import type { LocalSigner } from "./local-signer.js";
+import type { PolicyBinding } from "occproof";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const DASHBOARD_DIR = resolve(__dirname, "../dashboard");
@@ -96,6 +98,10 @@ export interface WrapDashboardOpts {
   signerMode: string;
   signerPublicKey?: string | undefined;
   proofPath: string;
+  localSigner?: LocalSigner | undefined;
+  policyBinding?: PolicyBinding | undefined;
+  /** Called when the policy binding is updated (e.g., from dashboard PUT /api/policy). */
+  onPolicyUpdate?: (binding: PolicyBinding) => void;
 }
 
 export interface ProofEntry {
@@ -134,6 +140,8 @@ function loadProofsFromDisk(proofPath: string): ProofEntry[] {
 export function startWrapDashboard(opts: WrapDashboardOpts): {
   addProof: (entry: ProofEntry) => void;
   port: number;
+  /** Set after interceptor is created so policy updates can reach it. */
+  setOnPolicyUpdate: (fn: (binding: PolicyBinding) => void) => void;
 } {
   const hasDashboard = checkHasDashboard();
 
@@ -304,13 +312,12 @@ export function startWrapDashboard(opts: WrapDashboardOpts): {
       const parts = path.split("/");
       const agentId = decodeURIComponent(parts[3] ?? "");
       const toolName = decodeURIComponent(parts[5] ?? "");
-      const agent = opts.state.getAgent(agentId);
-      if (!agent) { sendJson(res, 404, { error: "Agent not found" }); return; }
-      const allowed = new Set(agent.policy.globalConstraints.allowedTools ?? []);
-      allowed.add(toolName);
-      agent.policy.globalConstraints.allowedTools = [...allowed];
-      opts.state.updateAgentPolicy(agentId, agent.policy);
-      sendJson(res, 200, { tool: toolName, enabled: true });
+      try {
+        opts.state.toggleTool(agentId, toolName, true);
+        sendJson(res, 200, { tool: toolName, enabled: true });
+      } catch (err) {
+        sendJson(res, 404, { error: err instanceof Error ? err.message : "Agent not found" });
+      }
       return;
     }
 
@@ -319,19 +326,122 @@ export function startWrapDashboard(opts: WrapDashboardOpts): {
       const parts = path.split("/");
       const agentId = decodeURIComponent(parts[3] ?? "");
       const toolName = decodeURIComponent(parts[5] ?? "");
-      const agent = opts.state.getAgent(agentId);
-      if (!agent) { sendJson(res, 404, { error: "Agent not found" }); return; }
-      const allowed = new Set(agent.policy.globalConstraints.allowedTools ?? []);
-      allowed.delete(toolName);
-      agent.policy.globalConstraints.allowedTools = [...allowed];
-      opts.state.updateAgentPolicy(agentId, agent.policy);
-      sendJson(res, 200, { tool: toolName, enabled: false });
+      try {
+        opts.state.toggleTool(agentId, toolName, false);
+        sendJson(res, 200, { tool: toolName, enabled: false });
+      } catch (err) {
+        sendJson(res, 404, { error: err instanceof Error ? err.message : "Agent not found" });
+      }
       return;
     }
 
     // ── Policy ──
     if (path === "/api/policy" && req.method === "GET") {
-      sendJson(res, 200, { policy: null });
+      if (opts.state.policyCommitment) {
+        sendJson(res, 200, {
+          policy: opts.state.policyCommitment.policy,
+          policyDigestB64: opts.state.policyCommitment.policyDigestB64,
+          committedAt: opts.state.policyCommitment.committedAt,
+        });
+      } else {
+        sendJson(res, 200, { policy: null });
+      }
+      return;
+    }
+
+    if (path === "/api/policy" && req.method === "PUT") {
+      const chunks: Buffer[] = [];
+      req.on("data", (c: Buffer) => chunks.push(c));
+      req.on("end", async () => {
+        try {
+          const policy = JSON.parse(Buffer.concat(chunks).toString());
+          if (!policy || !policy.name) {
+            sendJson(res, 400, { error: "Invalid policy: name is required" });
+            return;
+          }
+
+          // Ensure required fields
+          if (!policy.version) policy.version = "occ/policy/1";
+          if (!policy.createdAt) policy.createdAt = Date.now();
+          if (!policy.globalConstraints) policy.globalConstraints = { allowedTools: [] };
+          if (!policy.skills) policy.skills = {};
+
+          // Hash the policy
+          const { hashPolicy } = await import("occ-policy-sdk");
+          const policyDigestB64 = hashPolicy(policy);
+
+          // Create the policy binding
+          const binding: PolicyBinding = {
+            digestB64: policyDigestB64,
+            name: policy.name,
+          };
+
+          // Commit policy as an OCC proof if local signer available
+          if (opts.localSigner) {
+            const proof = await opts.localSigner.commitDigest(
+              policyDigestB64,
+              {
+                kind: "policy-commitment",
+                policyName: policy.name,
+                policyVersion: policy.version,
+              },
+              binding,
+            );
+
+            // Compute the proof hash
+            const { canonicalize } = await import("occproof");
+            const { sha256 } = await import("@noble/hashes/sha256");
+            const proofHash = Buffer.from(sha256(canonicalize(proof))).toString("base64");
+            binding.authorProofDigestB64 = proofHash;
+
+            // Write policy commitment to proof log
+            addProof({
+              timestamp: new Date().toISOString(),
+              tool: "__policy_commitment",
+              args: { name: policy.name, version: policy.version, digestB64: policyDigestB64 },
+              receipt: { proof },
+              proofDigestB64: proofHash,
+            });
+
+            console.error(`  Policy committed via dashboard (counter: ${proof.commit.counter})`);
+          }
+
+          // Store in state
+          opts.state.policyCommitment = {
+            policy,
+            policyDigestB64,
+            occProof: null as unknown as import("occproof").OCCProof,
+            committedAt: Date.now(),
+          };
+
+          // Update all agents with the new policy's allowed tools
+          const agents = opts.state.getAgents();
+          for (const agent of agents) {
+            const updatedPolicy = { ...agent.policy };
+            if (policy.globalConstraints?.allowedTools) {
+              updatedPolicy.globalConstraints = {
+                ...updatedPolicy.globalConstraints,
+                allowedTools: policy.globalConstraints.allowedTools,
+              };
+            }
+            opts.state.updateAgentPolicy(agent.id, updatedPolicy);
+          }
+
+          // Notify parent (index.ts) so interceptor gets updated binding
+          if (opts.onPolicyUpdate) {
+            opts.onPolicyUpdate(binding);
+          }
+
+          sendJson(res, 200, {
+            policy,
+            policyDigestB64,
+            committedAt: Date.now(),
+          });
+        } catch (err) {
+          console.error(`  Policy commit error: ${err instanceof Error ? err.message : String(err)}`);
+          sendJson(res, 500, { error: err instanceof Error ? err.message : "Failed to commit policy" });
+        }
+      });
       return;
     }
 
@@ -377,9 +487,9 @@ export function startWrapDashboard(opts: WrapDashboardOpts): {
       return;
     }
 
-    // ── Connections ──
+    // ── Connections (downstream MCP servers) ──
     if (path === "/api/connections") {
-      sendJson(res, 200, []);
+      sendJson(res, 200, opts.registry.listServers());
       return;
     }
 
@@ -444,7 +554,16 @@ export function startWrapDashboard(opts: WrapDashboardOpts): {
 
   tryListen();
 
-  return { addProof, port: actualPort };
+  let policyUpdateFn: ((binding: PolicyBinding) => void) | undefined = opts.onPolicyUpdate;
+
+  return {
+    addProof,
+    port: actualPort,
+    setOnPolicyUpdate: (fn: (binding: PolicyBinding) => void) => {
+      policyUpdateFn = fn;
+      opts.onPolicyUpdate = fn;
+    },
+  };
 }
 
 // ── Self-contained dashboard HTML ──

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { getAuditLog } from "@/lib/api";
 import type { AuditEntry } from "@/lib/types";
 import { Card } from "@/components/shared/card";
@@ -28,8 +27,11 @@ export default function AuditPage() {
       .finally(() => setLoading(false));
   }, [page]);
 
+  const allowedCount = entries.filter((e) => e.decision.allowed).length;
+  const deniedCount = entries.filter((e) => !e.decision.allowed).length;
+
   return (
-    <div className="max-w-5xl mx-auto px-8 py-8">
+    <div className="max-w-6xl mx-auto px-8 py-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -39,6 +41,11 @@ export default function AuditPage() {
           {total > 0 && (
             <p className="text-sm text-text-secondary mt-1">
               {total} recorded event{total !== 1 ? "s" : ""}
+              {entries.length > 0 && (
+                <span className="text-text-tertiary">
+                  {" "}&middot; {allowedCount} allowed, {deniedCount} denied on this page
+                </span>
+              )}
             </p>
           )}
         </div>
@@ -76,6 +83,9 @@ export default function AuditPage() {
                   Timestamp
                 </th>
                 <th className="text-left text-[11px] font-medium uppercase tracking-[0.05em] text-text-tertiary px-4 py-3">
+                  Agent
+                </th>
+                <th className="text-left text-[11px] font-medium uppercase tracking-[0.05em] text-text-tertiary px-4 py-3">
                   Tool
                 </th>
                 <th className="text-left text-[11px] font-medium uppercase tracking-[0.05em] text-text-tertiary px-4 py-3">
@@ -96,6 +106,11 @@ export default function AuditPage() {
                     {formatTimestamp(entry.timestamp)}
                   </td>
                   <td className="px-4 py-3">
+                    <span className="text-xs text-text-secondary truncate max-w-[120px] inline-block">
+                      {entry.agentName ?? entry.agentId?.slice(0, 12) ?? "\u2014"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
                     <span className="text-xs font-mono text-text">
                       {entry.tool}
                     </span>
@@ -111,19 +126,32 @@ export default function AuditPage() {
                         Allowed
                       </Badge>
                     ) : (
-                      <Badge variant="error" dot>
-                        Denied
-                      </Badge>
+                      <div>
+                        <Badge variant="error" dot>
+                          Denied
+                        </Badge>
+                        {!entry.decision.allowed && "reason" in entry.decision && (
+                          <p className="text-[10px] text-error/70 mt-0.5 max-w-[200px] truncate" title={entry.decision.reason}>
+                            {entry.decision.reason}
+                          </p>
+                        )}
+                      </div>
                     )}
                   </td>
                   <td className="px-5 py-3">
                     {entry.proofDigestB64 ? (
-                      <Link
-                        href={`/audit/${entry.id}`}
-                        className="text-[11px] font-mono text-text-tertiary hover:text-info transition-colors"
+                      <a
+                        href={`https://occ.wtf/explorer?digest=${encodeURIComponent(entry.proofDigestB64)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[11px] font-mono text-accent hover:text-accent/80 transition-colors inline-flex items-center gap-1"
+                        title="View on OCC Explorer"
                       >
                         {entry.proofDigestB64.slice(0, 16)}...
-                      </Link>
+                        <svg width="10" height="10" viewBox="0 0 12 12" fill="none" className="opacity-50">
+                          <path d="M3.5 1.5H2C1.72386 1.5 1.5 1.72386 1.5 2V10C1.5 10.2761 1.72386 10.5 2 10.5H10C10.2761 10.5 10.5 10.2761 10.5 10V8.5M7 1.5H10.5V5M10.5 1.5L5.5 6.5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </a>
                     ) : (
                       <span className="text-[11px] text-text-tertiary">
                         &mdash;
