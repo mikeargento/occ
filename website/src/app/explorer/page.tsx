@@ -3,8 +3,8 @@
 import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { FileDrop } from "@/components/file-drop";
-import { hashFile } from "@/lib/occ";
-import type { OCCProof } from "@/lib/occ";
+import { hashFile, isOCCProof, verifyProofSignature } from "@/lib/occ";
+import type { OCCProof, ProofVerifyResult } from "@/lib/occ";
 import {
   toUrlSafeB64,
   truncateHash,
@@ -45,6 +45,10 @@ export default function ExplorerPage() {
   const [lookupResults, setLookupResults] = useState<LookupResult[] | null>(null);
   const [lookupError, setLookupError] = useState<string | null>(null);
 
+  /* ── Proof verification state (when a proof JSON is dropped) ── */
+  const [droppedProof, setDroppedProof] = useState<OCCProof | null>(null);
+  const [verifyResult, setVerifyResult] = useState<ProofVerifyResult | null>(null);
+
   /* ── Search state ── */
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<ProofSummary[] | null>(null);
@@ -71,15 +75,48 @@ export default function ExplorerPage() {
       .finally(() => setLoading(false));
   }, [page]);
 
-  /* ── File drop → hash → lookup ── */
+  /* ── File drop → detect proof or hash → lookup ── */
   const handleFile = useCallback(async (f: File) => {
     setFile(f);
     setHashing(true);
     setDigestB64(null);
     setLookupResults(null);
     setLookupError(null);
+    setDroppedProof(null);
+    setVerifyResult(null);
 
     try {
+      // Try to read as text and detect if it's a proof JSON
+      if (f.name.endsWith(".json") || f.type === "application/json" || f.size < 500_000) {
+        try {
+          const text = await f.text();
+          const proof = isOCCProof(text);
+          if (proof) {
+            setDroppedProof(proof);
+            setDigestB64(proof.artifact.digestB64);
+
+            // Verify signature
+            const result = await verifyProofSignature(proof);
+            setVerifyResult(result);
+
+            // Also look up in explorer index
+            const res = await fetch(`/api/proofs/${encodeURIComponent(toUrlSafeB64(proof.artifact.digestB64))}`);
+            if (res.ok) {
+              const data = await res.json();
+              setLookupResults(data.proofs ?? []);
+            } else if (res.status === 404) {
+              setLookupResults([]);
+            }
+
+            setHashing(false);
+            return;
+          }
+        } catch {
+          // Not valid text/JSON — fall through to hash
+        }
+      }
+
+      // Regular file — hash and look up
       const digest = await hashFile(f);
       setDigestB64(digest);
 
@@ -104,6 +141,8 @@ export default function ExplorerPage() {
     setDigestB64(null);
     setLookupResults(null);
     setLookupError(null);
+    setDroppedProof(null);
+    setVerifyResult(null);
   }, []);
 
   /* ── Search ── */
@@ -134,26 +173,145 @@ export default function ExplorerPage() {
         Every proof committed through OCC lives here. Drop a file to find its proof.
       </p>
 
-      {/* ── File Hasher ── */}
+      {/* ── Drop Zone ── */}
       <div className="mt-10">
         <h2 className="text-sm font-medium text-text-tertiary uppercase tracking-wider mb-4">
-          Verify a file
+          Verify
         </h2>
         <FileDrop
           onFile={handleFile}
           file={file}
           onClear={clearFile}
-          hint="Drop any file to compute its SHA-256 hash and find matching proofs"
+          hint="Drop a file to find its proof, or drop a proof JSON to verify it"
         />
 
         {/* Hash result */}
         {hashing && (
           <div className="mt-4 text-sm text-text-tertiary animate-pulse">
-            Computing SHA-256...
+            {droppedProof ? "Verifying proof..." : "Computing SHA-256..."}
           </div>
         )}
 
-        {digestB64 && !hashing && (
+        {/* ── Proof verification results ── */}
+        {droppedProof && verifyResult && !hashing && (
+          <div className="mt-4 space-y-4 animate-in fade-in duration-500">
+            {/* Status banner */}
+            <div className={`rounded-xl border p-5 ${
+              verifyResult.valid
+                ? "border-emerald-600/30 dark:border-emerald-500/30 bg-emerald-500/10 dark:bg-emerald-500/5"
+                : "border-red-600/30 dark:border-red-500/30 bg-red-500/10 dark:bg-red-500/5"
+            }`}>
+              <div className="flex items-center gap-3">
+                <div className={`flex items-center justify-center w-10 h-10 rounded-full ${
+                  verifyResult.valid ? "bg-emerald-500/20" : "bg-red-500/20"
+                }`}>
+                  {verifyResult.valid ? (
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-emerald-600 dark:text-emerald-400">
+                      <path d="M20 6L9 17l-5-5" />
+                    </svg>
+                  ) : (
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-red-600 dark:text-red-400">
+                      <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                  )}
+                </div>
+                <div>
+                  <div className={`text-lg font-semibold ${
+                    verifyResult.valid ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"
+                  }`}>
+                    {verifyResult.valid ? "Signature Valid" : "Signature Invalid"}
+                  </div>
+                  <div className="text-xs text-text-tertiary">
+                    {verifyResult.valid
+                      ? "This proof is cryptographically authentic"
+                      : verifyResult.reason}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Verification checks */}
+            <div className="rounded-xl border border-border-subtle bg-bg-elevated overflow-hidden">
+              <div className="px-5 py-3 border-b border-border-subtle">
+                <span className="text-xs text-text-tertiary font-medium">Verification checks</span>
+              </div>
+              <div className="divide-y divide-border-subtle">
+                {verifyResult.checks.map((check, i) => (
+                  <div key={i} className="flex items-start gap-3 px-5 py-3">
+                    <div className="shrink-0 mt-0.5">
+                      {check.status === "pass" ? (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-emerald-600 dark:text-emerald-400">
+                          <path d="M20 6L9 17l-5-5" />
+                        </svg>
+                      ) : check.status === "fail" ? (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-red-600 dark:text-red-400">
+                          <path d="M18 6L6 18M6 6l12 12" />
+                        </svg>
+                      ) : (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-text-tertiary">
+                          <circle cx="12" cy="12" r="10" />
+                          <path d="M12 8v4M12 16h.01" />
+                        </svg>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-sm font-medium text-text">{check.label}</div>
+                      {check.detail && (
+                        <div className="text-xs text-text-tertiary mt-0.5">{check.detail}</div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Proof identity */}
+            <div className="rounded-xl border border-border-subtle bg-bg-elevated p-5 space-y-3">
+              <div>
+                <div className="text-xs text-text-tertiary mb-1">Artifact digest</div>
+                <code className="text-sm font-mono text-text break-all">{droppedProof.artifact.digestB64}</code>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="text-xs text-text-tertiary mb-1">Signer</div>
+                  <code className="text-xs font-mono text-text break-all">{droppedProof.signer.publicKeyB64}</code>
+                </div>
+                {droppedProof.commit.time && (
+                  <div>
+                    <div className="text-xs text-text-tertiary mb-1">Committed</div>
+                    <span className="text-sm text-text">{new Date(droppedProof.commit.time).toLocaleString()}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Explorer index lookup */}
+            {lookupResults !== null && lookupResults.length > 0 && (
+              <div className="rounded-xl border border-border-subtle bg-bg-elevated p-5">
+                <div className="text-xs text-text-tertiary mb-3">
+                  Also indexed in Explorer ({lookupResults.length} record{lookupResults.length !== 1 ? "s" : ""})
+                </div>
+                <Link
+                  href={`/explorer/${encodeURIComponent(toUrlSafeB64(droppedProof.artifact.digestB64))}`}
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors"
+                >
+                  View in Explorer
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              </div>
+            )}
+            {lookupResults !== null && lookupResults.length === 0 && (
+              <div className="text-xs text-text-tertiary">
+                This proof is not in the Explorer index. It was verified locally from the file you dropped.
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Regular file hash results (non-proof) ── */}
+        {digestB64 && !hashing && !droppedProof && (
           <div className="mt-4 rounded-xl border border-border-subtle bg-bg-elevated p-5">
             <div className="text-xs text-text-tertiary mb-1">SHA-256 Digest</div>
             <code className="text-sm font-mono text-text break-all">{digestB64}</code>
@@ -179,7 +337,7 @@ export default function ExplorerPage() {
                       </svg>
                     </div>
                     <div>
-                      <div className="text-lg font-semibold text-emerald-600 dark:text-emerald-400">Verified</div>
+                      <div className="text-lg font-semibold text-emerald-600 dark:text-emerald-400">Proven</div>
                       <div className="text-xs text-text-tertiary">
                         {lookupResults.length} proof{lookupResults.length !== 1 ? "s" : ""} on record for this file
                       </div>

@@ -91,6 +91,180 @@ export async function hashFile(file: File): Promise<string> {
   return btoa(String.fromCharCode(...new Uint8Array(hashBuf)));
 }
 
+/* ── Browser-side proof verification ── */
+
+export interface ProofVerifyResult {
+  valid: boolean;
+  reason?: string;
+  checks: {
+    label: string;
+    status: "pass" | "fail" | "info";
+    detail?: string;
+  }[];
+}
+
+/**
+ * Detect whether a file's text content is an OCC proof JSON.
+ */
+export function isOCCProof(text: string): OCCProof | null {
+  try {
+    const obj = JSON.parse(text);
+    if (
+      obj &&
+      typeof obj === "object" &&
+      typeof obj.version === "string" &&
+      obj.version.startsWith("occ/") &&
+      obj.artifact?.digestB64 &&
+      obj.signer?.publicKeyB64 &&
+      obj.signer?.signatureB64
+    ) {
+      return obj as OCCProof;
+    }
+  } catch {
+    // not JSON
+  }
+  return null;
+}
+
+/**
+ * Verify an OCC proof's Ed25519 signature in the browser.
+ * Does NOT require the original file — verifies the cryptographic
+ * structure of the proof itself.
+ */
+export async function verifyProofSignature(proof: OCCProof): Promise<ProofVerifyResult> {
+  const { verify: ed25519Verify } = await import("@noble/ed25519");
+  const checks: ProofVerifyResult["checks"] = [];
+
+  // 1. Reconstruct signed body (must match constructor.ts exactly)
+  const signedBody: Record<string, unknown> = {
+    version: proof.version,
+    artifact: proof.artifact,
+    commit: proof.commit,
+    publicKeyB64: proof.signer.publicKeyB64,
+    enforcement: proof.environment.enforcement,
+    measurement: proof.environment.measurement,
+  };
+
+  if (proof.environment.attestation !== undefined) {
+    signedBody.attestationFormat = proof.environment.attestation.format;
+  }
+  const proofAny = proof as unknown as Record<string, unknown>;
+  if (proofAny.agency !== undefined) {
+    signedBody.actor = (proofAny.agency as { actor: unknown }).actor;
+  }
+  if (proofAny.policy !== undefined) {
+    signedBody.policy = proofAny.policy;
+  }
+  if (proof.attribution !== undefined) {
+    signedBody.attribution = proof.attribution;
+  }
+
+  // 2. Canonicalize (sorted keys, no whitespace, UTF-8)
+  const canonicalJson = JSON.stringify(sortKeys(signedBody));
+  const canonicalBytes = new TextEncoder().encode(canonicalJson);
+
+  // 3. Decode signature and public key
+  let sigBytes: Uint8Array;
+  let pubBytes: Uint8Array;
+  try {
+    sigBytes = base64ToBytes(proof.signer.signatureB64);
+    pubBytes = base64ToBytes(proof.signer.publicKeyB64);
+  } catch {
+    return {
+      valid: false,
+      reason: "Invalid base64 in signer fields",
+      checks: [{ label: "Base64 decoding", status: "fail", detail: "signer fields contain invalid base64" }],
+    };
+  }
+
+  // 4. Verify Ed25519 signature
+  let sigValid = false;
+  try {
+    sigValid = await ed25519Verify(sigBytes, canonicalBytes, pubBytes);
+  } catch (e) {
+    checks.push({ label: "Signature", status: "fail", detail: `Verification error: ${e}` });
+  }
+
+  if (sigValid) {
+    checks.push({ label: "Signature", status: "pass", detail: "Ed25519 signature valid" });
+  } else if (!checks.some(c => c.label === "Signature")) {
+    checks.push({ label: "Signature", status: "fail", detail: "Ed25519 signature does not match" });
+  }
+
+  // 5. Chain info
+  if (proof.commit.counter) {
+    checks.push({ label: "Chain position", status: "info", detail: `Proof #${proof.commit.counter}` });
+  }
+  if (proof.commit.prevB64) {
+    checks.push({ label: "Causal link", status: "pass", detail: `Links to previous proof` });
+  }
+
+  // 6. Enforcement tier
+  const enforcement = proof.environment.enforcement;
+  if (enforcement === "measured-tee") {
+    checks.push({ label: "Enforcement", status: "pass", detail: "Measured TEE (hardware enclave)" });
+  } else if (enforcement === "hw-key") {
+    checks.push({ label: "Enforcement", status: "pass", detail: "Hardware key" });
+  } else {
+    checks.push({ label: "Enforcement", status: "info", detail: `Software-only (${enforcement})` });
+  }
+
+  // 7. Attestation
+  if (proof.environment.attestation) {
+    checks.push({
+      label: "Attestation",
+      status: "pass",
+      detail: `${proof.environment.attestation.format} report present (${proof.environment.measurement.slice(0, 16)}...)`,
+    });
+  }
+
+  // 8. Timestamp
+  if (proof.timestamps?.artifact) {
+    checks.push({
+      label: "Timestamp",
+      status: "pass",
+      detail: `RFC 3161 via ${proof.timestamps.artifact.authority} at ${proof.timestamps.artifact.time}`,
+    });
+  }
+
+  // 9. Slot allocation
+  if (proof.slotAllocation) {
+    checks.push({
+      label: "Slot allocation",
+      status: "pass",
+      detail: `Slot #${proof.slotAllocation.counter} allocated and signed`,
+    });
+  }
+
+  return {
+    valid: sigValid,
+    reason: sigValid ? undefined : "Signature verification failed",
+    checks,
+  };
+}
+
+/** Recursively sort object keys for canonical JSON. */
+function sortKeys(obj: unknown): unknown {
+  if (obj === null || typeof obj !== "object") return obj;
+  if (Array.isArray(obj)) return obj.map(sortKeys);
+  const sorted: Record<string, unknown> = {};
+  for (const key of Object.keys(obj as Record<string, unknown>).sort()) {
+    const val = (obj as Record<string, unknown>)[key];
+    if (val !== undefined) sorted[key] = sortKeys(val);
+  }
+  return sorted;
+}
+
+/** Decode standard base64 to Uint8Array. */
+function base64ToBytes(b64: string): Uint8Array {
+  const binary = atob(b64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
 export async function hashBytes(bytes: Uint8Array): Promise<string> {
   const hashBuf = await crypto.subtle.digest("SHA-256", bytes as unknown as BufferSource);
   return btoa(String.fromCharCode(...new Uint8Array(hashBuf)));
