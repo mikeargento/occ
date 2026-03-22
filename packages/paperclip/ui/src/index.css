@@ -132,11 +132,19 @@
     font-family: "acumin-pro", "Helvetica Neue", Helvetica, sans-serif;
     height: 100%;
     overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
   h1,
   h2,
   h3 {
     text-wrap: balance;
+    letter-spacing: -0.01em;
+  }
+  /* Selection color */
+  ::selection {
+    background: color-mix(in srgb, var(--primary) 25%, transparent);
   }
   /* Prevent double-tap-to-zoom on interactive elements for mobile */
   a,
@@ -147,6 +155,16 @@
   textarea,
   label {
     touch-action: manipulation;
+  }
+  /* Refined inputs */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  input[type="url"],
+  input[type="number"],
+  textarea {
+    font-size: 13px;
   }
 }
 

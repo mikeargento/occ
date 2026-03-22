@@ -47,7 +47,7 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="w-60 h-full min-h-0 border-r border-border bg-background flex flex-col">
+    <aside className="w-60 h-full min-h-0 border-r border-border/60 bg-background flex flex-col">
       {/* Top bar: Company name (bold) + Search — aligned with top sections (no visible border) */}
       <div className="flex items-center gap-1 px-3 h-12 shrink-0">
         {selectedCompany?.brandColor && (
@@ -74,9 +74,9 @@ export function Sidebar() {
           {/* New Issue button aligned with nav items */}
           <button
             onClick={() => openNewIssue()}
-            className="flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium text-muted-foreground hover:bg-accent/50 hover:text-foreground transition-colors"
+            className="flex items-center gap-2.5 px-3 py-[7px] text-[13px] font-medium text-muted-foreground hover:bg-accent/50 hover:text-foreground rounded-lg transition-all duration-150"
           >
-            <SquarePen className="h-4 w-4 shrink-0" />
+            <SquarePen className="h-[15px] w-[15px] opacity-70 shrink-0" />
             <span className="truncate">New Issue</span>
           </button>
           <SidebarNavItem to="/dashboard" label="Dashboard" icon={LayoutDashboard} liveCount={liveRunCount} />
@@ -125,14 +125,14 @@ export function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="shrink-0 border-t border-border px-4 py-3">
+      <div className="shrink-0 border-t border-border/40 px-4 py-3">
         <a
           href="https://occ.wtf"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-accent/50"
+          className="flex items-center gap-2 px-2 py-1.5 text-[11px] text-muted-foreground/50 hover:text-muted-foreground transition-all duration-150 rounded-lg hover:bg-accent/30"
         >
-          <span className="text-[10px] font-black tracking-tight">OCC</span>
+          <span className="text-[10px] font-black tracking-[-0.02em]">OCC</span>
           <span>occ.wtf</span>
         </a>
       </div>
