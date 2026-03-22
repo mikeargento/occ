@@ -43,16 +43,25 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
   // ── Agents ──
   if (path === "/agents" && method === "GET") {
     const agents = await db.getAgents(userId);
-    const summaries = agents.map((a: any) => ({
-      id: a.id,
-      name: a.name,
-      policy: null,
-      createdAt: new Date(a.created_at).getTime(),
-      status: a.paused ? "paused" : "active",
-      totalCalls: a.total_calls ?? 0,
-      totalSpendCents: 0,
-      auditCount: a.total_calls ?? 0,
-    }));
+    const summaries = agents.map((a: any) => {
+      const tools = a.allowed_tools ?? [];
+      return {
+        id: a.id,
+        name: a.name,
+        policy: tools.length > 0 ? {
+          version: "occ/policy/1",
+          name: a.name,
+          createdAt: new Date(a.created_at).getTime(),
+          globalConstraints: { allowedTools: tools },
+          skills: {},
+        } : null,
+        createdAt: new Date(a.created_at).getTime(),
+        status: a.paused ? "paused" : "active",
+        totalCalls: a.total_calls ?? 0,
+        totalSpendCents: 0,
+        auditCount: a.total_calls ?? 0,
+      };
+    });
     // If no agents, create a default one
     if (summaries.length === 0) {
       await db.upsertAgent(userId, { id: "default-agent", name: "default-agent" });
@@ -61,7 +70,7 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
         name: "default-agent",
         policy: null,
         createdAt: Date.now(),
-        status: "active",
+        status: "active" as const,
         totalCalls: 0,
         totalSpendCents: 0,
         auditCount: 0,
@@ -84,12 +93,25 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
     if (method === "GET") {
       const agent = await db.getAgent(userId, agentId);
       if (!agent) return json(res, { error: "Not found" }, 404);
+      // Build policy object from allowed_tools so dashboard can read agent.policy.globalConstraints.allowedTools
+      const agentAllowedTools = agent.allowed_tools ?? [];
+      const agentPolicy = agentAllowedTools.length > 0 ? {
+        version: "occ/policy/1" as const,
+        name: agent.name,
+        createdAt: new Date(agent.created_at).getTime(),
+        globalConstraints: { allowedTools: agentAllowedTools },
+        skills: {},
+      } : null;
       return json(res, {
-        agent: { id: agent.id, name: agent.name, status: agent.paused ? "paused" : "active", createdAt: new Date(agent.created_at).getTime(), policy: null },
+        agent: { id: agent.id, name: agent.name, status: agent.paused ? "paused" : "active", createdAt: new Date(agent.created_at).getTime(), policy: agentPolicy },
         context: {
-          allowedTools: agent.allowed_tools ?? [],
+          allowedTools: agentAllowedTools,
           totalSpendCents: 0,
           toolCallCounts: {},
+          toolCallTimestamps: {},
+          globalCallTimestamps: [],
+          activeSkills: {},
+          auditLog: [],
           recentDenials: [],
         },
         auditCount: agent.total_calls ?? 0,
@@ -159,14 +181,13 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
     const { entries, total } = await db.getProofs(userId, limit, (page - 1) * limit);
     return json(res, {
       entries: entries.map((e: any) => ({
-        id: e.id,
+        id: String(e.id),
         agentId: e.agent_id,
         tool: e.tool,
-        allowed: e.allowed,
-        args: e.args,
-        output: e.output,
-        reason: e.reason,
-        proofDigest: e.proof_digest,
+        decision: e.allowed
+          ? { allowed: true as const }
+          : { allowed: false as const, reason: e.reason ?? "Policy denied", constraint: "policy" },
+        proofDigestB64: e.proof_digest ?? null,
         timestamp: new Date(e.created_at).getTime(),
       })),
       total,
@@ -179,6 +200,21 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
   const auditMatch = path.match(/^\/audit\/([^/]+)$/);
   if (auditMatch && method === "GET") {
     return json(res, { entry: null, receipt: null });
+  }
+
+  // ── Context ──
+  if (path === "/context" && method === "GET") {
+    const agentId = url.searchParams.get("agentId") ?? "default-agent";
+    const agent = await db.getAgent(userId, agentId);
+    return json(res, {
+      allowedTools: agent?.allowed_tools ?? [],
+      totalSpendCents: 0,
+      toolCallCounts: {},
+      toolCallTimestamps: {},
+      globalCallTimestamps: [],
+      activeSkills: {},
+      auditLog: [],
+    });
   }
 
   // ── Tools ──

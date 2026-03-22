@@ -46,11 +46,15 @@ function CodeBlock({ label, code }: { label: string; code: string }) {
   );
 }
 
-const CLAUDE_CONFIG = `{
+const CLAUDE_CONFIG = `Add this URL as an MCP server in your AI tool's settings:
+
+Your MCP URL will appear here after signing in.
+
+For Claude Desktop, add to claude_desktop_config.json:
+{
   "mcpServers": {
     "occ-agent": {
-      "command": "npx",
-      "args": ["occ-mcp-proxy", "--mcp"]
+      "url": "https://occ-production-b94f.up.railway.app/mcp/YOUR_TOKEN"
     }
   }
 }`;
@@ -95,12 +99,12 @@ export default function SetupPage() {
           }`} />
           <div>
             <p className={`text-sm font-medium ${isConnected ? "text-success" : "text-text"}`}>
-              {isConnected ? "Proxy running" : "Waiting for proxy..."}
+              {isConnected ? "Connected to OCC" : "Connecting..."}
             </p>
             <p className="text-xs text-text-tertiary mt-0.5">
               {isConnected
-                ? "Agents can connect on localhost:9100"
-                : "Run npx occ-mcp-proxy to start"}
+                ? "Your AI tools can connect via MCP"
+                : "Checking connection to control plane"}
             </p>
           </div>
         </div>
