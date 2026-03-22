@@ -132,7 +132,15 @@ export function isOCCProof(text: string): OCCProof | null {
  * structure of the proof itself.
  */
 export async function verifyProofSignature(proof: OCCProof): Promise<ProofVerifyResult> {
-  const { verify: ed25519Verify } = await import("@noble/ed25519");
+  const ed = await import("@noble/ed25519");
+
+  // Noble v3 requires SHA-512 to be configured for browser use
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (ed as any).etc.sha512Async = async (message: Uint8Array) => {
+    const hash = await crypto.subtle.digest("SHA-512", message as unknown as BufferSource);
+    return new Uint8Array(hash);
+  };
+
   const checks: ProofVerifyResult["checks"] = [];
 
   // 1. Reconstruct signed body (must match constructor.ts exactly)
@@ -180,7 +188,7 @@ export async function verifyProofSignature(proof: OCCProof): Promise<ProofVerify
   // 4. Verify Ed25519 signature
   let sigValid = false;
   try {
-    sigValid = await ed25519Verify(sigBytes, canonicalBytes, pubBytes);
+    sigValid = await ed.verifyAsync(sigBytes, canonicalBytes, pubBytes);
   } catch (e) {
     checks.push({ label: "Signature", status: "fail", detail: `Verification error: ${e}` });
   }
