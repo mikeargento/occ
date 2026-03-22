@@ -3,6 +3,7 @@ dist/
 .next/
 out/
 dashboard/
+!packages/hosted/dashboard/
 *.tsbuildinfo
 .DS_Store
 *.log
