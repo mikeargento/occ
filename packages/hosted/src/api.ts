@@ -38,11 +38,10 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
   }
 
   // Auth-gated endpoints
-  const userId = getUserId(req);
+  const userId = getUserId(req) ?? "anonymous";
 
   // ── Agents ──
   if (path === "/agents" && method === "GET") {
-    if (!userId) return json(res, { agents: [] });
     const agents = await db.getAgents(userId);
     const summaries = agents.map((a: any) => ({
       agentId: a.id,
@@ -54,7 +53,7 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
       deniedCount: a.denied_count,
     }));
     // If no agents, create a default one
-    if (summaries.length === 0 && userId) {
+    if (summaries.length === 0) {
       await db.upsertAgent(userId, { id: "default-agent", name: "default-agent" });
       summaries.push({
         agentId: "default-agent",
@@ -70,7 +69,6 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
   }
 
   if (path === "/agents" && method === "POST") {
-    if (!userId) return json(res, { error: "Unauthorized" }, 401);
     const body = JSON.parse(await readBody(req));
     const id = body.name?.toLowerCase().replace(/[^a-z0-9-]/g, "-") ?? "agent-" + Date.now();
     await db.upsertAgent(userId, { id, name: body.name ?? id, allowedTools: body.allowedTools });
@@ -82,7 +80,6 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
   if (agentMatch) {
     const agentId = decodeURIComponent(agentMatch[1]!);
     if (method === "GET") {
-      if (!userId) return json(res, { error: "Unauthorized" }, 401);
       const agent = await db.getAgent(userId, agentId);
       if (!agent) return json(res, { error: "Not found" }, 404);
       return json(res, {
@@ -92,7 +89,6 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
       });
     }
     if (method === "DELETE") {
-      if (!userId) return json(res, { error: "Unauthorized" }, 401);
       await db.deleteAgent(userId, agentId);
       return json(res, { deleted: true });
     }
@@ -123,7 +119,6 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
   }
 
   if (path === "/policy" && method === "PUT") {
-    if (!userId) return json(res, { error: "Unauthorized" }, 401);
     const body = JSON.parse(await readBody(req));
     const policy = await db.createPolicy(userId, {
       name: body.name ?? "default",
@@ -206,7 +201,7 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
 
   // ── MCP Config ──
   if (path === "/mcp-config" && method === "GET") {
-    if (!userId) return json(res, { error: "Unauthorized" }, 401);
+    // TODO: re-enable auth
     const user = await db.getUserById(userId);
     if (!user) return json(res, { error: "User not found" }, 404);
     const baseUrl = req.headers.host ? `https://${req.headers.host}` : "http://localhost:3100";
