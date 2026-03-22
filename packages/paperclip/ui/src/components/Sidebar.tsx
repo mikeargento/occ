@@ -127,13 +127,13 @@ export function Sidebar() {
       {/* Footer */}
       <div className="shrink-0 border-t border-border px-4 py-3">
         <a
-          href="https://buymeacoffee.com/mikeargento"
+          href="https://occ.wtf"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-2 px-2 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-accent/50"
         >
-          <span>☕</span>
-          <span>Support OCC Agent</span>
+          <span className="text-[10px] font-black tracking-tight">OCC</span>
+          <span>occ.wtf</span>
         </a>
       </div>
     </aside>
