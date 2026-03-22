@@ -8,7 +8,7 @@ import { assetsApi } from "../api/assets";
 import { secretsApi } from "../api/secrets";
 import { queryKeys } from "../lib/queryKeys";
 import { Button } from "@/components/ui/button";
-import { Settings, Check, Eye, EyeOff, RotateCw, Trash2, Plus, Plug, Copy, CheckCircle } from "lucide-react";
+import { Settings, Check, Eye, EyeOff, RotateCw, Trash2, Plus, Plug, Copy, CheckCircle, Download } from "lucide-react";
 import { CompanyPatternIcon } from "../components/CompanyPatternIcon";
 import {
   Field,
@@ -564,6 +564,19 @@ function ConnectYourAI({ companyId }: { companyId: string }) {
     }
   }
 
+  function handleDownload() {
+    if (!snippetJson) return;
+    const blob = new Blob([snippetJson], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "claude_desktop_config.json";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2">
@@ -594,22 +607,31 @@ function ConnectYourAI({ companyId }: { companyId: string }) {
               <pre className="rounded-lg border border-border bg-muted/30 px-3 py-3 font-mono text-xs leading-relaxed overflow-x-auto select-all">
                 {snippetJson}
               </pre>
-              <button
-                onClick={handleCopy}
-                className="absolute top-2 right-2 flex items-center gap-1 rounded-md bg-background/80 border border-border/50 px-2 py-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {copied ? (
-                  <>
-                    <CheckCircle key={copiedDelightId} className="h-3 w-3 text-emerald-500" />
-                    <span className="text-emerald-500">Copied</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="h-3 w-3" />
-                    Copy
-                  </>
-                )}
-              </button>
+              <div className="absolute top-2 right-2 flex items-center gap-1">
+                <button
+                  onClick={handleDownload}
+                  className="flex items-center gap-1 rounded-md bg-background/80 border border-border/50 px-2 py-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Download className="h-3 w-3" />
+                  Save File
+                </button>
+                <button
+                  onClick={handleCopy}
+                  className="flex items-center gap-1 rounded-md bg-background/80 border border-border/50 px-2 py-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {copied ? (
+                    <>
+                      <CheckCircle key={copiedDelightId} className="h-3 w-3 text-emerald-500" />
+                      <span className="text-emerald-500">Copied</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-3 w-3" />
+                      Copy
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
 
             <div className="space-y-2 pt-1">
@@ -618,19 +640,27 @@ function ConnectYourAI({ companyId }: { companyId: string }) {
               </p>
               <ol className="text-xs text-muted-foreground space-y-1.5 list-decimal list-inside">
                 <li>
-                  Copy the snippet above
-                </li>
-                <li>
-                  <strong>Claude Desktop:</strong> Paste into{" "}
+                  Click <strong>Save File</strong> to download{" "}
                   <code className="rounded bg-muted px-1 py-0.5 text-[11px]">
                     claude_desktop_config.json
                   </code>
                 </li>
                 <li>
+                  <strong>Claude Desktop:</strong> Move the file to{" "}
+                  <code className="rounded bg-muted px-1 py-0.5 text-[11px]">
+                    ~/Library/Application Support/Claude/
+                  </code>{" "}
+                  (Mac) or{" "}
+                  <code className="rounded bg-muted px-1 py-0.5 text-[11px]">
+                    %APPDATA%\Claude\
+                  </code>{" "}
+                  (Windows)
+                </li>
+                <li>
                   <strong>Cursor / Windsurf:</strong> Add as an MCP server in settings
                 </li>
                 <li>
-                  Your AI can now create issues, manage agents, and view your dashboard
+                  Restart your AI — it can now create issues, manage agents, and view your dashboard
                 </li>
               </ol>
             </div>
