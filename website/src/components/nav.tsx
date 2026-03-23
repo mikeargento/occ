@@ -29,24 +29,19 @@ export function Nav() {
 
           {/* Desktop */}
           <div className="hidden flex-1 items-center justify-end gap-1 md:flex">
-            {links.map((l, i) => {
-              const isExternal = l.external;
-              // Add separator before GitHub (external) link
-              const separator = isExternal ? (
-                <div key="sep" className="w-px h-4 bg-border-subtle mx-2" />
-              ) : null;
-
-              const linkEl = isExternal ? (
-                <a
-                  key={l.href}
-                  href={l.href}
-                  target="_blank"
-                  rel="noopener"
-                  className="text-sm font-semibold px-3 py-1.5 transition-colors duration-150 text-text-tertiary hover:text-text"
-                >
-                  {l.label}
-                </a>
-              ) : (
+            {links.map((l) => {
+              if (l.external) {
+                return (
+                  <a
+                    key={l.href}
+                    href={l.href}
+                    className="text-sm font-semibold px-4 py-1.5 rounded-lg bg-emerald-500 text-white hover:bg-emerald-400 transition-colors duration-150"
+                  >
+                    {l.label}
+                  </a>
+                );
+              }
+              return (
                 <Link
                   key={l.href}
                   href={l.href}
@@ -65,8 +60,6 @@ export function Nav() {
                   {l.label}
                 </Link>
               );
-
-              return separator ? [separator, linkEl] : linkEl;
             })}
             <div className="w-px h-4 bg-border-subtle mx-2" />
             <button
