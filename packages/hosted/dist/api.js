@@ -293,6 +293,19 @@ export async function handleApi(req, res, url) {
         return json(res, []);
     }
     // ── Permissions ──
+    // Unified endpoint: all permissions with full context
+    if (path === "/permissions" && method === "GET") {
+        const all = await db.getAllPermissions(userId);
+        return json(res, { permissions: all.map((r) => ({
+                id: r.id, agentId: r.agent_id, tool: r.tool, status: r.status,
+                clientName: r.client_name || "Unknown",
+                requestedAt: new Date(r.requested_at).getTime(),
+                resolvedAt: r.resolved_at ? new Date(r.resolved_at).getTime() : null,
+                requestArgs: r.request_args,
+                proofDigest: r.proof_digest,
+                explorerUrl: r.proof_digest ? `https://occ.wtf/explorer?digest=${encodeURIComponent(r.proof_digest)}` : null,
+            })) });
+    }
     if (path === "/permissions/pending" && method === "GET") {
         const pending = await db.getPendingPermissions(userId);
         return json(res, { requests: pending.map((r) => ({

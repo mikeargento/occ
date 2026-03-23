@@ -166,6 +166,16 @@ export async function listConnections(): Promise<DownstreamServer[]> {
 
 // ── Permissions ──
 
+export interface Permission {
+  id: number; agentId: string; tool: string; status: "pending" | "approved" | "denied" | "revoked";
+  clientName: string; requestedAt: number; resolvedAt: number | null;
+  requestArgs: unknown; proofDigest: string | null; explorerUrl: string | null;
+}
+
+export async function getAllPermissions(): Promise<{ permissions: Permission[] }> {
+  return apiFetch("/permissions");
+}
+
 export async function getPendingPermissions(): Promise<{ requests: Array<{
   id: number; agentId: string; tool: string; clientName: string; requestedAt: number; requestArgs?: unknown;
 }> }> {

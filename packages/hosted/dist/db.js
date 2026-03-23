@@ -246,6 +246,12 @@ export const db = {
        ORDER BY pr.resolved_at DESC`, [userId]);
         return res.rows;
     },
+    /** Get ALL permissions (pending + resolved) with full context */
+    async getAllPermissions(userId) {
+        const p = getPool();
+        const res = await p.query(`SELECT * FROM occ_permission_requests WHERE user_id = $1 ORDER BY requested_at DESC`, [userId]);
+        return res.rows;
+    },
     // ── Policies ──
     async getActivePolicy(userId) {
         const p = getPool();

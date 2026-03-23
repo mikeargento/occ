@@ -48,6 +48,8 @@ export declare const db: {
     resolvePermission(userId: string, requestId: number, decision: "approved" | "denied", proofDigest: string, receipt: unknown): Promise<any>;
     revokePermission(userId: string, agentId: string, tool: string, proofDigest: string, receipt: unknown): Promise<void>;
     getActivePermissions(userId: string): Promise<any[]>;
+    /** Get ALL permissions (pending + resolved) with full context */
+    getAllPermissions(userId: string): Promise<any[]>;
     getActivePolicy(userId: string): Promise<any>;
     createPolicy(userId: string, policy: {
         name: string;
