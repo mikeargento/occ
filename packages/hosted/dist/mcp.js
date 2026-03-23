@@ -159,8 +159,27 @@ export async function handleMcp(req, res, pathname) {
             }
         }
     }
-    // GET — return server info
+    // GET — SSE transport (for clients like Cursor that use SSE)
     if (method === "GET") {
+        const accept = req.headers.accept ?? "";
+        if (accept.includes("text/event-stream")) {
+            res.writeHead(200, {
+                "Content-Type": "text/event-stream",
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "Access-Control-Allow-Origin": "*",
+            });
+            // Send endpoint info so client knows where to POST
+            const endpoint = pathname;
+            res.write(`event: endpoint\ndata: ${endpoint}\n\n`);
+            // Keep alive
+            const interval = setInterval(() => {
+                res.write(": keepalive\n\n");
+            }, 15000);
+            req.on("close", () => clearInterval(interval));
+            return;
+        }
+        // Plain GET — return server info
         return json(res, {
             name: "occ-agent",
             version: "1.0.0",

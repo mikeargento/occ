@@ -294,7 +294,7 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
     // TODO: re-enable auth
     const user = await db.getUserById(userId);
     if (!user) return json(res, { error: "User not found" }, 404);
-    const baseUrl = req.headers.host ? `https://${req.headers.host}` : "http://localhost:3100";
+    const baseUrl = "https://agent.occ.wtf";
     return json(res, {
       mcpServers: {
         "occ-agent": {
