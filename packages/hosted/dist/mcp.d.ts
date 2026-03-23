@@ -10,6 +10,10 @@ interface ActiveConnection {
 }
 /** Get all active connections (for the dashboard) */
 export declare function getActiveConnections(): ActiveConnection[];
+export declare function commitProof(tool: string, args: unknown, agentId: string, allowed: boolean): Promise<{
+    proof: any;
+    digestB64: string;
+}>;
 /**
  * Handle MCP protocol requests at /mcp/:token
  *

@@ -4,18 +4,15 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "./theme-provider";
-import { listConnections } from "@/lib/api";
+import { listConnections, getPendingPermissions } from "@/lib/api";
 
 const NAV_ITEMS = [
   {
     href: "/",
-    label: "Switchboards",
+    label: "Permissions",
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="3" width="7" height="7" rx="1.5" />
-        <rect x="14" y="3" width="7" height="7" rx="1.5" />
-        <rect x="3" y="14" width="7" height="7" rx="1.5" />
-        <rect x="14" y="14" width="7" height="7" rx="1.5" />
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
       </svg>
     ),
   },
@@ -29,6 +26,16 @@ const NAV_ITEMS = [
         <path d="M16 13H8" />
         <path d="M16 17H8" />
         <path d="M10 9H8" />
+      </svg>
+    ),
+  },
+  {
+    href: "/connect",
+    label: "Connect",
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" />
+        <path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" />
       </svg>
     ),
   },
@@ -69,21 +76,28 @@ function ThemeButton() {
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   const [connectionCount, setConnectionCount] = useState(0);
+  const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
     const check = () => {
       listConnections()
         .then((res) => setConnectionCount(Array.isArray(res) ? res.length : 0))
         .catch(() => setConnectionCount(0));
+      getPendingPermissions()
+        .then((res) => setPendingCount(res.requests?.length ?? 0))
+        .catch(() => setPendingCount(0));
     };
     check();
+    // SSE for instant updates
+    const es = new EventSource("/api/events");
+    es.onmessage = () => check();
     const interval = setInterval(check, 5000);
-    return () => clearInterval(interval);
+    return () => { clearInterval(interval); es.close(); };
   }, []);
 
   function isActive(href: string) {
     if (href === "/") {
-      return pathname === "/" || pathname === "/agents" || pathname.startsWith("/agents/");
+      return pathname === "/";
     }
     return pathname.startsWith(href);
   }
@@ -122,6 +136,11 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
                     {item.icon}
                   </span>
                   {item.label}
+                  {item.label === "Permissions" && pendingCount > 0 && (
+                    <span className="ml-auto text-[10px] font-bold bg-amber-500 text-white px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                      {pendingCount}
+                    </span>
+                  )}
                 </Link>
               </li>
             );

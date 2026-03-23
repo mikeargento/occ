@@ -74,6 +74,27 @@ export const db = {
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
 
+      -- Permission requests table (the core of permission-first model)
+      CREATE TABLE IF NOT EXISTS occ_permission_requests (
+        id SERIAL PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        agent_id TEXT NOT NULL,
+        tool TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending',
+        client_name TEXT,
+        request_args JSONB,
+        proof_digest TEXT,
+        receipt JSONB,
+        requested_at TIMESTAMPTZ DEFAULT NOW(),
+        resolved_at TIMESTAMPTZ
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_occ_perm_user_status ON occ_permission_requests(user_id, status);
+      CREATE INDEX IF NOT EXISTS idx_occ_perm_user_agent_tool ON occ_permission_requests(user_id, agent_id, tool);
+
+      -- Add blocked_tools column to agents
+      ALTER TABLE occ_agents ADD COLUMN IF NOT EXISTS blocked_tools TEXT[] DEFAULT '{}';
+
       -- Create anonymous user for pre-auth testing
       INSERT INTO occ_users (id, email, name, provider, provider_id, mcp_token)
       VALUES ('anonymous', 'anon@occ.wtf', 'Anonymous', 'anonymous', 'anonymous', 'anon-token')
@@ -158,6 +179,72 @@ export const db = {
         const p = getPool();
         const col = allowed ? "allowed_count" : "denied_count";
         await p.query(`UPDATE occ_agents SET total_calls = total_calls + 1, ${col} = ${col} + 1 WHERE user_id = $1 AND id = $2`, [userId, agentId]);
+    },
+    // ── Permissions ──
+    async createPermissionRequest(userId, agentId, tool, clientName, args) {
+        const p = getPool();
+        // Dedup: don't create another pending request for the same tool
+        const existing = await p.query("SELECT id FROM occ_permission_requests WHERE user_id = $1 AND agent_id = $2 AND tool = $3 AND status = 'pending'", [userId, agentId, tool]);
+        if (existing.rows.length > 0)
+            return existing.rows[0];
+        const res = await p.query(`INSERT INTO occ_permission_requests (user_id, agent_id, tool, client_name, request_args)
+       VALUES ($1, $2, $3, $4, $5) RETURNING *`, [userId, agentId, tool, clientName, JSON.stringify(args)]);
+        return res.rows[0];
+    },
+    async getPendingPermissions(userId) {
+        const p = getPool();
+        const res = await p.query("SELECT * FROM occ_permission_requests WHERE user_id = $1 AND status = 'pending' ORDER BY requested_at DESC", [userId]);
+        return res.rows;
+    },
+    async getPermissionHistory(userId, limit = 50, offset = 0) {
+        const p = getPool();
+        const res = await p.query("SELECT * FROM occ_permission_requests WHERE user_id = $1 AND status != 'pending' ORDER BY resolved_at DESC LIMIT $2 OFFSET $3", [userId, limit, offset]);
+        const countRes = await p.query("SELECT COUNT(*) FROM occ_permission_requests WHERE user_id = $1 AND status != 'pending'", [userId]);
+        return { entries: res.rows, total: parseInt(countRes.rows[0].count, 10) };
+    },
+    async resolvePermission(userId, requestId, decision, proofDigest, receipt) {
+        const p = getPool();
+        // Get the request first
+        const req = await p.query("SELECT * FROM occ_permission_requests WHERE id = $1 AND user_id = $2 AND status = 'pending'", [requestId, userId]);
+        if (req.rows.length === 0)
+            return null;
+        const perm = req.rows[0];
+        // Update the request
+        await p.query(`UPDATE occ_permission_requests SET status = $3, resolved_at = NOW(), proof_digest = $4, receipt = $5
+       WHERE id = $1 AND user_id = $2`, [requestId, userId, decision, proofDigest, JSON.stringify(receipt)]);
+        // Update the agent's allowed/blocked tools
+        if (decision === 'approved') {
+            await p.query(`UPDATE occ_agents SET allowed_tools = array_append(allowed_tools, $3),
+                               blocked_tools = array_remove(blocked_tools, $3)
+         WHERE user_id = $1 AND id = $2 AND NOT ($3 = ANY(allowed_tools))`, [userId, perm.agent_id, perm.tool]);
+        }
+        else {
+            await p.query(`UPDATE occ_agents SET blocked_tools = array_append(blocked_tools, $3),
+                               allowed_tools = array_remove(allowed_tools, $3)
+         WHERE user_id = $1 AND id = $2 AND NOT ($3 = ANY(blocked_tools))`, [userId, perm.agent_id, perm.tool]);
+        }
+        return { ...perm, status: decision, proof_digest: proofDigest };
+    },
+    async revokePermission(userId, agentId, tool, proofDigest, receipt) {
+        const p = getPool();
+        // Remove from allowed, add to blocked
+        await p.query(`UPDATE occ_agents SET allowed_tools = array_remove(allowed_tools, $3),
+                             blocked_tools = array_append(blocked_tools, $3)
+       WHERE user_id = $1 AND id = $2`, [userId, agentId, tool]);
+        // Record the revocation
+        await p.query(`INSERT INTO occ_permission_requests (user_id, agent_id, tool, status, proof_digest, receipt, resolved_at)
+       VALUES ($1, $2, $3, 'revoked', $4, $5, NOW())`, [userId, agentId, tool, proofDigest, JSON.stringify(receipt)]);
+    },
+    async getActivePermissions(userId) {
+        const p = getPool();
+        const res = await p.query(`SELECT pr.* FROM occ_permission_requests pr
+       INNER JOIN (
+         SELECT DISTINCT ON (agent_id, tool) id FROM occ_permission_requests
+         WHERE user_id = $1 AND status = 'approved'
+         ORDER BY agent_id, tool, resolved_at DESC
+       ) latest ON pr.id = latest.id
+       ORDER BY pr.resolved_at DESC`, [userId]);
+        return res.rows;
     },
     // ── Policies ──
     async getActivePolicy(userId) {

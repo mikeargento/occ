@@ -1,259 +1,148 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { getAgents, createAgent, deleteAgent } from "@/lib/api";
-import type { AgentSummary } from "@/lib/types";
-import { Badge } from "@/components/shared/badge";
-import { EmptyState } from "@/components/shared/empty-state";
-import { TOOL_CATEGORIES, getCategoryStatuses } from "@/lib/categories";
+import { getPendingPermissions, getActivePermissions, approvePermission, denyPermission, revokePermission } from "@/lib/api";
 
-export default function SwitchboardsPage() {
-  const router = useRouter();
-  const [agents, setAgents] = useState<AgentSummary[]>([]);
+function timeAgo(ts: number): string {
+  const s = Math.floor((Date.now() - ts) / 1000);
+  if (s < 60) return `${s}s ago`;
+  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+  if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
+  return `${Math.floor(s / 86400)}d ago`;
+}
+
+interface PendingRequest {
+  id: number; agentId: string; tool: string; clientName: string; requestedAt: number;
+}
+
+interface ActivePerm {
+  id: number; agentId: string; tool: string; status: string; resolvedAt: number | null;
+  proofDigest: string | null; explorerUrl: string | null;
+}
+
+export default function PermissionsPage() {
+  const [pending, setPending] = useState<PendingRequest[]>([]);
+  const [active, setActive] = useState<ActivePerm[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [showCreate, setShowCreate] = useState(false);
-  const [newName, setNewName] = useState("");
-  const [creating, setCreating] = useState(false);
+  const [resolving, setResolving] = useState<Set<number>>(new Set());
 
-  const refresh = useCallback(() => {
-    getAgents()
-      .then((res) => setAgents(res.agents))
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
+  const refresh = useCallback(async () => {
+    try {
+      const [p, a] = await Promise.all([getPendingPermissions(), getActivePermissions()]);
+      setPending(p.requests);
+      setActive(a.permissions);
+    } catch {} finally { setLoading(false); }
   }, []);
 
   useEffect(() => {
     refresh();
+    const es = new EventSource("/api/events");
+    es.onmessage = (e) => {
+      try {
+        const data = JSON.parse(e.data);
+        if (data.type === "permission-requested" || data.type === "permission-resolved") refresh();
+      } catch {}
+    };
+    const interval = setInterval(refresh, 5000);
+    return () => { es.close(); clearInterval(interval); };
   }, [refresh]);
 
-  async function handleCreate() {
-    if (!newName.trim()) return;
-    setCreating(true);
-    try {
-      const res = await createAgent(newName.trim());
-      setNewName("");
-      setShowCreate(false);
-      router.push(`/agents/${res.agent.id}`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create");
-    } finally {
-      setCreating(false);
-    }
+  async function handleApprove(id: number) {
+    setResolving(s => new Set(s).add(id));
+    try { await approvePermission(id); await refresh(); }
+    catch {} finally { setResolving(s => { const n = new Set(s); n.delete(id); return n; }); }
   }
 
-  const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
+  async function handleDeny(id: number) {
+    setResolving(s => new Set(s).add(id));
+    try { await denyPermission(id); await refresh(); }
+    catch {} finally { setResolving(s => { const n = new Set(s); n.delete(id); return n; }); }
+  }
 
-  async function handleDelete(agentId: string) {
-    try {
-      await deleteAgent(agentId);
-      setConfirmingDelete(null);
-      refresh();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete");
-    }
+  async function handleRevoke(agentId: string, tool: string) {
+    try { await revokePermission(agentId, tool); await refresh(); } catch {}
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-8 py-8">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-[-0.02em]">
-            Switchboards
-          </h1>
-          {!loading && agents.length > 0 && (
-            <p className="text-sm text-text-secondary mt-1">
-              {agents.length} switchboard{agents.length !== 1 ? "s" : ""} &middot;{" "}
-              {agents.filter((a) => a.status === "active").length} active
-            </p>
-          )}
-        </div>
-        <button
-          onClick={() => setShowCreate(!showCreate)}
-          className="px-4 py-2.5 text-sm font-semibold rounded-lg bg-text text-bg hover:opacity-90 transition-opacity active:scale-[0.98]"
-        >
-          New Switchboard
-        </button>
-      </div>
+    <div className="max-w-2xl mx-auto px-6 py-8">
+      <h1 className="text-2xl font-semibold tracking-[-0.02em] mb-1">Permissions</h1>
+      <p className="text-sm text-text-secondary mb-8">
+        Your AI asks for permission as it needs new tools. Allow or deny here.
+      </p>
 
-      {/* Create form */}
-      {showCreate && (
-        <div className="mb-6 rounded-xl border border-border bg-bg-elevated p-5 animate-slide-up">
-          <p className="text-sm font-medium mb-3">Create a switchboard</p>
-          <p className="text-xs text-text-tertiary mb-4">
-            Each switchboard controls one AI agent. Give it a name and you'll get a unique URL to paste into your AI tool.
-          </p>
-          <div className="flex items-center gap-3">
-            <input
-              type="text"
-              placeholder="e.g. Research Assistant, Customer Bot, Code Agent"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-              className="flex-1 px-3 py-2.5 text-sm rounded-lg bg-bg-inset border border-border focus:border-accent-dim outline-none transition-colors"
-              autoFocus
-            />
-            <button
-              onClick={handleCreate}
-              disabled={creating || !newName.trim()}
-              className="px-5 py-2.5 text-sm font-medium rounded-lg bg-text text-bg hover:opacity-90 disabled:opacity-40 transition-all active:scale-[0.98]"
-            >
-              {creating ? "Creating..." : "Create"}
-            </button>
-            <button
-              onClick={() => { setShowCreate(false); setNewName(""); }}
-              className="px-3 py-2.5 text-sm text-text-tertiary hover:text-text-secondary transition-colors"
-            >
-              Cancel
-            </button>
+      {/* Pending Requests */}
+      {pending.length > 0 && (
+        <div className="mb-10">
+          <h2 className="text-xs font-semibold uppercase tracking-[0.08em] text-text-tertiary mb-3">
+            Awaiting your decision
+          </h2>
+          <div className="space-y-3">
+            {pending.map((req) => (
+              <div key={req.id} className="flex items-center gap-4 px-5 py-4 rounded-xl border-2 border-amber-500/30 bg-amber-500/[0.04]">
+                <div className="relative flex-shrink-0">
+                  <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                  <div className="absolute inset-0 w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping opacity-40" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-mono font-semibold text-text truncate">{req.tool}</p>
+                  <p className="text-xs text-text-tertiary mt-0.5">{req.clientName} &middot; {timeAgo(req.requestedAt)}</p>
+                </div>
+                <div className="flex gap-2 flex-shrink-0">
+                  <button onClick={() => handleApprove(req.id)} disabled={resolving.has(req.id)}
+                    className="px-4 py-1.5 text-sm font-semibold rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-colors disabled:opacity-50 active:scale-[0.97]">
+                    Allow
+                  </button>
+                  <button onClick={() => handleDeny(req.id)} disabled={resolving.has(req.id)}
+                    className="px-4 py-1.5 text-sm font-semibold rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors disabled:opacity-50 active:scale-[0.97]">
+                    Deny
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
 
-      {/* Error */}
-      {error && (
-        <div className="mb-5 px-4 py-3 rounded-xl bg-error/5 border border-error/20 text-sm text-error flex items-center justify-between">
-          <span>{error}</span>
-          <button onClick={() => setError(null)} className="text-error/60 hover:text-error text-xs ml-3">Dismiss</button>
+      {!loading && pending.length === 0 && active.length === 0 && (
+        <div className="text-center py-16">
+          <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-bg-subtle flex items-center justify-center">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-text-tertiary">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+          </div>
+          <p className="text-sm text-text-secondary font-medium">No permissions yet</p>
+          <p className="text-xs text-text-tertiary mt-1 max-w-xs mx-auto">
+            Connect an AI tool and start using it. Permission requests will appear here.
+          </p>
         </div>
       )}
 
-      {/* Loading */}
-      {loading && (
-        <div className="space-y-3">
-          {[1, 2].map((i) => (
-            <div key={i} className="skeleton h-[80px] rounded-xl" />
-          ))}
-        </div>
-      )}
-
-      {/* Empty */}
-      {!loading && !error && agents.length === 0 && (
-        <EmptyState
-          icon="shield"
-          title="Create your first switchboard"
-          description="A switchboard controls what one AI agent can do. Each gets its own URL. Everything starts allowed — flip switches to restrict."
-          action={
-            <button
-              onClick={() => setShowCreate(true)}
-              className="px-5 py-2.5 text-sm font-medium rounded-lg bg-text text-bg hover:opacity-90 transition-opacity"
-            >
-              New Switchboard
-            </button>
-          }
-        />
-      )}
-
-      {/* Switchboard list */}
-      {agents.length > 0 && (
-        <div className="space-y-2">
-          {agents.map((agent) => {
-            const tools = agent.policy?.globalConstraints?.allowedTools ?? [];
-            const enabledSet = new Set(tools);
-            const statuses = getCategoryStatuses(tools, enabledSet);
-            const isPaused = agent.status === "paused";
-
-            return (
-              <div
-                key={agent.id}
-                className="group rounded-xl border border-border bg-bg-elevated hover:bg-bg-subtle/30 transition-colors duration-75"
-              >
-                <Link
-                  href={`/agents/${agent.id}`}
-                  className="flex items-center px-5 py-4 gap-4"
-                >
-                  {/* Status dot */}
-                  <div
-                    className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
-                      isPaused ? "bg-text-tertiary" : "bg-success animate-pulse-dot"
-                    }`}
-                  />
-
-                  {/* Name + meta */}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-text truncate">
-                      {agent.name}
-                    </p>
-                    <p className="text-[11px] text-text-tertiary mt-0.5">
-                      {tools.length} tool{tools.length !== 1 ? "s" : ""} &middot; {agent.totalCalls} call{agent.totalCalls !== 1 ? "s" : ""}
-                    </p>
-                  </div>
-
-                  {/* Category dots */}
-                  <div className="hidden sm:flex items-center gap-1.5">
-                    {TOOL_CATEGORIES.map((cat) => {
-                      const status = statuses[cat.id];
-                      return (
-                        <div
-                          key={cat.id}
-                          title={cat.label}
-                          className={`w-2 h-2 rounded-full transition-colors ${
-                            status === "on"
-                              ? "bg-success"
-                              : status === "partial"
-                              ? "bg-warning"
-                              : "bg-border"
-                          }`}
-                        />
-                      );
-                    })}
-                  </div>
-
-                  {/* Badge */}
-                  <Badge variant={isPaused ? "neutral" : "success"} dot>
-                    {isPaused ? "Paused" : "Active"}
-                  </Badge>
-
-                  {/* Chevron */}
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 16 16"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                    className="text-text-tertiary group-hover:text-text-secondary transition-colors flex-shrink-0"
-                  >
-                    <path d="M6 4l4 4-4 4" />
-                  </svg>
-                </Link>
-
-                {/* Delete action (on hover) */}
-                <div className="px-5 pb-3 -mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {confirmingDelete === agent.id ? (
-                    <span className="text-xs text-text-tertiary">
-                      Delete this switchboard?{" "}
-                      <button
-                        onClick={(e) => { e.preventDefault(); handleDelete(agent.id); }}
-                        className="text-error hover:text-error/80 font-medium ml-1"
-                      >
-                        Yes
-                      </button>
-                      <button
-                        onClick={(e) => { e.preventDefault(); setConfirmingDelete(null); }}
-                        className="text-text-tertiary hover:text-text ml-2"
-                      >
-                        No
-                      </button>
-                    </span>
-                  ) : (
-                    <button
-                      onClick={(e) => { e.preventDefault(); setConfirmingDelete(agent.id); }}
-                      className="text-[11px] text-text-tertiary hover:text-error transition-colors"
-                    >
-                      Delete
-                    </button>
-                  )}
+      {active.length > 0 && (
+        <div>
+          <h2 className="text-xs font-semibold uppercase tracking-[0.08em] text-text-tertiary mb-3">
+            Active permissions
+          </h2>
+          <div className="divide-y divide-border rounded-xl border border-border overflow-hidden">
+            {active.map((perm) => (
+              <div key={`${perm.agentId}-${perm.tool}`} className="flex items-center gap-4 px-5 py-3 bg-bg-subtle/30">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-mono text-text truncate">{perm.tool}</p>
+                  {perm.resolvedAt && <p className="text-xs text-text-tertiary">Allowed {timeAgo(perm.resolvedAt)}</p>}
                 </div>
+                {perm.explorerUrl && (
+                  <a href={perm.explorerUrl} target="_blank" rel="noopener noreferrer"
+                    className="text-xs text-emerald-500 hover:underline flex-shrink-0">proof</a>
+                )}
+                <button onClick={() => handleRevoke(perm.agentId, perm.tool)}
+                  className="text-xs text-text-tertiary hover:text-red-400 transition-colors flex-shrink-0">Revoke</button>
               </div>
-            );
-          })}
+            ))}
+          </div>
         </div>
       )}
+
+      {loading && <div className="space-y-3"><div className="skeleton h-[72px] rounded-xl" /><div className="skeleton h-[72px] rounded-xl" /></div>}
     </div>
   );
 }

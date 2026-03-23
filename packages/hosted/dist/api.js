@@ -1,5 +1,6 @@
 import { db } from "./db.js";
-import { getActiveConnections } from "./mcp.js";
+import { getActiveConnections, commitProof } from "./mcp.js";
+import { eventBus } from "./events.js";
 function json(res, data, status = 200) {
     const body = JSON.stringify(data);
     res.writeHead(status, { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(body) });
@@ -291,6 +292,86 @@ export async function handleApi(req, res, url) {
     if (path === "/keys" && method === "GET") {
         return json(res, []);
     }
+    // ── Permissions ──
+    if (path === "/permissions/pending" && method === "GET") {
+        const pending = await db.getPendingPermissions(userId);
+        return json(res, { requests: pending.map((r) => ({
+                id: r.id, agentId: r.agent_id, tool: r.tool, clientName: r.client_name,
+                requestedAt: new Date(r.requested_at).getTime(), requestArgs: r.request_args,
+            })) });
+    }
+    if (path === "/permissions/active" && method === "GET") {
+        const active = await db.getActivePermissions(userId);
+        return json(res, { permissions: active.map((r) => ({
+                id: r.id, agentId: r.agent_id, tool: r.tool, status: r.status,
+                resolvedAt: r.resolved_at ? new Date(r.resolved_at).getTime() : null,
+                proofDigest: r.proof_digest,
+                explorerUrl: r.proof_digest ? `https://occ.wtf/explorer?digest=${encodeURIComponent(r.proof_digest)}` : null,
+            })) });
+    }
+    if (path === "/permissions/history" && method === "GET") {
+        const url = new URL(req.url ?? "", "http://localhost");
+        const page = Math.max(1, Number(url.searchParams.get("page") ?? 1));
+        const limit = Math.min(100, Number(url.searchParams.get("limit") ?? 50));
+        const { entries, total } = await db.getPermissionHistory(userId, limit, (page - 1) * limit);
+        return json(res, {
+            permissions: entries.map((r) => ({
+                id: r.id, agentId: r.agent_id, tool: r.tool, status: r.status,
+                resolvedAt: r.resolved_at ? new Date(r.resolved_at).getTime() : null,
+                proofDigest: r.proof_digest,
+            })),
+            total, page, limit,
+        });
+    }
+    // POST /api/permissions/:id/approve or /deny or /revoke
+    const permMatch = path.match(/^\/permissions\/(\d+)\/(approve|deny)$/);
+    if (permMatch && method === "POST") {
+        const requestId = parseInt(permMatch[1], 10);
+        const decision = permMatch[2];
+        const status = decision === "approve" ? "approved" : "denied";
+        // Get the request to know the tool name
+        const pending = await db.getPendingPermissions(userId);
+        const req_entry = pending.find((r) => r.id === requestId);
+        if (!req_entry)
+            return json(res, { error: "Permission request not found" }, 404);
+        // Sign the permission decision as an OCC proof
+        const { proof, digestB64 } = await commitProof(req_entry.tool, { type: `permission-${status}`, tool: req_entry.tool, agentId: req_entry.agent_id }, req_entry.agent_id, decision === "approve");
+        const result = await db.resolvePermission(userId, requestId, status, digestB64, proof);
+        if (!result)
+            return json(res, { error: "Failed to resolve" }, 500);
+        // Also log to proof table
+        await db.addProof(userId, {
+            agentId: req_entry.agent_id, tool: req_entry.tool,
+            allowed: decision === "approve",
+            reason: `Permission ${status}`,
+            proofDigest: digestB64, receipt: proof,
+        });
+        // Notify dashboard
+        eventBus.emit(userId, {
+            type: "permission-resolved",
+            tool: req_entry.tool, agentId: req_entry.agent_id,
+            decision: status, proofDigest: digestB64, timestamp: Date.now(),
+        });
+        return json(res, { permission: result, proof: { digestB64 } });
+    }
+    // POST /api/permissions/revoke
+    if (path === "/permissions/revoke" && method === "POST") {
+        const body = JSON.parse(await readBody(req));
+        const { agentId, tool } = body;
+        if (!agentId || !tool)
+            return json(res, { error: "agentId and tool required" }, 400);
+        const { proof, digestB64 } = await commitProof(tool, { type: "permission-revoke", tool, agentId }, agentId, false);
+        await db.revokePermission(userId, agentId, tool, digestB64, proof);
+        await db.addProof(userId, {
+            agentId, tool, allowed: false,
+            reason: "Permission revoked", proofDigest: digestB64, receipt: proof,
+        });
+        eventBus.emit(userId, {
+            type: "permission-resolved", tool, agentId,
+            decision: "revoked", proofDigest: digestB64, timestamp: Date.now(),
+        });
+        return json(res, { ok: true, proof: { digestB64 } });
+    }
     // ── Events (SSE) ──
     if (path === "/events" && method === "GET") {
         res.writeHead(200, {
@@ -299,16 +380,29 @@ export async function handleApi(req, res, url) {
             "Connection": "keep-alive",
         });
         res.write("data: {\"type\":\"connected\"}\n\n");
-        // Keep alive
+        eventBus.subscribe(userId, res);
         const interval = setInterval(() => {
             res.write(": keepalive\n\n");
         }, 15000);
         req.on("close", () => clearInterval(interval));
         return;
     }
-    // ── MCP Config ──
+    // ── Connect Config ──
+    if (path === "/connect-config" && method === "GET") {
+        const user = await db.getUserById(userId);
+        if (!user)
+            return json(res, { error: "User not found" }, 404);
+        const mcpUrl = `https://agent.occ.wtf/mcp/${user.mcp_token}`;
+        return json(res, {
+            mcpUrl,
+            claudeCode: `claude mcp add occ-agent --transport http ${mcpUrl}`,
+            claudeDesktop: JSON.stringify({ mcpServers: { "occ-agent": { url: mcpUrl } } }, null, 2),
+            cursor: JSON.stringify({ mcpServers: { "occ-agent": { url: mcpUrl } } }, null, 2),
+            generic: mcpUrl,
+        });
+    }
+    // ── MCP Config (legacy) ──
     if (path === "/mcp-config" && method === "GET") {
-        // TODO: re-enable auth
         const user = await db.getUserById(userId);
         if (!user)
             return json(res, { error: "User not found" }, 404);

@@ -164,6 +164,42 @@ export async function listConnections(): Promise<DownstreamServer[]> {
   return apiFetch("/connections");
 }
 
+// ── Permissions ──
+
+export async function getPendingPermissions(): Promise<{ requests: Array<{
+  id: number; agentId: string; tool: string; clientName: string; requestedAt: number; requestArgs?: unknown;
+}> }> {
+  return apiFetch("/permissions/pending");
+}
+
+export async function getActivePermissions(): Promise<{ permissions: Array<{
+  id: number; agentId: string; tool: string; status: string; resolvedAt: number | null;
+  proofDigest: string | null; explorerUrl: string | null;
+}> }> {
+  return apiFetch("/permissions/active");
+}
+
+export async function approvePermission(id: number): Promise<unknown> {
+  return apiFetch(`/permissions/${id}/approve`, { method: "POST" });
+}
+
+export async function denyPermission(id: number): Promise<unknown> {
+  return apiFetch(`/permissions/${id}/deny`, { method: "POST" });
+}
+
+export async function revokePermission(agentId: string, tool: string): Promise<unknown> {
+  return apiFetch("/permissions/revoke", {
+    method: "POST",
+    body: JSON.stringify({ agentId, tool }),
+  });
+}
+
+export async function getConnectConfig(): Promise<{
+  mcpUrl: string; claudeCode: string; claudeDesktop: string; cursor: string; generic: string;
+}> {
+  return apiFetch("/connect-config");
+}
+
 // ── Keys ──
 
 export async function listKeys(): Promise<StoredKey[]> {

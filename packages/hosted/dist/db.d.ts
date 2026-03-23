@@ -39,6 +39,15 @@ export declare const db: {
     setAgentPaused(userId: string, agentId: string, paused: boolean): Promise<void>;
     updateAgentRules(userId: string, agentId: string, rules: string): Promise<void>;
     incrementAgentCalls(userId: string, agentId: string, allowed: boolean): Promise<void>;
+    createPermissionRequest(userId: string, agentId: string, tool: string, clientName: string, args?: unknown): Promise<any>;
+    getPendingPermissions(userId: string): Promise<any[]>;
+    getPermissionHistory(userId: string, limit?: number, offset?: number): Promise<{
+        entries: any[];
+        total: number;
+    }>;
+    resolvePermission(userId: string, requestId: number, decision: "approved" | "denied", proofDigest: string, receipt: unknown): Promise<any>;
+    revokePermission(userId: string, agentId: string, tool: string, proofDigest: string, receipt: unknown): Promise<void>;
+    getActivePermissions(userId: string): Promise<any[]>;
     getActivePolicy(userId: string): Promise<any>;
     createPolicy(userId: string, policy: {
         name: string;

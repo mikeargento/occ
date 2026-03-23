@@ -2,6 +2,7 @@ import { sha256 } from "@noble/hashes/sha256";
 import * as ed from "@noble/ed25519";
 import { Constructor } from "occproof";
 import { db } from "./db.js";
+import { eventBus } from "./events.js";
 import crypto from "node:crypto";
 const activeConnections = new Map();
 /** Get all active connections (for the dashboard) */
@@ -99,7 +100,7 @@ function generateProofDigest(tool, args, timestamp, agentId) {
     const hash = sha256(new TextEncoder().encode(payload));
     return toBase64(hash);
 }
-async function commitProof(tool, args, agentId, allowed) {
+export async function commitProof(tool, args, agentId, allowed) {
     const payload = JSON.stringify({ tool, args, agentId, allowed, timestamp: Date.now() });
     const bytes = new TextEncoder().encode(payload);
     try {
@@ -232,51 +233,69 @@ export async function handleMcp(req, res, pathname) {
                 const agentId = agents.length > 0 ? agents[0].id : "default-agent";
                 trackConnection(req, token, agentId);
                 const agent = agents.find((a) => a.id === agentId);
-                const currentTools = agent?.allowed_tools ?? [];
+                const allowedTools = agent?.allowed_tools ?? [];
+                const blockedTools = agent?.blocked_tools ?? [];
                 const isPaused = agent?.paused ?? false;
-                // ── ENFORCEMENT ──
-                // Check if agent is paused — blocks EVERYTHING
+                const clientName = detectClient(req.headers["user-agent"] ?? "");
+                // ── ENFORCEMENT: PERMISSION-FIRST MODEL ──
+                // 1. Paused → deny everything
                 if (isPaused) {
                     const { proof, digestB64 } = await commitProof(toolName, args, agentId, false);
                     await db.addProof(user.id, {
                         agentId, tool: toolName, allowed: false, args, proofDigest: digestB64,
-                        reason: "Switchboard is paused — all tool access suspended",
-                        receipt: proof,
+                        reason: "All access suspended", receipt: proof,
                     });
                     await db.incrementAgentCalls(user.id, agentId, false);
                     return json(res, {
                         jsonrpc: "2.0", id: body.id,
-                        error: { code: -32600, message: `Denied: switchboard "${agentId}" is paused` },
+                        error: { code: -32600, message: `Denied: all access is suspended` },
                     });
                 }
-                // Check if agent has ever had tools configured
-                const hasEverBeenConfigured = (agent?.total_calls ?? 0) > 0 || currentTools.length > 0;
-                if (hasEverBeenConfigured && !currentTools.includes(toolName)) {
+                // 2. Explicitly blocked → deny
+                if (blockedTools.includes(toolName)) {
                     const { proof, digestB64 } = await commitProof(toolName, args, agentId, false);
                     await db.addProof(user.id, {
                         agentId, tool: toolName, allowed: false, args, proofDigest: digestB64,
-                        reason: `Tool "${toolName}" is not in the allowed list`,
-                        receipt: proof,
+                        reason: `"${toolName}" was explicitly denied`, receipt: proof,
                     });
                     await db.incrementAgentCalls(user.id, agentId, false);
                     return json(res, {
                         jsonrpc: "2.0", id: body.id,
-                        error: { code: -32600, message: `Denied: "${toolName}" is not allowed by switchboard "${agentId}"` },
+                        error: { code: -32600, message: `Denied: "${toolName}" has been blocked. Change this at agent.occ.wtf` },
                     });
                 }
-                // Auto-discover: brand new agent, no calls ever — add tool to allowed list
-                if (!hasEverBeenConfigured && !currentTools.includes(toolName)) {
-                    await db.enableTool(user.id, agentId, toolName);
+                // 3. Allowed → proceed
+                if (allowedTools.includes(toolName)) {
+                    // Fall through to execution below
                 }
-                // ── ALLOWED — commit real OCC proof ──
+                else {
+                    // 4. UNKNOWN TOOL → block + create pending permission request
+                    const permReq = await db.createPermissionRequest(user.id, agentId, toolName, clientName, args);
+                    const { proof, digestB64 } = await commitProof(toolName, args, agentId, false);
+                    await db.addProof(user.id, {
+                        agentId, tool: toolName, allowed: false, args, proofDigest: digestB64,
+                        reason: `Permission required — awaiting approval`, receipt: proof,
+                    });
+                    await db.incrementAgentCalls(user.id, agentId, false);
+                    // Notify dashboard via SSE
+                    eventBus.emit(user.id, {
+                        type: "permission-requested",
+                        tool: toolName,
+                        agentId,
+                        clientName,
+                        requestId: permReq.id,
+                        timestamp: Date.now(),
+                    });
+                    return json(res, {
+                        jsonrpc: "2.0", id: body.id,
+                        error: { code: -32600, message: `Permission required: "${toolName}" needs approval. Check agent.occ.wtf to allow or deny.` },
+                    });
+                }
+                // ── ALLOWED — commit signed OCC proof ──
                 const { proof, digestB64 } = await commitProof(toolName, args, agentId, true);
                 await db.addProof(user.id, {
-                    agentId,
-                    tool: toolName,
-                    allowed: true,
-                    args,
-                    proofDigest: digestB64,
-                    receipt: proof,
+                    agentId, tool: toolName, allowed: true, args,
+                    proofDigest: digestB64, receipt: proof,
                 });
                 await db.incrementAgentCalls(user.id, agentId, true);
                 // Handle built-in tools
