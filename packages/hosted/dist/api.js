@@ -1,4 +1,5 @@
 import { db } from "./db.js";
+import { getActiveConnections } from "./mcp.js";
 function json(res, data, status = 200) {
     const body = JSON.stringify(data);
     res.writeHead(status, { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(body) });
@@ -274,7 +275,17 @@ export async function handleApi(req, res, url) {
     }
     // ── Connections ──
     if (path === "/connections" && method === "GET") {
-        return json(res, []);
+        const connections = getActiveConnections().map(c => ({
+            name: c.clientName,
+            transport: "streamable-http",
+            status: "connected",
+            toolCount: c.toolCalls,
+            tools: [],
+            connectedAt: c.connectedAt.toISOString(),
+            lastSeen: c.lastSeen.toISOString(),
+            agentId: c.agentId,
+        }));
+        return json(res, connections);
     }
     // ── Keys ──
     if (path === "/keys" && method === "GET") {

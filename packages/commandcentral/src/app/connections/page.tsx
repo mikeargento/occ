@@ -2,149 +2,120 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { listConnections } from "@/lib/api";
-import type { DownstreamServer } from "@/lib/types";
-import { Card } from "@/components/shared/card";
-import { Badge } from "@/components/shared/badge";
 import { EmptyState } from "@/components/shared/empty-state";
 
+interface LiveConnection {
+  name: string;
+  status: "connected";
+  connectedAt: string;
+  lastSeen: string;
+  toolCount: number;
+  agentId: string | null;
+}
+
+function timeAgo(dateStr: string): string {
+  const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+  if (seconds < 60) return `${seconds}s ago`;
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+  return `${Math.floor(seconds / 86400)}d ago`;
+}
+
+function duration(startStr: string): string {
+  const seconds = Math.floor((Date.now() - new Date(startStr).getTime()) / 1000);
+  if (seconds < 60) return `${seconds}s`;
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
+  return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
+}
+
 export default function ConnectionsPage() {
-  const [servers, setServers] = useState<DownstreamServer[]>([]);
+  const [connections, setConnections] = useState<LiveConnection[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [expandedServer, setExpandedServer] = useState<string | null>(null);
 
   const refresh = useCallback(() => {
     listConnections()
-      .then((res) => setServers(res))
+      .then((res) => setConnections(res as unknown as LiveConnection[]))
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
     refresh();
-    const interval = setInterval(refresh, 5000);
+    const interval = setInterval(refresh, 3000);
     return () => clearInterval(interval);
   }, [refresh]);
 
-  const totalTools = servers.reduce((sum, s) => sum + s.toolCount, 0);
-  const realServers = servers.filter((s) => s.status === "connected");
-
   return (
-    <div className="max-w-5xl mx-auto px-8 py-8">
-      {/* Header */}
+    <div className="max-w-3xl mx-auto px-8 py-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold tracking-[-0.02em]">Connections</h1>
-        {!loading && servers.length > 0 && (
-          <p className="text-sm text-text-secondary mt-1">
-            {realServers.length} downstream MCP server{realServers.length !== 1 ? "s" : ""} &middot; {totalTools} tool{totalTools !== 1 ? "s" : ""} discovered
-          </p>
-        )}
+        <h1 className="text-2xl font-semibold tracking-[-0.02em]">Live Connections</h1>
+        <p className="text-sm text-text-secondary mt-1">
+          AI clients connected to your switchboard right now
+        </p>
       </div>
 
-      {/* Error */}
       {error && (
-        <div className="mb-5 px-4 py-3 rounded-lg bg-error/5 border border-error/20 text-sm text-error flex items-center justify-between">
-          <span>{error}</span>
-          <button onClick={() => setError(null)} className="text-error/60 hover:text-error ml-3 text-xs">
-            Dismiss
-          </button>
+        <div className="mb-5 px-4 py-3 rounded-lg bg-error/5 border border-error/20 text-sm text-error">
+          {error}
         </div>
       )}
 
-      {/* Loading */}
       {loading && (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {[1, 2].map((i) => (
-            <div key={i} className="skeleton h-[100px] rounded-xl" />
+            <div key={i} className="skeleton h-[72px] rounded-xl" />
           ))}
         </div>
       )}
 
-      {/* Empty */}
-      {!loading && !error && servers.length === 0 && (
+      {!loading && !error && connections.length === 0 && (
         <EmptyState
           icon="default"
-          title="No downstream servers"
-          description="Start the proxy with downstream MCP servers to see them here. Run: npx occ-mcp-proxy -- npx @modelcontextprotocol/server-filesystem ."
+          title="No active connections"
+          description="Connect an AI tool by adding your MCP URL in its settings. Supports Claude Desktop, Cursor, Windsurf, and more."
         />
       )}
 
-      {/* Server list */}
-      {servers.length > 0 && (
-        <div className="space-y-4">
-          {servers.map((server) => {
-            const isExpanded = expandedServer === server.name;
-            const isDemo = server.status === "demo";
+      {connections.length > 0 && (
+        <div className="space-y-3">
+          {connections.map((conn, i) => (
+            <div
+              key={`${conn.name}-${i}`}
+              className="flex items-center gap-4 px-5 py-4 rounded-xl border border-border bg-bg-subtle/50"
+            >
+              {/* Pulse dot */}
+              <div className="relative flex-shrink-0">
+                <div className="w-3 h-3 rounded-full bg-emerald-500" />
+                <div className="absolute inset-0 w-3 h-3 rounded-full bg-emerald-500 animate-ping opacity-40" />
+              </div>
 
-            return (
-              <Card key={server.name} className="flex flex-col">
-                <div
-                  className="flex items-center gap-3 cursor-pointer"
-                  onClick={() => setExpandedServer(isExpanded ? null : server.name)}
-                >
-                  {/* Status dot */}
-                  <div
-                    className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
-                      isDemo ? "bg-amber-400" : "bg-success"
-                    }`}
-                  />
-
-                  {/* Server info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-text truncate">
-                        {server.name}
-                      </span>
-                      <Badge variant={isDemo ? "warning" : "info"}>
-                        {server.transport}
-                      </Badge>
-                      <span className="text-xs text-text-tertiary">
-                        {server.toolCount} tool{server.toolCount !== 1 ? "s" : ""}
-                      </span>
-                    </div>
-
-                    {/* Connection detail */}
-                    {server.command && (
-                      <p className="text-xs text-text-tertiary mt-1 font-mono truncate">
-                        {server.command} {server.url ?? ""}
-                      </p>
-                    )}
-                    {server.url && !server.command && (
-                      <p className="text-xs text-text-tertiary mt-1 font-mono truncate">
-                        {server.url}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Expand indicator */}
-                  <span className="text-text-tertiary text-xs flex-shrink-0">
-                    {isExpanded ? "\u25B2" : "\u25BC"}
-                  </span>
+              {/* Info */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-text">{conn.name}</span>
+                  {conn.agentId && (
+                    <span className="text-xs text-text-tertiary">→ {conn.agentId}</span>
+                  )}
                 </div>
-
-                {/* Expanded: tool list */}
-                {isExpanded && server.tools.length > 0 && (
-                  <div className="mt-4 pt-3 border-t border-border-subtle animate-slide-up">
-                    <p className="text-[11px] font-medium uppercase tracking-[0.05em] text-text-tertiary mb-2">
-                      Tools
-                    </p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {server.tools.map((tool) => (
-                        <span
-                          key={tool}
-                          className="px-2 py-0.5 text-xs font-mono rounded-md bg-bg-subtle border border-border text-text-secondary"
-                        >
-                          {tool}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </Card>
-            );
-          })}
+                <div className="flex items-center gap-3 mt-0.5 text-xs text-text-tertiary">
+                  <span>Connected {duration(conn.connectedAt)}</span>
+                  <span>·</span>
+                  <span>Last seen {timeAgo(conn.lastSeen)}</span>
+                  <span>·</span>
+                  <span>{conn.toolCount} call{conn.toolCount !== 1 ? "s" : ""}</span>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
+
+      {/* Info box */}
+      <div className="mt-8 px-5 py-4 rounded-xl border border-border-subtle bg-bg-subtle/30 text-sm text-text-tertiary">
+        <p className="font-medium text-text-secondary mb-1">How connections work</p>
+        <p>When an AI tool (Cursor, Claude Desktop, etc.) connects to your MCP URL, it shows up here in real time. Connections are removed automatically when the client disconnects or goes idle for 2 minutes.</p>
+      </div>
     </div>
   );
 }

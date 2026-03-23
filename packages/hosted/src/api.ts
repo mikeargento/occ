@@ -1,5 +1,6 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { db } from "./db.js";
+import { getActiveConnections } from "./mcp.js";
 
 function json(res: ServerResponse, data: unknown, status = 200) {
   const body = JSON.stringify(data);
@@ -289,7 +290,17 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
 
   // ── Connections ──
   if (path === "/connections" && method === "GET") {
-    return json(res, []);
+    const connections = getActiveConnections().map(c => ({
+      name: c.clientName,
+      transport: "streamable-http",
+      status: "connected" as const,
+      toolCount: c.toolCalls,
+      tools: [],
+      connectedAt: c.connectedAt.toISOString(),
+      lastSeen: c.lastSeen.toISOString(),
+      agentId: c.agentId,
+    }));
+    return json(res, connections);
   }
 
   // ── Keys ──

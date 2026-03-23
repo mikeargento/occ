@@ -1,4 +1,15 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
+interface ActiveConnection {
+    id: string;
+    clientName: string;
+    connectedAt: Date;
+    lastSeen: Date;
+    userAgent: string;
+    agentId: string | null;
+    toolCalls: number;
+}
+/** Get all active connections (for the dashboard) */
+export declare function getActiveConnections(): ActiveConnection[];
 /**
  * Handle MCP protocol requests at /mcp/:token
  *
@@ -6,3 +17,4 @@ import type { IncomingMessage, ServerResponse } from "node:http";
  * The token in the URL authenticates the user — no API keys needed.
  */
 export declare function handleMcp(req: IncomingMessage, res: ServerResponse, pathname: string): Promise<void>;
+export {};

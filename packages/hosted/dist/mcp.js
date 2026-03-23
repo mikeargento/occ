@@ -3,6 +3,59 @@ import * as ed from "@noble/ed25519";
 import { Constructor } from "occproof";
 import { db } from "./db.js";
 import crypto from "node:crypto";
+const activeConnections = new Map();
+/** Get all active connections (for the dashboard) */
+export function getActiveConnections() {
+    // Prune stale connections (no activity in 2 minutes)
+    const now = Date.now();
+    for (const [id, conn] of activeConnections) {
+        if (now - conn.lastSeen.getTime() > 120_000) {
+            activeConnections.delete(id);
+        }
+    }
+    return Array.from(activeConnections.values());
+}
+function detectClient(ua) {
+    if (ua.includes("Cursor"))
+        return "Cursor";
+    if (ua.includes("Claude") || ua.includes("claude"))
+        return "Claude Desktop";
+    if (ua.includes("Windsurf"))
+        return "Windsurf";
+    if (ua.includes("Cline"))
+        return "Cline";
+    if (ua.includes("VS Code") || ua.includes("vscode"))
+        return "VS Code";
+    if (ua.includes("curl"))
+        return "curl";
+    return "Unknown Client";
+}
+function trackConnection(req, token, agentId) {
+    const ua = req.headers["user-agent"] ?? "";
+    const clientName = detectClient(ua);
+    // Use token + client as key so same client reconnecting updates instead of duplicates
+    const connId = `${token}-${clientName}`;
+    let conn = activeConnections.get(connId);
+    if (conn) {
+        conn.lastSeen = new Date();
+        conn.toolCalls++;
+        if (agentId)
+            conn.agentId = agentId;
+    }
+    else {
+        conn = {
+            id: connId,
+            clientName,
+            connectedAt: new Date(),
+            lastSeen: new Date(),
+            userAgent: ua,
+            agentId: agentId ?? null,
+            toolCalls: 0,
+        };
+        activeConnections.set(connId, conn);
+    }
+    return conn;
+}
 function toBase64(bytes) {
     return Buffer.from(bytes).toString("base64");
 }
@@ -105,6 +158,7 @@ export async function handleMcp(req, res, pathname) {
         // Handle MCP JSON-RPC methods
         switch (rpcMethod) {
             case "initialize": {
+                trackConnection(req, token);
                 return json(res, {
                     jsonrpc: "2.0",
                     id: body.id,
@@ -176,6 +230,7 @@ export async function handleMcp(req, res, pathname) {
                 // Find which agent this token maps to, or use first agent
                 const agents = await db.getAgents(user.id);
                 const agentId = agents.length > 0 ? agents[0].id : "default-agent";
+                trackConnection(req, token, agentId);
                 const agent = agents.find((a) => a.id === agentId);
                 const currentTools = agent?.allowed_tools ?? [];
                 const isPaused = agent?.paused ?? false;
@@ -278,6 +333,7 @@ export async function handleMcp(req, res, pathname) {
     if (method === "GET") {
         const accept = req.headers.accept ?? "";
         if (accept.includes("text/event-stream")) {
+            const conn = trackConnection(req, token);
             res.writeHead(200, {
                 "Content-Type": "text/event-stream",
                 "Cache-Control": "no-cache",
@@ -287,11 +343,15 @@ export async function handleMcp(req, res, pathname) {
             // Send endpoint info so client knows where to POST
             const endpoint = pathname;
             res.write(`event: endpoint\ndata: ${endpoint}\n\n`);
-            // Keep alive
+            // Keep alive + update lastSeen
             const interval = setInterval(() => {
+                conn.lastSeen = new Date();
                 res.write(": keepalive\n\n");
             }, 15000);
-            req.on("close", () => clearInterval(interval));
+            req.on("close", () => {
+                clearInterval(interval);
+                activeConnections.delete(conn.id);
+            });
             return;
         }
         // Plain GET — return server info
