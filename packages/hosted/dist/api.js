@@ -55,20 +55,7 @@ export async function handleApi(req, res, url) {
                 auditCount: a.total_calls ?? 0,
             };
         });
-        // If no agents, create a default one
-        if (summaries.length === 0) {
-            await db.upsertAgent(userId, { id: "default-agent", name: "default-agent" });
-            summaries.push({
-                id: "default-agent",
-                name: "default-agent",
-                policy: null,
-                createdAt: Date.now(),
-                status: "active",
-                totalCalls: 0,
-                totalSpendCents: 0,
-                auditCount: 0,
-            });
-        }
+        // No auto-creation — let the user create their own agents
         return json(res, { agents: summaries });
     }
     if (path === "/agents" && method === "POST") {
