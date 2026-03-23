@@ -199,9 +199,10 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
   // ── Audit ──
   if (path === "/audit" && method === "GET") {
     if (!userId) return json(res, { entries: [], total: 0, page: 1, limit: 50 });
-    const page = parseInt(url.searchParams.get("page") ?? "1", 10);
-    const limit = parseInt(url.searchParams.get("limit") ?? "50", 10);
-    const { entries, total } = await db.getProofs(userId, limit, (page - 1) * limit);
+    const page = Math.max(1, parseInt(url.searchParams.get("page") ?? "1", 10));
+    const limit = Math.max(1, parseInt(url.searchParams.get("limit") ?? "50", 10));
+    const offset = Math.max(0, (page - 1) * limit);
+    const { entries, total } = await db.getProofs(userId, limit, offset);
     return json(res, {
       entries: entries.map((e: any) => ({
         id: String(e.id),
