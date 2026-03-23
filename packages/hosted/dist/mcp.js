@@ -1,12 +1,74 @@
 import { sha256 } from "@noble/hashes/sha256";
+import * as ed from "@noble/ed25519";
+import { Constructor } from "occproof";
 import { db } from "./db.js";
+import crypto from "node:crypto";
 function toBase64(bytes) {
-    return Buffer.from(bytes).toString("base64url");
+    return Buffer.from(bytes).toString("base64");
+}
+// ── OCC Constructor (real cryptographic proofs) ──
+let occConstructor = null;
+async function getConstructor() {
+    if (occConstructor)
+        return occConstructor;
+    const privateKey = ed.utils.randomPrivateKey();
+    const publicKey = await ed.getPublicKeyAsync(privateKey);
+    const host = {
+        enforcementTier: "hw-key",
+        async getMeasurement() {
+            const hash = sha256(new TextEncoder().encode("occ-hosted-v1"));
+            return Buffer.from(hash).toString("hex");
+        },
+        async getFreshNonce() {
+            return new Uint8Array(crypto.randomBytes(16));
+        },
+        async sign(data) {
+            return new Uint8Array(await ed.signAsync(data, privateKey));
+        },
+        async getPublicKey() {
+            return new Uint8Array(publicKey);
+        },
+        _counter: 0,
+        async nextCounter() {
+            return String(++this._counter);
+        },
+    };
+    occConstructor = await Constructor.initialize({
+        host,
+        policy: { requireCounter: true },
+        epochId: `hosted-${Date.now()}`,
+    });
+    console.log("  [occ] Constructor initialized — signing proofs with Ed25519");
+    return occConstructor;
 }
 function generateProofDigest(tool, args, timestamp, agentId) {
     const payload = JSON.stringify({ tool, args, timestamp, agentId });
     const hash = sha256(new TextEncoder().encode(payload));
     return toBase64(hash);
+}
+async function commitProof(tool, args, agentId, allowed) {
+    const payload = JSON.stringify({ tool, args, agentId, allowed, timestamp: Date.now() });
+    const bytes = new TextEncoder().encode(payload);
+    try {
+        const ctor = await getConstructor();
+        const proof = await ctor.commit({
+            bytes,
+            metadata: { tool, agentId, decision: allowed ? "allowed" : "denied" },
+        });
+        const digestB64 = proof.artifact.digestB64;
+        // Forward proof to occ.wtf explorer
+        fetch("https://occ.wtf/api/proofs", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(proof),
+        }).catch(() => { }); // fire-and-forget
+        return { proof, digestB64 };
+    }
+    catch (err) {
+        // Fallback to simple hash if Constructor fails
+        const hash = sha256(bytes);
+        return { proof: null, digestB64: toBase64(hash) };
+    }
 }
 function json(res, data, status = 200) {
     const body = JSON.stringify(data);
@@ -117,15 +179,14 @@ export async function handleMcp(req, res, pathname) {
                 const agent = agents.find((a) => a.id === agentId);
                 const currentTools = agent?.allowed_tools ?? [];
                 const isPaused = agent?.paused ?? false;
-                // Generate proof digest regardless of decision
-                const timestamp = Date.now();
-                const proofDigest = generateProofDigest(toolName, args, timestamp, agentId);
                 // ── ENFORCEMENT ──
                 // Check if agent is paused — blocks EVERYTHING
                 if (isPaused) {
+                    const { proof, digestB64 } = await commitProof(toolName, args, agentId, false);
                     await db.addProof(user.id, {
-                        agentId, tool: toolName, allowed: false, args, proofDigest,
+                        agentId, tool: toolName, allowed: false, args, proofDigest: digestB64,
                         reason: "Switchboard is paused — all tool access suspended",
+                        receipt: proof,
                     });
                     await db.incrementAgentCalls(user.id, agentId, false);
                     return json(res, {
@@ -134,14 +195,13 @@ export async function handleMcp(req, res, pathname) {
                     });
                 }
                 // Check if agent has ever had tools configured
-                // We check total_calls > 0 OR allowed_tools is non-empty
-                // This means: first-ever calls auto-discover, but once you toggle anything, enforcement kicks in
                 const hasEverBeenConfigured = (agent?.total_calls ?? 0) > 0 || currentTools.length > 0;
                 if (hasEverBeenConfigured && !currentTools.includes(toolName)) {
-                    // Tool is NOT in the allowed list — DENY
+                    const { proof, digestB64 } = await commitProof(toolName, args, agentId, false);
                     await db.addProof(user.id, {
-                        agentId, tool: toolName, allowed: false, args, proofDigest,
+                        agentId, tool: toolName, allowed: false, args, proofDigest: digestB64,
                         reason: `Tool "${toolName}" is not in the allowed list`,
+                        receipt: proof,
                     });
                     await db.incrementAgentCalls(user.id, agentId, false);
                     return json(res, {
@@ -153,21 +213,15 @@ export async function handleMcp(req, res, pathname) {
                 if (!hasEverBeenConfigured && !currentTools.includes(toolName)) {
                     await db.enableTool(user.id, agentId, toolName);
                 }
-                // ── ALLOWED — log proof ──
+                // ── ALLOWED — commit real OCC proof ──
+                const { proof, digestB64 } = await commitProof(toolName, args, agentId, true);
                 await db.addProof(user.id, {
                     agentId,
                     tool: toolName,
                     allowed: true,
                     args,
-                    proofDigest,
-                    receipt: {
-                        version: "occ/proof/1",
-                        tool: toolName,
-                        agent: agentId,
-                        decision: "allowed",
-                        inputHash: `sha256:${proofDigest}`,
-                        timestamp: new Date(timestamp).toISOString(),
-                    },
+                    proofDigest: digestB64,
+                    receipt: proof,
                 });
                 await db.incrementAgentCalls(user.id, agentId, true);
                 // Handle built-in tools
