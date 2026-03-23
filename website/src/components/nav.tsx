@@ -35,7 +35,9 @@ export function Nav() {
                   <a
                     key={l.href}
                     href={l.href}
-                    className="text-sm font-semibold px-4 py-1.5 rounded-lg bg-emerald-500 text-white hover:bg-emerald-400 transition-colors duration-150 ml-2"
+                    target="_blank"
+                    rel="noopener"
+                    className="text-sm font-semibold px-3 py-1.5 transition-colors text-text-tertiary hover:text-text"
                   >
                     {l.label}
                   </a>
