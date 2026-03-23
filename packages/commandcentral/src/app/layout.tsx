@@ -32,7 +32,7 @@ export default function RootLayout({
           <ProxyProvider>
             <div className="flex h-screen overflow-hidden">
               <Sidebar />
-              <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden ml-[240px]">
+              <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden md:ml-[240px] pt-[52px] md:pt-0">
                 {children}
               </main>
             </div>
