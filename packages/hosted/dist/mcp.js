@@ -102,9 +102,18 @@ export async function handleMcp(req, res, pathname) {
             case "tools/call": {
                 const toolName = body.params?.name;
                 const args = body.params?.arguments ?? {};
+                // Find which agent this token maps to, or use first agent
+                const agents = await db.getAgents(user.id);
+                const agentId = agents.length > 0 ? agents[0].id : "default-agent";
+                // Auto-discover: add tool to agent's allowed list if not already there
+                const agent = agents.find((a) => a.id === agentId);
+                const currentTools = agent?.allowed_tools ?? [];
+                if (!currentTools.includes(toolName)) {
+                    await db.enableTool(user.id, agentId, toolName);
+                }
                 // Log the call as a proof
                 await db.addProof(user.id, {
-                    agentId: "default-agent",
+                    agentId,
                     tool: toolName,
                     allowed: true,
                     args,

@@ -228,7 +228,7 @@ export default function SwitchboardDetailPage() {
 
         <div className="rounded-xl border border-border bg-bg-elevated overflow-hidden">
           {activeTab === "activity" ? (
-            <ProofFeed events={agentEvents} isConnected={isConnected} />
+            <ProofFeed events={agentEvents} isConnected={isConnected} agentId={agentId} />
           ) : (
             <div className="p-5">
               <CustomRules agentId={agentId} initialRules={(agent as any)?.customRules ?? ""} />

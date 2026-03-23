@@ -228,19 +228,30 @@ export async function handleApi(req, res, url) {
     }
     // ── Tools ──
     if (path === "/tools" && method === "GET") {
-        // In hosted mode, aggregate all unique tools from all agents' allowed_tools
+        // Built-in OCC tools
+        const builtIn = [
+            { name: "occ_create_issue", description: "Create a new issue/task" },
+            { name: "occ_list_proofs", description: "List recent proof log entries" },
+            { name: "occ_get_policy", description: "Get the current active policy" },
+        ];
+        // Tools from agents' allowed lists
         const agents = await db.getAgents(userId);
-        const toolSet = new Set();
+        const toolSet = new Set(builtIn.map(t => t.name));
         for (const a of agents) {
             for (const t of (a.allowed_tools ?? [])) {
                 toolSet.add(t);
             }
         }
-        const tools = Array.from(toolSet).map(name => ({
-            name,
-            description: "",
-            source: "policy",
-        }));
+        // Tools discovered from proof log
+        const { entries } = await db.getProofs(userId, 200, 0);
+        for (const e of entries) {
+            if (e.tool)
+                toolSet.add(e.tool);
+        }
+        const tools = Array.from(toolSet).map(name => {
+            const bi = builtIn.find(b => b.name === name);
+            return { name, description: bi?.description ?? "", source: bi ? "built-in" : "discovered" };
+        });
         return json(res, { tools });
     }
     // ── Signer ──
