@@ -99,6 +99,25 @@ export const db = {
       -- Add blocked_tools column to agents
       ALTER TABLE occ_agents ADD COLUMN IF NOT EXISTS blocked_tools TEXT[] DEFAULT '{}';
 
+      -- Authorization objects — the core of the authorization-object model
+      -- Each row IS a cryptographic authorization (or revocation).
+      -- Not a permission flag. An object that must exist for execution to be reachable.
+      CREATE TABLE IF NOT EXISTS occ_authorizations (
+        id SERIAL PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        agent_id TEXT NOT NULL,
+        tool TEXT NOT NULL,
+        type TEXT NOT NULL DEFAULT 'authorization',
+        proof_digest TEXT NOT NULL,
+        proof JSONB,
+        references_digest TEXT,
+        constraints JSONB,
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_occ_auth_lookup ON occ_authorizations(user_id, agent_id, tool, type);
+      CREATE INDEX IF NOT EXISTS idx_occ_auth_digest ON occ_authorizations(proof_digest);
+
       -- Create anonymous user for pre-auth testing
       INSERT INTO occ_users (id, email, name, provider, provider_id, mcp_token)
       VALUES ('anonymous', 'anon@occ.wtf', 'Anonymous', 'anonymous', 'anonymous', 'anon-token')
@@ -344,6 +363,65 @@ export const db = {
       [userId]
     );
     return res.rows;
+  },
+
+  // ── Authorization Objects ──
+
+  async storeAuthorization(userId: string, agentId: string, tool: string, type: string, proofDigest: string, proof: unknown, referencesDigest?: string, constraints?: unknown) {
+    const p = getPool();
+    await p.query(
+      `INSERT INTO occ_authorizations (user_id, agent_id, tool, type, proof_digest, proof, references_digest, constraints)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [userId, agentId, tool, type, proofDigest, JSON.stringify(proof), referencesDigest ?? null, JSON.stringify(constraints ?? null)]
+    );
+  },
+
+  /** Find a valid authorization: latest auth with no subsequent revocation */
+  async getValidAuthorization(userId: string, agentId: string, tool: string): Promise<{ proofDigest: string; proof: any; constraints: any } | null> {
+    const p = getPool();
+    // Get the latest authorization
+    const authRes = await p.query(
+      `SELECT * FROM occ_authorizations
+       WHERE user_id = $1 AND agent_id = $2 AND tool = $3 AND type = 'authorization'
+       ORDER BY created_at DESC LIMIT 1`,
+      [userId, agentId, tool]
+    );
+    if (authRes.rows.length === 0) return null;
+    const auth = authRes.rows[0];
+
+    // Check if there's a revocation that supersedes it
+    const revokeRes = await p.query(
+      `SELECT id FROM occ_authorizations
+       WHERE user_id = $1 AND agent_id = $2 AND tool = $3 AND type = 'revocation'
+       AND created_at > $4 LIMIT 1`,
+      [userId, agentId, tool, auth.created_at]
+    );
+    if (revokeRes.rows.length > 0) return null; // Revoked
+
+    return {
+      proofDigest: auth.proof_digest,
+      proof: auth.proof,
+      constraints: auth.constraints,
+    };
+  },
+
+  /** Get the full authorization chain for a tool (authorizations, revocations) */
+  async getAuthorizationChain(userId: string, agentId: string, tool: string) {
+    const p = getPool();
+    const res = await p.query(
+      `SELECT * FROM occ_authorizations
+       WHERE user_id = $1 AND agent_id = $2 AND tool = $3
+       ORDER BY created_at ASC`,
+      [userId, agentId, tool]
+    );
+    return res.rows;
+  },
+
+  /** Get authorization by digest */
+  async getAuthorizationByDigest(digest: string) {
+    const p = getPool();
+    const res = await p.query("SELECT * FROM occ_authorizations WHERE proof_digest = $1", [digest]);
+    return res.rows[0] ?? null;
   },
 
   // ── Policies ──

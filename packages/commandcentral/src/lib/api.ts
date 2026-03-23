@@ -210,6 +210,16 @@ export async function getConnectConfig(): Promise<{
   return apiFetch("/connect-config");
 }
 
+export interface ChainEntry {
+  id: number; type: string; proofDigest: string;
+  referencesDigest: string | null; createdAt: number;
+  explorerUrl: string | null;
+}
+
+export async function getAuthorizationChain(agentId: string, tool: string): Promise<{ chain: ChainEntry[] }> {
+  return apiFetch(`/authorizations/${encodeURIComponent(agentId)}/${encodeURIComponent(tool)}/chain`);
+}
+
 // ── Keys ──
 
 export async function listKeys(): Promise<StoredKey[]> {

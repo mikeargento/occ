@@ -1,7 +1,8 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { db } from "./db.js";
-import { getActiveConnections, commitProof } from "./mcp.js";
+import { getActiveConnections } from "./mcp.js";
 import { eventBus } from "./events.js";
+import { createAuthorizationObject, createRevocationObject } from "./authorization.js";
 
 function json(res: ServerResponse, data: unknown, status = 200) {
   const body = JSON.stringify(data);
@@ -362,45 +363,47 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
     });
   }
 
-  // POST /api/permissions/:id/approve or /deny or /revoke
+  // POST /api/permissions/:id/approve or /deny
   const permMatch = path.match(/^\/permissions\/(\d+)\/(approve|deny)$/);
   if (permMatch && method === "POST") {
     const requestId = parseInt(permMatch[1], 10);
     const decision = permMatch[2] as "approve" | "deny";
     const status = decision === "approve" ? "approved" : "denied";
 
-    // Get the request to know the tool name
     const pending = await db.getPendingPermissions(userId);
     const req_entry = pending.find((r: any) => r.id === requestId);
     if (!req_entry) return json(res, { error: "Permission request not found" }, 404);
 
-    // Sign the permission decision as an OCC proof
-    const { proof, digestB64 } = await commitProof(
-      req_entry.tool,
-      { type: `permission-${status}`, tool: req_entry.tool, agentId: req_entry.agent_id },
-      req_entry.agent_id,
-      decision === "approve"
-    );
+    let digestB64 = "";
+    let proof: any = null;
 
-    const result = await db.resolvePermission(userId, requestId, status as any, digestB64, proof);
-    if (!result) return json(res, { error: "Failed to resolve" }, 500);
+    if (decision === "approve") {
+      // ── CREATE AUTHORIZATION OBJECT ──
+      // This is NOT a flag flip. This creates a cryptographic object
+      // that must exist before execution is reachable.
+      const authResult = await createAuthorizationObject(userId, req_entry.agent_id, req_entry.tool);
+      digestB64 = authResult.digest;
+      proof = authResult.proof;
+    }
 
-    // Also log to proof table
+    // Resolve the permission request (updates status, stores proof ref)
+    await db.resolvePermission(userId, requestId, status as any, digestB64, proof);
+
+    // Log to proof table
     await db.addProof(userId, {
       agentId: req_entry.agent_id, tool: req_entry.tool,
       allowed: decision === "approve",
-      reason: `Permission ${status}`,
-      proofDigest: digestB64, receipt: proof,
+      reason: decision === "approve" ? `Authorization object created: ${digestB64}` : "Denied — no authorization object created",
+      proofDigest: digestB64 || undefined, receipt: proof,
     });
 
-    // Notify dashboard
     eventBus.emit(userId, {
       type: "permission-resolved",
       tool: req_entry.tool, agentId: req_entry.agent_id,
       decision: status, proofDigest: digestB64, timestamp: Date.now(),
     });
 
-    return json(res, { permission: result, proof: { digestB64 } });
+    return json(res, { permission: { tool: req_entry.tool, status }, proof: { digestB64 } });
   }
 
   // POST /api/permissions/revoke
@@ -409,21 +412,38 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
     const { agentId, tool } = body;
     if (!agentId || !tool) return json(res, { error: "agentId and tool required" }, 400);
 
-    const { proof, digestB64 } = await commitProof(
-      tool, { type: "permission-revoke", tool, agentId }, agentId, false
-    );
-    await db.revokePermission(userId, agentId, tool, digestB64, proof);
+    // Find the authorization object to revoke
+    const authObj = await db.getValidAuthorization(userId, agentId, tool);
+    if (!authObj) return json(res, { error: "No active authorization to revoke" }, 404);
+
+    // ── CREATE REVOCATION OBJECT ──
+    // This supersedes the authorization. After this, no execution path exists.
+    const { proof, digest } = await createRevocationObject(userId, agentId, tool, authObj.proofDigest);
+
+    await db.revokePermission(userId, agentId, tool, digest, proof);
     await db.addProof(userId, {
       agentId, tool, allowed: false,
-      reason: "Permission revoked", proofDigest: digestB64, receipt: proof,
+      reason: `Revocation object created: ${digest} (supersedes ${authObj.proofDigest})`,
+      proofDigest: digest, receipt: proof,
     });
 
     eventBus.emit(userId, {
       type: "permission-resolved", tool, agentId,
-      decision: "revoked", proofDigest: digestB64, timestamp: Date.now(),
+      decision: "revoked", proofDigest: digest, timestamp: Date.now(),
     });
 
-    return json(res, { ok: true, proof: { digestB64 } });
+    return json(res, { ok: true, proof: { digestB64: digest } });
+  }
+
+  // GET /api/authorizations/:agentId/:tool/chain
+  const chainMatch = path.match(/^\/authorizations\/([^/]+)\/([^/]+)\/chain$/);
+  if (chainMatch && method === "GET") {
+    const chain = await db.getAuthorizationChain(userId, decodeURIComponent(chainMatch[1]), decodeURIComponent(chainMatch[2]));
+    return json(res, { chain: chain.map((r: any) => ({
+      id: r.id, type: r.type, proofDigest: r.proof_digest,
+      referencesDigest: r.references_digest, createdAt: new Date(r.created_at).getTime(),
+      explorerUrl: r.proof_digest ? `https://occ.wtf/explorer?digest=${encodeURIComponent(r.proof_digest)}` : null,
+    }))});
   }
 
   // ── Events (SSE) ──

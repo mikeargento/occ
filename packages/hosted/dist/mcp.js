@@ -1,6 +1,7 @@
 import { sha256 } from "@noble/hashes/sha256";
 import { db } from "./db.js";
 import { eventBus } from "./events.js";
+import { validateAuthorization, createExecutionProof } from "./authorization.js";
 const activeConnections = new Map();
 /** Get all active connections (for the dashboard) */
 export function getActiveConnections() {
@@ -201,114 +202,69 @@ export async function handleMcp(req, res, pathname) {
             case "tools/call": {
                 const toolName = body.params?.name;
                 const args = body.params?.arguments ?? {};
-                // Find which agent this token maps to, or use first agent
                 const agents = await db.getAgents(user.id);
                 const agentId = agents.length > 0 ? agents[0].id : "default-agent";
                 trackConnection(req, token, agentId);
                 const agent = agents.find((a) => a.id === agentId);
-                const allowedTools = agent?.allowed_tools ?? [];
-                const blockedTools = agent?.blocked_tools ?? [];
                 const isPaused = agent?.paused ?? false;
                 const clientName = detectClient(req.headers["user-agent"] ?? "");
-                // ── ENFORCEMENT: PERMISSION-FIRST MODEL ──
-                // 1. Paused → deny everything
+                // ── AUTHORIZATION-OBJECT ENFORCEMENT ──
+                // An action cannot exist unless a prior authorization object exists.
+                // 1. Global kill switch
                 if (isPaused) {
-                    const { proof, digestB64 } = await commitProof(toolName, args, agentId, false);
-                    await db.addProof(user.id, {
-                        agentId, tool: toolName, allowed: false, args, proofDigest: digestB64,
-                        reason: "All access suspended", receipt: proof,
-                    });
                     await db.incrementAgentCalls(user.id, agentId, false);
                     return json(res, {
                         jsonrpc: "2.0", id: body.id,
-                        error: { code: -32600, message: `Denied: all access is suspended` },
+                        error: { code: -32600, message: "Denied: all access is suspended" },
                     });
                 }
-                // 2. Explicitly blocked → deny
-                if (blockedTools.includes(toolName)) {
-                    const { proof, digestB64 } = await commitProof(toolName, args, agentId, false);
-                    await db.addProof(user.id, {
-                        agentId, tool: toolName, allowed: false, args, proofDigest: digestB64,
-                        reason: `"${toolName}" was explicitly denied`, receipt: proof,
-                    });
-                    await db.incrementAgentCalls(user.id, agentId, false);
-                    return json(res, {
-                        jsonrpc: "2.0", id: body.id,
-                        error: { code: -32600, message: `Denied: "${toolName}" has been blocked. Change this at agent.occ.wtf` },
-                    });
-                }
-                // 3. Allowed → proceed
-                if (allowedTools.includes(toolName)) {
-                    // Fall through to execution below
-                }
-                else {
-                    // 4. UNKNOWN TOOL → block + create pending permission request
+                // 2. Look up authorization object
+                const authObj = await validateAuthorization(user.id, agentId, toolName);
+                // 3. No authorization object → execution path does not exist
+                if (!authObj) {
+                    // Create a pending permission request so the user can authorize it
                     const permReq = await db.createPermissionRequest(user.id, agentId, toolName, clientName, args);
-                    const { proof, digestB64 } = await commitProof(toolName, args, agentId, false);
-                    await db.addProof(user.id, {
-                        agentId, tool: toolName, allowed: false, args, proofDigest: digestB64,
-                        reason: `Permission required — awaiting approval`, receipt: proof,
-                    });
                     await db.incrementAgentCalls(user.id, agentId, false);
-                    // Notify dashboard via SSE
                     eventBus.emit(user.id, {
                         type: "permission-requested",
-                        tool: toolName,
-                        agentId,
-                        clientName,
-                        requestId: permReq.id,
-                        timestamp: Date.now(),
+                        tool: toolName, agentId, clientName,
+                        requestId: permReq.id, timestamp: Date.now(),
                     });
                     return json(res, {
                         jsonrpc: "2.0", id: body.id,
-                        error: { code: -32600, message: `Permission required: "${toolName}" needs approval. Check agent.occ.wtf to allow or deny.` },
+                        error: { code: -32600, message: `No authorization exists for "${toolName}". Approve it at agent.occ.wtf` },
                     });
                 }
-                // ── ALLOWED — commit signed OCC proof ──
-                const { proof, digestB64 } = await commitProof(toolName, args, agentId, true);
-                await db.addProof(user.id, {
-                    agentId, tool: toolName, allowed: true, args,
-                    proofDigest: digestB64, receipt: proof,
-                });
-                await db.incrementAgentCalls(user.id, agentId, true);
-                // Handle built-in tools
+                // 4. Authorization object exists → create execution proof
+                // The execution proof references the authorization's digest.
+                // This is the causal link: authorization came first, execution depends on it.
+                const { proof: execProof, digest: execDigest } = await createExecutionProof(user.id, agentId, toolName, args, authObj.proofDigest);
+                // 5. Handle built-in tools
                 if (toolName === "occ_list_proofs") {
-                    const limit = args.limit ?? 10;
-                    const { entries } = await db.getProofs(user.id, limit);
+                    const { entries } = await db.getProofs(user.id, args.limit ?? 10);
                     return json(res, {
-                        jsonrpc: "2.0",
-                        id: body.id,
-                        result: {
-                            content: [{ type: "text", text: JSON.stringify(entries, null, 2) }],
-                        },
+                        jsonrpc: "2.0", id: body.id,
+                        result: { content: [{ type: "text", text: JSON.stringify(entries, null, 2) }] },
                     });
                 }
                 if (toolName === "occ_get_policy") {
                     const policy = await db.getActivePolicy(user.id);
                     return json(res, {
-                        jsonrpc: "2.0",
-                        id: body.id,
-                        result: {
-                            content: [{ type: "text", text: policy ? JSON.stringify(policy, null, 2) : "No active policy" }],
-                        },
+                        jsonrpc: "2.0", id: body.id,
+                        result: { content: [{ type: "text", text: policy ? JSON.stringify(policy, null, 2) : "No active policy" }] },
                     });
                 }
                 if (toolName === "occ_create_issue") {
-                    // Store as a proof entry for now
                     return json(res, {
-                        jsonrpc: "2.0",
-                        id: body.id,
-                        result: {
-                            content: [{ type: "text", text: `Issue created: ${args.title}` }],
-                        },
+                        jsonrpc: "2.0", id: body.id,
+                        result: { content: [{ type: "text", text: `Issue created: ${args.title ?? "Untitled"}` }] },
                     });
                 }
-                // Unknown tool
+                // 6. Generic tool — execution happened, proof was created
                 return json(res, {
-                    jsonrpc: "2.0",
-                    id: body.id,
+                    jsonrpc: "2.0", id: body.id,
                     result: {
-                        content: [{ type: "text", text: `Tool ${toolName} executed (no downstream connected)` }],
+                        content: [{ type: "text", text: `${toolName} executed. Proof: ${execDigest}` }],
                     },
                 });
             }

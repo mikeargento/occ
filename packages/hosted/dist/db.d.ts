@@ -50,6 +50,17 @@ export declare const db: {
     getActivePermissions(userId: string): Promise<any[]>;
     /** Get ALL permissions (pending + resolved) with full context */
     getAllPermissions(userId: string): Promise<any[]>;
+    storeAuthorization(userId: string, agentId: string, tool: string, type: string, proofDigest: string, proof: unknown, referencesDigest?: string, constraints?: unknown): Promise<void>;
+    /** Find a valid authorization: latest auth with no subsequent revocation */
+    getValidAuthorization(userId: string, agentId: string, tool: string): Promise<{
+        proofDigest: string;
+        proof: any;
+        constraints: any;
+    } | null>;
+    /** Get the full authorization chain for a tool (authorizations, revocations) */
+    getAuthorizationChain(userId: string, agentId: string, tool: string): Promise<any[]>;
+    /** Get authorization by digest */
+    getAuthorizationByDigest(digest: string): Promise<any>;
     getActivePolicy(userId: string): Promise<any>;
     createPolicy(userId: string, policy: {
         name: string;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { getAllPermissions, approvePermission, denyPermission, revokePermission, getConnectConfig, type Permission } from "@/lib/api";
+import { getAllPermissions, approvePermission, denyPermission, revokePermission, getConnectConfig, getAuthorizationChain, type Permission, type ChainEntry } from "@/lib/api";
 
 /* ── Helpers ── */
 
@@ -140,6 +140,14 @@ function PermRow({ perm, isSelected, onClick }: { perm: Permission; isSelected: 
 function Detail({ perm, onApprove, onDeny, onRevoke, busy }: {
   perm: Permission; onApprove: () => void; onDeny: () => void; onRevoke: () => void; busy: boolean;
 }) {
+  const [chain, setChain] = useState<ChainEntry[]>([]);
+
+  useEffect(() => {
+    if (perm.status !== "pending" && perm.agentId && perm.tool) {
+      getAuthorizationChain(perm.agentId, perm.tool).then(r => setChain(r.chain)).catch(() => {});
+    }
+  }, [perm.agentId, perm.tool, perm.status]);
+
   return (
     <div className="flex-1 bg-white overflow-y-auto border-l border-gray-100">
       <div className="max-w-xl mx-auto px-8 py-8">
@@ -166,12 +174,13 @@ function Detail({ perm, onApprove, onDeny, onRevoke, busy }: {
         {perm.status === "pending" && (
           <div className="mb-8">
             <p className="text-[14px] text-gray-600 leading-relaxed mb-6">
-              Your AI tried to use <strong className="font-mono text-gray-900">{perm.tool}</strong> and was blocked because it doesn&apos;t have permission yet.
+              Your AI tried to use <strong className="font-mono text-gray-900">{perm.tool}</strong> and was blocked because no authorization object exists for it.
             </p>
             <div className="flex gap-2">
               <button onClick={onApprove} disabled={busy}
-                className="h-9 px-5 text-[13px] font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-40 transition-colors">
-                Allow this tool
+                className="h-9 px-5 text-[13px] font-semibold rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-40 transition-colors flex items-center gap-2">
+                {busy && <div className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />}
+                {busy ? "Signing..." : "Create authorization"}
               </button>
               <button onClick={onDeny} disabled={busy}
                 className="h-9 px-5 text-[13px] font-medium rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition-colors">
@@ -184,27 +193,52 @@ function Detail({ perm, onApprove, onDeny, onRevoke, busy }: {
         {perm.status === "approved" && (
           <div className="mb-8">
             <p className="text-[14px] text-gray-600 leading-relaxed mb-6">
-              This tool is allowed. Your AI can use <strong className="font-mono text-gray-900">{perm.tool}</strong> freely. Every use is logged with a cryptographic proof.
+              An authorization object exists for <strong className="font-mono text-gray-900">{perm.tool}</strong>. Every execution references this object — the proof that authorized it and the record that it happened are the same chain.
             </p>
             <button onClick={onRevoke} disabled={busy}
-              className="h-9 px-5 text-[13px] font-medium rounded-lg border border-gray-200 text-gray-500 hover:text-red-600 hover:border-red-200 disabled:opacity-40 transition-colors">
-              Revoke access
+              className="h-9 px-5 text-[13px] font-medium rounded-lg border border-gray-200 text-gray-500 hover:text-red-600 hover:border-red-200 disabled:opacity-40 transition-colors flex items-center gap-2">
+              {busy && <div className="w-3 h-3 border-2 border-gray-300/40 border-t-gray-500 rounded-full animate-spin" />}
+              {busy ? "Revoking..." : "Revoke authorization"}
             </button>
           </div>
         )}
 
         {(perm.status === "denied" || perm.status === "revoked") && (
           <p className="text-[14px] text-gray-600 leading-relaxed mb-8">
-            This tool is blocked. Your AI will be denied if it tries to use <strong className="font-mono text-gray-900">{perm.tool}</strong>.
+            No authorization object exists for <strong className="font-mono text-gray-900">{perm.tool}</strong>. Execution is not reachable.
           </p>
         )}
 
-        {/* Proof link */}
-        {perm.explorerUrl && (
+        {/* Authorization chain */}
+        {chain.length > 0 && (
+          <div className="pt-6 border-t border-gray-100">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 mb-3">Authorization chain</p>
+            <div className="space-y-2">
+              {chain.map((entry, i) => (
+                <div key={entry.id} className="flex items-center gap-3 text-[12px]">
+                  <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                    entry.type === "authorization" ? "bg-emerald-500" : "bg-red-400"
+                  }`} />
+                  <span className="text-gray-500 font-mono truncate flex-1">
+                    {entry.type === "authorization" ? "Authorization" : "Revocation"} — {entry.proofDigest?.slice(0, 16)}...
+                  </span>
+                  <span className="text-gray-300 flex-shrink-0">{timeLabel(entry.createdAt)}</span>
+                  {entry.explorerUrl && (
+                    <a href={entry.explorerUrl} target="_blank" rel="noopener noreferrer"
+                      className="text-blue-500 hover:underline flex-shrink-0">proof</a>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Single proof link (for pending/denied without chain) */}
+        {chain.length === 0 && perm.explorerUrl && (
           <div className="pt-6 border-t border-gray-100">
             <a href={perm.explorerUrl} target="_blank" rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-[13px] text-blue-600 hover:underline">
-              View cryptographic proof ↗
+              View proof ↗
             </a>
           </div>
         )}
