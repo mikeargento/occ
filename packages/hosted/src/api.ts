@@ -321,7 +321,11 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
 
   if (path === "/permissions/active" && method === "GET") {
     const active = await db.getActivePermissions(userId);
-    return json(res, { permissions: active.map((r: any) => ({
+    // Also get denied/revoked
+    const { entries: denied } = await db.getPermissionHistory(userId, 100, 0);
+    const deniedItems = denied.filter((r: any) => r.status === "denied" || r.status === "revoked");
+    const all = [...active, ...deniedItems];
+    return json(res, { permissions: all.map((r: any) => ({
       id: r.id, agentId: r.agent_id, tool: r.tool, status: r.status,
       resolvedAt: r.resolved_at ? new Date(r.resolved_at).getTime() : null,
       proofDigest: r.proof_digest,
