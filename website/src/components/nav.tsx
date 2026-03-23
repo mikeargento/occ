@@ -31,16 +31,15 @@ export function Nav() {
           <div className="hidden flex-1 items-center justify-end gap-1 md:flex">
             {links.map((l) => {
               if (l.external) {
-                return [
-                  <div key="sep" className="w-px h-4 bg-border-subtle mx-2" />,
+                return (
                   <a
                     key={l.href}
                     href={l.href}
-                    className="text-sm font-semibold px-4 py-1.5 rounded-lg bg-emerald-500 text-white hover:bg-emerald-400 transition-colors duration-150"
+                    className="text-sm font-semibold px-4 py-1.5 rounded-lg bg-emerald-500 text-white hover:bg-emerald-400 transition-colors duration-150 ml-2"
                   >
                     {l.label}
-                  </a>,
-                ];
+                  </a>
+                );
               }
               return (
                 <Link
