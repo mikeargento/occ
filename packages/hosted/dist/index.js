@@ -4,6 +4,7 @@ import { join, extname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { handleApi } from "./api.js";
 import { handleMcp } from "./mcp.js";
+import { handleAuth } from "./auth.js";
 import { db } from "./db.js";
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const DASHBOARD_DIR = resolve(__dirname, "../dashboard");
@@ -114,11 +115,7 @@ async function handler(req, res) {
     res.writeHead(404, { "Content-Type": "text/plain" });
     res.end("Not Found");
 }
-async function handleAuth(_req, res, _pathname) {
-    // TODO: Better Auth integration
-    res.writeHead(501, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ error: "Auth not yet implemented" }));
-}
+// Auth is now in auth.ts
 async function main() {
     await db.init();
     const server = createServer(handler);
