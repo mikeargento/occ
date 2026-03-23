@@ -33,6 +33,10 @@ export declare const db: {
         allowedTools?: string[];
     }): Promise<void>;
     deleteAgent(userId: string, agentId: string): Promise<void>;
+    enableTool(userId: string, agentId: string, tool: string): Promise<void>;
+    disableTool(userId: string, agentId: string, tool: string): Promise<void>;
+    setAgentPaused(userId: string, agentId: string, paused: boolean): Promise<void>;
+    updateAgentRules(userId: string, agentId: string, rules: string): Promise<void>;
     incrementAgentCalls(userId: string, agentId: string, allowed: boolean): Promise<void>;
     getActivePolicy(userId: string): Promise<any>;
     createPolicy(userId: string, policy: {

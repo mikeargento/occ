@@ -33,6 +33,7 @@ export const db = {
         user_id TEXT NOT NULL,
         name TEXT NOT NULL,
         allowed_tools TEXT[] DEFAULT '{}',
+        custom_rules TEXT DEFAULT '',
         paused BOOLEAN DEFAULT false,
         total_calls INTEGER DEFAULT 0,
         allowed_count INTEGER DEFAULT 0,
@@ -40,6 +41,9 @@ export const db = {
         created_at TIMESTAMPTZ DEFAULT NOW(),
         PRIMARY KEY (id, user_id)
       );
+
+      -- Add custom_rules column if table already exists
+      ALTER TABLE occ_agents ADD COLUMN IF NOT EXISTS custom_rules TEXT DEFAULT '';
 
       CREATE TABLE IF NOT EXISTS occ_proofs (
         id SERIAL PRIMARY KEY,
@@ -126,6 +130,24 @@ export const db = {
     async deleteAgent(userId, agentId) {
         const p = getPool();
         await p.query("DELETE FROM occ_agents WHERE user_id = $1 AND id = $2", [userId, agentId]);
+    },
+    async enableTool(userId, agentId, tool) {
+        const p = getPool();
+        await p.query(`UPDATE occ_agents SET allowed_tools = array_append(allowed_tools, $3)
+       WHERE user_id = $1 AND id = $2 AND NOT ($3 = ANY(allowed_tools))`, [userId, agentId, tool]);
+    },
+    async disableTool(userId, agentId, tool) {
+        const p = getPool();
+        await p.query(`UPDATE occ_agents SET allowed_tools = array_remove(allowed_tools, $3)
+       WHERE user_id = $1 AND id = $2`, [userId, agentId, tool]);
+    },
+    async setAgentPaused(userId, agentId, paused) {
+        const p = getPool();
+        await p.query("UPDATE occ_agents SET paused = $3 WHERE user_id = $1 AND id = $2", [userId, agentId, paused]);
+    },
+    async updateAgentRules(userId, agentId, rules) {
+        const p = getPool();
+        await p.query("UPDATE occ_agents SET custom_rules = $3 WHERE user_id = $1 AND id = $2", [userId, agentId, rules]);
     },
     async incrementAgentCalls(userId, agentId, allowed) {
         const p = getPool();

@@ -23,11 +23,12 @@ export function CustomRules({ agentId, initialRules = "" }: CustomRulesProps) {
         typeof window !== "undefined"
           ? localStorage.getItem("occ-proxy-url") || ""
           : "";
-      await fetch(`${baseUrl}/api/agents/${encodeURIComponent(agentId)}/rules`, {
+      const res = await fetch(`${baseUrl}/api/agents/${encodeURIComponent(agentId)}/rules`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rules }),
       });
+      if (!res.ok) throw new Error("Failed to save");
       setSaved(true);
     } catch {
       // silent

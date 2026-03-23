@@ -90,7 +90,7 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
         skills: {},
       } : null;
       return json(res, {
-        agent: { id: agent.id, name: agent.name, status: agent.paused ? "paused" : "active", createdAt: new Date(agent.created_at).getTime(), policy: agentPolicy },
+        agent: { id: agent.id, name: agent.name, status: agent.paused ? "paused" : "active", createdAt: new Date(agent.created_at).getTime(), policy: agentPolicy, customRules: agent.custom_rules ?? "" },
         context: {
           allowedTools: agentAllowedTools,
           totalSpendCents: 0,
@@ -121,16 +121,42 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
     return json(res, { policy: body });
   }
 
-  // /agents/:id/pause
+  // /agents/:id/pause|resume
   const pauseMatch = path.match(/^\/agents\/([^/]+)\/(pause|resume)$/);
   if (pauseMatch && method === "PUT") {
-    return json(res, { paused: pauseMatch[2] === "pause" });
+    const agentId = decodeURIComponent(pauseMatch[1]!);
+    const paused = pauseMatch[2] === "pause";
+    await db.setAgentPaused(userId, agentId, paused);
+    return json(res, { paused });
+  }
+
+  // /agents/:id/rules
+  const rulesMatch = path.match(/^\/agents\/([^/]+)\/rules$/);
+  if (rulesMatch && method === "PUT") {
+    const agentId = decodeURIComponent(rulesMatch[1]!);
+    const body = JSON.parse(await readBody(req));
+    await db.updateAgentRules(userId, agentId, body.rules ?? "");
+    return json(res, { rules: body.rules ?? "" });
+  }
+  if (rulesMatch && method === "GET") {
+    const agentId = decodeURIComponent(rulesMatch[1]!);
+    const agent = await db.getAgent(userId, agentId);
+    return json(res, { rules: agent?.custom_rules ?? "" });
   }
 
   // /agents/:id/tools/:tool
   const toolMatch = path.match(/^\/agents\/([^/]+)\/tools\/([^/]+)$/);
   if (toolMatch) {
-    return json(res, { tool: decodeURIComponent(toolMatch[2]!), enabled: method === "PUT" });
+    const agentId = decodeURIComponent(toolMatch[1]!);
+    const tool = decodeURIComponent(toolMatch[2]!);
+    if (method === "PUT") {
+      await db.enableTool(userId, agentId, tool);
+      return json(res, { tool, enabled: true });
+    }
+    if (method === "DELETE") {
+      await db.disableTool(userId, agentId, tool);
+      return json(res, { tool, enabled: false });
+    }
   }
 
   // ── Policy ──

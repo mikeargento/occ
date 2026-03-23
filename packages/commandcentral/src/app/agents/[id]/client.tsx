@@ -231,7 +231,7 @@ export default function SwitchboardDetailPage() {
             <ProofFeed events={agentEvents} isConnected={isConnected} />
           ) : (
             <div className="p-5">
-              <CustomRules agentId={agentId} />
+              <CustomRules agentId={agentId} initialRules={(agent as any)?.customRules ?? ""} />
             </div>
           )}
         </div>
