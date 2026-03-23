@@ -399,9 +399,9 @@ function LiveProofFeed() {
   if (proofs.length === 0) {
     return (
       <div className="text-sm text-text-secondary py-4">
-        No proofs indexed yet. Commit a file through{" "}
-        <Link href="/studio" className="text-text hover:underline">Studio</Link>{" "}
-        to see it here.
+        No proofs indexed yet. Connect an AI tool through the{" "}
+        <a href="https://agent.occ.wtf" className="text-text hover:underline">Dashboard</a>{" "}
+        to see proofs here.
       </div>
     );
   }

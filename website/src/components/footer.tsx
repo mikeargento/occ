@@ -22,7 +22,7 @@ export function Footer() {
                 Product
               </h4>
               <ul className="space-y-3">
-                <li><Link href="/studio" className="text-sm text-text-secondary hover:text-text transition-colors">Studio</Link></li>
+                <li><a href="https://agent.occ.wtf" className="text-sm text-text-secondary hover:text-text transition-colors">Dashboard</a></li>
                 <li><Link href="/api-reference" className="text-sm text-text-secondary hover:text-text transition-colors">API Reference</Link></li>
               </ul>
             </div>
