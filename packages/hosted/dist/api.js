@@ -215,7 +215,20 @@ export async function handleApi(req, res, url) {
     }
     // ── Tools ──
     if (path === "/tools" && method === "GET") {
-        return json(res, { tools: [] });
+        // In hosted mode, aggregate all unique tools from all agents' allowed_tools
+        const agents = await db.getAgents(userId);
+        const toolSet = new Set();
+        for (const a of agents) {
+            for (const t of (a.allowed_tools ?? [])) {
+                toolSet.add(t);
+            }
+        }
+        const tools = Array.from(toolSet).map(name => ({
+            name,
+            description: "",
+            source: "policy",
+        }));
+        return json(res, { tools });
     }
     // ── Signer ──
     if (path === "/signer" && method === "GET") {
