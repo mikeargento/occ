@@ -58,7 +58,7 @@ export function McpUrlBar({ agentId }: McpUrlBarProps) {
           )}
         </button>
       </div>
-      <p className="text-[11px] text-text-tertiary mt-2 leading-relaxed">
+      <p className="text-[11px] text-emerald-500 mt-2 leading-relaxed">
         Paste into Claude Desktop, Cursor, or any MCP-compatible AI tool.
       </p>
     </div>

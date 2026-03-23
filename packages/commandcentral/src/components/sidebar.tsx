@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "./theme-provider";
@@ -64,7 +65,7 @@ function ThemeButton() {
   );
 }
 
-export function Sidebar() {
+function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
 
   function isActive(href: string) {
@@ -75,10 +76,10 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="w-[240px] h-screen flex flex-col border-r border-border bg-bg fixed left-0 top-0 z-10">
+    <>
       {/* Brand */}
       <div className="px-5 pt-6 pb-2">
-        <Link href="/" className="block">
+        <Link href="/" className="block" onClick={onNavigate}>
           <span className="text-[20px] font-black tracking-[-0.02em] text-text">
             OCC.WTF
           </span>
@@ -97,6 +98,7 @@ export function Sidebar() {
               <li key={item.href}>
                 <Link
                   href={item.href}
+                  onClick={onNavigate}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors duration-75 ${
                     active
                       ? "bg-bg-subtle text-text font-semibold"
@@ -122,6 +124,64 @@ export function Sidebar() {
         </div>
         <ThemeButton />
       </div>
-    </aside>
+    </>
+  );
+}
+
+export function Sidebar() {
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  return (
+    <>
+      {/* Mobile header bar */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-20 flex items-center justify-between px-4 py-3 bg-bg border-b border-border">
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="text-text-secondary hover:text-text transition-colors"
+          aria-label="Open menu"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+            <path d="M3 12h18M3 6h18M3 18h18" />
+          </svg>
+        </button>
+        <span className="text-[16px] font-black tracking-[-0.02em] text-text">
+          OCC.WTF
+        </span>
+        <ThemeButton />
+      </div>
+
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div
+          className="md:hidden fixed inset-0 z-30 bg-black/50 backdrop-blur-sm"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
+
+      {/* Mobile slide-out sidebar */}
+      <aside
+        className={`md:hidden fixed top-0 left-0 bottom-0 z-40 w-[280px] bg-bg border-r border-border flex flex-col transition-transform duration-200 ${
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="flex items-center justify-end px-4 pt-4">
+          <button
+            onClick={() => setMobileOpen(false)}
+            className="text-text-tertiary hover:text-text transition-colors"
+            aria-label="Close menu"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <SidebarContent onNavigate={() => setMobileOpen(false)} />
+      </aside>
+
+      {/* Desktop sidebar */}
+      <aside className="hidden md:flex w-[240px] h-screen flex-col border-r border-border bg-bg fixed left-0 top-0 z-10">
+        <SidebarContent />
+      </aside>
+    </>
   );
 }

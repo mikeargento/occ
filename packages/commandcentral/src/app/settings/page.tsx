@@ -121,7 +121,7 @@ export default function SettingsPage() {
           ) : (
             <div className="skeleton h-10 rounded-lg" />
           )}
-          <p className="text-[11px] text-text-tertiary mt-3">
+          <p className="text-[11px] text-emerald-500 mt-3">
             Paste into Claude Desktop, Cursor, or any MCP-compatible AI.
           </p>
         </section>
