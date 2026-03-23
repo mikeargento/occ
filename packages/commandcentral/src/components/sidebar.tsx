@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "./theme-provider";
+import { listConnections } from "@/lib/api";
 
 const NAV_ITEMS = [
   {
@@ -67,6 +68,18 @@ function ThemeButton() {
 
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
+  const [connectionCount, setConnectionCount] = useState(0);
+
+  useEffect(() => {
+    const check = () => {
+      listConnections()
+        .then((res) => setConnectionCount(Array.isArray(res) ? res.length : 0))
+        .catch(() => setConnectionCount(0));
+    };
+    check();
+    const interval = setInterval(check, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   function isActive(href: string) {
     if (href === "/") {
@@ -119,8 +132,12 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       {/* Footer */}
       <div className="px-5 py-4 border-t border-border-subtle flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-success" />
-          <span className="text-[11px] text-text-tertiary">Connected</span>
+          <div className={`w-2 h-2 rounded-full ${connectionCount > 0 ? "bg-success" : "bg-text-tertiary/30"}`} />
+          <span className="text-[11px] text-text-tertiary">
+            {connectionCount > 0
+              ? `${connectionCount} connection${connectionCount !== 1 ? "s" : ""}`
+              : "No connections"}
+          </span>
         </div>
         <ThemeButton />
       </div>
