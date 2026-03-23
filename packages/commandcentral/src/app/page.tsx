@@ -96,7 +96,7 @@ function Sidebar({ view, setView, pendingCount, allowedCount, deniedCount, total
   view: View; setView: (v: View) => void;
   pendingCount: number; allowedCount: number; deniedCount: number; totalCount: number;
 }) {
-  const items: { key: View; label: string; count?: number; icon: JSX.Element }[] = [
+  const items: { key: View; label: string; count?: number; icon: React.ReactNode }[] = [
     {
       key: "inbox", label: "Inbox", count: pendingCount || undefined,
       icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-8.97 5.7a1.94 1.94 0 01-2.06 0L2 7"/></svg>,
