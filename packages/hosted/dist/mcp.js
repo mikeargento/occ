@@ -1,9 +1,6 @@
 import { sha256 } from "@noble/hashes/sha256";
-import * as ed from "@noble/ed25519";
-import { Constructor } from "occproof";
 import { db } from "./db.js";
 import { eventBus } from "./events.js";
-import crypto from "node:crypto";
 const activeConnections = new Map();
 /** Get all active connections (for the dashboard) */
 export function getActiveConnections() {
@@ -60,68 +57,44 @@ function trackConnection(req, token, agentId) {
 function toBase64(bytes) {
     return Buffer.from(bytes).toString("base64");
 }
-// ── OCC Constructor (real cryptographic proofs) ──
-let occConstructor = null;
-async function getConstructor() {
-    if (occConstructor)
-        return occConstructor;
-    const privateKey = ed.utils.randomPrivateKey();
-    const publicKey = await ed.getPublicKeyAsync(privateKey);
-    const host = {
-        enforcementTier: "hw-key",
-        async getMeasurement() {
-            const hash = sha256(new TextEncoder().encode("occ-hosted-v1"));
-            return Buffer.from(hash).toString("hex");
-        },
-        async getFreshNonce() {
-            return new Uint8Array(crypto.randomBytes(16));
-        },
-        async sign(data) {
-            return new Uint8Array(await ed.signAsync(data, privateKey));
-        },
-        async getPublicKey() {
-            return new Uint8Array(publicKey);
-        },
-        _counter: 0,
-        async nextCounter() {
-            return String(++this._counter);
-        },
-    };
-    occConstructor = await Constructor.initialize({
-        host,
-        policy: { requireCounter: true },
-        epochId: `hosted-${Date.now()}`,
-    });
-    console.log("  [occ] Constructor initialized — signing proofs with Ed25519");
-    return occConstructor;
-}
-function generateProofDigest(tool, args, timestamp, agentId) {
-    const payload = JSON.stringify({ tool, args, timestamp, agentId });
-    const hash = sha256(new TextEncoder().encode(payload));
-    return toBase64(hash);
-}
+// ── TEE Commit via Nitro Enclave ──
+const TEE_URL = "https://nitro.occproof.com/commit";
 export async function commitProof(tool, args, agentId, allowed) {
     const payload = JSON.stringify({ tool, args, agentId, allowed, timestamp: Date.now() });
     const bytes = new TextEncoder().encode(payload);
+    const digestB64 = toBase64(sha256(bytes));
     try {
-        const ctor = await getConstructor();
-        const proof = await ctor.commit({
-            bytes,
-            metadata: { tool, agentId, decision: allowed ? "allowed" : "denied" },
+        const res = await fetch(TEE_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                digests: [{ digestB64, hashAlg: "sha256" }],
+                metadata: {
+                    kind: allowed ? "tool-execution" : "tool-denial",
+                    tool,
+                    agentId,
+                    decision: allowed ? "allowed" : "denied",
+                    adapter: "hosted-mcp",
+                    runtime: "agent.occ.wtf",
+                },
+            }),
         });
-        const digestB64 = proof.artifact.digestB64;
+        if (!res.ok)
+            throw new Error(`TEE ${res.status}`);
+        const data = await res.json();
+        const proof = Array.isArray(data) ? data[0] : data.proofs?.[0] ?? data;
         // Forward proof to occ.wtf explorer
         fetch("https://occ.wtf/api/proofs", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(proof),
-        }).catch(() => { }); // fire-and-forget
-        return { proof, digestB64 };
+            body: JSON.stringify({ proof }),
+        }).catch(() => { });
+        return { proof, digestB64: proof?.artifact?.digestB64 ?? digestB64 };
     }
     catch (err) {
-        // Fallback to simple hash if Constructor fails
-        const hash = sha256(bytes);
-        return { proof: null, digestB64: toBase64(hash) };
+        // Fallback to local hash if TEE is unreachable
+        console.warn("  [occ] TEE commit failed, using local hash:", err.message);
+        return { proof: null, digestB64 };
     }
 }
 function json(res, data, status = 200) {

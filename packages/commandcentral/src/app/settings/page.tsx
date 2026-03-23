@@ -6,9 +6,9 @@ export default function SettingsPage() {
   const [user, setUser] = useState<{ name: string; email: string; avatar: string } | null>(null);
 
   useEffect(() => {
-    fetch("/api/auth/me")
+    fetch("/auth/me")
       .then((r) => r.ok ? r.json() : null)
-      .then(setUser)
+      .then((d) => setUser(d?.user ?? null))
       .catch(() => {});
   }, []);
 
@@ -27,13 +27,13 @@ export default function SettingsPage() {
               <p className="text-sm font-medium text-text">{user.name}</p>
               <p className="text-xs text-text-tertiary">{user.email}</p>
             </div>
-            <a href="/api/auth/logout" className="text-xs text-text-tertiary hover:text-text transition-colors">
+            <a href="/auth/logout" className="text-xs text-text-tertiary hover:text-text transition-colors">
               Sign out
             </a>
           </div>
         ) : (
           <a
-            href="/api/auth/github"
+            href="/auth/login/github"
             className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-lg bg-text text-bg hover:opacity-90 transition-opacity"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
