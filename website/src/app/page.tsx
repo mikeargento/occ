@@ -567,13 +567,6 @@ export default function Home() {
             <p className="hero-animate text-text-secondary text-base sm:text-lg md:text-xl leading-relaxed" style={{ animationDelay: "120ms" }}>
               OCC is a system where computations are only executable if they are authorized by a previously committed, cryptographically bound policy.
             </p>
-            <a
-              href="https://agent.occ.wtf"
-              className="hero-animate inline-flex items-center mt-8 px-8 py-3.5 rounded-xl bg-emerald-500 text-white text-base font-semibold hover:bg-emerald-400 transition-all duration-150 hover:scale-[1.02] active:scale-[0.98]"
-              style={{ animationDelay: "160ms" }}
-            >
-              Get Started
-            </a>
           </div>
           <div className="hero-animate grid grid-cols-4 gap-3 sm:gap-5 shrink-0" style={{ animationDelay: "200ms" }}>
             {heroLogos.map((h) => (
