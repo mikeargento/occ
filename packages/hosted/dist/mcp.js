@@ -114,16 +114,47 @@ export async function handleMcp(req, res, pathname) {
                 // Find which agent this token maps to, or use first agent
                 const agents = await db.getAgents(user.id);
                 const agentId = agents.length > 0 ? agents[0].id : "default-agent";
-                // Auto-discover: add tool to agent's allowed list if not already there
                 const agent = agents.find((a) => a.id === agentId);
                 const currentTools = agent?.allowed_tools ?? [];
-                if (!currentTools.includes(toolName)) {
-                    await db.enableTool(user.id, agentId, toolName);
-                }
-                // Generate cryptographic proof digest
+                const isPaused = agent?.paused ?? false;
+                // Generate proof digest regardless of decision
                 const timestamp = Date.now();
                 const proofDigest = generateProofDigest(toolName, args, timestamp, agentId);
-                // Log the call with proof
+                // ── ENFORCEMENT ──
+                // Built-in OCC tools are always allowed
+                const isBuiltIn = toolName?.startsWith("occ_");
+                // Check if agent is paused
+                if (isPaused && !isBuiltIn) {
+                    await db.addProof(user.id, {
+                        agentId, tool: toolName, allowed: false, args, proofDigest,
+                        reason: "Agent is paused — all tool access suspended",
+                    });
+                    await db.incrementAgentCalls(user.id, agentId, false);
+                    return json(res, {
+                        jsonrpc: "2.0", id: body.id,
+                        error: { code: -32600, message: `Denied: agent "${agentId}" is paused` },
+                    });
+                }
+                // Check if tool is in allowed list (default-deny)
+                // If agent has no tools configured yet, auto-discover (allow + add)
+                // If agent HAS tools configured, enforce the list
+                const hasPolicy = currentTools.length > 0;
+                if (hasPolicy && !currentTools.includes(toolName) && !isBuiltIn) {
+                    await db.addProof(user.id, {
+                        agentId, tool: toolName, allowed: false, args, proofDigest,
+                        reason: `Tool "${toolName}" is not in the allowed list`,
+                    });
+                    await db.incrementAgentCalls(user.id, agentId, false);
+                    return json(res, {
+                        jsonrpc: "2.0", id: body.id,
+                        error: { code: -32600, message: `Denied: "${toolName}" is not allowed by policy` },
+                    });
+                }
+                // Auto-discover: if no policy yet, add tool to allowed list
+                if (!hasPolicy && !isBuiltIn && !currentTools.includes(toolName)) {
+                    await db.enableTool(user.id, agentId, toolName);
+                }
+                // ── ALLOWED — log proof ──
                 await db.addProof(user.id, {
                     agentId,
                     tool: toolName,
@@ -139,6 +170,7 @@ export async function handleMcp(req, res, pathname) {
                         timestamp: new Date(timestamp).toISOString(),
                     },
                 });
+                await db.incrementAgentCalls(user.id, agentId, true);
                 // Handle built-in tools
                 if (toolName === "occ_list_proofs") {
                     const limit = args.limit ?? 10;
