@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "occ-agent": {
+      "url": "https://agent.occ.wtf/mcp/anon-token"
+    }
+  }
+}

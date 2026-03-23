@@ -79,7 +79,7 @@ export function Sidebar() {
       {/* Brand */}
       <div className="px-5 pt-6 pb-2">
         <Link href="/" className="block">
-          <span className="text-[22px] font-black tracking-[-0.02em] text-text">
+          <span className="text-[20px] font-black tracking-[-0.02em] text-text">
             OCC.WTF
           </span>
         </Link>

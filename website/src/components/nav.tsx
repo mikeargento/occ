@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useTheme } from "./theme-provider";
 
 const links: { href: string; label: string; external?: boolean; indicator?: boolean }[] = [
-  { href: "/studio", label: "Policy Studio" },
+  { href: "https://agent.occ.wtf", label: "Dashboard", external: true },
   { href: "/docs", label: "Docs" },
   { href: "/explorer", label: "Explorer" },
 ];

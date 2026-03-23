@@ -31,6 +31,20 @@
         "OCC_MODE": "tee",
         "PAPERCLIP_MIGRATION_AUTO_APPLY": "true"
       }
+    },
+    {
+      "name": "paperclip-ui",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["vite", "--port", "5173"],
+      "port": 5173,
+      "cwd": "packages/paperclip/ui"
+    },
+    {
+      "name": "commandcentral",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3002,
+      "cwd": "packages/commandcentral"
     }
   ]
 }
