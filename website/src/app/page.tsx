@@ -3,7 +3,7 @@
 import Link from "next/link";
 import React, { useState, useCallback, useEffect } from "react";
 import { ScrollReveal } from "@/components/scroll-reveal";
-import { InteractiveSignerSection } from "./integrations/signer-toggle";
+// signer section removed — hosted dashboard handles this now
 import { CopyButton } from "./integrations/copy-button";
 import {
   toUrlSafeB64,
@@ -582,11 +582,6 @@ export default function Home() {
         </div>
 
       </section>
-
-      {/* Signer Mode Toggle */}
-      <ScrollReveal>
-        <InteractiveSignerSection />
-      </ScrollReveal>
 
       {/* Available */}
       <section className="mb-20 sm:mb-28">
