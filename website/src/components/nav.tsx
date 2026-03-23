@@ -6,9 +6,9 @@ import { useState } from "react";
 import { useTheme } from "./theme-provider";
 
 const links: { href: string; label: string; external?: boolean; indicator?: boolean }[] = [
-  { href: "https://agent.occ.wtf", label: "Dashboard", external: true },
-  { href: "/docs", label: "Docs" },
   { href: "/explorer", label: "Explorer" },
+  { href: "/docs", label: "Docs" },
+  { href: "https://agent.occ.wtf", label: "Dashboard", external: true },
 ];
 
 export function Nav() {
@@ -31,15 +31,16 @@ export function Nav() {
           <div className="hidden flex-1 items-center justify-end gap-1 md:flex">
             {links.map((l) => {
               if (l.external) {
-                return (
+                return [
+                  <div key="sep" className="w-px h-4 bg-border-subtle mx-2" />,
                   <a
                     key={l.href}
                     href={l.href}
                     className="text-sm font-semibold px-4 py-1.5 rounded-lg bg-emerald-500 text-white hover:bg-emerald-400 transition-colors duration-150"
                   >
                     {l.label}
-                  </a>
-                );
+                  </a>,
+                ];
               }
               return (
                 <Link
