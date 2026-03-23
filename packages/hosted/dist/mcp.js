@@ -121,25 +121,24 @@ export async function handleMcp(req, res, pathname) {
                 const timestamp = Date.now();
                 const proofDigest = generateProofDigest(toolName, args, timestamp, agentId);
                 // ── ENFORCEMENT ──
-                // Built-in OCC tools are always allowed
-                const isBuiltIn = toolName?.startsWith("occ_");
-                // Check if agent is paused
-                if (isPaused && !isBuiltIn) {
+                // Check if agent is paused — blocks EVERYTHING
+                if (isPaused) {
                     await db.addProof(user.id, {
                         agentId, tool: toolName, allowed: false, args, proofDigest,
-                        reason: "Agent is paused — all tool access suspended",
+                        reason: "Switchboard is paused — all tool access suspended",
                     });
                     await db.incrementAgentCalls(user.id, agentId, false);
                     return json(res, {
                         jsonrpc: "2.0", id: body.id,
-                        error: { code: -32600, message: `Denied: agent "${agentId}" is paused` },
+                        error: { code: -32600, message: `Denied: switchboard "${agentId}" is paused` },
                     });
                 }
-                // Check if tool is in allowed list (default-deny)
-                // If agent has no tools configured yet, auto-discover (allow + add)
-                // If agent HAS tools configured, enforce the list
-                const hasPolicy = currentTools.length > 0;
-                if (hasPolicy && !currentTools.includes(toolName) && !isBuiltIn) {
+                // Check if agent has ever had tools configured
+                // We check total_calls > 0 OR allowed_tools is non-empty
+                // This means: first-ever calls auto-discover, but once you toggle anything, enforcement kicks in
+                const hasEverBeenConfigured = (agent?.total_calls ?? 0) > 0 || currentTools.length > 0;
+                if (hasEverBeenConfigured && !currentTools.includes(toolName)) {
+                    // Tool is NOT in the allowed list — DENY
                     await db.addProof(user.id, {
                         agentId, tool: toolName, allowed: false, args, proofDigest,
                         reason: `Tool "${toolName}" is not in the allowed list`,
@@ -147,11 +146,11 @@ export async function handleMcp(req, res, pathname) {
                     await db.incrementAgentCalls(user.id, agentId, false);
                     return json(res, {
                         jsonrpc: "2.0", id: body.id,
-                        error: { code: -32600, message: `Denied: "${toolName}" is not allowed by policy` },
+                        error: { code: -32600, message: `Denied: "${toolName}" is not allowed by switchboard "${agentId}"` },
                     });
                 }
-                // Auto-discover: if no policy yet, add tool to allowed list
-                if (!hasPolicy && !isBuiltIn && !currentTools.includes(toolName)) {
+                // Auto-discover: brand new agent, no calls ever — add tool to allowed list
+                if (!hasEverBeenConfigured && !currentTools.includes(toolName)) {
                     await db.enableTool(user.id, agentId, toolName);
                 }
                 // ── ALLOWED — log proof ──

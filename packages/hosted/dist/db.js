@@ -104,6 +104,11 @@ export const db = {
         await p.query(`INSERT INTO occ_proofs (user_id, agent_id, tool, allowed, args, output, reason, proof_digest, receipt)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`, [userId, entry.agentId, entry.tool, entry.allowed, JSON.stringify(entry.args), JSON.stringify(entry.output), entry.reason, entry.proofDigest, JSON.stringify(entry.receipt)]);
     },
+    async getProof(userId, proofId) {
+        const p = getPool();
+        const res = await p.query("SELECT * FROM occ_proofs WHERE id = $1 AND user_id = $2", [proofId, userId]);
+        return res.rows[0] ?? null;
+    },
     async getProofs(userId, limit = 50, offset = 0) {
         const p = getPool();
         const res = await p.query("SELECT * FROM occ_proofs WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3", [userId, limit, offset]);

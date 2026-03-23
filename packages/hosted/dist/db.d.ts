@@ -21,6 +21,7 @@ export declare const db: {
         proofDigest?: string;
         receipt?: unknown;
     }): Promise<void>;
+    getProof(userId: string, proofId: string): Promise<any>;
     getProofs(userId: string, limit?: number, offset?: number): Promise<{
         entries: any[];
         total: number;

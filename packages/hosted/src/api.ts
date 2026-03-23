@@ -223,7 +223,20 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
   // /audit/:id
   const auditMatch = path.match(/^\/audit\/([^/]+)$/);
   if (auditMatch && method === "GET") {
-    return json(res, { entry: null, receipt: null });
+    const auditId = decodeURIComponent(auditMatch[1]!);
+    const e = await db.getProof(userId, auditId);
+    if (!e) return json(res, { entry: null, receipt: null });
+    return json(res, {
+      entry: {
+        id: String(e.id),
+        agentId: e.agent_id,
+        tool: e.tool,
+        decision: e.allowed ? { allowed: true as const } : { allowed: false as const, reason: e.reason ?? "Policy denied", constraint: "policy" },
+        proofDigestB64: e.proof_digest ?? null,
+        timestamp: new Date(e.created_at).getTime(),
+      },
+      receipt: e.receipt ?? null,
+    });
   }
 
   // ── Context ──

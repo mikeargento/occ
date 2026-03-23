@@ -121,6 +121,12 @@ export const db = {
     );
   },
 
+  async getProof(userId: string, proofId: string) {
+    const p = getPool();
+    const res = await p.query("SELECT * FROM occ_proofs WHERE id = $1 AND user_id = $2", [proofId, userId]);
+    return res.rows[0] ?? null;
+  },
+
   async getProofs(userId: string, limit = 50, offset = 0) {
     const p = getPool();
     const res = await p.query(

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { getAuditLog } from "@/lib/api";
 import type { AuditEntry } from "@/lib/types";
 import { Card } from "@/components/shared/card";
@@ -140,18 +141,13 @@ export default function AuditPage() {
                   </td>
                   <td className="px-5 py-3">
                     {entry.proofDigestB64 ? (
-                      <a
-                        href={`https://occ.wtf/explorer?digest=${encodeURIComponent(entry.proofDigestB64)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <Link
+                        href={`/audit/${entry.id}`}
                         className="text-[11px] font-mono text-accent hover:text-accent/80 transition-colors inline-flex items-center gap-1"
-                        title="View on OCC Explorer"
+                        title="View proof receipt"
                       >
                         {entry.proofDigestB64.slice(0, 16)}...
-                        <svg width="10" height="10" viewBox="0 0 12 12" fill="none" className="opacity-50">
-                          <path d="M3.5 1.5H2C1.72386 1.5 1.5 1.72386 1.5 2V10C1.5 10.2761 1.72386 10.5 2 10.5H10C10.2761 10.5 10.5 10.2761 10.5 10V8.5M7 1.5H10.5V5M10.5 1.5L5.5 6.5" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      </a>
+                      </Link>
                     ) : (
                       <span className="text-[11px] text-text-tertiary">
                         &mdash;
