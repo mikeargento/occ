@@ -38,10 +38,10 @@ export function SignerToggle({ onChange }: { onChange?: (mode: "local" | "tee") 
   }
 
   return (
-    <div className="inline-flex items-center rounded-full border border-border-subtle bg-bg p-0.5 gap-0">
+    <div className="inline-flex items-center rounded-full border border-border-subtle bg-bg p-1 gap-0.5">
       <button
         onClick={() => toggle("local")}
-        className={`px-3 py-1 text-xs font-medium rounded-full transition-all duration-150 ${
+        className={`px-5 py-1.5 text-sm font-medium rounded-full transition-all duration-150 ${
           mode === "local"
             ? "bg-emerald-500 text-white shadow-[0_0_12px_rgba(34,197,94,0.3)]"
             : "text-text-tertiary hover:text-text"
@@ -51,7 +51,7 @@ export function SignerToggle({ onChange }: { onChange?: (mode: "local" | "tee") 
       </button>
       <button
         onClick={() => toggle("tee")}
-        className={`px-3 py-1 text-xs font-medium rounded-full transition-all duration-150 ${
+        className={`px-5 py-1.5 text-sm font-medium rounded-full transition-all duration-150 ${
           mode === "tee"
             ? "bg-emerald-500 text-white shadow-[0_0_12px_rgba(34,197,94,0.3)]"
             : "text-text-tertiary hover:text-text"
@@ -112,14 +112,18 @@ export function InteractiveSignerSection() {
 
   return (
     <div className="rounded-2xl border border-border bg-bg-elevated/80 backdrop-blur-sm p-4 sm:p-8 md:p-10 mb-20 sm:mb-32 overflow-hidden shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
-      <div className="flex flex-col items-center text-center gap-3 mb-6">
-        <h2 className="text-xl font-semibold tracking-[-0.02em] mb-0">
-          Choose your signer
-        </h2>
-        <p className="text-sm text-text-tertiary">
-          Every integration supports both modes. Switch anytime.
-        </p>
-        <SignerToggle onChange={setMode} />
+      <div className="flex flex-col gap-3 mb-6">
+        <div>
+          <h2 className="text-xl font-semibold tracking-[-0.02em] mb-1">
+            Choose your signer
+          </h2>
+          <p className="text-sm text-text-tertiary">
+            Every integration supports both modes. Switch anytime.
+          </p>
+        </div>
+        <div className="flex justify-center sm:justify-start">
+          <SignerToggle onChange={setMode} />
+        </div>
       </div>
 
       <SignerDescription mode={mode} />
