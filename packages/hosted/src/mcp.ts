@@ -1,5 +1,16 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
+import { sha256 } from "@noble/hashes/sha256";
 import { db } from "./db.js";
+
+function toBase64(bytes: Uint8Array): string {
+  return Buffer.from(bytes).toString("base64url");
+}
+
+function generateProofDigest(tool: string, args: unknown, timestamp: number, agentId: string): string {
+  const payload = JSON.stringify({ tool, args, timestamp, agentId });
+  const hash = sha256(new TextEncoder().encode(payload));
+  return toBase64(hash);
+}
 
 function json(res: ServerResponse, data: unknown, status = 200) {
   const body = JSON.stringify(data);
@@ -126,12 +137,25 @@ export async function handleMcp(req: IncomingMessage, res: ServerResponse, pathn
           await db.enableTool(user.id, agentId, toolName);
         }
 
-        // Log the call as a proof
+        // Generate cryptographic proof digest
+        const timestamp = Date.now();
+        const proofDigest = generateProofDigest(toolName, args, timestamp, agentId);
+
+        // Log the call with proof
         await db.addProof(user.id, {
           agentId,
           tool: toolName,
           allowed: true,
           args,
+          proofDigest,
+          receipt: {
+            version: "occ/proof/1",
+            tool: toolName,
+            agent: agentId,
+            decision: "allowed",
+            inputHash: `sha256:${proofDigest}`,
+            timestamp: new Date(timestamp).toISOString(),
+          },
         });
 
         // Handle built-in tools

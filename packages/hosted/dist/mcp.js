@@ -1,4 +1,13 @@
+import { sha256 } from "@noble/hashes/sha256";
 import { db } from "./db.js";
+function toBase64(bytes) {
+    return Buffer.from(bytes).toString("base64url");
+}
+function generateProofDigest(tool, args, timestamp, agentId) {
+    const payload = JSON.stringify({ tool, args, timestamp, agentId });
+    const hash = sha256(new TextEncoder().encode(payload));
+    return toBase64(hash);
+}
 function json(res, data, status = 200) {
     const body = JSON.stringify(data);
     res.writeHead(status, { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(body) });
@@ -111,12 +120,24 @@ export async function handleMcp(req, res, pathname) {
                 if (!currentTools.includes(toolName)) {
                     await db.enableTool(user.id, agentId, toolName);
                 }
-                // Log the call as a proof
+                // Generate cryptographic proof digest
+                const timestamp = Date.now();
+                const proofDigest = generateProofDigest(toolName, args, timestamp, agentId);
+                // Log the call with proof
                 await db.addProof(user.id, {
                     agentId,
                     tool: toolName,
                     allowed: true,
                     args,
+                    proofDigest,
+                    receipt: {
+                        version: "occ/proof/1",
+                        tool: toolName,
+                        agent: agentId,
+                        decision: "allowed",
+                        inputHash: `sha256:${proofDigest}`,
+                        timestamp: new Date(timestamp).toISOString(),
+                    },
                 });
                 // Handle built-in tools
                 if (toolName === "occ_list_proofs") {
