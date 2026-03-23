@@ -142,7 +142,17 @@ export async function handleApi(req, res, url) {
         if (!policy)
             return json(res, { policy: null });
         return json(res, {
-            policy: { allowedTools: policy.allowed_tools, maxActions: policy.max_actions, rateLimit: policy.rate_limit },
+            policy: {
+                version: "occ/policy/1",
+                name: policy.name,
+                createdAt: new Date(policy.created_at).getTime(),
+                globalConstraints: {
+                    allowedTools: policy.allowed_tools ?? [],
+                    maxSpendCents: undefined,
+                    rateLimit: policy.rate_limit ? { maxCalls: parseInt(policy.rate_limit), windowMs: 3600000 } : undefined,
+                },
+                skills: {},
+            },
             policyDigestB64: policy.policy_digest,
             committedAt: new Date(policy.created_at).getTime(),
         });
