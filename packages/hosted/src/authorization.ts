@@ -160,6 +160,35 @@ export async function createExecutionProof(
 }
 
 /**
+ * Commit a policy as a proof.
+ * The policy proof is the RULE. It exists before any authorization.
+ * Every authorization references this proof's digest.
+ * Change the policy → new proof → old authorizations are re-evaluated.
+ */
+export async function commitPolicyProof(
+  userId: string,
+  policy: { categories: Record<string, boolean>; customRules: string[] }
+): Promise<{ proof: any; digest: string }> {
+  const artifact = {
+    type: "policy" as const,
+    userId,
+    categories: policy.categories,
+    customRules: policy.customRules,
+    timestamp: Date.now(),
+  };
+  const digest = digestOf(artifact);
+
+  const { proof, digestB64 } = await teeCommit(digest, {
+    kind: "policy-commitment",
+    userId,
+    adapter: "hosted-mcp",
+    runtime: "agent.occ.wtf",
+  });
+
+  return { proof, digest: digestB64 };
+}
+
+/**
  * Create a revocation object.
  * The revocation supersedes the authorization.
  * After revocation, no execution path exists until a new authorization is created.

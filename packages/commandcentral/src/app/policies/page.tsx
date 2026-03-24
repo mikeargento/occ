@@ -21,7 +21,7 @@ export default function PoliciesPage() {
     setLoading(true);
     getPolicy()
       .then((res) => {
-        setPolicy(res.policy);
+        setPolicy(res.policy as any);
         setDigest(res.policyDigestB64 ?? null);
         setCommittedAt(res.committedAt ?? null);
       })

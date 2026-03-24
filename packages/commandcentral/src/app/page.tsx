@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { getAllPermissions, approvePermission, denyPermission, revokePermission, getConnectConfig, type Permission } from "@/lib/api";
+import { getAllPermissions, approvePermission, denyPermission, revokePermission, getConnectConfig, getPolicy, commitPolicy, type Permission, type ChainEntry } from "@/lib/api";
 
 function timeLabel(ts: number | string | null): string {
   if (!ts) return "";
@@ -44,12 +44,7 @@ function Page({ user, children }: { user?: any; children: React.ReactNode }) {
             <a href="https://occ.wtf/docs" target="_blank" rel="noopener noreferrer" className="text-[13px] text-[#999] dark:text-[#666] hover:text-[#111] dark:hover:text-[#e5e5e5] transition-colors">Docs</a>
           </div>
         </div>
-        {user && (
-          <a href="/auth/logout" className="flex items-center gap-2 text-[12px] text-[#bbb] dark:text-[#555] hover:text-[#666] dark:hover:text-[#999] transition-colors">
-            {user.avatar && <img src={user.avatar} className="w-6 h-6 rounded-full" alt="" />}
-            <span className="hidden sm:inline">{user.name}</span>
-          </a>
-        )}
+        {user && <UserMenu user={user} />}
       </nav>
       {children}
     </div>
@@ -65,10 +60,10 @@ function Login() {
     <Center>
       <div className="text-center px-6 -mt-20 max-w-md">
         <h1 className="text-[48px] font-black tracking-[-0.04em] leading-[1.05] mb-4">
-          Define what<br />your AI can do.
+          Log in to OCC
         </h1>
         <p className="text-[15px] text-[#999] dark:text-[#666] mb-10 leading-relaxed">
-          Every rule is cryptographically proven before a single action can exist.
+          Define what your AI agents can do.
         </p>
         <div className="flex flex-col gap-3 w-full max-w-[280px] mx-auto">
           <a href="/auth/login/github"
@@ -96,6 +91,17 @@ function Login() {
    Dashboard
    ═══════════════════════════════════════════════════════════════ */
 
+const CATEGORIES = [
+  { key: "files", label: "Files", desc: "Read, write, delete files" },
+  { key: "web", label: "Web", desc: "Search, fetch, scrape" },
+  { key: "email", label: "Email", desc: "Read, draft, send" },
+  { key: "code", label: "Code", desc: "Run, commit, deploy" },
+  { key: "data", label: "Data", desc: "Query, insert, delete" },
+  { key: "payments", label: "Payments", desc: "Charge, refund, transfer" },
+  { key: "calendar", label: "Calendar", desc: "Events, scheduling" },
+  { key: "messaging", label: "Messaging", desc: "Slack, SMS, chat" },
+];
+
 function Dashboard() {
   const [perms, setPerms] = useState<Permission[]>([]);
   const [mcpUrl, setMcpUrl] = useState("");
@@ -103,6 +109,15 @@ function Dashboard() {
   const [busy, setBusy] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
   const [tab, setTab] = useState<"pending" | "allowed" | "blocked">("pending");
+
+  // Rules state
+  const [categories, setCategories] = useState<Record<string, boolean>>({});
+  const [customRules, setCustomRules] = useState<string[]>([]);
+  const [newRule, setNewRule] = useState("");
+  const [savedCategories, setSavedCategories] = useState<Record<string, boolean>>({});
+  const [savedCustomRules, setSavedCustomRules] = useState<string[]>([]);
+  const [committing, setCommitting] = useState(false);
+  const [lastCommitDigest, setLastCommitDigest] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -114,11 +129,37 @@ function Dashboard() {
   useEffect(() => {
     refresh();
     getConnectConfig().then(c => setMcpUrl(c.mcpUrl)).catch(() => {});
+    getPolicy().then(({ policy, policyDigestB64 }) => {
+      if (policy) {
+        setCategories(policy.categories ?? {});
+        setSavedCategories(policy.categories ?? {});
+        setCustomRules(policy.customRules ?? []);
+        setSavedCustomRules(policy.customRules ?? []);
+        setLastCommitDigest(policyDigestB64 ?? null);
+      }
+    }).catch(() => {});
     const es = new EventSource("/api/events");
     es.onmessage = () => refresh();
     const iv = setInterval(refresh, 5000);
     return () => { es.close(); clearInterval(iv); };
   }, [refresh]);
+
+  const isDirty = JSON.stringify(categories) !== JSON.stringify(savedCategories) ||
+    JSON.stringify(customRules) !== JSON.stringify(savedCustomRules);
+
+  async function handleCommitRules() {
+    setCommitting(true);
+    try {
+      const result = await commitPolicy(categories, customRules);
+      setSavedCategories({ ...categories });
+      setSavedCustomRules([...customRules]);
+      setLastCommitDigest(result.policyDigestB64);
+    } catch (e) {
+      console.error("Failed to commit policy:", e);
+    } finally {
+      setCommitting(false);
+    }
+  }
 
   const pending = useMemo(() => perms.filter(p => p.status === "pending"), [perms]);
   const allowed = useMemo(() => perms.filter(p => p.status === "approved"), [perms]);
@@ -180,7 +221,90 @@ function Dashboard() {
         )}
       </div>
 
-      {/* Tabs */}
+      {/* ── Rules ── */}
+      <div className="mb-10">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-[20px] font-bold tracking-[-0.02em]">Rules</h2>
+          <div className="flex items-center gap-3">
+            {lastCommitDigest && !isDirty && (
+              <a href={`https://occ.wtf/explorer/${lastCommitDigest.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')}`}
+                target="_blank" rel="noopener noreferrer"
+                className="text-[11px] text-blue-500/70 hover:text-blue-500 font-mono transition-colors">
+                proof ↗
+              </a>
+            )}
+            <button onClick={handleCommitRules} disabled={!isDirty || committing}
+              className={`h-9 px-5 text-[13px] font-semibold rounded-xl transition-all active:scale-[0.97] flex items-center gap-2 ${
+                isDirty
+                  ? "bg-emerald-500 text-white hover:bg-emerald-600 shadow-[0_2px_8px_rgba(52,211,153,0.3)]"
+                  : "bg-[#f0f0f0] dark:bg-[#1a1a1a] text-[#bbb] dark:text-[#555] cursor-default"
+              }`}>
+              {committing && <Spinner size={14} color="white" />}
+              {committing ? "Signing..." : isDirty ? "Commit rules" : "Rules saved"}
+            </button>
+          </div>
+        </div>
+
+        {/* Category toggles */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+          {CATEGORIES.map(cat => {
+            const on = categories[cat.key] ?? false;
+            return (
+              <button key={cat.key} onClick={() => setCategories(prev => ({ ...prev, [cat.key]: !on }))}
+                className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border transition-all text-left ${
+                  on
+                    ? "border-emerald-500/30 bg-emerald-500/[0.06] dark:bg-emerald-500/[0.08]"
+                    : "border-[#f0f0f0] dark:border-[#1a1a1a] hover:border-[#ddd] dark:hover:border-[#2a2a2a]"
+                }`}>
+                <div className={`w-2 h-2 rounded-full flex-shrink-0 transition-colors ${on ? "bg-emerald-400" : "bg-[#ddd] dark:bg-[#333]"}`} />
+                <div>
+                  <p className={`text-[13px] font-medium ${on ? "text-[#333] dark:text-[#e5e5e5]" : "text-[#999] dark:text-[#666]"}`}>{cat.label}</p>
+                  <p className="text-[10px] text-[#ccc] dark:text-[#444]">{cat.desc}</p>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Custom rules */}
+        <div className="rounded-xl border border-[#f0f0f0] dark:border-[#1a1a1a] p-4">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-[#bbb] dark:text-[#555] mb-3">Custom rules</p>
+          {customRules.length > 0 && (
+            <div className="space-y-1.5 mb-3">
+              {customRules.map((rule, i) => (
+                <div key={i} className="flex items-center gap-2 group">
+                  <span className="text-[13px] text-[#666] dark:text-[#999] flex-1">{rule}</span>
+                  <button onClick={() => setCustomRules(prev => prev.filter((_, j) => j !== i))}
+                    className="text-[11px] text-[#ddd] dark:text-[#333] hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100">
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="flex gap-2">
+            <input value={newRule} onChange={e => setNewRule(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter" && newRule.trim()) { setCustomRules(prev => [...prev, newRule.trim()]); setNewRule(""); }}}
+              placeholder="e.g. Never delete production files"
+              className="flex-1 h-9 px-3 text-[13px] rounded-lg bg-[#fafafa] dark:bg-[#0e0e0e] border border-[#eee] dark:border-[#1a1a1a] placeholder-[#ccc] dark:placeholder-[#444] focus:outline-none focus:border-emerald-500/30"
+            />
+            <button onClick={() => { if (newRule.trim()) { setCustomRules(prev => [...prev, newRule.trim()]); setNewRule(""); }}}
+              disabled={!newRule.trim()}
+              className="h-9 px-4 text-[12px] font-medium rounded-lg bg-[#f5f5f5] dark:bg-[#1a1a1a] text-[#999] dark:text-[#666] hover:text-[#555] dark:hover:text-[#aaa] disabled:opacity-30 transition-colors">
+              Add
+            </button>
+          </div>
+        </div>
+
+        {/* Stats placeholder */}
+        <div className="mt-4 flex gap-4 text-[11px] text-[#ccc] dark:text-[#444]">
+          <span>{Object.values(categories).filter(Boolean).length} categories enabled</span>
+          <span>{customRules.length} custom rule{customRules.length === 1 ? "" : "s"}</span>
+          {lastCommitDigest && <span>Last committed: {lastCommitDigest.slice(0, 12)}...</span>}
+        </div>
+      </div>
+
+      {/* ── Activity ── */}
       {hasAnything && (
         <>
           <div className="flex gap-1 mb-5 border-b border-[#f0f0f0] dark:border-[#1a1a1a]">
@@ -390,6 +514,33 @@ function Spinner({ size = 16, color = "#999" }: { size?: number; color?: string 
         borderTopColor: color,
       }}
     />
+  );
+}
+
+function UserMenu({ user }: { user: { name: string; email: string; avatar: string } }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="relative">
+      <button onClick={() => setOpen(!open)} className="flex items-center gap-2 text-[12px] text-[#bbb] dark:text-[#555] hover:text-[#666] dark:hover:text-[#999] transition-colors">
+        {user.avatar && <img src={user.avatar} className="w-6 h-6 rounded-full" alt="" />}
+        <span className="hidden sm:inline">{user.name}</span>
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 top-full mt-2 w-56 rounded-xl border border-[#f0f0f0] dark:border-[#222] bg-white dark:bg-[#111] shadow-[0_8px_30px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.5)] z-50 py-1.5 animate-fade-in">
+            <div className="px-4 py-2.5 border-b border-[#f5f5f5] dark:border-[#1a1a1a]">
+              <p className="text-[13px] font-medium text-[#333] dark:text-[#e5e5e5]">{user.name}</p>
+              <p className="text-[11px] text-[#999] dark:text-[#555]">{user.email}</p>
+            </div>
+            <a href="/auth/logout"
+              className="block px-4 py-2.5 text-[13px] text-[#666] dark:text-[#999] hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] transition-colors">
+              Sign out
+            </a>
+          </div>
+        </>
+      )}
+    </div>
   );
 }
 

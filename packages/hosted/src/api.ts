@@ -170,14 +170,9 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
     return json(res, {
       policy: {
         version: "occ/policy/1",
-        name: policy.name,
-        createdAt: new Date(policy.created_at).getTime(),
-        globalConstraints: {
-          allowedTools: policy.allowed_tools ?? [],
-          maxSpendCents: undefined,
-          rateLimit: policy.rate_limit ? { maxCalls: parseInt(policy.rate_limit), windowMs: 3600000 } : undefined,
-        },
-        skills: {},
+        categories: policy.categories ?? {},
+        customRules: policy.custom_rules ?? [],
+        allowedTools: policy.allowed_tools ?? [],
       },
       policyDigestB64: policy.policy_digest,
       committedAt: new Date(policy.created_at).getTime(),
@@ -186,16 +181,30 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
 
   if (path === "/policy" && method === "PUT") {
     const body = JSON.parse(await readBody(req));
+    // Commit the policy through TEE — the proof IS the rule
+    const { commitPolicyProof } = await import("./authorization.js");
+    const { proof, digest } = await commitPolicyProof(userId, {
+      categories: body.categories ?? {},
+      customRules: body.customRules ?? [],
+    });
     const policy = await db.createPolicy(userId, {
       name: body.name ?? "default",
       allowedTools: body.allowedTools ?? [],
       maxActions: body.maxActions,
       rateLimit: body.rateLimit,
+      categories: body.categories,
+      customRules: body.customRules,
+      policyDigest: digest,
     });
     return json(res, {
-      policy: { allowedTools: policy.allowed_tools },
-      policyDigestB64: policy.policy_digest,
-      committedAt: new Date(policy.created_at).getTime(),
+      policy: {
+        categories: policy.categories ?? body.categories,
+        customRules: policy.custom_rules ?? body.customRules,
+        allowedTools: policy.allowed_tools ?? [],
+      },
+      policyDigestB64: digest,
+      proof,
+      committedAt: Date.now(),
     });
   }
 

@@ -52,15 +52,7 @@ export async function getStatus(): Promise<{
   return apiFetch("/status");
 }
 
-// ── Policy ──
-
-export async function getPolicy(): Promise<{
-  policy: AgentPolicy | null;
-  policyDigestB64?: string;
-  committedAt?: number;
-}> {
-  return apiFetch("/policy");
-}
+// Old policy endpoint removed — see new one below
 
 export async function loadPolicy(policy: AgentPolicy): Promise<{
   policy: AgentPolicy;
@@ -218,6 +210,25 @@ export interface ChainEntry {
 
 export async function getAuthorizationChain(agentId: string, tool: string): Promise<{ chain: ChainEntry[] }> {
   return apiFetch(`/authorizations/${encodeURIComponent(agentId)}/${encodeURIComponent(tool)}/chain`);
+}
+
+// ── Policy ──
+
+export interface PolicyData {
+  categories: Record<string, boolean>;
+  customRules: string[];
+  allowedTools: string[];
+}
+
+export async function getPolicy(): Promise<{ policy: (PolicyData & Partial<AgentPolicy>) | null; policyDigestB64: string | null; committedAt: number | null }> {
+  return apiFetch("/policy");
+}
+
+export async function commitPolicy(categories: Record<string, boolean>, customRules: string[]): Promise<{ policyDigestB64: string; committedAt: number }> {
+  return apiFetch("/policy", {
+    method: "PUT",
+    body: JSON.stringify({ categories, customRules, name: "default", allowedTools: [] }),
+  });
 }
 
 // ── Keys ──

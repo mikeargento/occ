@@ -16,7 +16,7 @@ export default function PolicyDetailPage() {
   useEffect(() => {
     getPolicy()
       .then((res) => {
-        setPolicy(res.policy);
+        setPolicy(res.policy as any);
         setDigest(res.policyDigestB64 ?? null);
       })
       .catch((err) => setError(err.message));

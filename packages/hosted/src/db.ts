@@ -74,9 +74,15 @@ export const db = {
         max_actions INTEGER,
         rate_limit TEXT,
         policy_digest TEXT,
+        categories JSONB DEFAULT '{}',
+        custom_rules JSONB DEFAULT '[]',
         active BOOLEAN DEFAULT true,
         created_at TIMESTAMPTZ DEFAULT NOW()
       );
+
+      -- Add columns if they don't exist (migration for existing DBs)
+      ALTER TABLE occ_policies ADD COLUMN IF NOT EXISTS categories JSONB DEFAULT '{}';
+      ALTER TABLE occ_policies ADD COLUMN IF NOT EXISTS custom_rules JSONB DEFAULT '[]';
 
       -- Permission requests table (the core of permission-first model)
       CREATE TABLE IF NOT EXISTS occ_permission_requests (
@@ -438,14 +444,13 @@ export const db = {
     return res.rows[0] ?? null;
   },
 
-  async createPolicy(userId: string, policy: { name: string; allowedTools: string[]; maxActions?: number; rateLimit?: string; policyDigest?: string }) {
+  async createPolicy(userId: string, policy: { name: string; allowedTools: string[]; maxActions?: number; rateLimit?: string; policyDigest?: string; categories?: Record<string, boolean>; customRules?: string[] }) {
     const p = getPool();
-    // Deactivate old policies
     await p.query("UPDATE occ_policies SET active = false WHERE user_id = $1", [userId]);
     const res = await p.query(
-      `INSERT INTO occ_policies (user_id, name, allowed_tools, max_actions, rate_limit, policy_digest)
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-      [userId, policy.name, policy.allowedTools, policy.maxActions ?? null, policy.rateLimit ?? null, policy.policyDigest ?? null]
+      `INSERT INTO occ_policies (user_id, name, allowed_tools, max_actions, rate_limit, policy_digest, categories, custom_rules)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+      [userId, policy.name, policy.allowedTools, policy.maxActions ?? null, policy.rateLimit ?? null, policy.policyDigest ?? null, JSON.stringify(policy.categories ?? {}), JSON.stringify(policy.customRules ?? [])]
     );
     return res.rows[0];
   },
