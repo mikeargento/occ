@@ -568,9 +568,9 @@ export default function Home() {
               Every rule is cryptographically proven before a single action can exist.
             </p>
             <div className="hero-animate" style={{ animationDelay: "180ms" }}>
-              <a href="https://agent.occ.wtf" target="_blank" rel="noopener noreferrer"
-                className="inline-flex items-center justify-center rounded-full bg-emerald-500 text-white px-6 py-2.5 text-sm font-semibold transition-all hover:bg-emerald-600 active:scale-[0.97]">
-                Open Dashboard
+              <a href="https://agent.occ.wtf"
+                className="inline-flex items-center gap-1.5 text-sm text-text-tertiary hover:text-text transition-colors">
+                Open Dashboard <span className="text-[12px]">→</span>
               </a>
             </div>
           </div>
