@@ -10,8 +10,10 @@ export function Footer() {
           <div className="max-w-md">
             <p className="text-sm text-text-tertiary leading-relaxed">
               Origin Controlled Computing<br />
-              Control what your AI agents can do.<br />
-              Patent Pending<br />
+              Define what your AI agents can do.<br />
+              Patent Pending
+            </p>
+            <p className="text-sm text-text-tertiary mt-4">
               <a href="https://buymeacoffee.com/mikeargento" target="_blank" rel="noopener" className="text-text-tertiary hover:text-text transition-colors">Buy Me a Coffee</a>
             </p>
           </div>
