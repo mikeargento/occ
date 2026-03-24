@@ -3,6 +3,17 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { getAllPermissions, approvePermission, denyPermission, revokePermission, getConnectConfig, type Permission } from "@/lib/api";
 
+function timeLabel(ts: number | string | null): string {
+  if (!ts) return "";
+  const d = new Date(ts);
+  const now = Date.now();
+  const diff = now - d.getTime();
+  if (diff < 60_000) return "just now";
+  if (diff < 3600_000) return `${Math.floor(diff / 60_000)}m ago`;
+  if (diff < 86400_000) return `${Math.floor(diff / 3600_000)}h ago`;
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
 export default function App() {
   const [user, setUser] = useState<{ id: string; name: string; email: string; avatar: string } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -197,8 +208,9 @@ function Dashboard() {
                   <ToolRow key={p.id} perm={p}
                     action={
                       <button onClick={() => act(p.id, () => revokePermission(p.agentId, p.tool))}
-                        className="text-[11px] text-[#ccc] dark:text-[#444] hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
-                        revoke
+                        disabled={busy === p.id}
+                        className="text-[12px] font-medium px-3 py-1.5 rounded-lg border border-red-200/50 dark:border-red-500/20 text-red-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all flex-shrink-0 disabled:opacity-40">
+                        {busy === p.id ? "..." : "Revoke"}
                       </button>
                     }
                   />
@@ -280,14 +292,14 @@ function PendingCard({ perm, onAllow, onBlock, busy }: {
           })()}
         </div>
       </div>
-      <div className="flex gap-2 mt-4 ml-[52px]">
+      <div className="flex gap-3 mt-5 ml-[52px]">
         <button onClick={onAllow} disabled={busy}
-          className="h-10 px-6 text-[13px] font-semibold rounded-xl bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-40 transition-all active:scale-[0.97] flex items-center gap-2">
+          className="h-11 px-8 text-[14px] font-bold rounded-xl bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-40 transition-all active:scale-[0.97] flex items-center gap-2 shadow-[0_2px_8px_rgba(52,211,153,0.3)]">
           {busy && <Spinner size={14} color="white" />}
-          Allow
+          {busy ? "Signing..." : "Allow"}
         </button>
         <button onClick={onBlock} disabled={busy}
-          className="h-10 px-6 text-[13px] font-medium rounded-xl text-[#999] dark:text-[#666] hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] disabled:opacity-40 transition-all active:scale-[0.97]">
+          className="h-11 px-8 text-[14px] font-medium rounded-xl border border-red-200/60 dark:border-red-500/20 text-red-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 disabled:opacity-40 transition-all active:scale-[0.97]">
           Block
         </button>
       </div>
@@ -296,11 +308,20 @@ function PendingCard({ perm, onAllow, onBlock, busy }: {
 }
 
 function ToolRow({ perm, action, blocked }: { perm: Permission; action?: React.ReactNode; blocked?: boolean }) {
+  const proofUrl = perm.explorerUrl || (perm.proofDigest ? `https://occ.wtf/explorer?digest=${encodeURIComponent(perm.proofDigest)}` : null);
   return (
-    <div className="flex items-center gap-3 px-5 py-3.5 group hover:bg-[#fafafa] dark:hover:bg-[#111] transition-colors">
+    <div className="flex items-center gap-3 px-5 py-4 group hover:bg-[#fafafa] dark:hover:bg-[#111] transition-colors">
       <div className={`w-2 h-2 rounded-full flex-shrink-0 ${blocked ? "bg-red-300 dark:bg-red-500/60" : "bg-emerald-400"}`} />
-      <span className="text-[14px] font-mono text-[#444] dark:text-[#999] flex-1 truncate">{perm.tool}</span>
-      <span className="text-[11px] text-[#ddd] dark:text-[#333] flex-shrink-0">{perm.clientName}</span>
+      <div className="flex-1 min-w-0">
+        <span className="text-[14px] font-mono text-[#444] dark:text-[#999] truncate block">{perm.tool}</span>
+        <span className="text-[11px] text-[#ccc] dark:text-[#444] mt-0.5 block">{perm.clientName} · {timeLabel(perm.resolvedAt ?? perm.requestedAt)}</span>
+      </div>
+      {proofUrl && (
+        <a href={proofUrl} target="_blank" rel="noopener noreferrer"
+          className="text-[11px] text-blue-500/70 hover:text-blue-500 transition-colors font-mono flex-shrink-0">
+          proof ↗
+        </a>
+      )}
       {action}
     </div>
   );
