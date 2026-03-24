@@ -13,10 +13,12 @@ export async function insertProofs(proofs: OCCProof[]) {
   const sql = getDb();
   let indexed = 0;
 
-  // Ensure chain_id column exists (idempotent migration)
+  // Idempotent migrations
   try {
     await sql`ALTER TABLE proofs ADD COLUMN IF NOT EXISTS chain_id TEXT`;
-  } catch { /* column may already exist */ }
+    // Drop old unique constraint and add new one on digest_b64
+    await sql`CREATE UNIQUE INDEX IF NOT EXISTS proofs_digest_b64_unique ON proofs (digest_b64)`;
+  } catch { /* migrations may already be applied */ }
 
   for (const proof of proofs) {
     const digestB64 = proof.artifact.digestB64;
