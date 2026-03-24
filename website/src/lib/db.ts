@@ -16,9 +16,16 @@ export async function insertProofs(proofs: OCCProof[]) {
   // Idempotent migrations
   try {
     await sql`ALTER TABLE proofs ADD COLUMN IF NOT EXISTS chain_id TEXT`;
-    // Drop old unique constraint and add new one on digest_b64
+  } catch { /* already exists */ }
+  try {
     await sql`CREATE UNIQUE INDEX IF NOT EXISTS proofs_digest_b64_unique ON proofs (digest_b64)`;
-  } catch { /* migrations may already be applied */ }
+  } catch (e) {
+    // If duplicates prevent index creation, deduplicate first
+    try {
+      await sql`DELETE FROM proofs a USING proofs b WHERE a.id > b.id AND a.digest_b64 = b.digest_b64`;
+      await sql`CREATE UNIQUE INDEX IF NOT EXISTS proofs_digest_b64_unique ON proofs (digest_b64)`;
+    } catch { /* index may already exist */ }
+  }
 
   for (const proof of proofs) {
     const digestB64 = proof.artifact.digestB64;
@@ -34,12 +41,21 @@ export async function insertProofs(proofs: OCCProof[]) {
     const proofJson = JSON.stringify(proof);
 
     try {
+      // Try with chain_id first
       await sql`INSERT INTO proofs (digest_b64, counter, epoch_id, commit_time, enforcement, signer_pub, has_agency, has_tsa, attr_name, chain_id, proof_json)
         VALUES (${digestB64}, ${counter}, ${epochId}, ${commitTime}, ${enforcement}, ${signerPub}, ${hasAgency}, ${hasTsa}, ${attrName}, ${chainId}, ${proofJson}::jsonb)
         ON CONFLICT (digest_b64) DO NOTHING`;
       indexed++;
-    } catch (e) {
-      console.error("  insert proof failed:", (e as Error).message);
+    } catch {
+      // Fallback: insert without chain_id (column may not exist yet)
+      try {
+        await sql`INSERT INTO proofs (digest_b64, counter, epoch_id, commit_time, enforcement, signer_pub, has_agency, has_tsa, attr_name, proof_json)
+          VALUES (${digestB64}, ${counter}, ${epochId}, ${commitTime}, ${enforcement}, ${signerPub}, ${hasAgency}, ${hasTsa}, ${attrName}, ${proofJson}::jsonb)
+          ON CONFLICT (signer_pub, counter) DO NOTHING`;
+        indexed++;
+      } catch (e2) {
+        console.error("  insert proof failed:", (e2 as Error).message);
+      }
     }
   }
 
