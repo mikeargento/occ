@@ -92,14 +92,53 @@ function Login() {
    ═══════════════════════════════════════════════════════════════ */
 
 const CATEGORIES = [
-  { key: "files", label: "Files", desc: "Read, write, delete files" },
-  { key: "web", label: "Web", desc: "Search, fetch, scrape" },
-  { key: "email", label: "Email", desc: "Read, draft, send" },
-  { key: "code", label: "Code", desc: "Run, commit, deploy" },
-  { key: "data", label: "Data", desc: "Query, insert, delete" },
-  { key: "payments", label: "Payments", desc: "Charge, refund, transfer" },
-  { key: "calendar", label: "Calendar", desc: "Events, scheduling" },
-  { key: "messaging", label: "Messaging", desc: "Slack, SMS, chat" },
+  { key: "files", label: "Files", desc: "File system access", tools: [
+    { key: "read_file", label: "Read files" },
+    { key: "write_file", label: "Write files" },
+    { key: "delete_file", label: "Delete files" },
+    { key: "list_directory", label: "List directories" },
+    { key: "move_file", label: "Move / rename files" },
+  ]},
+  { key: "web", label: "Web", desc: "Internet access", tools: [
+    { key: "search_web", label: "Search the web" },
+    { key: "fetch_url", label: "Fetch URLs" },
+    { key: "scrape_page", label: "Scrape pages" },
+    { key: "download_file", label: "Download files" },
+  ]},
+  { key: "email", label: "Email", desc: "Email access", tools: [
+    { key: "read_email", label: "Read emails" },
+    { key: "draft_email", label: "Draft emails" },
+    { key: "send_email", label: "Send emails" },
+  ]},
+  { key: "code", label: "Code", desc: "Code execution", tools: [
+    { key: "run_code", label: "Run code" },
+    { key: "git_commit", label: "Git commit" },
+    { key: "git_push", label: "Git push" },
+    { key: "deploy_app", label: "Deploy" },
+    { key: "run_tests", label: "Run tests" },
+  ]},
+  { key: "data", label: "Data", desc: "Database access", tools: [
+    { key: "query_database", label: "Query data" },
+    { key: "insert_record", label: "Insert records" },
+    { key: "delete_record", label: "Delete records" },
+    { key: "export_csv", label: "Export data" },
+  ]},
+  { key: "payments", label: "Payments", desc: "Financial access", tools: [
+    { key: "charge_card", label: "Charge cards" },
+    { key: "send_invoice", label: "Send invoices" },
+    { key: "process_refund", label: "Process refunds" },
+    { key: "check_balance", label: "Check balances" },
+  ]},
+  { key: "calendar", label: "Calendar", desc: "Calendar access", tools: [
+    { key: "create_event", label: "Create events" },
+    { key: "list_events", label: "List events" },
+    { key: "delete_event", label: "Delete events" },
+  ]},
+  { key: "messaging", label: "Messaging", desc: "Messaging access", tools: [
+    { key: "send_slack", label: "Send Slack messages" },
+    { key: "send_sms", label: "Send SMS" },
+    { key: "read_messages", label: "Read messages" },
+  ]},
 ];
 
 function Dashboard() {
@@ -108,16 +147,16 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
-  const [tab, setTab] = useState<"pending" | "allowed" | "blocked">("pending");
 
   // Rules state
   const [categories, setCategories] = useState<Record<string, boolean>>({});
+  const [tools, setTools] = useState<Record<string, boolean>>({});
   const [customRules, setCustomRules] = useState<string[]>([]);
   const [newRule, setNewRule] = useState("");
-  const [savedCategories, setSavedCategories] = useState<Record<string, boolean>>({});
-  const [savedCustomRules, setSavedCustomRules] = useState<string[]>([]);
+  const [savedState, setSavedState] = useState({ categories: {} as Record<string, boolean>, tools: {} as Record<string, boolean>, customRules: [] as string[] });
   const [committing, setCommitting] = useState(false);
   const [lastCommitDigest, setLastCommitDigest] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -131,10 +170,18 @@ function Dashboard() {
     getConnectConfig().then(c => setMcpUrl(c.mcpUrl)).catch(() => {});
     getPolicy().then(({ policy, policyDigestB64 }) => {
       if (policy) {
-        setCategories(policy.categories ?? {});
-        setSavedCategories(policy.categories ?? {});
+        const cats = policy.categories ?? {};
+        // Extract tool-level toggles from categories (stored as "files.read_file": true)
+        const catLevel: Record<string, boolean> = {};
+        const toolLevel: Record<string, boolean> = {};
+        for (const [k, v] of Object.entries(cats)) {
+          if (k.includes(".")) toolLevel[k] = v;
+          else catLevel[k] = v;
+        }
+        setCategories(catLevel);
+        setTools(toolLevel);
         setCustomRules(policy.customRules ?? []);
-        setSavedCustomRules(policy.customRules ?? []);
+        setSavedState({ categories: catLevel, tools: toolLevel, customRules: policy.customRules ?? [] });
         setLastCommitDigest(policyDigestB64 ?? null);
       }
     }).catch(() => {});
@@ -144,15 +191,18 @@ function Dashboard() {
     return () => { es.close(); clearInterval(iv); };
   }, [refresh]);
 
-  const isDirty = JSON.stringify(categories) !== JSON.stringify(savedCategories) ||
-    JSON.stringify(customRules) !== JSON.stringify(savedCustomRules);
+  const isDirty = JSON.stringify(categories) !== JSON.stringify(savedState.categories) ||
+    JSON.stringify(tools) !== JSON.stringify(savedState.tools) ||
+    JSON.stringify(customRules) !== JSON.stringify(savedState.customRules);
 
   async function handleCommitRules() {
     setCommitting(true);
     try {
-      const result = await commitPolicy(categories, customRules);
-      setSavedCategories({ ...categories });
-      setSavedCustomRules([...customRules]);
+      // Merge categories and tool-level toggles into one object for storage
+      const merged = { ...categories };
+      for (const [k, v] of Object.entries(tools)) merged[k] = v;
+      const result = await commitPolicy(merged, customRules);
+      setSavedState({ categories: { ...categories }, tools: { ...tools }, customRules: [...customRules] });
       setLastCommitDigest(result.policyDigestB64);
     } catch (e) {
       console.error("Failed to commit policy:", e);
@@ -161,13 +211,36 @@ function Dashboard() {
     }
   }
 
-  const pending = useMemo(() => perms.filter(p => p.status === "pending"), [perms]);
-  const allowed = useMemo(() => perms.filter(p => p.status === "approved"), [perms]);
-  const blocked = useMemo(() => perms.filter(p => p.status === "denied" || p.status === "revoked"), [perms]);
+  function toggleCategory(key: string) {
+    const newVal = !categories[key];
+    setCategories(prev => ({ ...prev, [key]: newVal }));
+    // Toggle all child tools too
+    const cat = CATEGORIES.find(c => c.key === key);
+    if (cat) {
+      setTools(prev => {
+        const next = { ...prev };
+        for (const t of cat.tools) next[`${key}.${t.key}`] = newVal;
+        return next;
+      });
+    }
+  }
 
-  useEffect(() => {
-    if (pending.length > 0 && tab !== "pending") setTab("pending");
-  }, [pending.length]);
+  function toggleTool(catKey: string, toolKey: string) {
+    const fullKey = `${catKey}.${toolKey}`;
+    const newVal = !tools[fullKey];
+    setTools(prev => ({ ...prev, [fullKey]: newVal }));
+    // Update parent: if all children are on, parent is on. If any off, parent is off.
+    const cat = CATEGORIES.find(c => c.key === catKey);
+    if (cat) {
+      const allOn = cat.tools.every(t => {
+        const k = `${catKey}.${t.key}`;
+        return k === fullKey ? newVal : (tools[k] ?? false);
+      });
+      setCategories(prev => ({ ...prev, [catKey]: allOn }));
+    }
+  }
+
+  const pending = useMemo(() => perms.filter(p => p.status === "pending"), [perms]);
 
   async function act(id: number, fn: () => Promise<unknown>) {
     setBusy(id);
@@ -195,7 +268,7 @@ function Dashboard() {
         </h1>
         <p className="text-[15px] text-[#999] dark:text-[#666] mb-5">
           {hasAnything
-            ? `${allowed.length} tool${allowed.length === 1 ? "" : "s"} allowed · ${pending.length} pending`
+            ? `${perms.filter(p => p.status === "approved").length} allowed · ${pending.length} pending`
             : "Paste this link into Cursor, Claude Code, or any MCP-compatible AI tool."
           }
         </p>
@@ -245,23 +318,58 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Category toggles */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+        {/* Category toggles with expandable tools */}
+        <div className="space-y-1.5 mb-4">
           {CATEGORIES.map(cat => {
             const on = categories[cat.key] ?? false;
+            const isExpanded = expanded === cat.key;
+            const enabledTools = cat.tools.filter(t => tools[`${cat.key}.${t.key}`]).length;
             return (
-              <button key={cat.key} onClick={() => setCategories(prev => ({ ...prev, [cat.key]: !on }))}
-                className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border transition-all text-left ${
-                  on
-                    ? "border-emerald-500/30 bg-emerald-500/[0.06] dark:bg-emerald-500/[0.08]"
-                    : "border-[#f0f0f0] dark:border-[#1a1a1a] hover:border-[#ddd] dark:hover:border-[#2a2a2a]"
-                }`}>
-                <div className={`w-2 h-2 rounded-full flex-shrink-0 transition-colors ${on ? "bg-emerald-400" : "bg-[#ddd] dark:bg-[#333]"}`} />
-                <div>
-                  <p className={`text-[13px] font-medium ${on ? "text-[#333] dark:text-[#e5e5e5]" : "text-[#999] dark:text-[#666]"}`}>{cat.label}</p>
-                  <p className="text-[10px] text-[#ccc] dark:text-[#444]">{cat.desc}</p>
+              <div key={cat.key} className={`rounded-xl border transition-all ${
+                on ? "border-emerald-500/20 bg-emerald-500/[0.03] dark:bg-emerald-500/[0.04]" : "border-[#f0f0f0] dark:border-[#1a1a1a]"
+              }`}>
+                <div className="flex items-center px-4 py-3">
+                  <button onClick={() => setExpanded(isExpanded ? null : cat.key)}
+                    className="text-[11px] text-[#ccc] dark:text-[#444] mr-3 w-4 text-center hover:text-[#999] transition-colors">
+                    {isExpanded ? "▼" : "▶"}
+                  </button>
+                  <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setExpanded(isExpanded ? null : cat.key)}>
+                    <span className={`text-[14px] font-medium ${on ? "text-[#333] dark:text-[#e5e5e5]" : "text-[#888] dark:text-[#777]"}`}>{cat.label}</span>
+                    <span className="text-[11px] text-[#ccc] dark:text-[#444] ml-2">{cat.desc}</span>
+                    {on && enabledTools < cat.tools.length && (
+                      <span className="text-[10px] text-amber-500 ml-2">{enabledTools}/{cat.tools.length}</span>
+                    )}
+                  </div>
+                  <button onClick={() => toggleCategory(cat.key)}
+                    className={`w-10 h-6 rounded-full transition-colors flex-shrink-0 relative ${
+                      on ? "bg-emerald-500" : "bg-[#e0e0e0] dark:bg-[#333]"
+                    }`}>
+                    <div className={`w-4.5 h-4.5 rounded-full bg-white shadow-sm absolute top-[3px] transition-all ${
+                      on ? "right-[3px]" : "left-[3px]"
+                    }`} />
+                  </button>
                 </div>
-              </button>
+                {isExpanded && (
+                  <div className="px-4 pb-3 pt-0 border-t border-[#f5f5f5] dark:border-[#1a1a1a] mt-0">
+                    {cat.tools.map(tool => {
+                      const toolOn = tools[`${cat.key}.${tool.key}`] ?? false;
+                      return (
+                        <div key={tool.key} className="flex items-center py-2 pl-7">
+                          <span className={`text-[13px] flex-1 ${toolOn ? "text-[#555] dark:text-[#bbb]" : "text-[#bbb] dark:text-[#555]"}`}>{tool.label}</span>
+                          <button onClick={() => toggleTool(cat.key, tool.key)}
+                            className={`w-8 h-5 rounded-full transition-colors flex-shrink-0 relative ${
+                              toolOn ? "bg-emerald-500" : "bg-[#e0e0e0] dark:bg-[#333]"
+                            }`}>
+                            <div className={`w-3.5 h-3.5 rounded-full bg-white shadow-sm absolute top-[3px] transition-all ${
+                              toolOn ? "right-[3px]" : "left-[3px]"
+                            }`} />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>
@@ -304,79 +412,32 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* ── Activity ── */}
-      {hasAnything && (
-        <>
-          <div className="flex gap-1 mb-5 border-b border-[#f0f0f0] dark:border-[#1a1a1a]">
-            <Tab active={tab === "pending"} onClick={() => setTab("pending")} count={pending.length} pulse={pending.length > 0}>
-              Inbox
-            </Tab>
-            <Tab active={tab === "allowed"} onClick={() => setTab("allowed")} count={allowed.length}>
-              Allowed
-            </Tab>
-            <Tab active={tab === "blocked"} onClick={() => setTab("blocked")} count={blocked.length}>
-              Blocked
-            </Tab>
+      {/* ── Activity Log ── */}
+      {pending.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-[20px] font-bold tracking-[-0.02em] mb-4">
+            Pending <span className="text-amber-500 text-[14px] font-normal">{pending.length}</span>
+          </h2>
+          <div className="space-y-2 animate-fade-in">
+            {pending.map(p => (
+              <PendingCard key={p.id} perm={p}
+                onAllow={() => act(p.id, () => approvePermission(p.id))}
+                onBlock={() => act(p.id, () => denyPermission(p.id))}
+                busy={busy === p.id}
+              />
+            ))}
           </div>
-
-          {tab === "pending" && (
-            pending.length === 0 ? (
-              <Empty icon="✓" text="All caught up" sub="New requests will appear here when your AI tries something new." />
-            ) : (
-              <div className="space-y-2 animate-fade-in">
-                {pending.map(p => (
-                  <PendingCard key={p.id} perm={p}
-                    onAllow={() => act(p.id, () => approvePermission(p.id))}
-                    onBlock={() => act(p.id, () => denyPermission(p.id))}
-                    busy={busy === p.id}
-                  />
-                ))}
-              </div>
-            )
-          )}
-
-          {tab === "allowed" && (
-            allowed.length === 0 ? (
-              <Empty icon="○" text="Nothing allowed yet" sub="Approve tools from your Inbox to see them here." />
-            ) : (
-              <div className="rounded-2xl border border-[#f0f0f0] dark:border-[#1a1a1a] divide-y divide-[#f5f5f5] dark:divide-[#151515] overflow-hidden animate-fade-in">
-                {allowed.map(p => (
-                  <ToolRow key={p.id} perm={p}
-                    action={
-                      <button onClick={() => act(p.id, () => revokePermission(p.agentId, p.tool))}
-                        disabled={busy === p.id}
-                        className="text-[12px] font-medium px-3 py-1.5 rounded-lg border border-red-200/50 dark:border-red-500/20 text-red-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all flex-shrink-0 disabled:opacity-40">
-                        {busy === p.id ? "..." : "Revoke"}
-                      </button>
-                    }
-                  />
-                ))}
-              </div>
-            )
-          )}
-
-          {tab === "blocked" && (
-            blocked.length === 0 ? (
-              <Empty icon="—" text="Nothing blocked" sub="Denied or revoked tools appear here." />
-            ) : (
-              <div className="rounded-2xl border border-[#f0f0f0] dark:border-[#1a1a1a] divide-y divide-[#f5f5f5] dark:divide-[#151515] overflow-hidden animate-fade-in">
-                {blocked.map(p => (
-                  <ToolRow key={p.id} perm={p} blocked />
-                ))}
-              </div>
-            )
-          )}
-        </>
+        </div>
       )}
 
-      {/* Empty state */}
-      {!hasAnything && (
-        <div className="text-center pt-16 pb-8">
-          <div className="w-12 h-12 rounded-full bg-[#f7f7f7] dark:bg-[#141414] flex items-center justify-center mx-auto mb-4">
-            <div className="w-2 h-2 rounded-full bg-[#ddd] dark:bg-[#333] animate-pulse" />
+      {perms.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-[20px] font-bold tracking-[-0.02em] mb-4">Activity</h2>
+          <div className="rounded-2xl border border-[#f0f0f0] dark:border-[#1a1a1a] divide-y divide-[#f5f5f5] dark:divide-[#151515] overflow-hidden">
+            {perms.filter(p => p.status !== "pending").slice(0, 20).map(p => (
+              <ToolRow key={p.id} perm={p} blocked={p.status === "denied" || p.status === "revoked"} />
+            ))}
           </div>
-          <p className="text-[15px] text-[#bbb] dark:text-[#555] mb-1">Waiting for your AI to connect...</p>
-          <p className="text-[12px] text-[#ddd] dark:text-[#333]">Paste the link above into your AI tool and start using it</p>
         </div>
       )}
 
