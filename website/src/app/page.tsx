@@ -569,8 +569,8 @@ export default function Home() {
             </p>
             <div className="hero-animate" style={{ animationDelay: "180ms" }}>
               <a href="https://agent.occ.wtf"
-                className="inline-flex items-center justify-center rounded-full bg-bg-elevated border border-border-subtle px-8 py-3 text-base font-semibold text-text-secondary hover:text-text hover:border-border transition-all">
-                Get started
+                className="inline-flex items-center justify-center rounded-full bg-text text-bg px-10 py-3.5 text-base font-semibold hover:opacity-90 transition-all">
+                Try OCC
               </a>
             </div>
           </div>
