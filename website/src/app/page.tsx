@@ -569,8 +569,9 @@ export default function Home() {
             </p>
             <div className="hero-animate" style={{ animationDelay: "180ms" }}>
               <a href="https://agent.occ.wtf"
-                className="inline-flex items-center gap-1.5 text-sm text-text-tertiary hover:text-text transition-colors">
-                Open Dashboard <span className="text-[12px]">→</span>
+                className="inline-flex items-center gap-3 rounded-full bg-bg-elevated border border-border-subtle px-5 py-2.5 text-sm text-text-secondary hover:text-text hover:border-border transition-all">
+                Open Dashboard
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="opacity-40"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
               </a>
             </div>
           </div>

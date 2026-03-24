@@ -35,8 +35,6 @@ export function Nav() {
                   <a
                     key={l.href}
                     href={l.href}
-                    target="_blank"
-                    rel="noopener"
                     className="text-sm font-semibold px-3 py-1.5 transition-colors text-text-tertiary hover:text-text"
                   >
                     {l.label}
@@ -140,8 +138,6 @@ export function Nav() {
                 <a
                   key={l.href}
                   href={l.href}
-                  target="_blank"
-                  rel="noopener"
                   onClick={() => setOpen(false)}
                   className="rounded-lg px-3 py-2.5 text-sm font-semibold text-text-secondary hover:text-text"
                 >
