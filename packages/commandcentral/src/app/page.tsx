@@ -423,7 +423,7 @@ function Dashboard() {
                   <div key={p.id} className="bg-white dark:bg-[#111] rounded-xl border border-amber-200/50 dark:border-amber-500/10 p-4">
                     <div className="flex items-center gap-3 mb-3">
                       <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                      <span className="text-[14px] font-mono font-medium flex-1">{p.tool}</span>
+                      <span className="text-[14px] font-medium flex-1">{p.tool}</span>
                       <span className="text-[11px] text-[#888] dark:text-[#888]">{p.clientName}</span>
                     </div>
                     <div className="flex gap-2">
@@ -467,13 +467,13 @@ function Dashboard() {
                       p.status === "approved" ? "bg-emerald-400" : "bg-red-400"
                     }`} />
                     <div className="flex-1 min-w-0">
-                      <span className="text-[14px] font-mono">{p.tool}</span>
+                      <span className="text-[14px] font-medium">{p.tool}</span>
                       <span className="text-[12px] text-[#999] dark:text-[#777] ml-2">{p.clientName}</span>
                     </div>
                     <span className="text-[11px] text-[#aaa] dark:text-[#666] flex-shrink-0">{timeLabel(p.resolvedAt ?? p.requestedAt)}</span>
                     {p.proofDigest && (
                       <a href={explorerUrl(p.proofDigest)} target="_blank" rel="noopener noreferrer"
-                        className="text-[11px] text-blue-500/60 hover:text-blue-500 transition-colors flex-shrink-0 font-mono">
+                        className="text-[11px] text-blue-500/60 hover:text-blue-500 transition-colors flex-shrink-0">
                         proof ↗
                       </a>
                     )}

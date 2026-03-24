@@ -4,7 +4,7 @@
 
 @theme {
   --font-sans: "neue-haas-grotesk-display", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-mono: var(--font-jetbrains), "SF Mono", ui-monospace, monospace;
+  --font-mono: "neue-haas-grotesk-display", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --color-success: #34d399;
   --color-warning: #fbbf24;
   --color-error: #f87171;
