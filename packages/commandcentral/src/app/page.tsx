@@ -5,6 +5,11 @@ import { getAllPermissions, approvePermission, denyPermission, revokePermission,
 
 /* ── Helpers ── */
 
+function explorerUrl(digest: string): string {
+  const safe = digest.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  return `https://occ.wtf/explorer/${safe}`;
+}
+
 function timeLabel(ts: number | string | null): string {
   if (!ts) return "";
   const d = new Date(ts);
@@ -158,6 +163,7 @@ function Dashboard() {
   const [perms, setPerms] = useState<Permission[]>([]);
   const [mcpUrl, setMcpUrl] = useState("");
   const [copied, setCopied] = useState(false);
+  const [connectTab, setConnectTab] = useState<"url" | "terminal" | "json">("url");
   const [busy, setBusy] = useState<number | null>(null);
 
   // Policy state
@@ -264,17 +270,47 @@ function Dashboard() {
   return (
     <div className="mx-auto max-w-7xl px-6 py-6">
 
-      {/* Connect bar */}
-      <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-3">
-        <div className="flex-1 h-10 flex items-center px-4 rounded-lg bg-white dark:bg-[#111] border border-[#eee] dark:border-[#1a1a1a] overflow-hidden cursor-pointer group" onClick={copy}>
-          <span className="text-[12px] font-mono text-[#bbb] dark:text-[#444] group-hover:text-[#888] truncate transition-colors select-all">
-            {mcpUrl || "Loading..."}
-          </span>
+      {/* Connect bar — three formats */}
+      <div className="mb-6 bg-white dark:bg-[#111] rounded-2xl border border-[#eee] dark:border-[#1a1a1a] overflow-hidden">
+        <div className="flex items-center justify-between px-4 pt-3 pb-2">
+          <div className="flex gap-1">
+            {(["url", "terminal", "json"] as const).map(t => (
+              <button key={t} onClick={() => setConnectTab(t)}
+                className={`px-3 py-1 text-[12px] font-medium rounded-md transition-colors ${
+                  connectTab === t
+                    ? "bg-[#f0f0f0] dark:bg-[#1a1a1a] text-[#111] dark:text-[#e5e5e5]"
+                    : "text-[#bbb] dark:text-[#555] hover:text-[#888]"
+                }`}>
+                {t === "url" ? "URL" : t === "terminal" ? "Terminal" : "JSON"}
+              </button>
+            ))}
+          </div>
+          <button onClick={() => {
+            const text = connectTab === "url" ? mcpUrl
+              : connectTab === "terminal" ? `claude mcp add occ --transport http ${mcpUrl}`
+              : JSON.stringify({ mcpServers: { occ: { url: mcpUrl } } }, null, 2);
+            navigator.clipboard.writeText(text);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+          }}
+            className="h-8 px-4 text-[12px] font-semibold rounded-lg bg-[#111] dark:bg-white text-white dark:text-[#111] hover:bg-[#333] dark:hover:bg-[#ddd] transition-all active:scale-[0.97]">
+            {copied ? "✓ Copied" : "Copy"}
+          </button>
         </div>
-        <button onClick={copy}
-          className="h-10 px-5 text-[13px] font-semibold rounded-lg bg-[#111] dark:bg-white text-white dark:text-[#111] hover:bg-[#333] dark:hover:bg-[#ddd] transition-all active:scale-[0.97] flex-shrink-0">
-          {copied ? "✓ Copied" : "Copy link"}
-        </button>
+        <div className="px-4 pb-3">
+          <div className="h-10 flex items-center px-3 rounded-lg bg-[#f7f7f7] dark:bg-[#0a0a0a] border border-[#eee] dark:border-[#151515] overflow-x-auto">
+            <code className="text-[12px] font-mono text-[#999] dark:text-[#555] whitespace-nowrap select-all">
+              {connectTab === "url" && mcpUrl}
+              {connectTab === "terminal" && `claude mcp add occ --transport http ${mcpUrl}`}
+              {connectTab === "json" && `{ "mcpServers": { "occ": { "url": "${mcpUrl}" } } }`}
+            </code>
+          </div>
+          <p className="text-[11px] text-[#ccc] dark:text-[#333] mt-2">
+            {connectTab === "url" && "Paste into Cursor → Settings → MCP → Add Custom MCP"}
+            {connectTab === "terminal" && "Run in your terminal to connect Claude Code"}
+            {connectTab === "json" && "Add to .cursor/mcp.json or claude_desktop_config.json"}
+          </p>
+        </div>
       </div>
 
       {/* Two column layout */}
@@ -360,7 +396,7 @@ function Dashboard() {
             {/* Policy proof */}
             {lastCommitDigest && (
               <div className="border-t border-[#f0f0f0] dark:border-[#1a1a1a] px-5 py-3.5">
-                <a href={`https://occ.wtf/explorer?digest=${encodeURIComponent(lastCommitDigest)}`} target="_blank" rel="noopener noreferrer"
+                <a href={{explorerUrl(lastCommitDigest)}} target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-3 group">
                   <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -437,7 +473,7 @@ function Dashboard() {
                     </div>
                     <span className="text-[11px] text-[#ddd] dark:text-[#333] flex-shrink-0">{timeLabel(p.resolvedAt ?? p.requestedAt)}</span>
                     {p.proofDigest && (
-                      <a href={`https://occ.wtf/explorer?digest=${encodeURIComponent(p.proofDigest)}`} target="_blank" rel="noopener noreferrer"
+                      <a href={{explorerUrl(p.proofDigest)}} target="_blank" rel="noopener noreferrer"
                         className="text-[11px] text-blue-500/60 hover:text-blue-500 transition-colors flex-shrink-0 font-mono">
                         proof ↗
                       </a>
