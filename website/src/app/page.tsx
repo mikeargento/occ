@@ -549,7 +549,7 @@ function HomeProofRow({ proof: p }: { proof: HomeProofSummary }) {
 /* ── Page ── */
 
 export default function Home() {
-  const available = frameworks.filter((f) => f.status === "available");
+  const available: Framework[] = []; // Integration cards removed — dashboard is the product
 
   return (
     <>

@@ -1,18 +1,76 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
-import { getAllPermissions, approvePermission, denyPermission, revokePermission, getConnectConfig, getPolicy, commitPolicy, type Permission, type ChainEntry } from "@/lib/api";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { getAllPermissions, approvePermission, denyPermission, revokePermission, getConnectConfig, getPolicy, commitPolicy, type Permission } from "@/lib/api";
+
+/* ── Helpers ── */
 
 function timeLabel(ts: number | string | null): string {
   if (!ts) return "";
   const d = new Date(ts);
-  const now = Date.now();
-  const diff = now - d.getTime();
+  const diff = Date.now() - d.getTime();
   if (diff < 60_000) return "just now";
   if (diff < 3600_000) return `${Math.floor(diff / 60_000)}m ago`;
   if (diff < 86400_000) return `${Math.floor(diff / 3600_000)}h ago`;
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
+
+/* ── Category definitions with sub-tools ── */
+
+const CATEGORIES: { key: string; label: string; desc: string; tools: { key: string; label: string }[] }[] = [
+  { key: "files", label: "Files", desc: "Read, write, delete, move", tools: [
+    { key: "read_file", label: "Read files" },
+    { key: "write_file", label: "Write files" },
+    { key: "delete_file", label: "Delete files" },
+    { key: "list_directory", label: "List directories" },
+    { key: "move_file", label: "Move / rename files" },
+  ]},
+  { key: "web", label: "Web", desc: "Search, fetch, scrape", tools: [
+    { key: "search_web", label: "Search the web" },
+    { key: "fetch_url", label: "Fetch URLs" },
+    { key: "scrape_page", label: "Scrape pages" },
+    { key: "download_file", label: "Download files" },
+  ]},
+  { key: "code", label: "Code", desc: "Run, commit, deploy", tools: [
+    { key: "run_code", label: "Run code" },
+    { key: "git_commit", label: "Git commit" },
+    { key: "git_push", label: "Git push" },
+    { key: "deploy_app", label: "Deploy" },
+    { key: "run_tests", label: "Run tests" },
+  ]},
+  { key: "data", label: "Data", desc: "Query, insert, delete", tools: [
+    { key: "query_database", label: "Query database" },
+    { key: "insert_record", label: "Insert records" },
+    { key: "delete_record", label: "Delete records" },
+    { key: "run_sql", label: "Run SQL" },
+    { key: "export_csv", label: "Export CSV" },
+  ]},
+  { key: "messaging", label: "Messaging", desc: "Email, Slack, SMS", tools: [
+    { key: "send_email", label: "Send email" },
+    { key: "read_email", label: "Read email" },
+    { key: "send_slack", label: "Send Slack message" },
+    { key: "send_sms", label: "Send SMS" },
+  ]},
+  { key: "payments", label: "Payments", desc: "Charge, refund, transfer", tools: [
+    { key: "charge_card", label: "Charge card" },
+    { key: "send_invoice", label: "Send invoice" },
+    { key: "process_refund", label: "Process refund" },
+    { key: "check_balance", label: "Check balance" },
+    { key: "transfer_funds", label: "Transfer funds" },
+  ]},
+  { key: "calendar", label: "Calendar", desc: "Events, scheduling", tools: [
+    { key: "create_calendar_event", label: "Create event" },
+    { key: "schedule_meeting", label: "Schedule meeting" },
+  ]},
+  { key: "contacts", label: "Contacts", desc: "People, profiles", tools: [
+    { key: "list_contacts", label: "List contacts" },
+    { key: "update_profile", label: "Update profile" },
+  ]},
+];
+
+/* ═══════════════════════════════════════════════════════════════
+   App Entry
+   ═══════════════════════════════════════════════════════════════ */
 
 export default function App() {
   const [user, setUser] = useState<{ id: string; name: string; email: string; avatar: string } | null>(null);
@@ -24,28 +82,34 @@ export default function App() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <Page><Center><Spinner size={20} /></Center></Page>;
-  if (!user) return <Page><Login /></Page>;
-  return <Page user={user}><Dashboard /></Page>;
+  if (loading) return <Shell><Center><Spinner size={20} /></Center></Shell>;
+  if (!user) return <Shell><Login /></Shell>;
+  return <Shell user={user}><Dashboard /></Shell>;
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   Page Shell
+   Shell — matches occ.wtf nav
    ═══════════════════════════════════════════════════════════════ */
 
-function Page({ user, children }: { user?: any; children: React.ReactNode }) {
+function Shell({ user, children }: { user?: any; children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-white dark:bg-[#0a0a0a] text-[#111] dark:text-[#e5e5e5]">
-      <nav className="h-14 px-6 flex items-center justify-between border-b border-[#f0f0f0] dark:border-[#1a1a1a]">
-        <div className="flex items-center gap-6">
-          <span className="text-[16px] font-black tracking-[-0.03em]">OCC</span>
-          <div className="hidden sm:flex items-center gap-5">
-            <a href="https://occ.wtf/explorer" target="_blank" rel="noopener noreferrer" className="text-[13px] text-[#999] dark:text-[#666] hover:text-[#111] dark:hover:text-[#e5e5e5] transition-colors">Explorer</a>
-            <a href="https://occ.wtf/docs" target="_blank" rel="noopener noreferrer" className="text-[13px] text-[#999] dark:text-[#666] hover:text-[#111] dark:hover:text-[#e5e5e5] transition-colors">Docs</a>
+    <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a] text-[#111] dark:text-[#e5e5e5]">
+      <header className="sticky top-0 z-50 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-[#eee] dark:border-[#1a1a1a]">
+        <nav className="mx-auto max-w-7xl px-6 flex h-14 items-center justify-between">
+          <a href="https://occ.wtf" className="text-[20px] tracking-[-0.02em] font-black">OCC</a>
+          <div className="flex items-center gap-1">
+            <a href="https://occ.wtf/explorer" target="_blank" rel="noopener noreferrer"
+              className="text-sm px-3 py-1.5 text-[#999] dark:text-[#555] hover:text-[#111] dark:hover:text-[#e5e5e5] transition-colors">Explorer</a>
+            <a href="https://occ.wtf/docs" target="_blank" rel="noopener noreferrer"
+              className="text-sm px-3 py-1.5 text-[#999] dark:text-[#555] hover:text-[#111] dark:hover:text-[#e5e5e5] transition-colors">Docs</a>
+            {user && (
+              <a href="/auth/logout" className="flex items-center gap-2 ml-4 text-[12px] text-[#bbb] dark:text-[#555] hover:text-[#666] dark:hover:text-[#999] transition-colors">
+                {user.avatar && <img src={user.avatar} className="w-6 h-6 rounded-full" alt="" />}
+              </a>
+            )}
           </div>
-        </div>
-        {user && <UserMenu user={user} />}
-      </nav>
+        </nav>
+      </header>
       {children}
     </div>
   );
@@ -59,194 +123,88 @@ function Login() {
   return (
     <Center>
       <div className="text-center px-6 -mt-20 max-w-md">
-        <h1 className="text-[48px] font-black tracking-[-0.04em] leading-[1.05] mb-4">
-          Log in to OCC
+        <h1 className="text-[44px] font-black tracking-[-0.04em] leading-[1.05] mb-4">
+          Define what your<br />AI agents can do.
         </h1>
         <p className="text-[15px] text-[#999] dark:text-[#666] mb-10 leading-relaxed">
-          Define what your AI agents can do.
+          Every rule is cryptographically proven before a single action can exist.
         </p>
-        <div className="flex flex-col gap-3 w-full max-w-[280px] mx-auto">
-          <a href="/auth/login/github"
-            className="inline-flex items-center justify-center gap-2.5 h-12 px-6 text-[14px] font-semibold rounded-full bg-[#111] dark:bg-white text-white dark:text-[#111] hover:bg-[#333] dark:hover:bg-[#ddd] transition-colors w-full">
-            <GitHubIcon />
-            Continue with GitHub
-          </a>
-          <a href="/auth/login/google"
-            className="inline-flex items-center justify-center gap-2.5 h-12 px-6 text-[14px] font-semibold rounded-full border border-[#e0e0e0] dark:border-[#333] text-[#444] dark:text-[#ccc] hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] transition-colors w-full">
-            <GoogleIcon />
-            Continue with Google
-          </a>
-          <a href="/auth/login/apple"
-            className="inline-flex items-center justify-center gap-2.5 h-12 px-6 text-[14px] font-semibold rounded-full border border-[#e0e0e0] dark:border-[#333] text-[#444] dark:text-[#ccc] hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] transition-colors w-full">
-            <AppleIcon />
-            Continue with Apple
-          </a>
+        <div className="flex flex-col gap-3">
+          <AuthButton href="/auth/login/github" icon={<GitHubIcon />} label="Continue with GitHub" />
+          <AuthButton href="/auth/login/google" icon={<GoogleIcon />} label="Continue with Google" />
+          <AuthButton href="/auth/login/apple" icon={<AppleIcon />} label="Continue with Apple" />
         </div>
       </div>
     </Center>
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   Dashboard
-   ═══════════════════════════════════════════════════════════════ */
+function AuthButton({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
+  return (
+    <a href={href}
+      className="inline-flex items-center justify-center gap-2.5 h-12 px-8 text-[14px] font-semibold rounded-full border border-[#e0e0e0] dark:border-[#2a2a2a] bg-white dark:bg-[#111] hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] transition-colors">
+      {icon}
+      {label}
+    </a>
+  );
+}
 
-const CATEGORIES = [
-  { key: "files", label: "Files", desc: "File system access", tools: [
-    { key: "read_file", label: "Read files" },
-    { key: "write_file", label: "Write files" },
-    { key: "delete_file", label: "Delete files" },
-    { key: "list_directory", label: "List directories" },
-    { key: "move_file", label: "Move / rename files" },
-  ]},
-  { key: "web", label: "Web", desc: "Internet access", tools: [
-    { key: "search_web", label: "Search the web" },
-    { key: "fetch_url", label: "Fetch URLs" },
-    { key: "scrape_page", label: "Scrape pages" },
-    { key: "download_file", label: "Download files" },
-  ]},
-  { key: "email", label: "Email", desc: "Email access", tools: [
-    { key: "read_email", label: "Read emails" },
-    { key: "draft_email", label: "Draft emails" },
-    { key: "send_email", label: "Send emails" },
-  ]},
-  { key: "code", label: "Code", desc: "Code execution", tools: [
-    { key: "run_code", label: "Run code" },
-    { key: "git_commit", label: "Git commit" },
-    { key: "git_push", label: "Git push" },
-    { key: "deploy_app", label: "Deploy" },
-    { key: "run_tests", label: "Run tests" },
-  ]},
-  { key: "data", label: "Data", desc: "Database access", tools: [
-    { key: "query_database", label: "Query data" },
-    { key: "insert_record", label: "Insert records" },
-    { key: "delete_record", label: "Delete records" },
-    { key: "export_csv", label: "Export data" },
-  ]},
-  { key: "payments", label: "Payments", desc: "Financial access", tools: [
-    { key: "charge_card", label: "Charge cards" },
-    { key: "send_invoice", label: "Send invoices" },
-    { key: "process_refund", label: "Process refunds" },
-    { key: "check_balance", label: "Check balances" },
-  ]},
-  { key: "calendar", label: "Calendar", desc: "Calendar access", tools: [
-    { key: "create_event", label: "Create events" },
-    { key: "list_events", label: "List events" },
-    { key: "delete_event", label: "Delete events" },
-  ]},
-  { key: "messaging", label: "Messaging", desc: "Messaging access", tools: [
-    { key: "send_slack", label: "Send Slack messages" },
-    { key: "send_sms", label: "Send SMS" },
-    { key: "read_messages", label: "Read messages" },
-  ]},
-];
+/* ═══════════════════════════════════════════════════════════════
+   Dashboard — two columns: Rules (left) + Activity (right)
+   ═══════════════════════════════════════════════════════════════ */
 
 function Dashboard() {
   const [perms, setPerms] = useState<Permission[]>([]);
   const [mcpUrl, setMcpUrl] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
+  const [busy, setBusy] = useState<number | null>(null);
 
-  // Rules state
+  // Policy state
   const [categories, setCategories] = useState<Record<string, boolean>>({});
-  const [tools, setTools] = useState<Record<string, boolean>>({});
   const [customRules, setCustomRules] = useState<string[]>([]);
   const [newRule, setNewRule] = useState("");
-  const [savedState, setSavedState] = useState({ categories: {} as Record<string, boolean>, tools: {} as Record<string, boolean>, customRules: [] as string[] });
-  const [committing, setCommitting] = useState(false);
+  const [committedCategories, setCommittedCategories] = useState<Record<string, boolean>>({});
+  const [committedCustomRules, setCommittedCustomRules] = useState<string[]>([]);
   const [lastCommitDigest, setLastCommitDigest] = useState<string | null>(null);
+  const [committing, setCommitting] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
+  // Per-tool overrides within categories
+  const [toolOverrides, setToolOverrides] = useState<Record<string, boolean>>({});
+  const [committedToolOverrides, setCommittedToolOverrides] = useState<Record<string, boolean>>({});
+
+  const isDirty = useMemo(() => {
+    return JSON.stringify({ categories, customRules, toolOverrides }) !==
+           JSON.stringify({ categories: committedCategories, customRules: committedCustomRules, toolOverrides: committedToolOverrides });
+  }, [categories, customRules, toolOverrides, committedCategories, committedCustomRules, committedToolOverrides]);
 
   const refresh = useCallback(async () => {
     try {
-      const { permissions } = await getAllPermissions();
-      setPerms(permissions);
-    } catch {} finally { setLoading(false); }
+      const [permData, policyData, configData] = await Promise.all([
+        getAllPermissions(),
+        getPolicy().catch(() => ({ policy: null, policyDigestB64: null, committedAt: null })),
+        getConnectConfig().catch(() => ({ mcpUrl: "" })),
+      ]);
+      setPerms(permData.permissions ?? []);
+      setMcpUrl((configData as any).mcpUrl ?? "");
+      if (policyData.policy) {
+        const c = policyData.policy.categories ?? {};
+        const cr = policyData.policy.customRules ?? [];
+        setCategories(c);
+        setCommittedCategories(c);
+        setCustomRules(cr);
+        setCommittedCustomRules(cr);
+        setLastCommitDigest(policyData.policyDigestB64);
+      }
+    } catch {}
   }, []);
 
   useEffect(() => {
     refresh();
-    getConnectConfig().then(c => setMcpUrl(c.mcpUrl)).catch(() => {});
-    getPolicy().then(({ policy, policyDigestB64 }) => {
-      if (policy) {
-        const cats = policy.categories ?? {};
-        // Extract tool-level toggles from categories (stored as "files.read_file": true)
-        const catLevel: Record<string, boolean> = {};
-        const toolLevel: Record<string, boolean> = {};
-        for (const [k, v] of Object.entries(cats)) {
-          if (k.includes(".")) toolLevel[k] = v;
-          else catLevel[k] = v;
-        }
-        setCategories(catLevel);
-        setTools(toolLevel);
-        setCustomRules(policy.customRules ?? []);
-        setSavedState({ categories: catLevel, tools: toolLevel, customRules: policy.customRules ?? [] });
-        setLastCommitDigest(policyDigestB64 ?? null);
-      }
-    }).catch(() => {});
     const es = new EventSource("/api/events");
     es.onmessage = () => refresh();
-    const iv = setInterval(refresh, 5000);
+    const iv = setInterval(refresh, 8000);
     return () => { es.close(); clearInterval(iv); };
   }, [refresh]);
-
-  const isDirty = JSON.stringify(categories) !== JSON.stringify(savedState.categories) ||
-    JSON.stringify(tools) !== JSON.stringify(savedState.tools) ||
-    JSON.stringify(customRules) !== JSON.stringify(savedState.customRules);
-
-  async function handleCommitRules() {
-    setCommitting(true);
-    try {
-      // Merge categories and tool-level toggles into one object for storage
-      const merged = { ...categories };
-      for (const [k, v] of Object.entries(tools)) merged[k] = v;
-      const result = await commitPolicy(merged, customRules);
-      setSavedState({ categories: { ...categories }, tools: { ...tools }, customRules: [...customRules] });
-      setLastCommitDigest(result.policyDigestB64);
-    } catch (e) {
-      console.error("Failed to commit policy:", e);
-    } finally {
-      setCommitting(false);
-    }
-  }
-
-  function toggleCategory(key: string) {
-    const newVal = !categories[key];
-    setCategories(prev => ({ ...prev, [key]: newVal }));
-    // Toggle all child tools too
-    const cat = CATEGORIES.find(c => c.key === key);
-    if (cat) {
-      setTools(prev => {
-        const next = { ...prev };
-        for (const t of cat.tools) next[`${key}.${t.key}`] = newVal;
-        return next;
-      });
-    }
-  }
-
-  function toggleTool(catKey: string, toolKey: string) {
-    const fullKey = `${catKey}.${toolKey}`;
-    const newVal = !tools[fullKey];
-    setTools(prev => ({ ...prev, [fullKey]: newVal }));
-    // Update parent: if all children are on, parent is on. If any off, parent is off.
-    const cat = CATEGORIES.find(c => c.key === catKey);
-    if (cat) {
-      const allOn = cat.tools.every(t => {
-        const k = `${catKey}.${t.key}`;
-        return k === fullKey ? newVal : (tools[k] ?? false);
-      });
-      setCategories(prev => ({ ...prev, [catKey]: allOn }));
-    }
-  }
-
-  const pending = useMemo(() => perms.filter(p => p.status === "pending"), [perms]);
-
-  async function act(id: number, fn: () => Promise<unknown>) {
-    setBusy(id);
-    try { await fn(); await refresh(); }
-    finally { setBusy(null); }
-  }
 
   const copy = () => {
     navigator.clipboard.writeText(mcpUrl);
@@ -254,197 +212,238 @@ function Dashboard() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  if (loading) return <Center><Spinner size={20} /></Center>;
+  const handleCommit = async () => {
+    setCommitting(true);
+    try {
+      const result = await commitPolicy(categories, customRules);
+      setCommittedCategories({ ...categories });
+      setCommittedCustomRules([...customRules]);
+      setCommittedToolOverrides({ ...toolOverrides });
+      setLastCommitDigest(result.policyDigestB64);
+      await refresh();
+    } finally { setCommitting(false); }
+  };
 
-  const hasAnything = perms.length > 0;
+  const toggleCategory = (key: string) => {
+    setCategories(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const toggleTool = (toolKey: string, catEnabled: boolean) => {
+    setToolOverrides(prev => {
+      const current = prev[toolKey] ?? catEnabled;
+      return { ...prev, [toolKey]: !current };
+    });
+  };
+
+  const addCustomRule = () => {
+    const r = newRule.trim();
+    if (!r) return;
+    setCustomRules(prev => [...prev, r]);
+    setNewRule("");
+  };
+
+  const removeCustomRule = (idx: number) => {
+    setCustomRules(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  async function act(id: number, fn: () => Promise<unknown>) {
+    setBusy(id);
+    try { await fn(); await refresh(); }
+    finally { setBusy(null); }
+  }
+
+  const activity = useMemo(() =>
+    perms.filter(p => p.status !== "pending").sort((a, b) => (b.resolvedAt ?? b.requestedAt) - (a.resolvedAt ?? a.requestedAt)),
+    [perms]
+  );
+  const pending = useMemo(() => perms.filter(p => p.status === "pending"), [perms]);
+
+  const hasAnything = perms.length > 0 || Object.keys(committedCategories).length > 0;
 
   return (
-    <div className="max-w-2xl mx-auto px-5 py-8 sm:py-12">
+    <div className="mx-auto max-w-7xl px-6 py-6">
 
-      {/* Connect */}
-      <div className="mb-10">
-        <h1 className="text-[32px] sm:text-[40px] font-black tracking-[-0.04em] leading-[1.1] mb-2">
-          {hasAnything ? "Your AI" : "Connect your AI"}
-        </h1>
-        <p className="text-[15px] text-[#999] dark:text-[#666] mb-5">
-          {hasAnything
-            ? `${perms.filter(p => p.status === "approved").length} allowed · ${pending.length} pending`
-            : "Paste this link into Cursor, Claude Code, or any MCP-compatible AI tool."
-          }
-        </p>
-
-        <div className="flex gap-2">
-          <div className="flex-1 h-11 flex items-center px-4 rounded-xl bg-[#f7f7f7] dark:bg-[#141414] border border-[#eee] dark:border-[#222] overflow-hidden cursor-pointer group" onClick={copy}>
-            <span className="text-[12px] font-mono text-[#999] dark:text-[#555] group-hover:text-[#666] dark:group-hover:text-[#888] truncate transition-colors select-all">
-              {mcpUrl || "Loading..."}
-            </span>
-          </div>
-          <button onClick={copy}
-            className="h-11 px-5 text-[13px] font-semibold rounded-xl bg-[#111] dark:bg-white text-white dark:text-[#111] hover:bg-[#333] dark:hover:bg-[#ddd] transition-all active:scale-[0.97] flex-shrink-0">
-            {copied ? "✓ Copied" : "Copy"}
-          </button>
+      {/* Connect bar */}
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="flex-1 h-10 flex items-center px-4 rounded-lg bg-white dark:bg-[#111] border border-[#eee] dark:border-[#1a1a1a] overflow-hidden cursor-pointer group" onClick={copy}>
+          <span className="text-[12px] font-mono text-[#bbb] dark:text-[#444] group-hover:text-[#888] truncate transition-colors select-all">
+            {mcpUrl || "Loading..."}
+          </span>
         </div>
-
-        {!hasAnything && (
-          <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <Instruction step="1" title="Copy the link" desc="Click Copy above" />
-            <Instruction step="2" title="Paste into your AI" desc="Cursor → Settings → MCP" />
-            <Instruction step="3" title="Use your AI" desc="Requests appear here" />
-          </div>
-        )}
+        <button onClick={copy}
+          className="h-10 px-5 text-[13px] font-semibold rounded-lg bg-[#111] dark:bg-white text-white dark:text-[#111] hover:bg-[#333] dark:hover:bg-[#ddd] transition-all active:scale-[0.97] flex-shrink-0">
+          {copied ? "✓ Copied" : "Copy link"}
+        </button>
       </div>
 
-      {/* ── Rules ── */}
-      <div className="mb-10">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-[20px] font-bold tracking-[-0.02em]">Rules</h2>
-          <div className="flex items-center gap-3">
-            {lastCommitDigest && !isDirty && (
-              <a href={`https://occ.wtf/explorer/${lastCommitDigest.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')}`}
-                target="_blank" rel="noopener noreferrer"
-                className="text-[11px] text-blue-500/70 hover:text-blue-500 font-mono transition-colors">
-                proof ↗
-              </a>
-            )}
-            <button onClick={handleCommitRules} disabled={!isDirty || committing}
-              className={`h-9 px-5 text-[13px] font-semibold rounded-xl transition-all active:scale-[0.97] flex items-center gap-2 ${
-                isDirty
-                  ? "bg-emerald-500 text-white hover:bg-emerald-600 shadow-[0_2px_8px_rgba(52,211,153,0.3)]"
-                  : "bg-[#f0f0f0] dark:bg-[#1a1a1a] text-[#bbb] dark:text-[#555] cursor-default"
-              }`}>
-              {committing && <Spinner size={14} color="white" />}
-              {committing ? "Signing..." : isDirty ? "Commit rules" : "Rules saved"}
-            </button>
-          </div>
-        </div>
+      {/* Two column layout */}
+      <div className="flex flex-col lg:flex-row gap-6">
 
-        {/* Category toggles with expandable tools */}
-        <div className="space-y-1.5 mb-4">
-          {CATEGORIES.map(cat => {
-            const on = categories[cat.key] ?? false;
-            const isExpanded = expanded === cat.key;
-            const enabledTools = cat.tools.filter(t => tools[`${cat.key}.${t.key}`]).length;
-            return (
-              <div key={cat.key} className={`rounded-xl border transition-all ${
-                on ? "border-emerald-500/20 bg-emerald-500/[0.03] dark:bg-emerald-500/[0.04]" : "border-[#f0f0f0] dark:border-[#1a1a1a]"
-              }`}>
-                <div className="flex items-center px-4 py-3">
-                  <button onClick={() => setExpanded(isExpanded ? null : cat.key)}
-                    className="text-[11px] text-[#ccc] dark:text-[#444] mr-3 w-4 text-center hover:text-[#999] transition-colors">
-                    {isExpanded ? "▼" : "▶"}
-                  </button>
-                  <div className="flex-1 min-w-0 cursor-pointer" onClick={() => setExpanded(isExpanded ? null : cat.key)}>
-                    <span className={`text-[14px] font-medium ${on ? "text-[#333] dark:text-[#e5e5e5]" : "text-[#888] dark:text-[#777]"}`}>{cat.label}</span>
-                    <span className="text-[11px] text-[#ccc] dark:text-[#444] ml-2">{cat.desc}</span>
-                    {on && enabledTools < cat.tools.length && (
-                      <span className="text-[10px] text-amber-500 ml-2">{enabledTools}/{cat.tools.length}</span>
+        {/* ── LEFT: Rules ── */}
+        <div className="lg:w-[400px] flex-shrink-0">
+          <div className="bg-white dark:bg-[#111] rounded-2xl border border-[#eee] dark:border-[#1a1a1a] overflow-hidden">
+
+            {/* Header + commit button */}
+            <div className="px-5 py-4 flex items-center justify-between border-b border-[#f0f0f0] dark:border-[#1a1a1a]">
+              <h2 className="text-[16px] font-bold">Rules</h2>
+              <button onClick={handleCommit} disabled={!isDirty || committing}
+                className={`h-8 px-4 text-[12px] font-semibold rounded-lg transition-all active:scale-[0.97] flex items-center gap-2 ${
+                  isDirty
+                    ? "bg-emerald-500 text-white hover:bg-emerald-600"
+                    : "bg-[#f0f0f0] dark:bg-[#1a1a1a] text-[#ccc] dark:text-[#444] cursor-default"
+                }`}>
+                {committing && <Spinner size={12} color="white" />}
+                {committing ? "Signing..." : isDirty ? "Commit to chain" : "Rules saved"}
+              </button>
+            </div>
+
+            {/* Categories */}
+            <div className="divide-y divide-[#f5f5f5] dark:divide-[#151515]">
+              {CATEGORIES.map(cat => {
+                const isOn = categories[cat.key] ?? false;
+                const isExpanded = expanded === cat.key;
+                return (
+                  <div key={cat.key}>
+                    <div className="flex items-center gap-3 px-5 py-3 hover:bg-[#fafafa] dark:hover:bg-[#0e0e0e] transition-colors">
+                      <button onClick={() => setExpanded(isExpanded ? null : cat.key)}
+                        className="text-[10px] text-[#ccc] dark:text-[#444] w-4 flex-shrink-0 transition-transform"
+                        style={{ transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)" }}>
+                        ▶
+                      </button>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-[14px] font-medium">{cat.label}</span>
+                        <span className="text-[12px] text-[#bbb] dark:text-[#555] ml-2">{cat.desc}</span>
+                      </div>
+                      <Toggle on={isOn} onChange={() => toggleCategory(cat.key)} />
+                    </div>
+                    {isExpanded && (
+                      <div className="bg-[#fafafa] dark:bg-[#0a0a0a] border-t border-[#f0f0f0] dark:border-[#151515]">
+                        {cat.tools.map(tool => {
+                          const toolOn = toolOverrides[tool.key] ?? isOn;
+                          return (
+                            <div key={tool.key} className="flex items-center gap-3 pl-12 pr-5 py-2.5">
+                              <span className="text-[13px] text-[#666] dark:text-[#888] flex-1">{tool.label}</span>
+                              <Toggle on={toolOn} onChange={() => toggleTool(tool.key, isOn)} small />
+                            </div>
+                          );
+                        })}
+                      </div>
                     )}
                   </div>
-                  <button onClick={() => toggleCategory(cat.key)}
-                    className={`w-10 h-6 rounded-full transition-colors flex-shrink-0 relative ${
-                      on ? "bg-emerald-500" : "bg-[#e0e0e0] dark:bg-[#333]"
-                    }`}>
-                    <div className={`w-4.5 h-4.5 rounded-full bg-white shadow-sm absolute top-[3px] transition-all ${
-                      on ? "right-[3px]" : "left-[3px]"
-                    }`} />
-                  </button>
-                </div>
-                {isExpanded && (
-                  <div className="px-4 pb-3 pt-0 border-t border-[#f5f5f5] dark:border-[#1a1a1a] mt-0">
-                    {cat.tools.map(tool => {
-                      const toolOn = tools[`${cat.key}.${tool.key}`] ?? false;
-                      return (
-                        <div key={tool.key} className="flex items-center py-2 pl-7">
-                          <span className={`text-[13px] flex-1 ${toolOn ? "text-[#555] dark:text-[#bbb]" : "text-[#bbb] dark:text-[#555]"}`}>{tool.label}</span>
-                          <button onClick={() => toggleTool(cat.key, tool.key)}
-                            className={`w-8 h-5 rounded-full transition-colors flex-shrink-0 relative ${
-                              toolOn ? "bg-emerald-500" : "bg-[#e0e0e0] dark:bg-[#333]"
-                            }`}>
-                            <div className={`w-3.5 h-3.5 rounded-full bg-white shadow-sm absolute top-[3px] transition-all ${
-                              toolOn ? "right-[3px]" : "left-[3px]"
-                            }`} />
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+                );
+              })}
+            </div>
 
-        {/* Custom rules */}
-        <div className="rounded-xl border border-[#f0f0f0] dark:border-[#1a1a1a] p-4">
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-[#bbb] dark:text-[#555] mb-3">Custom rules</p>
-          {customRules.length > 0 && (
-            <div className="space-y-1.5 mb-3">
+            {/* Custom rules */}
+            <div className="border-t border-[#f0f0f0] dark:border-[#1a1a1a] px-5 py-4">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-[#bbb] dark:text-[#555] mb-3">Custom rules</p>
               {customRules.map((rule, i) => (
-                <div key={i} className="flex items-center gap-2 group">
-                  <span className="text-[13px] text-[#666] dark:text-[#999] flex-1">{rule}</span>
-                  <button onClick={() => setCustomRules(prev => prev.filter((_, j) => j !== i))}
-                    className="text-[11px] text-[#ddd] dark:text-[#333] hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100">
-                    ×
-                  </button>
+                <div key={i} className="flex items-start gap-2 mb-2 group">
+                  <span className="text-[13px] text-[#666] dark:text-[#888] flex-1 leading-snug">{rule}</span>
+                  <button onClick={() => removeCustomRule(i)}
+                    className="text-[11px] text-[#ddd] dark:text-[#333] hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0 mt-0.5">✕</button>
                 </div>
               ))}
+              <div className="flex gap-2 mt-2">
+                <input value={newRule} onChange={e => setNewRule(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && addCustomRule()}
+                  placeholder="e.g. Never delete production files"
+                  className="flex-1 h-9 px-3 text-[13px] rounded-lg bg-[#f7f7f7] dark:bg-[#0a0a0a] border border-[#eee] dark:border-[#1a1a1a] placeholder:text-[#ccc] dark:placeholder:text-[#333] focus:outline-none focus:ring-1 focus:ring-emerald-400/30" />
+                <button onClick={addCustomRule} disabled={!newRule.trim()}
+                  className="h-9 px-3 text-[12px] font-medium rounded-lg bg-[#f0f0f0] dark:bg-[#1a1a1a] text-[#999] dark:text-[#555] hover:text-[#666] dark:hover:text-[#888] disabled:opacity-30 transition-colors">
+                  Add
+                </button>
+              </div>
+            </div>
+
+            {/* Policy digest */}
+            {lastCommitDigest && (
+              <div className="border-t border-[#f0f0f0] dark:border-[#1a1a1a] px-5 py-3">
+                <p className="text-[11px] text-[#ccc] dark:text-[#333]">
+                  Policy: <a href={`https://occ.wtf/explorer?digest=${encodeURIComponent(lastCommitDigest)}`} target="_blank" rel="noopener noreferrer"
+                    className="font-mono text-blue-500/70 hover:text-blue-500 transition-colors">{lastCommitDigest.slice(0, 16)}...</a>
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Pending requests */}
+          {pending.length > 0 && (
+            <div className="mt-4">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-500 mb-2 px-1">
+                {pending.length} pending request{pending.length > 1 ? "s" : ""}
+              </p>
+              <div className="space-y-2">
+                {pending.map(p => (
+                  <div key={p.id} className="bg-white dark:bg-[#111] rounded-xl border border-amber-200/50 dark:border-amber-500/10 p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                      <span className="text-[14px] font-mono font-medium flex-1">{p.tool}</span>
+                      <span className="text-[11px] text-[#bbb] dark:text-[#555]">{p.clientName}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => act(p.id, () => approvePermission(p.id))} disabled={busy === p.id}
+                        className="h-8 px-4 text-[12px] font-semibold rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-40 transition-all active:scale-[0.97] flex items-center gap-1.5">
+                        {busy === p.id && <Spinner size={10} color="white" />}
+                        Allow
+                      </button>
+                      <button onClick={() => act(p.id, () => denyPermission(p.id))} disabled={busy === p.id}
+                        className="h-8 px-4 text-[12px] font-medium rounded-lg text-[#999] dark:text-[#555] hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] disabled:opacity-40 transition-all">
+                        Block
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
-          <div className="flex gap-2">
-            <input value={newRule} onChange={e => setNewRule(e.target.value)}
-              onKeyDown={e => { if (e.key === "Enter" && newRule.trim()) { setCustomRules(prev => [...prev, newRule.trim()]); setNewRule(""); }}}
-              placeholder="e.g. Never delete production files"
-              className="flex-1 h-9 px-3 text-[13px] rounded-lg bg-[#fafafa] dark:bg-[#0e0e0e] border border-[#eee] dark:border-[#1a1a1a] placeholder-[#ccc] dark:placeholder-[#444] focus:outline-none focus:border-emerald-500/30"
-            />
-            <button onClick={() => { if (newRule.trim()) { setCustomRules(prev => [...prev, newRule.trim()]); setNewRule(""); }}}
-              disabled={!newRule.trim()}
-              className="h-9 px-4 text-[12px] font-medium rounded-lg bg-[#f5f5f5] dark:bg-[#1a1a1a] text-[#999] dark:text-[#666] hover:text-[#555] dark:hover:text-[#aaa] disabled:opacity-30 transition-colors">
-              Add
-            </button>
-          </div>
         </div>
 
-        {/* Stats placeholder */}
-        <div className="mt-4 flex gap-4 text-[11px] text-[#ccc] dark:text-[#444]">
-          <span>{Object.values(categories).filter(Boolean).length} categories enabled</span>
-          <span>{customRules.length} custom rule{customRules.length === 1 ? "" : "s"}</span>
-          {lastCommitDigest && <span>Last committed: {lastCommitDigest.slice(0, 12)}...</span>}
+        {/* ── RIGHT: Activity ── */}
+        <div className="flex-1 min-w-0">
+          <div className="bg-white dark:bg-[#111] rounded-2xl border border-[#eee] dark:border-[#1a1a1a] overflow-hidden">
+            <div className="px-5 py-4 border-b border-[#f0f0f0] dark:border-[#1a1a1a]">
+              <h2 className="text-[16px] font-bold">Activity</h2>
+            </div>
+
+            {activity.length === 0 ? (
+              <div className="text-center py-20">
+                <div className="w-10 h-10 rounded-full bg-[#f5f5f5] dark:bg-[#151515] flex items-center justify-center mx-auto mb-4">
+                  <div className="w-2 h-2 rounded-full bg-[#ddd] dark:bg-[#333] animate-pulse" />
+                </div>
+                <p className="text-[14px] text-[#bbb] dark:text-[#444]">No activity yet</p>
+                <p className="text-[12px] text-[#ddd] dark:text-[#2a2a2a] mt-1">Actions will appear here as your AI works</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-[#f5f5f5] dark:divide-[#151515]">
+                {activity.map(p => (
+                  <div key={p.id} className="flex items-center gap-3 px-5 py-3.5 hover:bg-[#fafafa] dark:hover:bg-[#0e0e0e] transition-colors group">
+                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                      p.status === "approved" ? "bg-emerald-400" : "bg-red-400"
+                    }`} />
+                    <div className="flex-1 min-w-0">
+                      <span className="text-[14px] font-mono">{p.tool}</span>
+                      <span className="text-[12px] text-[#ccc] dark:text-[#444] ml-2">{p.clientName}</span>
+                    </div>
+                    <span className="text-[11px] text-[#ddd] dark:text-[#333] flex-shrink-0">{timeLabel(p.resolvedAt ?? p.requestedAt)}</span>
+                    {p.proofDigest && (
+                      <a href={`https://occ.wtf/explorer?digest=${encodeURIComponent(p.proofDigest)}`} target="_blank" rel="noopener noreferrer"
+                        className="text-[11px] text-blue-500/60 hover:text-blue-500 transition-colors flex-shrink-0 font-mono">
+                        proof ↗
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* ── Activity Log ── */}
-      {pending.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-[20px] font-bold tracking-[-0.02em] mb-4">
-            Pending <span className="text-amber-500 text-[14px] font-normal">{pending.length}</span>
-          </h2>
-          <div className="space-y-2 animate-fade-in">
-            {pending.map(p => (
-              <PendingCard key={p.id} perm={p}
-                onAllow={() => act(p.id, () => approvePermission(p.id))}
-                onBlock={() => act(p.id, () => denyPermission(p.id))}
-                busy={busy === p.id}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {perms.length > 0 && (
-        <div className="mb-8">
-          <h2 className="text-[20px] font-bold tracking-[-0.02em] mb-4">Activity</h2>
-          <div className="rounded-2xl border border-[#f0f0f0] dark:border-[#1a1a1a] divide-y divide-[#f5f5f5] dark:divide-[#151515] overflow-hidden">
-            {perms.filter(p => p.status !== "pending").slice(0, 20).map(p => (
-              <ToolRow key={p.id} perm={p} blocked={p.status === "denied" || p.status === "revoked"} />
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Footer */}
-      <div className="mt-16 pt-6 border-t border-[#f5f5f5] dark:border-[#141414] text-center">
-        <p className="text-[11px] text-[#ddd] dark:text-[#333]">
-          Every action is signed through a Trusted Execution Environment · <a href="https://occ.wtf" target="_blank" rel="noopener noreferrer" className="hover:text-[#999] dark:hover:text-[#666] transition-colors">occ.wtf</a>
+      <div className="mt-12 pb-8 text-center">
+        <p className="text-[11px] text-[#ddd] dark:text-[#2a2a2a]">
+          Every action is signed through a Trusted Execution Environment · <a href="https://occ.wtf" target="_blank" rel="noopener noreferrer" className="hover:text-[#999] dark:hover:text-[#555] transition-colors">occ.wtf</a>
         </p>
       </div>
     </div>
@@ -455,110 +454,18 @@ function Dashboard() {
    Components
    ═══════════════════════════════════════════════════════════════ */
 
-function PendingCard({ perm, onAllow, onBlock, busy }: {
-  perm: Permission; onAllow: () => void; onBlock: () => void; busy: boolean;
-}) {
+function Toggle({ on, onChange, small }: { on: boolean; onChange: () => void; small?: boolean }) {
+  const w = small ? "w-8" : "w-10";
+  const h = small ? "h-[18px]" : "h-[22px]";
+  const dot = small ? "w-3.5 h-3.5" : "w-[18px] h-[18px]";
+  const translate = small ? "translate-x-[14px]" : "translate-x-[20px]";
   return (
-    <div className="bg-white dark:bg-[#111] rounded-2xl border border-[#f0f0f0] dark:border-[#1a1a1a] p-5 transition-all hover:border-[#e0e0e0] dark:hover:border-[#2a2a2a] hover:shadow-[0_2px_12px_rgba(0,0,0,0.04)] dark:hover:shadow-[0_2px_12px_rgba(0,0,0,0.3)]">
-      <div className="flex items-start gap-4">
-        <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-          <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-[16px] font-semibold font-mono tracking-[-0.01em]">{perm.tool}</p>
-          <p className="text-[13px] text-[#aaa] dark:text-[#555] mt-1">
-            <span className="text-[#888] dark:text-[#777] font-medium">{perm.clientName}</span> wants to use this tool
-          </p>
-          {(() => {
-            const args = perm.requestArgs as Record<string, unknown> | null;
-            if (!args || typeof args !== "object" || Object.keys(args).length === 0) return null;
-            return (
-              <pre className="mt-3 text-[11px] font-mono text-[#999] dark:text-[#555] bg-[#fafafa] dark:bg-[#0a0a0a] rounded-lg px-3 py-2 overflow-x-auto border border-[#f5f5f5] dark:border-[#1a1a1a]">
-                {JSON.stringify(args, null, 2).slice(0, 200)}
-              </pre>
-            );
-          })()}
-        </div>
-      </div>
-      <div className="flex gap-3 mt-5 ml-[52px]">
-        <button onClick={onAllow} disabled={busy}
-          className="h-11 px-8 text-[14px] font-bold rounded-xl bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-40 transition-all active:scale-[0.97] flex items-center gap-2 shadow-[0_2px_8px_rgba(52,211,153,0.3)]">
-          {busy && <Spinner size={14} color="white" />}
-          {busy ? "Signing..." : "Allow"}
-        </button>
-        <button onClick={onBlock} disabled={busy}
-          className="h-11 px-8 text-[14px] font-medium rounded-xl border border-red-200/60 dark:border-red-500/20 text-red-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 disabled:opacity-40 transition-all active:scale-[0.97]">
-          Block
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function ToolRow({ perm, action, blocked }: { perm: Permission; action?: React.ReactNode; blocked?: boolean }) {
-  const digest = perm.proofDigest;
-  const proofUrl = digest ? `https://occ.wtf/explorer/${digest.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')}` : perm.explorerUrl || null;
-  return (
-    <div className="flex items-center gap-3 px-5 py-4 group hover:bg-[#fafafa] dark:hover:bg-[#111] transition-colors">
-      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${blocked ? "bg-red-300 dark:bg-red-500/60" : "bg-emerald-400"}`} />
-      <div className="flex-1 min-w-0">
-        <span className="text-[14px] font-mono text-[#444] dark:text-[#999] truncate block">{perm.tool}</span>
-        <span className="text-[11px] text-[#ccc] dark:text-[#444] mt-0.5 block">{perm.clientName} · {timeLabel(perm.resolvedAt ?? perm.requestedAt)}</span>
-      </div>
-      {proofUrl && (
-        <a href={proofUrl} target="_blank" rel="noopener noreferrer"
-          className="text-[11px] text-blue-500/70 hover:text-blue-500 transition-colors font-mono flex-shrink-0">
-          proof ↗
-        </a>
-      )}
-      {action}
-    </div>
-  );
-}
-
-function Tab({ active, onClick, count, pulse, children }: {
-  active: boolean; onClick: () => void; count: number; pulse?: boolean; children: React.ReactNode;
-}) {
-  return (
-    <button onClick={onClick}
-      className={`px-4 pb-3 text-[13px] font-medium transition-colors border-b-2 -mb-px flex items-center gap-2 ${
-        active
-          ? "border-[#111] dark:border-[#e5e5e5] text-[#111] dark:text-[#e5e5e5]"
-          : "border-transparent text-[#bbb] dark:text-[#555] hover:text-[#888] dark:hover:text-[#999]"
+    <button onClick={onChange}
+      className={`${w} ${h} rounded-full transition-colors duration-150 flex items-center px-[2px] flex-shrink-0 ${
+        on ? "bg-emerald-500" : "bg-[#e0e0e0] dark:bg-[#2a2a2a]"
       }`}>
-      {children}
-      {count > 0 && (
-        <span className={`text-[11px] font-semibold px-1.5 py-0.5 rounded-full ${
-          pulse
-            ? "bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400"
-            : "bg-[#f0f0f0] dark:bg-[#1a1a1a] text-[#999] dark:text-[#666]"
-        }`}>
-          {count}
-        </span>
-      )}
+      <div className={`${dot} rounded-full bg-white shadow-sm transition-transform duration-150 ${on ? translate : "translate-x-0"}`} />
     </button>
-  );
-}
-
-function Instruction({ step, title, desc }: { step: string; title: string; desc: string }) {
-  return (
-    <div className="flex gap-3 items-start">
-      <span className="w-6 h-6 rounded-full bg-[#f0f0f0] dark:bg-[#1a1a1a] text-[11px] font-bold text-[#999] dark:text-[#555] flex items-center justify-center flex-shrink-0">{step}</span>
-      <div>
-        <p className="text-[13px] font-medium text-[#555] dark:text-[#aaa]">{title}</p>
-        <p className="text-[12px] text-[#bbb] dark:text-[#444]">{desc}</p>
-      </div>
-    </div>
-  );
-}
-
-function Empty({ icon, text, sub }: { icon: string; text: string; sub: string }) {
-  return (
-    <div className="text-center py-16">
-      <span className="text-[24px] text-[#ddd] dark:text-[#333]">{icon}</span>
-      <p className="text-[14px] text-[#aaa] dark:text-[#555] mt-3 mb-1">{text}</p>
-      <p className="text-[12px] text-[#ccc] dark:text-[#333] max-w-[280px] mx-auto">{sub}</p>
-    </div>
   );
 }
 
@@ -569,49 +476,25 @@ function Center({ children }: { children: React.ReactNode }) {
 function Spinner({ size = 16, color = "#999" }: { size?: number; color?: string }) {
   return (
     <div className="animate-spin rounded-full"
-      style={{
-        width: size, height: size,
-        border: `2px solid ${color}33`,
-        borderTopColor: color,
-      }}
-    />
+      style={{ width: size, height: size, border: `2px solid ${color}33`, borderTopColor: color }} />
   );
 }
 
-function UserMenu({ user }: { user: { name: string; email: string; avatar: string } }) {
-  const [open, setOpen] = useState(false);
+function GitHubIcon() {
   return (
-    <div className="relative">
-      <button onClick={() => setOpen(!open)} className="flex items-center gap-2 text-[12px] text-[#bbb] dark:text-[#555] hover:text-[#666] dark:hover:text-[#999] transition-colors">
-        {user.avatar && <img src={user.avatar} className="w-6 h-6 rounded-full" alt="" />}
-        <span className="hidden sm:inline">{user.name}</span>
-      </button>
-      {open && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full mt-2 w-56 rounded-xl border border-[#f0f0f0] dark:border-[#222] bg-white dark:bg-[#111] shadow-[0_8px_30px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.5)] z-50 py-1.5 animate-fade-in">
-            <div className="px-4 py-2.5 border-b border-[#f5f5f5] dark:border-[#1a1a1a]">
-              <p className="text-[13px] font-medium text-[#333] dark:text-[#e5e5e5]">{user.name}</p>
-              <p className="text-[11px] text-[#999] dark:text-[#555]">{user.email}</p>
-            </div>
-            <a href="/auth/logout"
-              className="block px-4 py-2.5 text-[13px] text-[#666] dark:text-[#999] hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] transition-colors">
-              Sign out
-            </a>
-          </div>
-        </>
-      )}
-    </div>
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+    </svg>
   );
 }
 
 function GoogleIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24">
-      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
-      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
+      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
     </svg>
   );
 }
@@ -620,14 +503,6 @@ function AppleIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
       <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
-    </svg>
-  );
-}
-
-function GitHubIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
     </svg>
   );
 }

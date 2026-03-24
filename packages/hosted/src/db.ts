@@ -154,12 +154,23 @@ export const db = {
 
   async upsertUser(user: { id: string; email: string; name: string; avatar: string; provider: string; providerId: string; mcpToken: string }) {
     const p = getPool();
+    // First check if a user with this email already exists (different provider, same person)
+    const existing = await p.query("SELECT id, mcp_token FROM occ_users WHERE email = $1", [user.email]);
+    if (existing.rows.length > 0) {
+      // Same person, different provider — update the existing record
+      await p.query(
+        "UPDATE occ_users SET name = $1, avatar = $2 WHERE email = $3",
+        [user.name, user.avatar, user.email]
+      );
+      return existing.rows[0];
+    }
     await p.query(
       `INSERT INTO occ_users (id, email, name, avatar, provider, provider_id, mcp_token)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
        ON CONFLICT (id) DO UPDATE SET email = $2, name = $3, avatar = $4`,
       [user.id, user.email, user.name, user.avatar, user.provider, user.providerId, user.mcpToken]
     );
+    return { id: user.id, mcp_token: user.mcpToken };
   },
 
   // ── Proofs ──
