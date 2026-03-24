@@ -72,26 +72,31 @@ function toBase64(bytes: Uint8Array): string {
 // ── TEE Commit via Nitro Enclave ──
 const TEE_URL = "https://nitro.occproof.com/commit";
 
-export async function commitProof(tool: string, args: unknown, agentId: string, allowed: boolean): Promise<{ proof: any; digestB64: string }> {
+export async function commitProof(tool: string, args: unknown, agentId: string, allowed: boolean, chainId?: string): Promise<{ proof: any; digestB64: string }> {
   const payload = JSON.stringify({ tool, args, agentId, allowed, timestamp: Date.now() });
   const bytes = new TextEncoder().encode(payload);
   const digestB64 = toBase64(sha256(bytes));
 
   try {
+    const commitBody: Record<string, unknown> = {
+      digests: [{ digestB64, hashAlg: "sha256" }],
+      metadata: {
+        kind: allowed ? "tool-execution" : "tool-denial",
+        tool,
+        agentId,
+        decision: allowed ? "allowed" : "denied",
+        adapter: "hosted-mcp",
+        runtime: "agent.occ.wtf",
+      },
+    };
+    if (chainId) {
+      commitBody.chainId = chainId;
+    }
+
     const res = await fetch(TEE_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        digests: [{ digestB64, hashAlg: "sha256" }],
-        metadata: {
-          kind: allowed ? "tool-execution" : "tool-denial",
-          tool,
-          agentId,
-          decision: allowed ? "allowed" : "denied",
-          adapter: "hosted-mcp",
-          runtime: "agent.occ.wtf",
-        },
-      }),
+      body: JSON.stringify(commitBody),
     });
 
     if (!res.ok) throw new Error(`TEE ${res.status}`);
@@ -273,7 +278,7 @@ export async function handleMcp(req: IncomingMessage, res: ServerResponse, pathn
         // The execution proof references the authorization's digest.
         // This is the causal link: authorization came first, execution depends on it.
         const { proof: execProof, digest: execDigest } = await createExecutionProof(
-          user.id, agentId, toolName, args, authObj.proofDigest
+          user.id, agentId, toolName, args, authObj.proofDigest, user.id
         );
 
         // 5. Handle built-in tools

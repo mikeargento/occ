@@ -32,6 +32,7 @@ export interface CommitDigestRequest {
 /** Pre-allocate a causal slot (nonce-first). */
 export interface AllocateSlotRequest {
   type: "allocateSlot";
+  chainId?: string;
 }
 
 export interface KeyRequest {
@@ -58,6 +59,8 @@ export interface ConvertBWRequest {
 export interface InitRequest {
   type: "init";
   lastProof?: OCCProof;
+  /** Per-chain last proofs for multi-chain epoch lineage. */
+  lastProofsPerChain?: Record<string, OCCProof>;
   /** Must be explicitly true to start without a predecessor. */
   allowGenesis?: boolean;
 }

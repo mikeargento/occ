@@ -102,28 +102,35 @@ console.log(`[enclave] epochId: ${epochId}`);
 const constructor = await Constructor.initialize({ host: nitroHost, epochId });
 
 // ---------------------------------------------------------------------------
-// Monotonic counter (in-memory; initialized from DynamoDB on boot)
+// Per-chain state — each chainId gets its own counter, prevB64, and epochLink.
+// Chains are created dynamically on first use (no registration needed).
+// The "global" chain is the default for backward compatibility.
 // ---------------------------------------------------------------------------
 
-let counter = 0n;
+interface ChainState {
+  counter: bigint;
+  lastProofHashB64: string | undefined;
+  pendingEpochLink: OCCProof["commit"]["epochLink"] | undefined;
+}
 
-// ---------------------------------------------------------------------------
-// Proof chain state — tracks last proof for prevB64 chaining
-// prevB64 = BASE64(SHA-256(canonicalize(previousProof)))
-// First proof of an epoch has no prevB64.
-// ---------------------------------------------------------------------------
+const chains = new Map<string, ChainState>();
+const DEFAULT_CHAIN = "global";
 
-let lastProofHashB64: string | undefined;
+function getChain(chainId?: string): ChainState {
+  const id = chainId ?? DEFAULT_CHAIN;
+  let chain = chains.get(id);
+  if (!chain) {
+    chain = { counter: 0n, lastProofHashB64: undefined, pendingEpochLink: undefined };
+    chains.set(id, chain);
+    console.log(`[enclave] chain created: ${id}`);
+  }
+  return chain;
+}
 
-// ---------------------------------------------------------------------------
-// Epoch lineage — set during init if a lastProof from a previous epoch is
-// provided. Consumed by the FIRST proof of this epoch (injected as
-// commit.epochLink), then cleared so subsequent proofs don't carry it.
-//
-// New epochs continue lineage, not counters. Counter starts fresh each epoch.
-// ---------------------------------------------------------------------------
-
-let pendingEpochLink: OCCProof["commit"]["epochLink"] | undefined;
+/** Get all chain IDs with their current state (for persistence on shutdown) */
+function getAllChainStates(): Map<string, ChainState> {
+  return chains;
+}
 
 // ---------------------------------------------------------------------------
 // Challenge state — pending challenges for agency signing
@@ -183,6 +190,7 @@ const SLOT_TTL_MS = 120_000; // 2 minutes
 
 interface SlotEntry {
   record: SlotAllocation;
+  chainId: string;
   expiresAt: number;
 }
 
@@ -211,12 +219,12 @@ function cleanExpiredSlots(): void {
  * The signed slot record is embedded in the resulting proof so that any
  * verifier can confirm the nonce existed before the artifact was bound.
  */
-async function handleAllocateSlot(): Promise<{ slotId: string; slot: SlotAllocation }> {
+async function handleAllocateSlot(chainId?: string): Promise<{ slotId: string; slot: SlotAllocation; chainId: string }> {
   cleanExpiredSlots();
 
-  // 1. Increment counter — the slot itself occupies a counter position,
-  //    guaranteeing slotCounter < commitCounter for any later commit.
-  counter += 1n;
+  // 1. Get or create the chain, then increment its counter.
+  const chain = getChain(chainId);
+  chain.counter += 1n;
 
   // 2. Generate fresh nonce from NSM hardware RNG
   const nonceBytes = await nitroHost.getFreshNonce();
@@ -226,13 +234,15 @@ async function handleAllocateSlot(): Promise<{ slotId: string; slot: SlotAllocat
   const time = Date.now();
 
   // 4. Build slot body — deliberately NO artifact hash
+  const resolvedChainId = chainId ?? DEFAULT_CHAIN;
   const slotBody = {
     version: "occ/slot/1" as const,
     nonceB64,
-    counter: String(counter),
+    counter: String(chain.counter),
     time,
     epochId,
     publicKeyB64,
+    ...(resolvedChainId !== DEFAULT_CHAIN ? { chainId: resolvedChainId } : {}),
   };
 
   // 5. Sign the slot body (proves enclave created this independently)
@@ -245,10 +255,10 @@ async function handleAllocateSlot(): Promise<{ slotId: string; slot: SlotAllocat
   };
 
   // 6. Store as single-use resource
-  pendingSlots.set(nonceB64, { record, expiresAt: Date.now() + SLOT_TTL_MS });
+  pendingSlots.set(nonceB64, { record, chainId: resolvedChainId, expiresAt: Date.now() + SLOT_TTL_MS });
 
-  console.log(`[enclave] slot allocated: counter=${record.counter} (${pendingSlots.size} pending)`);
-  return { slotId: nonceB64, slot: record };
+  console.log(`[enclave] slot allocated: chain=${resolvedChainId} counter=${record.counter} (${pendingSlots.size} pending)`);
+  return { slotId: nonceB64, slot: record, chainId: resolvedChainId };
 }
 
 // ---------------------------------------------------------------------------
@@ -443,9 +453,11 @@ async function handleCommit(req: {
     throw new Error("Slot not found or expired — call allocateSlot before committing");
   }
   const slotRecord = slotEntry.record;
+  const chainId = slotEntry.chainId;
+  const chain = getChain(chainId);
   pendingSlots.delete(req.slotId); // single-use consumption
 
-  console.log(`[enclave] slot consumed: counter=${slotRecord.counter} slotId=${req.slotId.slice(0, 12)}... (${pendingSlots.size} remaining)`);
+  console.log(`[enclave] slot consumed: chain=${chainId} counter=${slotRecord.counter} slotId=${req.slotId.slice(0, 12)}... (${pendingSlots.size} remaining)`);
 
   // Validate digest
   const digestB64 = req.digestB64;
@@ -500,9 +512,9 @@ async function handleCommit(req: {
   // The slot has been consumed. This commit is causally bound to
   // the pre-existing slot allocation.
 
-  // Step 1: Counter (commit counter, guaranteed > slot counter)
-  counter += 1n;
-  const counterStr = String(counter);
+  // Step 1: Counter (commit counter, guaranteed > slot counter) — per chain
+  chain.counter += 1n;
+  const counterStr = String(chain.counter);
 
   // Step 2: Nonce — use the slot's nonce (causal binding)
   // No new nonce generated here. The nonce was pre-allocated in the slot.
@@ -533,18 +545,22 @@ async function handleCommit(req: {
     epochId,
   };
 
-  // Proof chaining: include prevB64 if we have a previous proof
-  if (lastProofHashB64 !== undefined) {
-    commitFields.prevB64 = lastProofHashB64;
+  // Proof chaining: include prevB64 from THIS chain's last proof
+  if (chain.lastProofHashB64 !== undefined) {
+    commitFields.prevB64 = chain.lastProofHashB64;
   }
 
-  // Epoch lineage: inject epochLink on the FIRST proof of this epoch only.
-  // After injection, clear pendingEpochLink so subsequent proofs don't carry it.
-  // This establishes: "this epoch consumed the final proof of the previous epoch."
-  if (pendingEpochLink) {
-    commitFields.epochLink = pendingEpochLink;
-    console.log(`[enclave] epoch lineage injected: prevEpoch=${pendingEpochLink.prevEpochId.slice(0, 12)}... prevCounter=${pendingEpochLink.prevCounter}`);
-    pendingEpochLink = undefined; // single-use consumption
+  // Include chainId in commit fields (omit for global/default chain for backward compat)
+  if (chainId !== DEFAULT_CHAIN) {
+    (commitFields as Record<string, unknown>).chainId = chainId;
+  }
+
+  // Epoch lineage: inject epochLink on the FIRST proof of this chain in this epoch.
+  // After injection, clear so subsequent proofs on this chain don't carry it.
+  if (chain.pendingEpochLink) {
+    commitFields.epochLink = chain.pendingEpochLink;
+    console.log(`[enclave] epoch lineage injected: chain=${chainId} prevEpoch=${chain.pendingEpochLink.prevEpochId.slice(0, 12)}... prevCounter=${chain.pendingEpochLink.prevCounter}`);
+    chain.pendingEpochLink = undefined; // single-use consumption
   }
 
   const signedBody: SignedBody = {
@@ -636,11 +652,84 @@ async function handleCommit(req: {
     proof.metadata = req.metadata;
   }
 
-  // Update proof chain state: hash this proof for the next proof's prevB64
+  // Update THIS chain's proof state: hash this proof for the next proof's prevB64
   const proofCanonicalBytes = canonicalize(proof);
-  lastProofHashB64 = Buffer.from(sha256(proofCanonicalBytes)).toString("base64");
+  chain.lastProofHashB64 = Buffer.from(sha256(proofCanonicalBytes)).toString("base64");
 
   return proof;
+}
+
+// ---------------------------------------------------------------------------
+// Per-chain epoch lineage verification
+// Reused for both global and per-chain last proofs during init.
+// ---------------------------------------------------------------------------
+
+async function verifyAndLinkChain(chainId: string, lastProof: OCCProof): Promise<void> {
+  // 1. Validate structure
+  if (!lastProof.signer?.publicKeyB64 || !lastProof.signer?.signatureB64) {
+    throw new Error(`FATAL: chain "${chainId}" lastProof missing signer fields — enclave HALTED`);
+  }
+  if (!lastProof.commit?.epochId) {
+    throw new Error(`FATAL: chain "${chainId}" lastProof missing commit.epochId — enclave HALTED`);
+  }
+  if (!lastProof.version || lastProof.version !== "occ/1") {
+    throw new Error(`FATAL: chain "${chainId}" lastProof unsupported version — enclave HALTED`);
+  }
+  if (!lastProof.artifact?.digestB64 || !lastProof.artifact?.hashAlg) {
+    throw new Error(`FATAL: chain "${chainId}" lastProof missing artifact fields — enclave HALTED`);
+  }
+  if (!lastProof.environment?.enforcement || !lastProof.environment?.measurement) {
+    throw new Error(`FATAL: chain "${chainId}" lastProof missing environment fields — enclave HALTED`);
+  }
+
+  // 2. Reconstruct signed body and verify Ed25519 signature
+  const prevSignedBody: SignedBody = {
+    version: lastProof.version,
+    artifact: lastProof.artifact,
+    commit: lastProof.commit,
+    publicKeyB64: lastProof.signer.publicKeyB64,
+    enforcement: lastProof.environment.enforcement,
+    measurement: lastProof.environment.measurement,
+  };
+  if (lastProof.environment.attestation?.format) {
+    prevSignedBody.attestationFormat = lastProof.environment.attestation.format;
+  }
+  if (lastProof.agency?.actor) {
+    prevSignedBody.actor = lastProof.agency.actor;
+  }
+  if (lastProof.attribution) {
+    prevSignedBody.attribution = lastProof.attribution;
+  }
+
+  const prevCanonical = canonicalize(prevSignedBody);
+  const prevPubKey = Buffer.from(lastProof.signer.publicKeyB64, "base64");
+  const prevSig = Buffer.from(lastProof.signer.signatureB64, "base64");
+
+  if (prevPubKey.length !== 32) {
+    throw new Error(`FATAL: chain "${chainId}" lastProof signer key wrong length — enclave HALTED`);
+  }
+  if (prevSig.length !== 64) {
+    throw new Error(`FATAL: chain "${chainId}" lastProof signature wrong length — enclave HALTED`);
+  }
+
+  const sigValid = await verifyAsync(prevSig, prevCanonical, prevPubKey);
+  if (!sigValid) {
+    throw new Error(`FATAL: chain "${chainId}" lastProof Ed25519 signature verification FAILED — enclave HALTED`);
+  }
+
+  // 3. Compute canonical hash of the full proof
+  const prevProofHashB64 = Buffer.from(sha256(canonicalize(lastProof))).toString("base64");
+
+  // 4. Build epochLink and set it on this chain
+  const chain = getChain(chainId);
+  chain.pendingEpochLink = {
+    prevEpochId: lastProof.commit.epochId,
+    prevPublicKeyB64: lastProof.signer.publicKeyB64,
+    prevCounter: lastProof.commit.counter ?? "0",
+    prevProofHashB64,
+    toEpochId: epochId,
+    toPublicKeyB64: publicKeyB64,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -673,89 +762,35 @@ async function handleRequest(req: Record<string, unknown>): Promise<unknown> {
       // The enclave fully verifies the proof cryptographically before using it.
 
       const lastProof = (req as { lastProof?: OCCProof }).lastProof;
+      const lastProofsPerChain = (req as { lastProofsPerChain?: Record<string, OCCProof> }).lastProofsPerChain;
       const allowGenesis = (req as { allowGenesis?: boolean }).allowGenesis === true;
 
+      // ── PER-CHAIN EPOCH LINEAGE ──
+      // If lastProofsPerChain is provided, verify each chain's last proof
+      // and set up per-chain epoch links. This happens BEFORE the global
+      // lastProof check (which handles the default/global chain).
+      if (lastProofsPerChain) {
+        for (const [cid, chainLastProof] of Object.entries(lastProofsPerChain)) {
+          // Verify signature (same logic as global, extracted below)
+          await verifyAndLinkChain(cid, chainLastProof);
+          console.log(`[enclave] chain "${cid}" lineage verified`);
+        }
+      }
+
       if (lastProof) {
-        // ── STRICT PREDECESSOR VERIFICATION ──
-        // Any failure here is FATAL. The enclave will not start.
-
-        // 1. Validate structure
-        if (!lastProof.signer?.publicKeyB64 || !lastProof.signer?.signatureB64) {
-          throw new Error("FATAL: lastProof missing signer fields — enclave HALTED");
-        }
-        if (!lastProof.commit?.epochId) {
-          throw new Error("FATAL: lastProof missing commit.epochId — enclave HALTED");
-        }
-        if (!lastProof.version || lastProof.version !== "occ/1") {
-          throw new Error(`FATAL: lastProof unsupported version "${lastProof.version}" — enclave HALTED`);
-        }
-        if (!lastProof.artifact?.digestB64 || !lastProof.artifact?.hashAlg) {
-          throw new Error("FATAL: lastProof missing artifact fields — enclave HALTED");
-        }
-        if (!lastProof.environment?.enforcement || !lastProof.environment?.measurement) {
-          throw new Error("FATAL: lastProof missing environment fields — enclave HALTED");
-        }
-
-        // 2. Reconstruct the signed body and verify Ed25519 signature
-        const prevSignedBody: SignedBody = {
-          version: lastProof.version,
-          artifact: lastProof.artifact,
-          commit: lastProof.commit,
-          publicKeyB64: lastProof.signer.publicKeyB64,
-          enforcement: lastProof.environment.enforcement,
-          measurement: lastProof.environment.measurement,
-        };
-        if (lastProof.environment.attestation?.format) {
-          prevSignedBody.attestationFormat = lastProof.environment.attestation.format;
-        }
-        if (lastProof.agency?.actor) {
-          prevSignedBody.actor = lastProof.agency.actor;
-        }
-        if (lastProof.attribution) {
-          prevSignedBody.attribution = lastProof.attribution;
-        }
-
-        const prevCanonical = canonicalize(prevSignedBody);
-        const prevPubKey = Buffer.from(lastProof.signer.publicKeyB64, "base64");
-        const prevSig = Buffer.from(lastProof.signer.signatureB64, "base64");
-
-        if (prevPubKey.length !== 32) {
-          throw new Error(`FATAL: lastProof signer key is ${prevPubKey.length} bytes, expected 32 — enclave HALTED`);
-        }
-        if (prevSig.length !== 64) {
-          throw new Error(`FATAL: lastProof signature is ${prevSig.length} bytes, expected 64 — enclave HALTED`);
-        }
-
-        const sigValid = await verifyAsync(prevSig, prevCanonical, prevPubKey);
-        if (!sigValid) {
-          throw new Error("FATAL: lastProof Ed25519 signature verification FAILED — enclave HALTED");
-        }
-
-        // 3. Compute canonical hash of the full proof (deterministic, sorted keys)
-        const prevProofHashB64 = Buffer.from(sha256(canonicalize(lastProof))).toString("base64");
-
-        // 4. Build epochLink with successor binding
-        // toEpochId and toPublicKeyB64 bind this predecessor to THIS specific successor.
-        pendingEpochLink = {
-          prevEpochId: lastProof.commit.epochId,
-          prevPublicKeyB64: lastProof.signer.publicKeyB64,
-          prevCounter: lastProof.commit.counter ?? "0",
-          prevProofHashB64,
-          toEpochId: epochId,
-          toPublicKeyB64: publicKeyB64,
-        };
-
-        console.log(`[enclave] epoch lineage VERIFIED:`);
-        console.log(`  prevEpoch  = ${pendingEpochLink.prevEpochId.slice(0, 16)}...`);
-        console.log(`  prevCounter= ${pendingEpochLink.prevCounter}`);
-        console.log(`  prevHash   = ${pendingEpochLink.prevProofHashB64.slice(0, 16)}...`);
+        // Global/default chain lineage — uses the shared verifyAndLinkChain function
+        await verifyAndLinkChain(DEFAULT_CHAIN, lastProof);
+        const globalChain = getChain(DEFAULT_CHAIN);
+        console.log(`[enclave] global epoch lineage VERIFIED:`);
+        console.log(`  prevEpoch  = ${globalChain.pendingEpochLink!.prevEpochId.slice(0, 16)}...`);
+        console.log(`  prevCounter= ${globalChain.pendingEpochLink!.prevCounter}`);
         console.log(`  → thisEpoch= ${epochId.slice(0, 16)}...`);
       } else if (allowGenesis) {
         // ── EXPLICIT GENESIS ──
         // No predecessor — this is the first epoch in the lineage.
         console.log(`[enclave] GENESIS epoch (no predecessor, allowGenesis=true)`);
         console.log(`  epochId = ${epochId.slice(0, 16)}...`);
-        pendingEpochLink = undefined;
+        // Genesis — no pending epoch links on any chain
       } else {
         // ── FAIL-CLOSED ──
         // No lastProof AND no allowGenesis flag → refuse to start.
@@ -766,12 +801,12 @@ async function handleRequest(req: Record<string, unknown>): Promise<unknown> {
         );
       }
 
-      return { counter: String(counter), epochId };
+      return { counter: "0", epochId, chains: chains.size };
     }
     case "health": {
       return {
         status: "ok",
-        counter: String(counter),
+        chains: chains.size,
         publicKeyB64,
         measurement,
         enforcement: "measured-tee",
@@ -779,7 +814,8 @@ async function handleRequest(req: Record<string, unknown>): Promise<unknown> {
       };
     }
     case "allocateSlot": {
-      return await handleAllocateSlot();
+      const slotChainId = (req as { chainId?: string }).chainId;
+      return await handleAllocateSlot(slotChainId);
     }
     case "challenge": {
       return await handleChallenge();

@@ -186,7 +186,7 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
     const { proof, digest } = await commitPolicyProof(userId, {
       categories: body.categories ?? {},
       customRules: body.customRules ?? [],
-    });
+    }, userId);
     const policy = await db.createPolicy(userId, {
       name: body.name ?? "default",
       allowedTools: body.allowedTools ?? [],
@@ -390,7 +390,7 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
       // ── CREATE AUTHORIZATION OBJECT ──
       // This is NOT a flag flip. This creates a cryptographic object
       // that must exist before execution is reachable.
-      const authResult = await createAuthorizationObject(userId, req_entry.agent_id, req_entry.tool);
+      const authResult = await createAuthorizationObject(userId, req_entry.agent_id, req_entry.tool, undefined, userId);
       digestB64 = authResult.digest;
       proof = authResult.proof;
     }
@@ -427,7 +427,7 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
 
     // ── CREATE REVOCATION OBJECT ──
     // This supersedes the authorization. After this, no execution path exists.
-    const { proof, digest } = await createRevocationObject(userId, agentId, tool, authObj.proofDigest);
+    const { proof, digest } = await createRevocationObject(userId, agentId, tool, authObj.proofDigest, userId);
 
     await db.revokePermission(userId, agentId, tool, digest, proof);
     await db.addProof(userId, {
