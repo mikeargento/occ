@@ -99,7 +99,7 @@ export default function App() {
 function Shell({ user, children }: { user?: any; children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a] text-[#111] dark:text-[#e5e5e5]">
-      <header className="sticky top-0 z-50 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-[#eee] dark:border-[#1a1a1a]">
+      <header className="sticky top-0 z-50 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-[#ddd] dark:border-[#1a1a1a]">
         <nav className="mx-auto max-w-7xl px-6 flex h-14 items-center justify-between">
           <a href="https://occ.wtf" className="text-[20px] tracking-[-0.02em] font-black">OCC</a>
           <div className="flex items-center gap-1">
@@ -109,7 +109,7 @@ function Shell({ user, children }: { user?: any; children: React.ReactNode }) {
               className="text-sm px-3 py-1.5 text-[#999] dark:text-[#888] hover:text-[#111] dark:hover:text-[#e5e5e5] transition-colors">Docs</a>
             <ThemeToggle />
             {user && (
-              <a href="/auth/logout" className="flex items-center gap-2 ml-3 text-[12px] text-[#bbb] dark:text-[#888] hover:text-[#666] dark:hover:text-[#999] transition-colors">
+              <a href="/auth/logout" className="flex items-center gap-2 ml-3 text-[12px] text-[#888] dark:text-[#888] hover:text-[#666] dark:hover:text-[#999] transition-colors">
                 {user.avatar && <img src={user.avatar} className="w-6 h-6 rounded-full" alt="" />}
               </a>
             )}
@@ -275,7 +275,7 @@ function Dashboard() {
 
         {/* ── LEFT: Rules ── */}
         <div className="lg:w-[400px] flex-shrink-0">
-          <div className="bg-white dark:bg-[#111] rounded-2xl border border-[#eee] dark:border-[#1a1a1a] overflow-hidden">
+          <div className="bg-white dark:bg-[#111] rounded-2xl border border-[#ddd] dark:border-[#1a1a1a] overflow-hidden">
 
             {/* Connect link */}
             <div className="px-5 py-3.5 border-b border-[#f0f0f0] dark:border-[#1a1a1a]">
@@ -286,7 +286,7 @@ function Dashboard() {
                       className={`px-2.5 py-0.5 text-[11px] font-medium rounded-md transition-colors ${
                         connectTab === t
                           ? "bg-[#f0f0f0] dark:bg-[#1a1a1a] text-[#111] dark:text-[#e5e5e5]"
-                          : "text-[#bbb] dark:text-[#888] hover:text-[#888]"
+                          : "text-[#888] dark:text-[#888] hover:text-[#888]"
                       }`}>
                       {t === "url" ? "URL" : t === "terminal" ? "Terminal" : "JSON"}
                     </button>
@@ -304,7 +304,7 @@ function Dashboard() {
                   {copied ? "✓" : "Copy"}
                 </button>
               </div>
-              <div className="h-8 flex items-center px-3 rounded-lg bg-[#f7f7f7] dark:bg-[#0a0a0a] border border-[#eee] dark:border-[#151515] overflow-hidden">
+              <div className="h-8 flex items-center px-3 rounded-lg bg-[#f7f7f7] dark:bg-[#0a0a0a] border border-[#ddd] dark:border-[#151515] overflow-hidden">
                 <code className="text-[11px] font-mono text-[#999] dark:text-[#888] truncate">
                   {connectTab === "url" && mcpUrl}
                   {connectTab === "terminal" && `claude mcp add occ --transport http ${mcpUrl}`}
@@ -325,7 +325,7 @@ function Dashboard() {
                 className={`h-8 px-4 text-[12px] font-semibold rounded-lg transition-all active:scale-[0.97] flex items-center gap-2 ${
                   isDirty
                     ? "bg-emerald-500 text-white hover:bg-emerald-600"
-                    : "bg-[#f0f0f0] dark:bg-[#1a1a1a] text-[#ccc] dark:text-[#777] cursor-default"
+                    : "bg-[#f0f0f0] dark:bg-[#1a1a1a] text-[#999] dark:text-[#777] cursor-default"
                 }`}>
                 {committing && <Spinner size={12} color="white" />}
                 {committing ? "Signing..." : isDirty ? "Commit to chain" : "Rules saved"}
@@ -341,13 +341,13 @@ function Dashboard() {
                   <div key={cat.key}>
                     <div className="flex items-center gap-3 px-5 py-3 hover:bg-[#fafafa] dark:hover:bg-[#0e0e0e] transition-colors">
                       <button onClick={() => setExpanded(isExpanded ? null : cat.key)}
-                        className="text-[10px] text-[#ccc] dark:text-[#777] w-4 flex-shrink-0 transition-transform"
+                        className="text-[10px] text-[#999] dark:text-[#777] w-4 flex-shrink-0 transition-transform"
                         style={{ transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)" }}>
                         ▶
                       </button>
                       <div className="flex-1 min-w-0">
                         <span className="text-[14px] font-medium">{cat.label}</span>
-                        <span className="text-[12px] text-[#bbb] dark:text-[#888] ml-2">{cat.desc}</span>
+                        <span className="text-[12px] text-[#888] dark:text-[#888] ml-2">{cat.desc}</span>
                       </div>
                       <Toggle on={isOn} onChange={() => toggleCategory(cat.key)} />
                     </div>
@@ -371,19 +371,19 @@ function Dashboard() {
 
             {/* Custom rules */}
             <div className="border-t border-[#f0f0f0] dark:border-[#1a1a1a] px-5 py-4">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-[#bbb] dark:text-[#888] mb-3">Custom rules</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-[#888] dark:text-[#888] mb-3">Custom rules</p>
               {customRules.map((rule, i) => (
                 <div key={i} className="flex items-start gap-2 mb-2 group">
                   <span className="text-[13px] text-[#666] dark:text-[#888] flex-1 leading-snug">{rule}</span>
                   <button onClick={() => removeCustomRule(i)}
-                    className="text-[11px] text-[#ddd] dark:text-[#666] hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0 mt-0.5">✕</button>
+                    className="text-[11px] text-[#aaa] dark:text-[#666] hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0 mt-0.5">✕</button>
                 </div>
               ))}
               <div className="flex gap-2 mt-2">
                 <input value={newRule} onChange={e => setNewRule(e.target.value)}
                   onKeyDown={e => e.key === "Enter" && addCustomRule()}
                   placeholder="e.g. Never delete production files"
-                  className="flex-1 h-9 px-3 text-[13px] rounded-lg bg-[#f7f7f7] dark:bg-[#0a0a0a] border border-[#eee] dark:border-[#1a1a1a] placeholder:text-[#ccc] dark:placeholder:text-[#333] focus:outline-none focus:ring-1 focus:ring-emerald-400/30" />
+                  className="flex-1 h-9 px-3 text-[13px] rounded-lg bg-[#f7f7f7] dark:bg-[#0a0a0a] border border-[#ddd] dark:border-[#1a1a1a] placeholder:text-[#999] dark:placeholder:text-[#333] focus:outline-none focus:ring-1 focus:ring-emerald-400/30" />
                 <button onClick={addCustomRule} disabled={!newRule.trim()}
                   className="h-9 px-3 text-[12px] font-medium rounded-lg bg-[#f0f0f0] dark:bg-[#1a1a1a] text-[#999] dark:text-[#888] hover:text-[#666] dark:hover:text-[#888] disabled:opacity-30 transition-colors">
                   Add
@@ -404,9 +404,9 @@ function Dashboard() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[12px] font-medium text-emerald-600 dark:text-emerald-400">Rules committed to chain</p>
-                    <p className="text-[11px] font-mono text-[#bbb] dark:text-[#777] group-hover:text-emerald-500 transition-colors truncate">{lastCommitDigest}</p>
+                    <p className="text-[11px] font-mono text-[#888] dark:text-[#777] group-hover:text-emerald-500 transition-colors truncate">{lastCommitDigest}</p>
                   </div>
-                  <span className="text-[11px] text-[#ccc] dark:text-[#666] group-hover:text-emerald-500 transition-colors flex-shrink-0">View proof ↗</span>
+                  <span className="text-[11px] text-[#999] dark:text-[#666] group-hover:text-emerald-500 transition-colors flex-shrink-0">View proof ↗</span>
                 </a>
               </div>
             )}
@@ -424,7 +424,7 @@ function Dashboard() {
                     <div className="flex items-center gap-3 mb-3">
                       <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
                       <span className="text-[14px] font-mono font-medium flex-1">{p.tool}</span>
-                      <span className="text-[11px] text-[#bbb] dark:text-[#888]">{p.clientName}</span>
+                      <span className="text-[11px] text-[#888] dark:text-[#888]">{p.clientName}</span>
                     </div>
                     <div className="flex gap-2">
                       <button onClick={() => act(p.id, () => approvePermission(p.id))} disabled={busy === p.id}
@@ -446,7 +446,7 @@ function Dashboard() {
 
         {/* ── RIGHT: Activity ── */}
         <div className="flex-1 min-w-0">
-          <div className="bg-white dark:bg-[#111] rounded-2xl border border-[#eee] dark:border-[#1a1a1a] overflow-hidden">
+          <div className="bg-white dark:bg-[#111] rounded-2xl border border-[#ddd] dark:border-[#1a1a1a] overflow-hidden">
             <div className="px-5 py-4 border-b border-[#f0f0f0] dark:border-[#1a1a1a]">
               <h2 className="text-[16px] font-bold">Activity</h2>
             </div>
@@ -456,8 +456,8 @@ function Dashboard() {
                 <div className="w-10 h-10 rounded-full bg-[#f5f5f5] dark:bg-[#151515] flex items-center justify-center mx-auto mb-4">
                   <div className="w-2 h-2 rounded-full bg-[#ddd] dark:bg-[#333] animate-pulse" />
                 </div>
-                <p className="text-[14px] text-[#bbb] dark:text-[#777]">No activity yet</p>
-                <p className="text-[12px] text-[#ddd] dark:text-[#2a2a2a] mt-1">Actions will appear here as your AI works</p>
+                <p className="text-[14px] text-[#888] dark:text-[#777]">No activity yet</p>
+                <p className="text-[12px] text-[#aaa] dark:text-[#2a2a2a] mt-1">Actions will appear here as your AI works</p>
               </div>
             ) : (
               <div className="divide-y divide-[#f5f5f5] dark:divide-[#151515]">
@@ -468,9 +468,9 @@ function Dashboard() {
                     }`} />
                     <div className="flex-1 min-w-0">
                       <span className="text-[14px] font-mono">{p.tool}</span>
-                      <span className="text-[12px] text-[#ccc] dark:text-[#777] ml-2">{p.clientName}</span>
+                      <span className="text-[12px] text-[#999] dark:text-[#777] ml-2">{p.clientName}</span>
                     </div>
-                    <span className="text-[11px] text-[#ddd] dark:text-[#666] flex-shrink-0">{timeLabel(p.resolvedAt ?? p.requestedAt)}</span>
+                    <span className="text-[11px] text-[#aaa] dark:text-[#666] flex-shrink-0">{timeLabel(p.resolvedAt ?? p.requestedAt)}</span>
                     {p.proofDigest && (
                       <a href={explorerUrl(p.proofDigest)} target="_blank" rel="noopener noreferrer"
                         className="text-[11px] text-blue-500/60 hover:text-blue-500 transition-colors flex-shrink-0 font-mono">
@@ -487,7 +487,7 @@ function Dashboard() {
 
       {/* Footer */}
       <div className="mt-12 pb-8 text-center">
-        <p className="text-[11px] text-[#ddd] dark:text-[#2a2a2a]">
+        <p className="text-[11px] text-[#aaa] dark:text-[#2a2a2a]">
           Every action is signed through a Trusted Execution Environment · <a href="https://occ.wtf" target="_blank" rel="noopener noreferrer" className="hover:text-[#999] dark:hover:text-[#555] transition-colors">occ.wtf</a>
         </p>
       </div>
@@ -515,7 +515,7 @@ function ThemeToggle() {
     localStorage.setItem("occ-theme", next ? "dark" : "light");
   };
   return (
-    <button onClick={toggle} className="p-2 text-[#bbb] dark:text-[#888] hover:text-[#666] dark:hover:text-[#999] transition-colors" aria-label="Toggle theme">
+    <button onClick={toggle} className="p-2 text-[#888] dark:text-[#888] hover:text-[#666] dark:hover:text-[#999] transition-colors" aria-label="Toggle theme">
       {dark ? (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
           <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
@@ -537,7 +537,7 @@ function Toggle({ on, onChange, small }: { on: boolean; onChange: () => void; sm
   return (
     <button onClick={onChange}
       className={`${w} ${h} rounded-full transition-colors duration-150 flex items-center px-[2px] flex-shrink-0 ${
-        on ? "bg-emerald-500" : "bg-[#e0e0e0] dark:bg-[#2a2a2a]"
+        on ? "bg-emerald-500" : "bg-[#ccc] dark:bg-[#2a2a2a]"
       }`}>
       <div className={`${dot} rounded-full bg-white shadow-sm transition-transform duration-150 ${on ? translate : "translate-x-0"}`} />
     </button>
