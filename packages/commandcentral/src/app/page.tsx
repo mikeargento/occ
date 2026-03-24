@@ -99,18 +99,18 @@ export default function App() {
 function Shell({ user, children }: { user?: any; children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a] text-[#111] dark:text-[#e5e5e5]">
-      <header className="sticky top-0 z-50 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-[#ddd] dark:border-[#1a1a1a]">
-        <nav className="mx-auto max-w-7xl px-6 flex h-14 items-center justify-between">
+      <header className="sticky top-0 z-50 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-[#ddd]/50 dark:border-[#1a1a1a]/50">
+        <nav className="mx-auto max-w-6xl px-6 flex h-16 items-center justify-between">
           <a href="https://occ.wtf" className="text-[20px] tracking-[-0.02em] font-black">OCC</a>
           <div className="flex items-center gap-1">
             <a href="https://occ.wtf/explorer" target="_blank" rel="noopener noreferrer"
-              className="text-sm px-3 py-1.5 text-[#999] dark:text-[#888] hover:text-[#111] dark:hover:text-[#e5e5e5] transition-colors">Explorer</a>
+              className="text-sm font-semibold px-3 py-1.5 text-[#999] dark:text-[#888] hover:text-[#111] dark:hover:text-[#e5e5e5] transition-colors">Explorer</a>
             <a href="https://occ.wtf/docs" target="_blank" rel="noopener noreferrer"
-              className="text-sm px-3 py-1.5 text-[#999] dark:text-[#888] hover:text-[#111] dark:hover:text-[#e5e5e5] transition-colors">Docs</a>
+              className="text-sm font-semibold px-3 py-1.5 text-[#999] dark:text-[#888] hover:text-[#111] dark:hover:text-[#e5e5e5] transition-colors">Docs</a>
             <ThemeToggle />
             {user && (
-              <a href="/auth/logout" className="flex items-center gap-2 ml-3 text-[12px] text-[#888] dark:text-[#888] hover:text-[#666] dark:hover:text-[#999] transition-colors">
-                {user.avatar && <img src={user.avatar} className="w-6 h-6 rounded-full" alt="" />}
+              <a href="/auth/logout" className="flex items-center gap-2 ml-3">
+                {user.avatar && <img src={user.avatar} className="w-7 h-7 rounded-full" alt="" />}
               </a>
             )}
           </div>
@@ -268,7 +268,7 @@ function Dashboard() {
   const hasAnything = perms.length > 0 || Object.keys(committedCategories).length > 0;
 
   return (
-    <div className="mx-auto max-w-7xl px-6 py-6">
+    <div className="mx-auto max-w-6xl px-6 py-6">
 
       {/* Two column layout */}
       <div className="flex flex-col lg:flex-row gap-6">
