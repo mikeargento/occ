@@ -37,7 +37,7 @@ const PORT = Number(
 // Proof indexing — fire-and-forget POST to explorer database
 // ---------------------------------------------------------------------------
 
-const INDEX_URL = process.env["PROOF_INDEX_URL"] ?? ""; // e.g. "https://proofstudio.xyz/api/proofs"
+const INDEX_URL = process.env["PROOF_INDEX_URL"] ?? "https://www.occ.wtf/api/proofs";
 
 async function indexProofs(proofs: OCCProof[]): Promise<void> {
   if (!INDEX_URL) return;
