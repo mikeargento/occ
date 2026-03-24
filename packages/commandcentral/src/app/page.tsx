@@ -270,49 +270,6 @@ function Dashboard() {
   return (
     <div className="mx-auto max-w-7xl px-6 py-6">
 
-      {/* Connect bar — three formats */}
-      <div className="mb-6 bg-white dark:bg-[#111] rounded-2xl border border-[#eee] dark:border-[#1a1a1a] overflow-hidden">
-        <div className="flex items-center justify-between px-4 pt-3 pb-2">
-          <div className="flex gap-1">
-            {(["url", "terminal", "json"] as const).map(t => (
-              <button key={t} onClick={() => setConnectTab(t)}
-                className={`px-3 py-1 text-[12px] font-medium rounded-md transition-colors ${
-                  connectTab === t
-                    ? "bg-[#f0f0f0] dark:bg-[#1a1a1a] text-[#111] dark:text-[#e5e5e5]"
-                    : "text-[#bbb] dark:text-[#888] hover:text-[#888]"
-                }`}>
-                {t === "url" ? "URL" : t === "terminal" ? "Terminal" : "JSON"}
-              </button>
-            ))}
-          </div>
-          <button onClick={() => {
-            const text = connectTab === "url" ? mcpUrl
-              : connectTab === "terminal" ? `claude mcp add occ --transport http ${mcpUrl}`
-              : JSON.stringify({ mcpServers: { occ: { url: mcpUrl } } }, null, 2);
-            navigator.clipboard.writeText(text);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
-          }}
-            className="h-8 px-4 text-[12px] font-semibold rounded-lg bg-[#111] dark:bg-white text-white dark:text-[#111] hover:bg-[#333] dark:hover:bg-[#ddd] transition-all active:scale-[0.97]">
-            {copied ? "✓ Copied" : "Copy"}
-          </button>
-        </div>
-        <div className="px-4 pb-3">
-          <div className="h-10 flex items-center px-3 rounded-lg bg-[#f7f7f7] dark:bg-[#0a0a0a] border border-[#eee] dark:border-[#151515] overflow-x-auto">
-            <code className="text-[12px] font-mono text-[#999] dark:text-[#888] whitespace-nowrap select-all">
-              {connectTab === "url" && mcpUrl}
-              {connectTab === "terminal" && `claude mcp add occ --transport http ${mcpUrl}`}
-              {connectTab === "json" && `{ "mcpServers": { "occ": { "url": "${mcpUrl}" } } }`}
-            </code>
-          </div>
-          <p className="text-[11px] text-[#999] dark:text-[#666] mt-2">
-            {connectTab === "url" && "Paste into Cursor → Settings → MCP → Add Custom MCP"}
-            {connectTab === "terminal" && "Run in your terminal to connect Claude Code"}
-            {connectTab === "json" && "Add to .cursor/mcp.json or claude_desktop_config.json"}
-          </p>
-        </div>
-      </div>
-
       {/* Two column layout */}
       <div className="flex flex-col lg:flex-row gap-6">
 
@@ -391,6 +348,47 @@ function Dashboard() {
                   Add
                 </button>
               </div>
+            </div>
+
+            {/* Connect — same width as rules panel */}
+            <div className="border-t border-[#f0f0f0] dark:border-[#1a1a1a] px-5 py-3.5">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex gap-1">
+                  {(["url", "terminal", "json"] as const).map(t => (
+                    <button key={t} onClick={() => setConnectTab(t)}
+                      className={`px-2.5 py-0.5 text-[11px] font-medium rounded-md transition-colors ${
+                        connectTab === t
+                          ? "bg-[#f0f0f0] dark:bg-[#1a1a1a] text-[#111] dark:text-[#e5e5e5]"
+                          : "text-[#bbb] dark:text-[#888] hover:text-[#888]"
+                      }`}>
+                      {t === "url" ? "URL" : t === "terminal" ? "Terminal" : "JSON"}
+                    </button>
+                  ))}
+                </div>
+                <button onClick={() => {
+                  const text = connectTab === "url" ? mcpUrl
+                    : connectTab === "terminal" ? `claude mcp add occ --transport http ${mcpUrl}`
+                    : JSON.stringify({ mcpServers: { occ: { url: mcpUrl } } }, null, 2);
+                  navigator.clipboard.writeText(text);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                }}
+                  className="h-7 px-3 text-[11px] font-semibold rounded-md bg-[#111] dark:bg-white text-white dark:text-[#111] hover:bg-[#333] dark:hover:bg-[#ddd] transition-all active:scale-[0.97]">
+                  {copied ? "✓" : "Copy"}
+                </button>
+              </div>
+              <div className="h-8 flex items-center px-3 rounded-lg bg-[#f7f7f7] dark:bg-[#0a0a0a] border border-[#eee] dark:border-[#151515] overflow-x-auto">
+                <code className="text-[11px] font-mono text-[#999] dark:text-[#888] whitespace-nowrap select-all">
+                  {connectTab === "url" && mcpUrl}
+                  {connectTab === "terminal" && `claude mcp add occ --transport http ${mcpUrl}`}
+                  {connectTab === "json" && `{ "mcpServers": { "occ": { "url": "${mcpUrl}" } } }`}
+                </code>
+              </div>
+              <p className="text-[10px] text-[#999] dark:text-[#666] mt-1.5">
+                {connectTab === "url" && "Paste into Cursor → Settings → MCP"}
+                {connectTab === "terminal" && "Run in terminal to connect Claude Code"}
+                {connectTab === "json" && "Add to .cursor/mcp.json or config file"}
+              </p>
             </div>
 
             {/* Policy proof */}
