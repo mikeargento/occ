@@ -18,6 +18,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem("occ-theme") as Theme | null;
       if (stored === "light" || stored === "dark") return stored;
+      // Check cross-domain cookie
+      const cookie = document.cookie.match(/occ-theme=(dark|light)/);
+      if (cookie) return cookie[1] as Theme;
     }
     return "dark";
   });
@@ -29,6 +32,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     root.classList.remove("dark", "light");
     root.classList.add(theme);
     localStorage.setItem("occ-theme", theme);
+    // Cross-domain sync via cookie on .occ.wtf
+    document.cookie = `occ-theme=${theme}; path=/; domain=.occ.wtf; max-age=31536000; SameSite=Lax`;
   }, [theme, mounted]);
 
   const toggle = () => setTheme((t) => (t === "dark" ? "light" : "dark"));

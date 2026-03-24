@@ -498,9 +498,11 @@ function Dashboard() {
 function ThemeToggle() {
   const [dark, setDark] = useState(true);
   useEffect(() => {
-    // Initialize theme from localStorage on mount
+    // Check localStorage first, then cross-domain cookie
     const saved = localStorage.getItem("occ-theme");
-    const isDark = saved !== "light"; // default to dark
+    const cookie = document.cookie.match(/occ-theme=(dark|light)/);
+    const theme = saved ?? cookie?.[1] ?? "dark";
+    const isDark = theme !== "light";
     setDark(isDark);
     document.documentElement.classList.toggle("dark", isDark);
   }, []);
@@ -509,6 +511,7 @@ function ThemeToggle() {
     setDark(next);
     document.documentElement.classList.toggle("dark", next);
     localStorage.setItem("occ-theme", next ? "dark" : "light");
+    document.cookie = `occ-theme=${next ? "dark" : "light"}; path=/; domain=.occ.wtf; max-age=31536000; SameSite=Lax`;
   };
   return (
     <button onClick={toggle} className="p-2 text-[#888] dark:text-[#888] hover:text-[#666] dark:hover:text-[#999] transition-colors" aria-label="Toggle theme">
