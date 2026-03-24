@@ -54,7 +54,7 @@ function Login() {
     <Center>
       <div className="text-center px-6 -mt-20 max-w-md">
         <h1 className="text-[48px] font-black tracking-[-0.04em] leading-[1.05] mb-4">
-          Control what<br />your AI can do.
+          Define what<br />your AI can do.
         </h1>
         <p className="text-[15px] text-[#999] dark:text-[#666] mb-10 leading-relaxed">
           Every rule is cryptographically proven before a single action can exist.
