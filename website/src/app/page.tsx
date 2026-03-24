@@ -721,33 +721,6 @@ export default function Home() {
       </section>
       )}
 
-      {/* CTA */}
-      <ScrollReveal>
-      <section className="text-center">
-        <h2 className="text-2xl font-semibold tracking-[-0.02em] mb-4">
-          Get started
-        </h2>
-        <p className="text-text-secondary text-base leading-relaxed max-w-lg mx-auto mb-8">
-          One link. Connect your AI. Define what it can do.
-        </p>
-        <div className="flex items-center justify-center gap-4 flex-wrap">
-          <a
-            href="https://agent.occ.wtf"
-            className="inline-flex items-center justify-center rounded-lg bg-text text-bg px-6 py-3 text-sm font-semibold transition-opacity hover:opacity-90"
-          >
-            Open Dashboard
-          </a>
-          <a
-            href="https://github.com/mikeargento/occ"
-            target="_blank"
-            rel="noopener"
-            className="inline-flex items-center justify-center rounded-lg border border-border-subtle px-6 py-3 text-sm font-semibold text-text-secondary hover:text-text hover:border-border transition-colors"
-          >
-            GitHub
-          </a>
-        </div>
-      </section>
-      </ScrollReveal>
     </div>
     </>
   );
