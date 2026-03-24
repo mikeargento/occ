@@ -565,7 +565,7 @@ export default function Home() {
               AI agents can do.
             </h1>
             <p className="hero-animate text-text-secondary text-base sm:text-lg md:text-xl leading-relaxed" style={{ animationDelay: "120ms" }}>
-              OCC is a system where computations are only executable if they are authorized by a previously committed, cryptographically bound policy.
+              Every rule is cryptographically proven before a single action can exist.
             </p>
           </div>
           <div className="hero-animate grid grid-cols-4 gap-3 sm:gap-5 shrink-0" style={{ animationDelay: "200ms" }}>

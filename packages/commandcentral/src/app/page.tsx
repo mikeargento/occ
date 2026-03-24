@@ -57,8 +57,7 @@ function Login() {
           Control what<br />your AI can do.
         </h1>
         <p className="text-[15px] text-[#999] dark:text-[#666] mb-10 leading-relaxed">
-          One link. Every tool call your AI makes goes through OCC.
-          You decide what&apos;s allowed. Everything gets a cryptographic proof.
+          Every rule is cryptographically proven before a single action can exist.
         </p>
         <a href="/auth/login/github"
           className="inline-flex items-center gap-2.5 h-12 px-8 text-[14px] font-semibold rounded-full bg-[#111] dark:bg-white text-white dark:text-[#111] hover:bg-[#333] dark:hover:bg-[#ddd] transition-colors">
