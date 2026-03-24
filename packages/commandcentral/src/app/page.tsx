@@ -304,8 +304,8 @@ function Dashboard() {
                   {copied ? "✓" : "Copy"}
                 </button>
               </div>
-              <div className="h-8 flex items-center px-3 rounded-lg bg-[#f7f7f7] dark:bg-[#0a0a0a] border border-[#eee] dark:border-[#151515] overflow-x-auto">
-                <code className="text-[11px] font-mono text-[#999] dark:text-[#888] whitespace-nowrap select-all">
+              <div className="h-8 flex items-center px-3 rounded-lg bg-[#f7f7f7] dark:bg-[#0a0a0a] border border-[#eee] dark:border-[#151515] overflow-hidden">
+                <code className="text-[11px] font-mono text-[#999] dark:text-[#888] truncate">
                   {connectTab === "url" && mcpUrl}
                   {connectTab === "terminal" && `claude mcp add occ --transport http ${mcpUrl}`}
                   {connectTab === "json" && `{ "mcpServers": { "occ": { "url": "${mcpUrl}" } } }`}
