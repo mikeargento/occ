@@ -140,6 +140,12 @@ export const db = {
     return res.rows[0] ?? null;
   },
 
+  async getUserByEmail(email: string) {
+    const p = getPool();
+    const res = await p.query("SELECT * FROM occ_users WHERE email = $1", [email]);
+    return res.rows[0] ?? null;
+  },
+
   async upsertUser(user: { id: string; email: string; name: string; avatar: string; provider: string; providerId: string; mcpToken: string }) {
     const p = getPool();
     await p.query(

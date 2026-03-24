@@ -42,12 +42,15 @@ export function getSessionUserId(req: IncomingMessage): string | null {
 async function createOrGetUser(provider: string, providerId: string, email: string, name: string, avatar: string) {
   const userId = `${provider}-${providerId}`;
   const existing = await db.getUserById(userId);
-  if (!existing) {
-    const mcpToken = crypto.randomBytes(24).toString("hex");
-    await db.upsertUser({ id: userId, email, name, avatar, provider, providerId, mcpToken });
-    // Create a default agent for the user
-    await db.upsertAgent(userId, { id: "default", name: "Default" });
-  }
+  if (existing) return userId;
+
+  // Check if a user with this email already exists (different provider, same person)
+  const byEmail = await db.getUserByEmail(email);
+  if (byEmail) return byEmail.id; // Log them in as the existing user
+
+  const mcpToken = crypto.randomBytes(24).toString("hex");
+  await db.upsertUser({ id: userId, email, name, avatar, provider, providerId, mcpToken });
+  await db.upsertAgent(userId, { id: "default", name: "Default" });
   return userId;
 }
 
