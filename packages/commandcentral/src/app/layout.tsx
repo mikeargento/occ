@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "OCC — Define what your AI agents can do",
-  description: "Every rule is cryptographically proven before a single action can exist.",
+  description: "Every rule is mathematically proven before a single action can exist.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

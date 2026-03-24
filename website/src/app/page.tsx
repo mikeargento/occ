@@ -565,7 +565,7 @@ export default function Home() {
               AI agents can do.
             </h1>
             <p className="hero-animate text-text-secondary text-base sm:text-lg md:text-xl leading-relaxed mb-8" style={{ animationDelay: "120ms" }}>
-              Every rule is cryptographically proven before a single action can exist.
+              Every rule is mathematically proven before a single action can exist.
             </p>
             <div className="hero-animate" style={{ animationDelay: "180ms" }}>
               <a href="https://agent.occ.wtf"
