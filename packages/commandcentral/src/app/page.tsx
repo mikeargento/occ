@@ -24,18 +24,17 @@ export default function App() {
 
 function Page({ user, children }: { user?: any; children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-white text-[#111]">
-      {/* Top bar */}
-      <nav className="h-14 px-6 flex items-center justify-between border-b border-[#f0f0f0]">
+    <div className="min-h-screen bg-white dark:bg-[#0a0a0a] text-[#111] dark:text-[#e5e5e5]">
+      <nav className="h-14 px-6 flex items-center justify-between border-b border-[#f0f0f0] dark:border-[#1a1a1a]">
         <div className="flex items-center gap-6">
           <span className="text-[16px] font-black tracking-[-0.03em]">OCC</span>
           <div className="hidden sm:flex items-center gap-5">
-            <a href="https://occ.wtf/explorer" className="text-[13px] text-[#999] hover:text-[#111] transition-colors">Explorer</a>
-            <a href="https://occ.wtf/docs" className="text-[13px] text-[#999] hover:text-[#111] transition-colors">Docs</a>
+            <a href="https://occ.wtf/explorer" target="_blank" rel="noopener noreferrer" className="text-[13px] text-[#999] dark:text-[#666] hover:text-[#111] dark:hover:text-[#e5e5e5] transition-colors">Explorer</a>
+            <a href="https://occ.wtf/docs" target="_blank" rel="noopener noreferrer" className="text-[13px] text-[#999] dark:text-[#666] hover:text-[#111] dark:hover:text-[#e5e5e5] transition-colors">Docs</a>
           </div>
         </div>
         {user && (
-          <a href="/auth/logout" className="flex items-center gap-2 text-[12px] text-[#bbb] hover:text-[#666] transition-colors">
+          <a href="/auth/logout" className="flex items-center gap-2 text-[12px] text-[#bbb] dark:text-[#555] hover:text-[#666] dark:hover:text-[#999] transition-colors">
             {user.avatar && <img src={user.avatar} className="w-6 h-6 rounded-full" alt="" />}
             <span className="hidden sm:inline">{user.name}</span>
           </a>
@@ -55,14 +54,14 @@ function Login() {
     <Center>
       <div className="text-center px-6 -mt-20 max-w-md">
         <h1 className="text-[48px] font-black tracking-[-0.04em] leading-[1.05] mb-4">
-          Control wtf<br />your AI can do.
+          Control what<br />your AI can do.
         </h1>
-        <p className="text-[15px] text-[#999] mb-10 leading-relaxed">
+        <p className="text-[15px] text-[#999] dark:text-[#666] mb-10 leading-relaxed">
           One link. Every tool call your AI makes goes through OCC.
           You decide what&apos;s allowed. Everything gets a cryptographic proof.
         </p>
         <a href="/auth/login/github"
-          className="inline-flex items-center gap-2.5 h-12 px-8 text-[14px] font-semibold rounded-full bg-[#111] text-white hover:bg-[#333] transition-colors">
+          className="inline-flex items-center gap-2.5 h-12 px-8 text-[14px] font-semibold rounded-full bg-[#111] dark:bg-white text-white dark:text-[#111] hover:bg-[#333] dark:hover:bg-[#ddd] transition-colors">
           <GitHubIcon />
           Continue with GitHub
         </a>
@@ -72,7 +71,7 @@ function Login() {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   Dashboard — the whole product on one screen
+   Dashboard
    ═══════════════════════════════════════════════════════════════ */
 
 function Dashboard() {
@@ -103,7 +102,6 @@ function Dashboard() {
   const allowed = useMemo(() => perms.filter(p => p.status === "approved"), [perms]);
   const blocked = useMemo(() => perms.filter(p => p.status === "denied" || p.status === "revoked"), [perms]);
 
-  // Auto-switch to pending tab when new requests arrive
   useEffect(() => {
     if (pending.length > 0 && tab !== "pending") setTab("pending");
   }, [pending.length]);
@@ -127,32 +125,30 @@ function Dashboard() {
   return (
     <div className="max-w-2xl mx-auto px-5 py-8 sm:py-12">
 
-      {/* ── Connect section ── */}
+      {/* Connect */}
       <div className="mb-10">
         <h1 className="text-[32px] sm:text-[40px] font-black tracking-[-0.04em] leading-[1.1] mb-2">
           {hasAnything ? "Your AI" : "Connect your AI"}
         </h1>
-        <p className="text-[15px] text-[#999] mb-5">
+        <p className="text-[15px] text-[#999] dark:text-[#666] mb-5">
           {hasAnything
             ? `${allowed.length} tool${allowed.length === 1 ? "" : "s"} allowed · ${pending.length} pending`
             : "Paste this link into Cursor, Claude Code, or any MCP-compatible AI tool."
           }
         </p>
 
-        {/* URL bar */}
         <div className="flex gap-2">
-          <div className="flex-1 h-11 flex items-center px-4 rounded-xl bg-[#f7f7f7] border border-[#eee] overflow-hidden cursor-pointer group" onClick={copy}>
-            <span className="text-[12px] font-mono text-[#999] group-hover:text-[#666] truncate transition-colors select-all">
+          <div className="flex-1 h-11 flex items-center px-4 rounded-xl bg-[#f7f7f7] dark:bg-[#141414] border border-[#eee] dark:border-[#222] overflow-hidden cursor-pointer group" onClick={copy}>
+            <span className="text-[12px] font-mono text-[#999] dark:text-[#555] group-hover:text-[#666] dark:group-hover:text-[#888] truncate transition-colors select-all">
               {mcpUrl || "Loading..."}
             </span>
           </div>
           <button onClick={copy}
-            className="h-11 px-5 text-[13px] font-semibold rounded-xl bg-[#111] text-white hover:bg-[#333] transition-all active:scale-[0.97] flex-shrink-0">
+            className="h-11 px-5 text-[13px] font-semibold rounded-xl bg-[#111] dark:bg-white text-white dark:text-[#111] hover:bg-[#333] dark:hover:bg-[#ddd] transition-all active:scale-[0.97] flex-shrink-0">
             {copied ? "✓ Copied" : "Copy"}
           </button>
         </div>
 
-        {/* Quick instructions */}
         {!hasAnything && (
           <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
             <Instruction step="1" title="Copy the link" desc="Click Copy above" />
@@ -162,10 +158,10 @@ function Dashboard() {
         )}
       </div>
 
-      {/* ── Tabs ── */}
+      {/* Tabs */}
       {hasAnything && (
         <>
-          <div className="flex gap-1 mb-5 border-b border-[#f0f0f0]">
+          <div className="flex gap-1 mb-5 border-b border-[#f0f0f0] dark:border-[#1a1a1a]">
             <Tab active={tab === "pending"} onClick={() => setTab("pending")} count={pending.length} pulse={pending.length > 0}>
               Inbox
             </Tab>
@@ -177,7 +173,6 @@ function Dashboard() {
             </Tab>
           </div>
 
-          {/* ── Pending ── */}
           {tab === "pending" && (
             pending.length === 0 ? (
               <Empty icon="✓" text="All caught up" sub="New requests will appear here when your AI tries something new." />
@@ -194,17 +189,16 @@ function Dashboard() {
             )
           )}
 
-          {/* ── Allowed ── */}
           {tab === "allowed" && (
             allowed.length === 0 ? (
               <Empty icon="○" text="Nothing allowed yet" sub="Approve tools from your Inbox to see them here." />
             ) : (
-              <div className="rounded-2xl border border-[#f0f0f0] divide-y divide-[#f5f5f5] overflow-hidden animate-fade-in">
+              <div className="rounded-2xl border border-[#f0f0f0] dark:border-[#1a1a1a] divide-y divide-[#f5f5f5] dark:divide-[#151515] overflow-hidden animate-fade-in">
                 {allowed.map(p => (
                   <ToolRow key={p.id} perm={p}
                     action={
                       <button onClick={() => act(p.id, () => revokePermission(p.agentId, p.tool))}
-                        className="text-[11px] text-[#ccc] hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
+                        className="text-[11px] text-[#ccc] dark:text-[#444] hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
                         revoke
                       </button>
                     }
@@ -214,18 +208,17 @@ function Dashboard() {
             )
           )}
 
-          {/* ── Blocked ── */}
           {tab === "blocked" && (
             blocked.length === 0 ? (
               <Empty icon="—" text="Nothing blocked" sub="Denied or revoked tools appear here." />
             ) : (
-              <div className="rounded-2xl border border-[#f0f0f0] divide-y divide-[#f5f5f5] overflow-hidden animate-fade-in">
+              <div className="rounded-2xl border border-[#f0f0f0] dark:border-[#1a1a1a] divide-y divide-[#f5f5f5] dark:divide-[#151515] overflow-hidden animate-fade-in">
                 {blocked.map(p => (
                   <ToolRow key={p.id} perm={p} blocked
                     action={
                       p.explorerUrl ? (
                         <a href={p.explorerUrl} target="_blank" rel="noopener noreferrer"
-                          className="text-[11px] text-[#ddd] hover:text-blue-500 transition-colors opacity-0 group-hover:opacity-100 font-mono">
+                          className="text-[11px] text-[#ddd] dark:text-[#333] hover:text-blue-500 transition-colors opacity-0 group-hover:opacity-100 font-mono">
                           proof
                         </a>
                       ) : null
@@ -238,21 +231,21 @@ function Dashboard() {
         </>
       )}
 
-      {/* ── Empty state when nothing has happened yet ── */}
+      {/* Empty state */}
       {!hasAnything && (
         <div className="text-center pt-16 pb-8">
-          <div className="w-12 h-12 rounded-full bg-[#f7f7f7] flex items-center justify-center mx-auto mb-4">
-            <div className="w-2 h-2 rounded-full bg-[#ddd] animate-pulse" />
+          <div className="w-12 h-12 rounded-full bg-[#f7f7f7] dark:bg-[#141414] flex items-center justify-center mx-auto mb-4">
+            <div className="w-2 h-2 rounded-full bg-[#ddd] dark:bg-[#333] animate-pulse" />
           </div>
-          <p className="text-[15px] text-[#bbb] mb-1">Waiting for your AI to connect...</p>
-          <p className="text-[12px] text-[#ddd]">Paste the link above into your AI tool and start using it</p>
+          <p className="text-[15px] text-[#bbb] dark:text-[#555] mb-1">Waiting for your AI to connect...</p>
+          <p className="text-[12px] text-[#ddd] dark:text-[#333]">Paste the link above into your AI tool and start using it</p>
         </div>
       )}
 
-      {/* ── Footer ── */}
-      <div className="mt-16 pt-6 border-t border-[#f5f5f5] text-center">
-        <p className="text-[11px] text-[#ddd]">
-          Every action is signed through a Trusted Execution Environment · <a href="https://occ.wtf" className="hover:text-[#999] transition-colors">occ.wtf</a>
+      {/* Footer */}
+      <div className="mt-16 pt-6 border-t border-[#f5f5f5] dark:border-[#141414] text-center">
+        <p className="text-[11px] text-[#ddd] dark:text-[#333]">
+          Every action is signed through a Trusted Execution Environment · <a href="https://occ.wtf" target="_blank" rel="noopener noreferrer" className="hover:text-[#999] dark:hover:text-[#666] transition-colors">occ.wtf</a>
         </p>
       </div>
     </div>
@@ -267,21 +260,21 @@ function PendingCard({ perm, onAllow, onBlock, busy }: {
   perm: Permission; onAllow: () => void; onBlock: () => void; busy: boolean;
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-[#f0f0f0] p-5 transition-all hover:border-[#e0e0e0] hover:shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+    <div className="bg-white dark:bg-[#111] rounded-2xl border border-[#f0f0f0] dark:border-[#1a1a1a] p-5 transition-all hover:border-[#e0e0e0] dark:hover:border-[#2a2a2a] hover:shadow-[0_2px_12px_rgba(0,0,0,0.04)] dark:hover:shadow-[0_2px_12px_rgba(0,0,0,0.3)]">
       <div className="flex items-start gap-4">
-        <div className="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+        <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
           <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[16px] font-semibold text-[#111] font-mono tracking-[-0.01em]">{perm.tool}</p>
-          <p className="text-[13px] text-[#aaa] mt-1">
-            <span className="text-[#888] font-medium">{perm.clientName}</span> wants to use this tool
+          <p className="text-[16px] font-semibold font-mono tracking-[-0.01em]">{perm.tool}</p>
+          <p className="text-[13px] text-[#aaa] dark:text-[#555] mt-1">
+            <span className="text-[#888] dark:text-[#777] font-medium">{perm.clientName}</span> wants to use this tool
           </p>
           {(() => {
             const args = perm.requestArgs as Record<string, unknown> | null;
             if (!args || typeof args !== "object" || Object.keys(args).length === 0) return null;
             return (
-              <pre className="mt-3 text-[11px] font-mono text-[#999] bg-[#fafafa] rounded-lg px-3 py-2 overflow-x-auto border border-[#f5f5f5]">
+              <pre className="mt-3 text-[11px] font-mono text-[#999] dark:text-[#555] bg-[#fafafa] dark:bg-[#0a0a0a] rounded-lg px-3 py-2 overflow-x-auto border border-[#f5f5f5] dark:border-[#1a1a1a]">
                 {JSON.stringify(args, null, 2).slice(0, 200)}
               </pre>
             );
@@ -295,7 +288,7 @@ function PendingCard({ perm, onAllow, onBlock, busy }: {
           Allow
         </button>
         <button onClick={onBlock} disabled={busy}
-          className="h-10 px-6 text-[13px] font-medium rounded-xl text-[#999] hover:bg-[#f5f5f5] disabled:opacity-40 transition-all active:scale-[0.97]">
+          className="h-10 px-6 text-[13px] font-medium rounded-xl text-[#999] dark:text-[#666] hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] disabled:opacity-40 transition-all active:scale-[0.97]">
           Block
         </button>
       </div>
@@ -305,10 +298,10 @@ function PendingCard({ perm, onAllow, onBlock, busy }: {
 
 function ToolRow({ perm, action, blocked }: { perm: Permission; action?: React.ReactNode; blocked?: boolean }) {
   return (
-    <div className="flex items-center gap-3 px-5 py-3.5 group hover:bg-[#fafafa] transition-colors">
-      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${blocked ? "bg-red-300" : "bg-emerald-400"}`} />
-      <span className="text-[14px] font-mono text-[#444] flex-1 truncate">{perm.tool}</span>
-      <span className="text-[11px] text-[#ddd] flex-shrink-0">{perm.clientName}</span>
+    <div className="flex items-center gap-3 px-5 py-3.5 group hover:bg-[#fafafa] dark:hover:bg-[#111] transition-colors">
+      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${blocked ? "bg-red-300 dark:bg-red-500/60" : "bg-emerald-400"}`} />
+      <span className="text-[14px] font-mono text-[#444] dark:text-[#999] flex-1 truncate">{perm.tool}</span>
+      <span className="text-[11px] text-[#ddd] dark:text-[#333] flex-shrink-0">{perm.clientName}</span>
       {action}
     </div>
   );
@@ -320,12 +313,16 @@ function Tab({ active, onClick, count, pulse, children }: {
   return (
     <button onClick={onClick}
       className={`px-4 pb-3 text-[13px] font-medium transition-colors border-b-2 -mb-px flex items-center gap-2 ${
-        active ? "border-[#111] text-[#111]" : "border-transparent text-[#bbb] hover:text-[#888]"
+        active
+          ? "border-[#111] dark:border-[#e5e5e5] text-[#111] dark:text-[#e5e5e5]"
+          : "border-transparent text-[#bbb] dark:text-[#555] hover:text-[#888] dark:hover:text-[#999]"
       }`}>
       {children}
       {count > 0 && (
         <span className={`text-[11px] font-semibold px-1.5 py-0.5 rounded-full ${
-          pulse ? "bg-amber-100 text-amber-700" : "bg-[#f0f0f0] text-[#999]"
+          pulse
+            ? "bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400"
+            : "bg-[#f0f0f0] dark:bg-[#1a1a1a] text-[#999] dark:text-[#666]"
         }`}>
           {count}
         </span>
@@ -337,10 +334,10 @@ function Tab({ active, onClick, count, pulse, children }: {
 function Instruction({ step, title, desc }: { step: string; title: string; desc: string }) {
   return (
     <div className="flex gap-3 items-start">
-      <span className="w-6 h-6 rounded-full bg-[#f0f0f0] text-[11px] font-bold text-[#999] flex items-center justify-center flex-shrink-0">{step}</span>
+      <span className="w-6 h-6 rounded-full bg-[#f0f0f0] dark:bg-[#1a1a1a] text-[11px] font-bold text-[#999] dark:text-[#555] flex items-center justify-center flex-shrink-0">{step}</span>
       <div>
-        <p className="text-[13px] font-medium text-[#555]">{title}</p>
-        <p className="text-[12px] text-[#bbb]">{desc}</p>
+        <p className="text-[13px] font-medium text-[#555] dark:text-[#aaa]">{title}</p>
+        <p className="text-[12px] text-[#bbb] dark:text-[#444]">{desc}</p>
       </div>
     </div>
   );
@@ -349,9 +346,9 @@ function Instruction({ step, title, desc }: { step: string; title: string; desc:
 function Empty({ icon, text, sub }: { icon: string; text: string; sub: string }) {
   return (
     <div className="text-center py-16">
-      <span className="text-[24px] text-[#ddd]">{icon}</span>
-      <p className="text-[14px] text-[#aaa] mt-3 mb-1">{text}</p>
-      <p className="text-[12px] text-[#ccc] max-w-[280px] mx-auto">{sub}</p>
+      <span className="text-[24px] text-[#ddd] dark:text-[#333]">{icon}</span>
+      <p className="text-[14px] text-[#aaa] dark:text-[#555] mt-3 mb-1">{text}</p>
+      <p className="text-[12px] text-[#ccc] dark:text-[#333] max-w-[280px] mx-auto">{sub}</p>
     </div>
   );
 }

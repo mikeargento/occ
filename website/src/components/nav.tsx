@@ -24,7 +24,7 @@ export function Nav() {
             href="/"
             className="text-[20px] tracking-[-0.02em] font-black text-text"
           >
-            OCC.WTF
+            OCC
           </Link>
 
           {/* Desktop */}
