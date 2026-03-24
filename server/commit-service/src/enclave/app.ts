@@ -848,7 +848,8 @@ async function handleRequest(req: Record<string, unknown>): Promise<unknown> {
       const agency = (req as { agency?: AgencyEnvelope }).agency;
       const attribution = (req as { attribution?: { name?: string; title?: string; message?: string } }).attribution;
       const policy = (req as { policy?: PolicyBinding }).policy;
-      const proof = await handleCommit({ slotId, digestB64, agency, attribution, policy });
+      const principal = (req as { principal?: { id: string; provider?: string } }).principal;
+      const proof = await handleCommit({ slotId, digestB64, agency, attribution, policy, principal });
       return { proof };
     }
     case "commit": {
