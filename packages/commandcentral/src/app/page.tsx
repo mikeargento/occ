@@ -396,7 +396,7 @@ function Dashboard() {
             {/* Policy proof */}
             {lastCommitDigest && (
               <div className="border-t border-[#f0f0f0] dark:border-[#1a1a1a] px-5 py-3.5">
-                <a href={{explorerUrl(lastCommitDigest)}} target="_blank" rel="noopener noreferrer"
+                <a href={explorerUrl(lastCommitDigest)} target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-3 group">
                   <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -473,7 +473,7 @@ function Dashboard() {
                     </div>
                     <span className="text-[11px] text-[#ddd] dark:text-[#333] flex-shrink-0">{timeLabel(p.resolvedAt ?? p.requestedAt)}</span>
                     {p.proofDigest && (
-                      <a href={{explorerUrl(p.proofDigest)}} target="_blank" rel="noopener noreferrer"
+                      <a href={explorerUrl(p.proofDigest)} target="_blank" rel="noopener noreferrer"
                         className="text-[11px] text-blue-500/60 hover:text-blue-500 transition-colors flex-shrink-0 font-mono">
                         proof ↗
                       </a>
