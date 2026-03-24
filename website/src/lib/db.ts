@@ -13,11 +13,17 @@ export async function insertProofs(proofs: OCCProof[]) {
   const sql = getDb();
   let indexed = 0;
 
+  // Ensure chain_id column exists (idempotent migration)
+  try {
+    await sql`ALTER TABLE proofs ADD COLUMN IF NOT EXISTS chain_id TEXT`;
+  } catch { /* column may already exist */ }
+
   for (const proof of proofs) {
     const digestB64 = proof.artifact.digestB64;
     const counter = proof.commit.counter ?? null;
     const epochId = proof.commit.epochId ?? null;
     const commitTime = proof.commit.time ?? null;
+    const chainId = (proof.commit as Record<string, unknown>).chainId as string ?? null;
     const enforcement = proof.environment.enforcement;
     const signerPub = proof.signer.publicKeyB64;
     const hasAgency = !!proof.agency;
@@ -26,12 +32,12 @@ export async function insertProofs(proofs: OCCProof[]) {
     const proofJson = JSON.stringify(proof);
 
     try {
-      await sql`INSERT INTO proofs (digest_b64, counter, epoch_id, commit_time, enforcement, signer_pub, has_agency, has_tsa, attr_name, proof_json)
-        VALUES (${digestB64}, ${counter}, ${epochId}, ${commitTime}, ${enforcement}, ${signerPub}, ${hasAgency}, ${hasTsa}, ${attrName}, ${proofJson}::jsonb)
-        ON CONFLICT (signer_pub, counter) DO NOTHING`;
+      await sql`INSERT INTO proofs (digest_b64, counter, epoch_id, commit_time, enforcement, signer_pub, has_agency, has_tsa, attr_name, chain_id, proof_json)
+        VALUES (${digestB64}, ${counter}, ${epochId}, ${commitTime}, ${enforcement}, ${signerPub}, ${hasAgency}, ${hasTsa}, ${attrName}, ${chainId}, ${proofJson}::jsonb)
+        ON CONFLICT (digest_b64) DO NOTHING`;
       indexed++;
-    } catch {
-      // skip individual failures
+    } catch (e) {
+      console.error("  insert proof failed:", (e as Error).message);
     }
   }
 

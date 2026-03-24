@@ -48,7 +48,7 @@ async function teeCommit(digestB64: string, metadata: Record<string, unknown>, p
     const proof = Array.isArray(data) ? data[0] : data.proofs?.[0] ?? data;
 
     // Forward to explorer
-    fetch("https://occ.wtf/api/proofs", {
+    fetch("https://www.occ.wtf/api/proofs", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ proof }),

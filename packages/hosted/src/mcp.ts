@@ -105,7 +105,7 @@ export async function commitProof(tool: string, args: unknown, agentId: string, 
     const proof = Array.isArray(data) ? data[0] : data.proofs?.[0] ?? data;
 
     // Forward proof to occ.wtf explorer
-    fetch("https://occ.wtf/api/proofs", {
+    fetch("https://www.occ.wtf/api/proofs", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ proof }),

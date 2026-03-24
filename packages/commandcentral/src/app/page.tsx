@@ -89,7 +89,7 @@ export default function App() {
 
   if (loading) return <Shell><Center><Spinner size={20} /></Center></Shell>;
   if (!user) return <Shell><Login /></Shell>;
-  return <Shell user={user}><Dashboard /></Shell>;
+  return <Shell user={user}><Dashboard userName={user.name} /></Shell>;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -160,7 +160,7 @@ function AuthButton({ href, icon, label }: { href: string; icon: React.ReactNode
    Dashboard — two columns: Rules (left) + Activity (right)
    ═══════════════════════════════════════════════════════════════ */
 
-function Dashboard() {
+function Dashboard({ userName }: { userName: string }) {
   const [perms, setPerms] = useState<Permission[]>([]);
   const [mcpUrl, setMcpUrl] = useState("");
   const [copied, setCopied] = useState(false);
@@ -268,8 +268,13 @@ function Dashboard() {
 
   const hasAnything = perms.length > 0 || Object.keys(committedCategories).length > 0;
 
+  const firstName = userName?.split(" ")[0] ?? "there";
+
   return (
     <div className="mx-auto max-w-6xl px-6 py-6">
+
+      {/* Greeting */}
+      <h1 className="text-2xl font-bold tracking-[-0.02em] mb-6">Hi, {firstName}</h1>
 
       {/* Two column layout */}
       <div className="flex flex-col lg:flex-row gap-6">
