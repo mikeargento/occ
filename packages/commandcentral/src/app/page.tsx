@@ -473,7 +473,7 @@ function Dashboard() {
                     <span className="text-[11px] text-[#aaa] dark:text-[#666] flex-shrink-0">{timeLabel(p.resolvedAt ?? p.requestedAt)}</span>
                     {p.proofDigest && (
                       <a href={explorerUrl(p.proofDigest)} target="_blank" rel="noopener noreferrer"
-                        className="text-[11px] text-blue-500/60 hover:text-blue-500 transition-colors flex-shrink-0">
+                        className="text-[11px] text-blue-500 hover:text-blue-400 transition-colors flex-shrink-0">
                         proof ↗
                       </a>
                     )}
