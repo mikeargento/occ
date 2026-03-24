@@ -22,7 +22,7 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "OCC - Control what your AI agents can do",
+    default: "OCC - Define what your AI agents can do",
     template: "%s | OCC",
   },
   description:
@@ -41,15 +41,15 @@ export const metadata: Metadata = {
     "default deny",
   ],
   openGraph: {
-    title: "OCC - Control what your AI agents can do",
-    description: "Origin Controlled Computing. Control what your AI agents can do. Prove what they did.",
+    title: "OCC - Define what your AI agents can do",
+    description: "Origin Controlled Computing. Define what your AI agents can do. Prove what they did.",
     type: "website",
     siteName: "OCC",
   },
   twitter: {
     card: "summary_large_image",
-    title: "OCC - Control what your AI agents can do",
-    description: "Origin Controlled Computing. Control what your AI agents can do. Prove what they did.",
+    title: "OCC - Define what your AI agents can do",
+    description: "Origin Controlled Computing. Define what your AI agents can do. Prove what they did.",
   },
   robots: { index: true, follow: true },
 };

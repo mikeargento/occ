@@ -9,8 +9,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "OCC — Control wtf your AI can do",
-  description: "One link. Every tool call your AI makes goes through OCC. You decide what's allowed.",
+  title: "OCC — Define what your AI agents can do",
+  description: "Every rule is cryptographically proven before a single action can exist.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
