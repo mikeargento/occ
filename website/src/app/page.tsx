@@ -564,9 +564,15 @@ export default function Home() {
               Define what your<br />
               AI agents can do.
             </h1>
-            <p className="hero-animate text-text-secondary text-base sm:text-lg md:text-xl leading-relaxed" style={{ animationDelay: "120ms" }}>
+            <p className="hero-animate text-text-secondary text-base sm:text-lg md:text-xl leading-relaxed mb-8" style={{ animationDelay: "120ms" }}>
               Every rule is cryptographically proven before a single action can exist.
             </p>
+            <div className="hero-animate" style={{ animationDelay: "180ms" }}>
+              <a href="https://agent.occ.wtf" target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center justify-center rounded-full bg-emerald-500 text-white px-6 py-2.5 text-sm font-semibold transition-all hover:bg-emerald-600 active:scale-[0.97]">
+                Open Dashboard
+              </a>
+            </div>
           </div>
           <div className="hero-animate grid grid-cols-4 gap-3 sm:gap-5 shrink-0" style={{ animationDelay: "200ms" }}>
             {heroLogos.map((h) => (
