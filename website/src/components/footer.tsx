@@ -13,9 +13,6 @@ export function Footer() {
               Define what your AI agents can do.<br />
               Patent Pending
             </p>
-            <p className="text-sm text-text-tertiary mt-4">
-              <a href="https://buymeacoffee.com/mikeargento" target="_blank" rel="noopener" className="text-text-tertiary hover:text-text transition-colors">Buy Me a Coffee</a>
-            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-10 sm:grid-cols-3 sm:gap-16">
