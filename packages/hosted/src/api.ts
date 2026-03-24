@@ -43,6 +43,15 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
   // Auth-gated endpoints
   const userId = getUserId(req) ?? "anonymous";
 
+  // Build principal for proof signing — cached per request
+  let _principal: { id: string; provider?: string; email?: string } | undefined;
+  async function getPrincipal() {
+    if (_principal) return _principal;
+    const user = await db.getUserById(userId);
+    _principal = user ? { id: userId, provider: user.provider, email: user.email } : { id: userId };
+    return _principal;
+  }
+
   // ── Agents ──
   if (path === "/agents" && method === "GET") {
     const agents = await db.getAgents(userId);
@@ -186,7 +195,7 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
     const { proof, digest } = await commitPolicyProof(userId, {
       categories: body.categories ?? {},
       customRules: body.customRules ?? [],
-    }, userId);
+    }, userId, await getPrincipal());
     const policy = await db.createPolicy(userId, {
       name: body.name ?? "default",
       allowedTools: body.allowedTools ?? [],
@@ -390,7 +399,7 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
       // ── CREATE AUTHORIZATION OBJECT ──
       // This is NOT a flag flip. This creates a cryptographic object
       // that must exist before execution is reachable.
-      const authResult = await createAuthorizationObject(userId, req_entry.agent_id, req_entry.tool, undefined, userId);
+      const authResult = await createAuthorizationObject(userId, req_entry.agent_id, req_entry.tool, undefined, userId, await getPrincipal());
       digestB64 = authResult.digest;
       proof = authResult.proof;
     }
@@ -427,7 +436,7 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
 
     // ── CREATE REVOCATION OBJECT ──
     // This supersedes the authorization. After this, no execution path exists.
-    const { proof, digest } = await createRevocationObject(userId, agentId, tool, authObj.proofDigest, userId);
+    const { proof, digest } = await createRevocationObject(userId, agentId, tool, authObj.proofDigest, userId, await getPrincipal());
 
     await db.revokePermission(userId, agentId, tool, digest, proof);
     await db.addProof(userId, {

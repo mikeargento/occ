@@ -277,8 +277,9 @@ export async function handleMcp(req: IncomingMessage, res: ServerResponse, pathn
         // 4. Authorization object exists → create execution proof
         // The execution proof references the authorization's digest.
         // This is the causal link: authorization came first, execution depends on it.
+        const principal = { id: user.id, provider: user.provider ?? undefined, email: user.email ?? undefined };
         const { proof: execProof, digest: execDigest } = await createExecutionProof(
-          user.id, agentId, toolName, args, authObj.proofDigest, user.id
+          user.id, agentId, toolName, args, authObj.proofDigest, user.id, principal
         );
 
         // 5. Handle built-in tools

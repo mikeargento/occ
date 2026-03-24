@@ -23,7 +23,7 @@ function digestOf(obj: Record<string, unknown>): string {
   return toBase64(sha256(canonicalize(obj)));
 }
 
-async function teeCommit(digestB64: string, metadata: Record<string, unknown>, policyBinding?: { authorProofDigestB64: string }, chainId?: string): Promise<{ proof: any; digestB64: string }> {
+async function teeCommit(digestB64: string, metadata: Record<string, unknown>, policyBinding?: { authorProofDigestB64: string }, chainId?: string, principal?: { id: string; provider?: string; email?: string }): Promise<{ proof: any; digestB64: string }> {
   try {
     const body: Record<string, unknown> = {
       digests: [{ digestB64, hashAlg: "sha256" }],
@@ -34,6 +34,9 @@ async function teeCommit(digestB64: string, metadata: Record<string, unknown>, p
     }
     if (chainId) {
       body.chainId = chainId;
+    }
+    if (principal) {
+      body.principal = principal;
     }
 
     const res = await fetch(`${TEE_URL}/commit`, {
@@ -72,7 +75,8 @@ export async function createAuthorizationObject(
   agentId: string,
   tool: string,
   constraints?: Record<string, unknown>,
-  chainId?: string
+  chainId?: string,
+  principal?: { id: string; provider?: string; email?: string }
 ): Promise<{ proof: any; digest: string }> {
   // The artifact encodes what is being authorized
   const artifact = {
@@ -93,7 +97,7 @@ export async function createAuthorizationObject(
     agentId,
     adapter: "hosted-mcp",
     runtime: "agent.occ.wtf",
-  }, undefined, chainId);
+  }, undefined, chainId, principal);
 
   // Store the authorization object
   await db.storeAuthorization(userId, agentId, tool, "authorization", digestB64, proof, undefined, constraints);
@@ -128,7 +132,8 @@ export async function createExecutionProof(
   tool: string,
   args: unknown,
   authorizationDigest: string,
-  chainId?: string
+  chainId?: string,
+  principal?: { id: string; provider?: string; email?: string }
 ): Promise<{ proof: any; digest: string }> {
   const artifact = {
     type: "execution" as const,
@@ -147,7 +152,7 @@ export async function createExecutionProof(
     authorizationDigest,
     adapter: "hosted-mcp",
     runtime: "agent.occ.wtf",
-  }, { authorProofDigestB64: authorizationDigest }, chainId);
+  }, { authorProofDigestB64: authorizationDigest }, chainId, principal);
 
   // Store in proof log
   await db.addProof(userId, {
@@ -174,7 +179,8 @@ export async function createExecutionProof(
 export async function commitPolicyProof(
   userId: string,
   policy: { categories: Record<string, boolean>; customRules: string[] },
-  chainId?: string
+  chainId?: string,
+  principal?: { id: string; provider?: string; email?: string }
 ): Promise<{ proof: any; digest: string }> {
   const artifact = {
     type: "policy" as const,
@@ -190,7 +196,7 @@ export async function commitPolicyProof(
     userId,
     adapter: "hosted-mcp",
     runtime: "agent.occ.wtf",
-  }, undefined, chainId);
+  }, undefined, chainId, principal);
 
   return { proof, digest: digestB64 };
 }
@@ -205,7 +211,8 @@ export async function createRevocationObject(
   agentId: string,
   tool: string,
   authorizationDigest: string,
-  chainId?: string
+  chainId?: string,
+  principal?: { id: string; provider?: string; email?: string }
 ): Promise<{ proof: any; digest: string }> {
   const artifact = {
     type: "revocation" as const,
@@ -224,7 +231,7 @@ export async function createRevocationObject(
     authorizationDigest,
     adapter: "hosted-mcp",
     runtime: "agent.occ.wtf",
-  }, undefined, chainId);
+  }, undefined, chainId, principal);
 
   // Store revocation
   await db.storeAuthorization(userId, agentId, tool, "revocation", digestB64, proof, authorizationDigest);

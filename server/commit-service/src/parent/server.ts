@@ -244,6 +244,7 @@ async function handleCommit(req: IncomingMessage, res: ServerResponse): Promise<
     attribution?: { name?: string; title?: string; message?: string };
     policy?: PolicyBinding;
     chainId?: string;
+    principal?: { id: string; provider?: string; email?: string };
   };
 
   try {
@@ -313,6 +314,7 @@ async function handleCommit(req: IncomingMessage, res: ServerResponse): Promise<
       agency: agencyForDigest,
       attribution: body.attribution,
       policy: body.policy,
+      principal: body.principal,
       metadata: body.metadata,
     });
 

@@ -27,6 +27,8 @@ export interface CommitDigestRequest {
   attribution?: { name?: string; title?: string; message?: string };
   /** Optional policy binding — cryptographically sealed into the proof. */
   policy?: PolicyBinding;
+  /** Optional principal identity — cryptographically sealed into the proof. */
+  principal?: { id: string; provider?: string; email?: string };
 }
 
 /** Pre-allocate a causal slot (nonce-first). */

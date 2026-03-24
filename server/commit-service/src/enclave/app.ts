@@ -443,6 +443,7 @@ async function handleCommit(req: {
   agency?: AgencyEnvelope;
   attribution?: { name?: string; title?: string; message?: string };
   policy?: PolicyBinding;
+  principal?: { id: string; provider?: string; email?: string };
 }): Promise<OCCProof> {
   // ── Slot consumption — OCC causal gate ──
   // The slot MUST exist before any artifact can be committed.
@@ -594,6 +595,12 @@ async function handleCommit(req: {
     signedBody.policy = req.policy;
   }
 
+  // Include principal identity in the signed body (cryptographically sealed).
+  // Makes WHO explicit — the enclave attests the application's identity claim.
+  if (req.principal) {
+    (signedBody as unknown as Record<string, unknown>).principal = req.principal;
+  }
+
   // Step 7: Canonicalize
   const canonicalBytes = canonicalize(signedBody);
 
@@ -646,6 +653,11 @@ async function handleCommit(req: {
   // Include attribution (sealed in signed body)
   if (signedBody.attribution) {
     proof.attribution = signedBody.attribution;
+  }
+
+  // Include principal identity (sealed in signed body)
+  if (req.principal) {
+    (proof as unknown as Record<string, unknown>).principal = req.principal;
   }
 
   if (req.metadata !== undefined) {
