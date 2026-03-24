@@ -225,16 +225,7 @@ function Dashboard() {
             ) : (
               <div className="rounded-2xl border border-[#f0f0f0] dark:border-[#1a1a1a] divide-y divide-[#f5f5f5] dark:divide-[#151515] overflow-hidden animate-fade-in">
                 {blocked.map(p => (
-                  <ToolRow key={p.id} perm={p} blocked
-                    action={
-                      p.explorerUrl ? (
-                        <a href={p.explorerUrl} target="_blank" rel="noopener noreferrer"
-                          className="text-[11px] text-[#ddd] dark:text-[#333] hover:text-blue-500 transition-colors opacity-0 group-hover:opacity-100 font-mono">
-                          proof
-                        </a>
-                      ) : null
-                    }
-                  />
+                  <ToolRow key={p.id} perm={p} blocked />
                 ))}
               </div>
             )
@@ -308,7 +299,8 @@ function PendingCard({ perm, onAllow, onBlock, busy }: {
 }
 
 function ToolRow({ perm, action, blocked }: { perm: Permission; action?: React.ReactNode; blocked?: boolean }) {
-  const proofUrl = perm.explorerUrl || (perm.proofDigest ? `https://occ.wtf/explorer?digest=${encodeURIComponent(perm.proofDigest)}` : null);
+  const digest = perm.proofDigest;
+  const proofUrl = digest ? `https://occ.wtf/explorer/${digest.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')}` : perm.explorerUrl || null;
   return (
     <div className="flex items-center gap-3 px-5 py-4 group hover:bg-[#fafafa] dark:hover:bg-[#111] transition-colors">
       <div className={`w-2 h-2 rounded-full flex-shrink-0 ${blocked ? "bg-red-300 dark:bg-red-500/60" : "bg-emerald-400"}`} />
