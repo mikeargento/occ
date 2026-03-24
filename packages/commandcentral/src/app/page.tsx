@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { getAllPermissions, approvePermission, denyPermission, revokePermission, getConnectConfig, getPolicy, commitPolicy, type Permission } from "@/lib/api";
 
 /* ── Helpers ── */
@@ -102,8 +102,9 @@ function Shell({ user, children }: { user?: any; children: React.ReactNode }) {
               className="text-sm px-3 py-1.5 text-[#999] dark:text-[#555] hover:text-[#111] dark:hover:text-[#e5e5e5] transition-colors">Explorer</a>
             <a href="https://occ.wtf/docs" target="_blank" rel="noopener noreferrer"
               className="text-sm px-3 py-1.5 text-[#999] dark:text-[#555] hover:text-[#111] dark:hover:text-[#e5e5e5] transition-colors">Docs</a>
+            <ThemeToggle />
             {user && (
-              <a href="/auth/logout" className="flex items-center gap-2 ml-4 text-[12px] text-[#bbb] dark:text-[#555] hover:text-[#666] dark:hover:text-[#999] transition-colors">
+              <a href="/auth/logout" className="flex items-center gap-2 ml-3 text-[12px] text-[#bbb] dark:text-[#555] hover:text-[#666] dark:hover:text-[#999] transition-colors">
                 {user.avatar && <img src={user.avatar} className="w-6 h-6 rounded-full" alt="" />}
               </a>
             )}
@@ -356,13 +357,22 @@ function Dashboard() {
               </div>
             </div>
 
-            {/* Policy digest */}
+            {/* Policy proof */}
             {lastCommitDigest && (
-              <div className="border-t border-[#f0f0f0] dark:border-[#1a1a1a] px-5 py-3">
-                <p className="text-[11px] text-[#ccc] dark:text-[#333]">
-                  Policy: <a href={`https://occ.wtf/explorer?digest=${encodeURIComponent(lastCommitDigest)}`} target="_blank" rel="noopener noreferrer"
-                    className="font-mono text-blue-500/70 hover:text-blue-500 transition-colors">{lastCommitDigest.slice(0, 16)}...</a>
-                </p>
+              <div className="border-t border-[#f0f0f0] dark:border-[#1a1a1a] px-5 py-3.5">
+                <a href={`https://occ.wtf/explorer?digest=${encodeURIComponent(lastCommitDigest)}`} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-3 group">
+                  <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[12px] font-medium text-emerald-600 dark:text-emerald-400">Rules committed to chain</p>
+                    <p className="text-[11px] font-mono text-[#bbb] dark:text-[#444] group-hover:text-emerald-500 transition-colors truncate">{lastCommitDigest}</p>
+                  </div>
+                  <span className="text-[11px] text-[#ccc] dark:text-[#333] group-hover:text-emerald-500 transition-colors flex-shrink-0">View proof ↗</span>
+                </a>
               </div>
             )}
           </div>
@@ -453,6 +463,32 @@ function Dashboard() {
 /* ═══════════════════════════════════════════════════════════════
    Components
    ═══════════════════════════════════════════════════════════════ */
+
+function ThemeToggle() {
+  const [dark, setDark] = useState(true);
+  useEffect(() => {
+    setDark(document.documentElement.classList.contains("dark"));
+  }, []);
+  const toggle = () => {
+    const next = !dark;
+    setDark(next);
+    document.documentElement.classList.toggle("dark", next);
+    localStorage.setItem("occ-theme", next ? "dark" : "light");
+  };
+  return (
+    <button onClick={toggle} className="p-2 text-[#bbb] dark:text-[#555] hover:text-[#666] dark:hover:text-[#999] transition-colors" aria-label="Toggle theme">
+      {dark ? (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+        </svg>
+      ) : (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+        </svg>
+      )}
+    </button>
+  );
+}
 
 function Toggle({ on, onChange, small }: { on: boolean; onChange: () => void; small?: boolean }) {
   const w = small ? "w-8" : "w-10";

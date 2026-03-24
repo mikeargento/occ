@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { FileDrop } from "@/components/file-drop";
 import { hashFile, isOCCProof, verifyProofSignature } from "@/lib/occ";
@@ -37,7 +38,15 @@ interface LookupResult {
 
 /* ── Page ── */
 
-export default function ExplorerPage() {
+export default function ExplorerPageWrapper() {
+  return (
+    <Suspense fallback={<div className="text-center py-20 text-text-tertiary">Loading...</div>}>
+      <ExplorerPage />
+    </Suspense>
+  );
+}
+
+function ExplorerPage() {
   /* ── File hasher state ── */
   const [file, setFile] = useState<File | null>(null);
   const [hashing, setHashing] = useState(false);
@@ -74,6 +83,24 @@ export default function ExplorerPage() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [page]);
+
+  /* ── Handle ?digest= query parameter ── */
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    const digestParam = searchParams?.get("digest");
+    if (digestParam) {
+      const safeDigest = toUrlSafeB64(digestParam);
+      fetch(`/api/proofs/${encodeURIComponent(safeDigest)}`)
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (data?.proof) {
+            setDroppedProof(data.proof);
+            setDigestB64(digestParam);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [searchParams]);
 
   /* ── File drop → detect proof or hash → lookup ── */
   const handleFile = useCallback(async (f: File) => {

@@ -15,11 +15,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${jetbrainsMono.variable} dark`}>
+    <html lang="en" className={`${jetbrainsMono.variable}`} suppressHydrationWarning>
       <head>
         <link rel="stylesheet" href="https://use.typekit.net/svq0oqy.css" />
         <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='black'/></svg>" />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('occ-theme');if(t==='light')return;document.documentElement.classList.add('dark')}catch(e){}})()` }} />
       </head>
       <body className="bg-white text-[#111] dark:bg-[#0a0a0a] dark:text-[#e5e5e5]">
         {children}
