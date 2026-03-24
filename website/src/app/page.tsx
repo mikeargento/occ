@@ -583,27 +583,7 @@ export default function Home() {
 
       </section>
 
-      {/* Available */}
-      <section className="mb-20 sm:mb-28">
-        <ScrollReveal>
-        <div className="flex items-center gap-3 mb-10">
-          <h2 className="text-2xl font-semibold tracking-[-0.02em]">
-            Available now
-          </h2>
-          <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-400">
-            {available.length} integrations
-          </span>
-        </div>
-        </ScrollReveal>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {available.map((f, i) => (
-            <ScrollReveal key={f.name} delay={i * 40} className="h-full">
-              <FrameworkCard framework={f} />
-            </ScrollReveal>
-          ))}
-        </div>
-      </section>
+      {/* Integration cards removed — agent.occ.wtf dashboard is the product */}
 
       {/* Live Proof Explorer */}
       <section className="mb-20 sm:mb-32">
@@ -632,7 +612,8 @@ export default function Home() {
         </ScrollReveal>
       </section>
 
-      {/* Orchestrators */}
+      {/* Orchestrators section removed — agent.occ.wtf dashboard is the product */}
+      {false && (
       <section className="mb-20 sm:mb-32">
         <ScrollReveal>
         <div className="flex items-center gap-3 mb-4">
@@ -732,24 +713,24 @@ export default function Home() {
           ))}
         </div>
       </section>
+      )}
 
       {/* CTA */}
       <ScrollReveal>
       <section className="text-center">
         <h2 className="text-2xl font-semibold tracking-[-0.02em] mb-4">
-          Don&apos;t see your framework?
+          Get started
         </h2>
         <p className="text-text-secondary text-base leading-relaxed max-w-lg mx-auto mb-8">
-          OCC is open source. Add cryptographic control to any tool-calling
-          framework in minutes. Contributions welcome.
+          One link. Connect your AI. Define what it can do.
         </p>
         <div className="flex items-center justify-center gap-4 flex-wrap">
-          <Link
-            href="/docs"
+          <a
+            href="https://agent.occ.wtf"
             className="inline-flex items-center justify-center rounded-lg bg-text text-bg px-6 py-3 text-sm font-semibold transition-opacity hover:opacity-90"
           >
-            Documentation
-          </Link>
+            Open Dashboard
+          </a>
           <a
             href="https://github.com/mikeargento/occ"
             target="_blank"
