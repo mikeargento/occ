@@ -23,7 +23,7 @@ function digestOf(obj: Record<string, unknown>): string {
   return toBase64(sha256(canonicalize(obj)));
 }
 
-async function teeCommit(digestB64: string, metadata: Record<string, unknown>, policyBinding?: { authorProofDigestB64: string }, chainId?: string, principal?: { id: string; provider?: string; email?: string }): Promise<{ proof: any; digestB64: string }> {
+async function teeCommit(digestB64: string, metadata: Record<string, unknown>, policyBinding?: { authorProofDigestB64: string }, chainId?: string, principal?: { id: string; provider?: string }): Promise<{ proof: any; digestB64: string }> {
   try {
     const body: Record<string, unknown> = {
       digests: [{ digestB64, hashAlg: "sha256" }],
@@ -76,7 +76,7 @@ export async function createAuthorizationObject(
   tool: string,
   constraints?: Record<string, unknown>,
   chainId?: string,
-  principal?: { id: string; provider?: string; email?: string }
+  principal?: { id: string; provider?: string }
 ): Promise<{ proof: any; digest: string }> {
   // The artifact encodes what is being authorized
   const artifact = {
@@ -133,7 +133,7 @@ export async function createExecutionProof(
   args: unknown,
   authorizationDigest: string,
   chainId?: string,
-  principal?: { id: string; provider?: string; email?: string }
+  principal?: { id: string; provider?: string }
 ): Promise<{ proof: any; digest: string }> {
   const artifact = {
     type: "execution" as const,
@@ -180,7 +180,7 @@ export async function commitPolicyProof(
   userId: string,
   policy: { categories: Record<string, boolean>; customRules: string[] },
   chainId?: string,
-  principal?: { id: string; provider?: string; email?: string }
+  principal?: { id: string; provider?: string }
 ): Promise<{ proof: any; digest: string }> {
   const artifact = {
     type: "policy" as const,
@@ -212,7 +212,7 @@ export async function createRevocationObject(
   tool: string,
   authorizationDigest: string,
   chainId?: string,
-  principal?: { id: string; provider?: string; email?: string }
+  principal?: { id: string; provider?: string }
 ): Promise<{ proof: any; digest: string }> {
   const artifact = {
     type: "revocation" as const,

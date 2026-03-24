@@ -443,7 +443,7 @@ async function handleCommit(req: {
   agency?: AgencyEnvelope;
   attribution?: { name?: string; title?: string; message?: string };
   policy?: PolicyBinding;
-  principal?: { id: string; provider?: string; email?: string };
+  principal?: { id: string; provider?: string };
 }): Promise<OCCProof> {
   // ── Slot consumption — OCC causal gate ──
   // The slot MUST exist before any artifact can be committed.

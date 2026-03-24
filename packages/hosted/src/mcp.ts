@@ -72,7 +72,7 @@ function toBase64(bytes: Uint8Array): string {
 // ── TEE Commit via Nitro Enclave ──
 const TEE_URL = "https://nitro.occproof.com/commit";
 
-export async function commitProof(tool: string, args: unknown, agentId: string, allowed: boolean, chainId?: string): Promise<{ proof: any; digestB64: string }> {
+export async function commitProof(tool: string, args: unknown, agentId: string, allowed: boolean, chainId?: string, principal?: { id: string; provider?: string }): Promise<{ proof: any; digestB64: string }> {
   const payload = JSON.stringify({ tool, args, agentId, allowed, timestamp: Date.now() });
   const bytes = new TextEncoder().encode(payload);
   const digestB64 = toBase64(sha256(bytes));
@@ -91,6 +91,9 @@ export async function commitProof(tool: string, args: unknown, agentId: string, 
     };
     if (chainId) {
       commitBody.chainId = chainId;
+    }
+    if (principal) {
+      commitBody.principal = principal;
     }
 
     const res = await fetch(TEE_URL, {
@@ -277,7 +280,7 @@ export async function handleMcp(req: IncomingMessage, res: ServerResponse, pathn
         // 4. Authorization object exists → create execution proof
         // The execution proof references the authorization's digest.
         // This is the causal link: authorization came first, execution depends on it.
-        const principal = { id: user.id, provider: user.provider ?? undefined, email: user.email ?? undefined };
+        const principal = { id: user.id, provider: user.provider ?? undefined };
         const { proof: execProof, digest: execDigest } = await createExecutionProof(
           user.id, agentId, toolName, args, authObj.proofDigest, user.id, principal
         );

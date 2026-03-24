@@ -44,11 +44,11 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
   const userId = getUserId(req) ?? "anonymous";
 
   // Build principal for proof signing — cached per request
-  let _principal: { id: string; provider?: string; email?: string } | undefined;
+  let _principal: { id: string; provider?: string } | undefined;
   async function getPrincipal() {
     if (_principal) return _principal;
     const user = await db.getUserById(userId);
-    _principal = user ? { id: userId, provider: user.provider, email: user.email } : { id: userId };
+    _principal = user ? { id: userId, provider: user.provider } : { id: userId };
     return _principal;
   }
 
