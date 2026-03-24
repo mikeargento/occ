@@ -103,10 +103,8 @@ function Shell({ user, children }: { user?: any; children: React.ReactNode }) {
         <nav className="mx-auto max-w-6xl px-6 flex h-16 items-center justify-between">
           <a href="https://occ.wtf" className="text-[20px] tracking-[-0.02em] font-black">OCC</a>
           <div className="flex items-center gap-1">
-            <a href="https://occ.wtf/explorer" target="_blank" rel="noopener noreferrer"
-              className="text-sm font-semibold px-3 py-1.5 text-[#999] dark:text-[#888] hover:text-[#111] dark:hover:text-[#e5e5e5] transition-colors">Explorer</a>
-            <a href="https://occ.wtf/docs" target="_blank" rel="noopener noreferrer"
-              className="text-sm font-semibold px-3 py-1.5 text-[#999] dark:text-[#888] hover:text-[#111] dark:hover:text-[#e5e5e5] transition-colors">Docs</a>
+            <a href="https://occ.wtf/explorer"              className="text-sm font-semibold px-3 py-1.5 text-[#999] dark:text-[#888] hover:text-[#111] dark:hover:text-[#e5e5e5] transition-colors">Explorer</a>
+            <a href="https://occ.wtf/docs"              className="text-sm font-semibold px-3 py-1.5 text-[#999] dark:text-[#888] hover:text-[#111] dark:hover:text-[#e5e5e5] transition-colors">Docs</a>
             <ThemeToggle />
             {user && (
               <a href="/auth/logout" className="flex items-center gap-2 ml-3">
@@ -395,8 +393,7 @@ function Dashboard() {
             {/* Policy proof */}
             {lastCommitDigest && (
               <div className="border-t border-[#f0f0f0] dark:border-[#1a1a1a] px-5 py-3.5">
-                <a href={explorerUrl(lastCommitDigest)} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-3 group">
+                <a href={explorerUrl(lastCommitDigest)}                  className="flex items-center gap-3 group">
                   <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
@@ -472,8 +469,7 @@ function Dashboard() {
                     </div>
                     <span className="text-[11px] text-[#aaa] dark:text-[#666] flex-shrink-0">{timeLabel(p.resolvedAt ?? p.requestedAt)}</span>
                     {p.proofDigest && (
-                      <a href={explorerUrl(p.proofDigest)} target="_blank" rel="noopener noreferrer"
-                        className="text-[11px] text-blue-500 hover:text-blue-400 transition-colors flex-shrink-0">
+                      <a href={explorerUrl(p.proofDigest)}                        className="text-[11px] text-blue-500 hover:text-blue-400 transition-colors flex-shrink-0">
                         proof ↗
                       </a>
                     )}
@@ -488,7 +484,7 @@ function Dashboard() {
       {/* Footer */}
       <div className="mt-12 pb-8 text-center">
         <p className="text-[11px] text-[#aaa] dark:text-[#2a2a2a]">
-          Every action is signed through a Trusted Execution Environment · <a href="https://occ.wtf" target="_blank" rel="noopener noreferrer" className="hover:text-[#999] dark:hover:text-[#555] transition-colors">occ.wtf</a>
+          Every action is signed through a Trusted Execution Environment · <a href="https://occ.wtf" target="_self" className="hover:text-[#999] dark:hover:text-[#555] transition-colors">occ.wtf</a>
         </p>
       </div>
     </div>
