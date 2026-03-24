@@ -570,7 +570,7 @@ export default function Home() {
             <div className="hero-animate" style={{ animationDelay: "180ms" }}>
               <a href="https://agent.occ.wtf"
                 className="inline-flex items-center gap-2 text-sm font-medium text-text-tertiary hover:text-text transition-colors">
-                Sign in <span className="text-[13px]">→</span>
+                Get started <span className="text-[13px]">→</span>
               </a>
             </div>
           </div>
