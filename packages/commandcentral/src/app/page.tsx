@@ -128,12 +128,11 @@ function Login() {
     <Center>
       <div className="text-center px-6 -mt-20 max-w-md">
         <h1 className="text-[44px] font-black tracking-[-0.04em] leading-[1.05] mb-4">
-          Define what your<br />AI agents can do.
+          Log in to OCC
         </h1>
-        <p className="text-[15px] text-[#999] dark:text-[#666] mb-10 leading-relaxed">
-          Every rule is cryptographically proven before a single action can exist.
+        <p className="text-[15px] text-[#999] dark:text-[#888] mb-10 leading-relaxed">
+          Define what your AI agents can do.
         </p>
-        <p className="text-[13px] text-[#888] dark:text-[#777] mb-4 font-medium">Sign in to get started</p>
         <div className="flex flex-col gap-3">
           <AuthButton href="/auth/login/github" icon={<GitHubIcon />} label="Continue with GitHub" />
           <AuthButton href="/auth/login/google" icon={<GoogleIcon />} label="Continue with Google" />
