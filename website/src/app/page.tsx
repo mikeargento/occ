@@ -57,36 +57,36 @@ function InstallButton() {
 
 /* ── Logo helper ── */
 
-function Logo({ src, alt, invert }: { src: string; alt: string; invert?: boolean }) {
+function Logo({ src, alt }: { src: string; alt: string }) {
   return (
     <img
       src={src}
       alt={alt}
-      className={`w-9 h-9${invert ? " invert" : ""}`}
+      className="w-9 h-9"
     />
   );
 }
 
 const logos = {
   mcp: <Logo src="/logos/mcp.svg" alt="MCP" />,
-  claude: <Logo src="/logos/anthropic.svg" alt="Anthropic" invert />,
-  cursor: <Logo src="/logos/cursor.svg" alt="Cursor" invert />,
-  openai: <Logo src="/logos/openai.svg" alt="OpenAI" invert />,
-  langchain: <Logo src="/logos/langchain.svg" alt="LangChain" invert />,
-  vercel: <Logo src="/logos/vercel.svg" alt="Vercel" invert />,
+  claude: <Logo src="/logos/anthropic.svg" alt="Anthropic" />,
+  cursor: <Logo src="/logos/cursor.svg" alt="Cursor" />,
+  openai: <Logo src="/logos/openai.svg" alt="OpenAI" />,
+  langchain: <Logo src="/logos/langchain.svg" alt="LangChain" />,
+  vercel: <Logo src="/logos/vercel.svg" alt="Vercel" />,
   crewai: <Logo src="/logos/crewai.svg" alt="CrewAI" />,
   google: <Logo src="/logos/google.svg" alt="Google" />,
   llamaindex: <Logo src="/logos/llamaindex.svg" alt="LlamaIndex" />,
   autogen: <Logo src="/logos/autogen.svg" alt="AutoGen" />,
-  mastra: <Logo src="/logos/mastra.svg" alt="Mastra" invert />,
+  mastra: <Logo src="/logos/mastra.svg" alt="Mastra" />,
   cloudflare: <Logo src="/logos/cloudflare.svg" alt="Cloudflare" />,
-  github: <Logo src="/logos/github.svg" alt="GitHub" invert />,
-  composio: <Logo src="/logos/composio.svg" alt="Composio" invert />,
-  agentops: <Logo src="/logos/agentops.svg" alt="AgentOps" invert />,
-  julep: <Logo src="/logos/julep.svg" alt="Julep" invert />,
-  relevanceai: <Logo src="/logos/relevanceai.svg" alt="Relevance AI" invert />,
-  letta: <Logo src="/logos/letta.svg" alt="Letta" invert />,
-  superagi: <Logo src="/logos/superagi.svg" alt="SuperAGI" invert />,
+  github: <Logo src="/logos/github.svg" alt="GitHub" />,
+  composio: <Logo src="/logos/composio.svg" alt="Composio" />,
+  agentops: <Logo src="/logos/agentops.svg" alt="AgentOps" />,
+  julep: <Logo src="/logos/julep.svg" alt="Julep" />,
+  relevanceai: <Logo src="/logos/relevanceai.svg" alt="Relevance AI" />,
+  letta: <Logo src="/logos/letta.svg" alt="Letta" />,
+  superagi: <Logo src="/logos/superagi.svg" alt="SuperAGI" />,
   openclaw: <Logo src="/logos/openclaw.svg" alt="OpenClaw" />,
 };
 
@@ -104,7 +104,7 @@ const heroLogos = [
   { key: "autogen", logo: logos.autogen, available: true },
   { key: "cloudflare", logo: logos.cloudflare, available: true },
   { key: "github", logo: logos.github, available: true },
-  { key: "paperclip", logo: <Logo src="/logos/paperclip.svg" alt="Paperclip" invert />, available: true },
+  { key: "paperclip", logo: <Logo src="/logos/paperclip.svg" alt="Paperclip" />, available: true },
   { key: "composio", logo: logos.composio, available: true },
   { key: "openclaw", logo: logos.openclaw, available: true },
   { key: "mastra", logo: logos.mastra, available: true },
@@ -643,7 +643,7 @@ export default function Home() {
               name: "Paperclip",
               description: "Agent control plane with policy enforcement, revocation, and TEE-attested proofs on every action",
               status: "available" as const,
-              logo: <Logo src="/logos/paperclip.svg" alt="Paperclip" invert />,
+              logo: <Logo src="/logos/paperclip.svg" alt="Paperclip" />,
             },
             {
               name: "Composio",
