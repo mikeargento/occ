@@ -192,7 +192,6 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
   const [committing, setCommitting] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [expandedRequests, setExpandedRequests] = useState<Set<number>>(new Set());
-  const [showConnect, setShowConnect] = useState(false);
   // Per-tool overrides within categories
   const [toolOverrides, setToolOverrides] = useState<Record<string, boolean>>({});
   const [committedToolOverrides, setCommittedToolOverrides] = useState<Record<string, boolean>>({});
@@ -375,18 +374,6 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
                     : "border-[#ddd] dark:border-[#2a2a2a] text-[#666] dark:text-[#999] hover:text-[#111] dark:hover:text-white hover:border-[#bbb] dark:hover:border-[#444]"
                 }`}>
                 {a.name}
-                {selectedAgent === a.id && (
-                  <span onClick={e => { e.stopPropagation(); setShowConnect(prev => !prev); }}
-                    className={`opacity-60 hover:!opacity-100 transition-opacity cursor-pointer text-[11px] ${
-                      showConnect ? "!opacity-100" : ""
-                    } text-white/60 dark:text-[#111]/60`}
-                    title="MCP connection">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                    </svg>
-                  </span>
-                )}
                 <span onClick={e => { e.stopPropagation(); setEditingName(a.id); setEditName(a.name); }}
                   className={`opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity cursor-pointer text-[11px] ${
                     selectedAgent === a.id ? "text-white/60 dark:text-[#111]/60" : ""
@@ -424,49 +411,6 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
           </button>
         )}
       </div>
-
-      {/* MCP connection info — toggled from agent tab link icon */}
-      {showConnect && agents.length > 0 && (
-        <div className="mb-6 bg-white dark:bg-[#111] rounded-xl border border-[#ddd] dark:border-[#1a1a1a] px-5 py-3.5">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex gap-1">
-              {(["url", "terminal", "json"] as const).map(t => (
-                <button key={t} onClick={() => setConnectTab(t)}
-                  className={`px-2.5 py-0.5 text-[11px] font-medium rounded-md transition-colors ${
-                    connectTab === t
-                      ? "bg-[#f0f0f0] dark:bg-[#1a1a1a] text-[#111] dark:text-[#e5e5e5]"
-                      : "text-[#888] dark:text-[#888] hover:text-[#888]"
-                  }`}>
-                  {t === "url" ? "URL" : t === "terminal" ? "Terminal" : "JSON"}
-                </button>
-              ))}
-            </div>
-            <button onClick={() => {
-              const text = connectTab === "url" ? mcpUrl
-                : connectTab === "terminal" ? `claude mcp add occ --transport http ${mcpUrl}`
-                : JSON.stringify({ mcpServers: { occ: { url: mcpUrl } } }, null, 2);
-              navigator.clipboard.writeText(text);
-              setCopied(true);
-              setTimeout(() => setCopied(false), 2000);
-            }}
-              className="h-7 px-3 text-[11px] font-semibold rounded-md bg-[#111] dark:bg-white text-white dark:text-[#111] hover:bg-[#333] dark:hover:bg-[#ddd] transition-all active:scale-[0.97]">
-              {copied ? "✓" : "Copy"}
-            </button>
-          </div>
-          <div className="h-8 flex items-center px-3 rounded-lg bg-[#f7f7f7] dark:bg-[#0a0a0a] border border-[#ddd] dark:border-[#151515] overflow-hidden">
-            <code className="text-[11px] font-mono text-[#999] dark:text-[#888] truncate">
-              {connectTab === "url" && mcpUrl}
-              {connectTab === "terminal" && `claude mcp add occ --transport http ${mcpUrl}`}
-              {connectTab === "json" && `{ "mcpServers": { "occ": { "url": "${mcpUrl}" } } }`}
-            </code>
-          </div>
-          <p className="text-[10px] text-[#999] dark:text-[#666] mt-1.5">
-            {connectTab === "url" && "Paste into your AI's MCP settings"}
-            {connectTab === "terminal" && "Run in your terminal"}
-            {connectTab === "json" && "Add to your MCP config file"}
-          </p>
-        </div>
-      )}
 
       {/* No agents — prompt to create first one */}
       {agents.length === 0 && (
@@ -634,8 +578,53 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
 
         </div>
 
-        {/* ── RIGHT: Pending + Activity ── */}
+        {/* ── RIGHT: MCP Links + Pending + Activity ── */}
         <div className="flex-1 min-w-0 space-y-4">
+
+          {/* MCP Links for selected agent */}
+          {(() => {
+            const selAgent = agents.find(a => a.id === selectedAgent);
+            if (!selAgent) return null;
+            return (
+              <div className="bg-white dark:bg-[#111] rounded-2xl border border-[#ddd] dark:border-[#1a1a1a] overflow-hidden">
+                <div className="px-5 py-3 border-b border-[#f0f0f0] dark:border-[#1a1a1a] flex items-center justify-between">
+                  <h2 className="text-[14px] font-bold">{selAgent.name} MCP Link</h2>
+                  <div className="flex gap-1">
+                    {(["url", "terminal", "json"] as const).map(t => (
+                      <button key={t} onClick={() => setConnectTab(t)}
+                        className={`px-2.5 py-0.5 text-[11px] font-medium rounded-md transition-colors ${
+                          connectTab === t
+                            ? "bg-[#f0f0f0] dark:bg-[#1a1a1a] text-[#111] dark:text-[#e5e5e5]"
+                            : "text-[#888] dark:text-[#888] hover:text-[#888]"
+                        }`}>
+                        {t === "url" ? "URL" : t === "terminal" ? "Terminal" : "JSON"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="px-5 py-3 flex items-center gap-2">
+                  <div className="flex-1 h-8 flex items-center px-3 rounded-lg bg-[#f7f7f7] dark:bg-[#0a0a0a] border border-[#ddd] dark:border-[#151515] overflow-hidden">
+                    <code className="text-[11px] font-mono text-[#999] dark:text-[#888] truncate">
+                      {connectTab === "url" && mcpUrl}
+                      {connectTab === "terminal" && `claude mcp add occ --transport http ${mcpUrl}`}
+                      {connectTab === "json" && `{ "mcpServers": { "occ": { "url": "${mcpUrl}" } } }`}
+                    </code>
+                  </div>
+                  <button onClick={() => {
+                    const text = connectTab === "url" ? mcpUrl
+                      : connectTab === "terminal" ? `claude mcp add occ --transport http ${mcpUrl}`
+                      : JSON.stringify({ mcpServers: { occ: { url: mcpUrl } } }, null, 2);
+                    navigator.clipboard.writeText(text);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                    className="h-8 px-4 text-[11px] font-semibold rounded-lg bg-[#111] dark:bg-white text-white dark:text-[#111] hover:bg-[#333] dark:hover:bg-[#ddd] transition-all active:scale-[0.97] flex-shrink-0">
+                    {copied ? "Copied" : "Copy"}
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Pending requests — top of activity panel */}
           {pending.length > 0 && (

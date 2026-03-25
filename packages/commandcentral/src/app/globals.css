@@ -3,8 +3,8 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --font-sans: "neue-haas-grotesk-display", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-mono: "neue-haas-grotesk-display", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-sans: "acumin-pro", "Helvetica Neue", Helvetica, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", ui-monospace, monospace;
   --color-success: #34d399;
   --color-warning: #fbbf24;
   --color-error: #f87171;
@@ -16,7 +16,6 @@ html {
 
 body {
   font-family: var(--font-sans);
-  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
