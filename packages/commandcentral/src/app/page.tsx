@@ -89,7 +89,7 @@ export default function App() {
 
   if (loading) return <Shell><Center><Spinner size={20} /></Center></Shell>;
   if (!user) return <Shell><Login /></Shell>;
-  return <Shell user={user}><Dashboard userName={user.name} /></Shell>;
+  return <Shell user={user}><Dashboard userName={user.name} provider={user.provider} /></Shell>;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -162,7 +162,7 @@ function AuthButton({ href, icon, label }: { href: string; icon: React.ReactNode
 
 type Agent = { id: string; name: string; mcpUrl: string | null; status: string; totalCalls: number; createdAt: number };
 
-function Dashboard({ userName }: { userName: string }) {
+function Dashboard({ userName, provider }: { userName: string; provider?: string }) {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [selectedAgent, setSelectedAgent] = useState<string>("default");
   const [addingAgent, setAddingAgent] = useState(false);
@@ -278,11 +278,12 @@ function Dashboard({ userName }: { userName: string }) {
     finally { setBusy(null); }
   }
 
+  const agentPerms = useMemo(() => perms.filter(p => p.agentId === selectedAgent), [perms, selectedAgent]);
   const activity = useMemo(() =>
-    perms.filter(p => p.status !== "pending").sort((a, b) => (b.resolvedAt ?? b.requestedAt) - (a.resolvedAt ?? a.requestedAt)),
-    [perms]
+    agentPerms.filter(p => p.status !== "pending").sort((a, b) => (b.resolvedAt ?? b.requestedAt) - (a.resolvedAt ?? a.requestedAt)),
+    [agentPerms]
   );
-  const pending = useMemo(() => perms.filter(p => p.status === "pending"), [perms]);
+  const pending = useMemo(() => agentPerms.filter(p => p.status === "pending"), [agentPerms]);
 
   const hasAnything = perms.length > 0 || Object.keys(committedCategories).length > 0;
 
@@ -292,7 +293,8 @@ function Dashboard({ userName }: { userName: string }) {
     <div className="mx-auto max-w-6xl px-6 py-6">
 
       {/* Greeting */}
-      <h1 className="text-2xl font-bold tracking-[-0.02em] mb-4">Hi, {firstName}</h1>
+      <h1 className="text-2xl font-bold tracking-[-0.02em] mb-1">Hi, {firstName}</h1>
+      {provider && <p className="text-xs text-[#999] dark:text-[#666] mb-4">Signed in via {provider}</p>}
 
       {/* Death notice */}
       {deathNotice && (
