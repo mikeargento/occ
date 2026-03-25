@@ -41,17 +41,16 @@ export async function insertProofs(proofs: OCCProof[]) {
     const proofJson = JSON.stringify(proof);
 
     try {
-      // Try with chain_id first
       await sql`INSERT INTO proofs (digest_b64, counter, epoch_id, commit_time, enforcement, signer_pub, has_agency, has_tsa, attr_name, chain_id, proof_json)
         VALUES (${digestB64}, ${counter}, ${epochId}, ${commitTime}, ${enforcement}, ${signerPub}, ${hasAgency}, ${hasTsa}, ${attrName}, ${chainId}, ${proofJson}::jsonb)
         ON CONFLICT (digest_b64) DO NOTHING`;
       indexed++;
-    } catch {
-      // Fallback: insert without chain_id (column may not exist yet)
+    } catch (e1) {
+      // chain_id column might not exist — try without it, use digest_b64 conflict only
       try {
         await sql`INSERT INTO proofs (digest_b64, counter, epoch_id, commit_time, enforcement, signer_pub, has_agency, has_tsa, attr_name, proof_json)
           VALUES (${digestB64}, ${counter}, ${epochId}, ${commitTime}, ${enforcement}, ${signerPub}, ${hasAgency}, ${hasTsa}, ${attrName}, ${proofJson}::jsonb)
-          ON CONFLICT (signer_pub, counter) DO NOTHING`;
+          ON CONFLICT (digest_b64) DO NOTHING`;
         indexed++;
       } catch (e2) {
         console.error("  insert proof failed:", (e2 as Error).message);
