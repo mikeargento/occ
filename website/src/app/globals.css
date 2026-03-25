@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Disable dark mode — single muted light theme */
+@custom-variant dark (&:where(.force-dark));
+
 @theme {
   --color-bg: var(--bg);
   --color-bg-elevated: var(--bg-elevated);
