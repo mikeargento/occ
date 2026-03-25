@@ -51,7 +51,9 @@ async function teeCommit(digestB64: string, metadata: Record<string, unknown>, p
     const proof = Array.isArray(data) ? data[0] : data.proofs?.[0] ?? data;
 
     // Forward to explorer
-    console.log("  [occ] Forwarding proof to explorer...", proof?.artifact?.digestB64?.slice(0, 20));
+    const hasCommitTime = !!(proof?.commit?.time);
+    const hasArtifact = !!(proof?.artifact?.digestB64);
+    console.log("  [occ] Forwarding proof:", { hasCommitTime, hasArtifact, digest: proof?.artifact?.digestB64?.slice(0, 20), keys: Object.keys(proof || {}).join(",") });
     try {
       const fwdRes = await fetch("https://www.occ.wtf/api/proofs", {
         method: "POST",
