@@ -387,6 +387,12 @@ export const db = {
        WHERE user_id = $1 AND id = $2`,
       [userId, agentId, tool]
     );
+    // Update any existing approved rows to revoked
+    await p.query(
+      `UPDATE occ_permission_requests SET status = 'revoked', resolved_at = NOW()
+       WHERE user_id = $1 AND agent_id = $2 AND tool = $3 AND status = 'approved'`,
+      [userId, agentId, tool]
+    );
     // Record the revocation
     await p.query(
       `INSERT INTO occ_permission_requests (user_id, agent_id, tool, status, proof_digest, receipt, resolved_at)
