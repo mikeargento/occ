@@ -50,20 +50,18 @@ async function teeCommit(digestB64: string, metadata: Record<string, unknown>, p
     const data = await res.json();
     const proof = Array.isArray(data) ? data[0] : data.proofs?.[0] ?? data;
 
-    // Forward to explorer — fire and forget but log errors
+    // Forward to explorer
+    console.log("  [occ] Forwarding proof to explorer...", proof?.artifact?.digestB64?.slice(0, 20));
     try {
       const fwdRes = await fetch("https://www.occ.wtf/api/proofs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ proof }),
-        signal: AbortSignal.timeout(10000),
       });
-      if (!fwdRes.ok) {
-        const body = await fwdRes.text().catch(() => "");
-        console.warn(`  [occ] Explorer forward failed: ${fwdRes.status} ${body.slice(0, 200)}`);
-      }
+      const fwdBody = await fwdRes.text().catch(() => "");
+      console.log("  [occ] Explorer response:", fwdRes.status, fwdBody.slice(0, 100));
     } catch (fwdErr) {
-      console.warn("  [occ] Explorer forward error:", (fwdErr as Error).message);
+      console.log("  [occ] Explorer forward error:", (fwdErr as Error).message);
     }
 
     return { proof, digestB64: proof?.artifact?.digestB64 ?? digestB64 };
