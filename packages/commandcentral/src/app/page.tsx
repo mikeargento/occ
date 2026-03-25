@@ -383,7 +383,7 @@ function Dashboard({ userName }: { userName: string }) {
                 }
                 if (e.key === "Escape") { setAddingAgent(false); setNewAgentName(""); }
               }} />
-            <button onClick={async () => { if (newAgentName.trim()) { const name = newAgentName.trim(); await createAgent(name); setNewAgentName(""); setAddingAgent(false); await refresh(); setSelectedAgent(name); } }}
+            <button onClick={async () => { if (newAgentName.trim()) { const result = await createAgent(newAgentName.trim()); setNewAgentName(""); setAddingAgent(false); await refresh(); if (result?.agent?.id) setSelectedAgent(result.agent.id); } }}
               className="text-emerald-500 hover:text-emerald-400 text-sm font-bold px-1">✓</button>
             <button onClick={() => { setAddingAgent(false); setNewAgentName(""); }}
               className="text-[#999] hover:text-[#666] text-sm px-0.5">✕</button>
@@ -410,13 +410,12 @@ function Dashboard({ userName }: { userName: string }) {
                 className="px-3 py-2 text-sm rounded-lg border border-[#ccc] dark:border-[#444] bg-white dark:bg-[#1a1a1a] text-[#111] dark:text-[#e5e5e5] outline-none focus:border-emerald-500 w-48 caret-emerald-500"
                 onKeyDown={async e => {
                   if (e.key === "Enter" && newAgentName.trim()) {
-                    const name = newAgentName.trim();
-                    await createAgent(name);
-                    setNewAgentName(""); setAddingAgent(false); await refresh(); setSelectedAgent(name);
+                    const result = await createAgent(newAgentName.trim());
+                    setNewAgentName(""); setAddingAgent(false); await refresh(); if (result?.agent?.id) setSelectedAgent(result.agent.id);
                   }
                   if (e.key === "Escape") { setAddingAgent(false); setNewAgentName(""); }
                 }} />
-              <button onClick={async () => { if (newAgentName.trim()) { const name = newAgentName.trim(); await createAgent(name); setNewAgentName(""); setAddingAgent(false); await refresh(); setSelectedAgent(name); } }}
+              <button onClick={async () => { if (newAgentName.trim()) { const result = await createAgent(newAgentName.trim()); setNewAgentName(""); setAddingAgent(false); await refresh(); if (result?.agent?.id) setSelectedAgent(result.agent.id); } }}
                 className="px-3 py-2 text-sm font-bold rounded-lg bg-emerald-500 text-white hover:bg-emerald-400 transition-colors">Create</button>
               <button onClick={() => { setAddingAgent(false); setNewAgentName(""); }}
                 className="px-2 py-2 text-sm text-[#999] hover:text-[#666]">Cancel</button>
