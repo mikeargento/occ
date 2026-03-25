@@ -92,7 +92,7 @@ export async function createAgent(name: string, allowedTools?: string[]): Promis
   });
 }
 
-export async function deleteAgent(agentId: string): Promise<{ deleted: boolean }> {
+export async function deleteAgent(agentId: string): Promise<{ deleted: boolean; deathProof?: any }> {
   return apiFetch(`/agents/${encodeURIComponent(agentId)}`, { method: "DELETE" });
 }
 

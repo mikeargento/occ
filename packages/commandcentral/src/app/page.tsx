@@ -170,6 +170,7 @@ function Dashboard({ userName }: { userName: string }) {
   const [editingName, setEditingName] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [deathNotice, setDeathNotice] = useState<{ name: string; digest: string } | null>(null);
 
   const [perms, setPerms] = useState<Permission[]>([]);
   const [mcpUrl, setMcpUrl] = useState("");
@@ -293,6 +294,25 @@ function Dashboard({ userName }: { userName: string }) {
       {/* Greeting */}
       <h1 className="text-2xl font-bold tracking-[-0.02em] mb-4">Hi, {firstName}</h1>
 
+      {/* Death notice */}
+      {deathNotice && (
+        <div className="mb-4 px-4 py-3 rounded-lg border border-red-300 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-red-500 text-sm">&#x1F480;</span>
+            <span className="text-sm text-red-700 dark:text-red-400">
+              Agent &quot;{deathNotice.name}&quot; terminated — death proof sealed on chain
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <a href={explorerUrl(deathNotice.digest)} target="_blank" rel="noopener noreferrer"
+              className="text-xs text-blue-500 hover:text-blue-400 transition-colors">
+              View proof ↗
+            </a>
+            <button onClick={() => setDeathNotice(null)} className="text-xs text-[#999] hover:text-[#666]">✕</button>
+          </div>
+        </div>
+      )}
+
       {/* Agent selector */}
       <div className="flex items-center gap-2 mb-6 flex-wrap">
         {agents.map(a => (
@@ -315,7 +335,17 @@ function Dashboard({ userName }: { userName: string }) {
             ) : confirmDelete === a.id ? (
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-red-400 dark:border-red-500 bg-white dark:bg-[#111] text-sm">
                 <span className="text-red-500 font-medium">Delete &quot;{a.name}&quot;?</span>
-                <button onClick={async () => { await deleteAgent(a.id); setConfirmDelete(null); if (selectedAgent === a.id) setSelectedAgent(agents[0]?.id ?? ""); await refresh(); }}
+                <button onClick={async () => {
+                  const result = await deleteAgent(a.id);
+                  const digest = result?.deathProof?.artifact?.digestB64;
+                  setConfirmDelete(null);
+                  if (digest) {
+                    setDeathNotice({ name: a.name, digest });
+                    setTimeout(() => setDeathNotice(null), 10000);
+                  }
+                  if (selectedAgent === a.id) setSelectedAgent(agents[0]?.id ?? "");
+                  await refresh();
+                }}
                   className="text-red-500 hover:text-red-400 font-bold">Yes</button>
                 <button onClick={() => setConfirmDelete(null)}
                   className="text-[#999] hover:text-[#666]">No</button>
