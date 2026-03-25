@@ -295,26 +295,43 @@ function Dashboard({ userName }: { userName: string }) {
       {/* Agent selector */}
       <div className="flex items-center gap-2 mb-6 flex-wrap">
         {agents.map(a => (
-          <button key={a.id} onClick={() => { setSelectedAgent(a.id); }}
-            className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
-              selectedAgent === a.id
-                ? "bg-[#111] dark:bg-white text-white dark:text-[#111] border-transparent font-semibold"
-                : "border-[#ddd] dark:border-[#2a2a2a] text-[#666] dark:text-[#999] hover:text-[#111] dark:hover:text-white hover:border-[#bbb] dark:hover:border-[#444]"
-            }`}>
+          <div key={a.id} className="flex items-center gap-0.5">
             {editingName === a.id ? (
-              <input value={editName} onChange={e => setEditName(e.target.value)} autoFocus
-                className="bg-transparent outline-none w-24 text-sm"
-                onBlur={async () => { if (editName.trim()) await renameAgent(a.id, editName.trim()); setEditingName(null); await refresh(); }}
-                onKeyDown={e => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }} />
+              <div className="flex items-center gap-1 px-2 py-1 rounded-lg border border-blue-400 dark:border-blue-500 bg-white dark:bg-[#111]">
+                <input value={editName} onChange={e => setEditName(e.target.value)} autoFocus
+                  className="bg-transparent outline-none w-28 text-sm text-[#111] dark:text-[#e5e5e5]"
+                  onKeyDown={async e => {
+                    if (e.key === "Enter" && editName.trim()) {
+                      await renameAgent(a.id, editName.trim()); setEditingName(null); await refresh();
+                    }
+                    if (e.key === "Escape") setEditingName(null);
+                  }} />
+                <button onClick={async () => { if (editName.trim()) { await renameAgent(a.id, editName.trim()); setEditingName(null); await refresh(); } }}
+                  className="text-emerald-500 hover:text-emerald-400 text-sm font-bold px-1">✓</button>
+                <button onClick={() => setEditingName(null)}
+                  className="text-[#999] hover:text-[#666] text-sm px-0.5">✕</button>
+              </div>
             ) : (
-              <span onDoubleClick={() => { setEditingName(a.id); setEditName(a.name); }}>{a.name}</span>
+              <button onClick={() => setSelectedAgent(a.id)}
+                className={`group flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border transition-colors ${
+                  selectedAgent === a.id
+                    ? "bg-[#111] dark:bg-white text-white dark:text-[#111] border-transparent font-semibold"
+                    : "border-[#ddd] dark:border-[#2a2a2a] text-[#666] dark:text-[#999] hover:text-[#111] dark:hover:text-white hover:border-[#bbb] dark:hover:border-[#444]"
+                }`}>
+                {a.name}
+                <span onClick={e => { e.stopPropagation(); setEditingName(a.id); setEditName(a.name); }}
+                  className={`opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity cursor-pointer text-[11px] ${
+                    selectedAgent === a.id ? "text-white/60 dark:text-[#111]/60" : ""
+                  }`}
+                  title="Rename">✎</span>
+              </button>
             )}
-          </button>
+          </div>
         ))}
         {addingAgent ? (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 px-2 py-1 rounded-lg border border-blue-400 dark:border-blue-500 bg-white dark:bg-[#111]">
             <input value={newAgentName} onChange={e => setNewAgentName(e.target.value)} placeholder="Agent name" autoFocus
-              className="px-2 py-1 text-sm rounded-lg border border-[#ddd] dark:border-[#2a2a2a] bg-transparent outline-none w-32"
+              className="bg-transparent outline-none w-28 text-sm text-[#111] dark:text-[#e5e5e5]"
               onKeyDown={async e => {
                 if (e.key === "Enter" && newAgentName.trim()) {
                   await createAgent(newAgentName.trim());
@@ -322,8 +339,10 @@ function Dashboard({ userName }: { userName: string }) {
                 }
                 if (e.key === "Escape") { setAddingAgent(false); setNewAgentName(""); }
               }} />
+            <button onClick={async () => { if (newAgentName.trim()) { await createAgent(newAgentName.trim()); setNewAgentName(""); setAddingAgent(false); await refresh(); } }}
+              className="text-emerald-500 hover:text-emerald-400 text-sm font-bold px-1">✓</button>
             <button onClick={() => { setAddingAgent(false); setNewAgentName(""); }}
-              className="text-[#999] hover:text-[#666] text-sm">✕</button>
+              className="text-[#999] hover:text-[#666] text-sm px-0.5">✕</button>
           </div>
         ) : (
           <button onClick={() => setAddingAgent(true)}
