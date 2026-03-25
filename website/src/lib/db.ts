@@ -14,18 +14,16 @@ export async function insertProofs(proofs: OCCProof[]) {
   let indexed = 0;
 
   // Idempotent migrations
-  try {
-    await sql`ALTER TABLE proofs ADD COLUMN IF NOT EXISTS chain_id TEXT`;
-  } catch { /* already exists */ }
-  try {
-    await sql`CREATE UNIQUE INDEX IF NOT EXISTS proofs_digest_b64_unique ON proofs (digest_b64)`;
-  } catch (e) {
-    // If duplicates prevent index creation, deduplicate first
+  try { await sql`ALTER TABLE proofs ADD COLUMN IF NOT EXISTS chain_id TEXT`; } catch { }
+  try { await sql`CREATE UNIQUE INDEX IF NOT EXISTS proofs_digest_b64_unique ON proofs (digest_b64)`; } catch {
     try {
       await sql`DELETE FROM proofs a USING proofs b WHERE a.id > b.id AND a.digest_b64 = b.digest_b64`;
       await sql`CREATE UNIQUE INDEX IF NOT EXISTS proofs_digest_b64_unique ON proofs (digest_b64)`;
-    } catch { /* index may already exist */ }
+    } catch { }
   }
+  // Drop old (signer_pub, counter) constraint — conflicts with per-agent chains
+  try { await sql`DROP INDEX IF EXISTS proofs_signer_pub_counter_key`; } catch { }
+  try { await sql`ALTER TABLE proofs DROP CONSTRAINT IF EXISTS proofs_signer_pub_counter_key`; } catch { }
 
   for (const proof of proofs) {
     const digestB64 = proof.artifact.digestB64;
@@ -46,14 +44,14 @@ export async function insertProofs(proofs: OCCProof[]) {
         ON CONFLICT (digest_b64) DO NOTHING`;
       indexed++;
     } catch (e1) {
-      // chain_id column might not exist — try without it, use digest_b64 conflict only
+      console.error("  insert proof (with chain_id) failed:", (e1 as Error).message, "digest:", digestB64?.slice(0, 20));
       try {
         await sql`INSERT INTO proofs (digest_b64, counter, epoch_id, commit_time, enforcement, signer_pub, has_agency, has_tsa, attr_name, proof_json)
           VALUES (${digestB64}, ${counter}, ${epochId}, ${commitTime}, ${enforcement}, ${signerPub}, ${hasAgency}, ${hasTsa}, ${attrName}, ${proofJson}::jsonb)
           ON CONFLICT (digest_b64) DO NOTHING`;
         indexed++;
       } catch (e2) {
-        console.error("  insert proof failed:", (e2 as Error).message);
+        console.error("  insert proof (fallback) also failed:", (e2 as Error).message);
       }
     }
   }
