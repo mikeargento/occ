@@ -486,20 +486,26 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
 
     // Find the authorization object to revoke
     const authObj = await db.getValidAuthorization(userId, agentId, tool);
-    if (!authObj) return json(res, { error: "No active authorization to revoke" }, 404);
 
-    // ── CREATE REVOCATION OBJECT ──
-    // This supersedes the authorization. After this, no execution path exists.
-    const revokeChainId = `${userId}:${agentId}`;
-    const { proof, digest } = await createRevocationObject(userId, agentId, tool, authObj.proofDigest, revokeChainId, await getPrincipal());
+    let digest = "";
+    let proof: any = null;
 
+    if (authObj) {
+      // ── CREATE REVOCATION OBJECT ──
+      // This supersedes the authorization. After this, no execution path exists.
+      const revokeChainId = `${userId}:${agentId}`;
+      const result = await createRevocationObject(userId, agentId, tool, authObj.proofDigest, revokeChainId, await getPrincipal());
+      digest = result.digest;
+      proof = result.proof;
+    }
+
+    // Always revoke the permission and disable the tool — even without an auth object
     await db.revokePermission(userId, agentId, tool, digest, proof);
-    // Sync the toggle: remove tool from agent's allowed list
     await db.disableTool(userId, agentId, tool);
     await db.addProof(userId, {
       agentId, tool, allowed: false,
-      reason: `Revocation object created: ${digest} (supersedes ${authObj.proofDigest})`,
-      proofDigest: digest, receipt: proof,
+      reason: digest ? `Revocation object created: ${digest}` : "Tool revoked (no authorization object)",
+      proofDigest: digest || undefined, receipt: proof,
     });
 
     eventBus.emit(userId, {
