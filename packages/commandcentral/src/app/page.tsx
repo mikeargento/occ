@@ -345,7 +345,7 @@ function Dashboard({ userName }: { userName: string }) {
         {addingAgent ? (
           <div className="flex items-center gap-1 px-2 py-1 rounded-lg border border-blue-400 dark:border-blue-500 bg-white dark:bg-[#111]">
             <input value={newAgentName} onChange={e => setNewAgentName(e.target.value)} placeholder="Agent name" autoFocus
-              className="bg-transparent outline-none w-28 text-sm text-[#111] dark:text-[#e5e5e5]"
+              className="bg-transparent outline-none w-32 text-sm text-[#111] dark:text-[#e5e5e5] placeholder:text-[#aaa] dark:placeholder:text-[#555] caret-emerald-500"
               onKeyDown={async e => {
                 if (e.key === "Enter" && newAgentName.trim()) {
                   await createAgent(newAgentName.trim());
@@ -367,17 +367,35 @@ function Dashboard({ userName }: { userName: string }) {
       </div>
 
       {/* No agents — prompt to create first one */}
-      {agents.length === 0 && !addingAgent && (
+      {agents.length === 0 && (
         <div className="text-center py-16">
           <div className="text-4xl mb-4">🤖</div>
           <h2 className="text-xl font-bold mb-2">Create your first agent</h2>
           <p className="text-sm text-[#999] dark:text-[#666] mb-6 max-w-xs mx-auto text-balance">
             Each agent gets its own MCP link, its own rules, and its own proof chain.
           </p>
-          <button onClick={() => setAddingAgent(true)}
-            className="px-6 py-2.5 text-sm font-semibold rounded-xl bg-[#111] dark:bg-white text-white dark:text-[#111] hover:opacity-90 transition-opacity">
-            + Create agent
-          </button>
+          {addingAgent ? (
+            <div className="flex items-center justify-center gap-2">
+              <input value={newAgentName} onChange={e => setNewAgentName(e.target.value)} placeholder="Agent name" autoFocus
+                className="px-3 py-2 text-sm rounded-lg border border-[#ccc] dark:border-[#444] bg-white dark:bg-[#1a1a1a] text-[#111] dark:text-[#e5e5e5] outline-none focus:border-emerald-500 w-48 caret-emerald-500"
+                onKeyDown={async e => {
+                  if (e.key === "Enter" && newAgentName.trim()) {
+                    await createAgent(newAgentName.trim());
+                    setNewAgentName(""); setAddingAgent(false); await refresh();
+                  }
+                  if (e.key === "Escape") { setAddingAgent(false); setNewAgentName(""); }
+                }} />
+              <button onClick={async () => { if (newAgentName.trim()) { await createAgent(newAgentName.trim()); setNewAgentName(""); setAddingAgent(false); await refresh(); } }}
+                className="px-3 py-2 text-sm font-bold rounded-lg bg-emerald-500 text-white hover:bg-emerald-400 transition-colors">Create</button>
+              <button onClick={() => { setAddingAgent(false); setNewAgentName(""); }}
+                className="px-2 py-2 text-sm text-[#999] hover:text-[#666]">Cancel</button>
+            </div>
+          ) : (
+            <button onClick={() => setAddingAgent(true)}
+              className="px-6 py-2.5 text-sm font-semibold rounded-xl bg-[#111] dark:bg-white text-white dark:text-[#111] hover:opacity-90 transition-opacity">
+              + Create agent
+            </button>
+          )}
         </div>
       )}
 
