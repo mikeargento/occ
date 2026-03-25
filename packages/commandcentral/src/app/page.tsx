@@ -479,9 +479,9 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
                   <div key={cat.key}>
                     <div className="flex items-center gap-3 px-5 py-3 hover:bg-[#f5f3f0] transition-colors">
                       <button onClick={() => setExpanded(isExpanded ? null : cat.key)}
-                        className="text-[10px] text-[#b0ada8] w-4 flex-shrink-0 transition-transform"
+                        className="text-[#b0ada8] w-4 flex-shrink-0 transition-transform"
                         style={{ transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)" }}>
-                        ▶
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
                       </button>
                       <div className="flex-1 min-w-0">
                         <span className="text-[14px] font-medium">{cat.label}</span>
