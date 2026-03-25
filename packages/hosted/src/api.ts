@@ -455,7 +455,7 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
       proof = authResult.proof;
 
       // Sync the toggle: add tool to agent's allowed list
-      await db.addToolToAgent(userId, req_entry.agent_id, req_entry.tool);
+      await db.enableTool(userId, req_entry.agent_id, req_entry.tool);
     }
 
     // Resolve the permission request (updates status, stores proof ref)
@@ -495,7 +495,7 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
 
     await db.revokePermission(userId, agentId, tool, digest, proof);
     // Sync the toggle: remove tool from agent's allowed list
-    await db.removeToolFromAgent(userId, agentId, tool);
+    await db.disableTool(userId, agentId, tool);
     await db.addProof(userId, {
       agentId, tool, allowed: false,
       reason: `Revocation object created: ${digest} (supersedes ${authObj.proofDigest})`,
