@@ -32,7 +32,7 @@ export default function DocsPage() {
           <ScrollReveal key={p.href} delay={i * 60}>
             <Link
               href={p.href}
-              className="group block rounded-xl border border-border-subtle bg-bg-elevated p-8 card-hover hover:border-border relative"
+              className="group block border border-border-subtle bg-bg-elevated p-8 card-hover hover:border-border relative"
             >
               <div className="flex items-start gap-5">
                 <span className="text-xs font-mono text-text-tertiary mt-1 shrink-0">

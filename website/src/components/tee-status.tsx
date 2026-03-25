@@ -46,7 +46,7 @@ export function TeeStatus() {
 
   const statusColor =
     health.status === "online"
-      ? "bg-emerald-500"
+      ? "bg-blue-500"
       : health.status === "checking"
         ? "bg-amber-400"
         : "bg-red-500";
@@ -59,13 +59,13 @@ export function TeeStatus() {
         : "Enclave Offline";
 
   return (
-    <div className="rounded-xl border border-border-subtle bg-bg-elevated overflow-hidden">
+    <div className="border border-border-subtle bg-bg-elevated overflow-hidden">
       {/* Header */}
       <div className="px-5 py-4 flex items-center justify-between border-b border-border-subtle">
         <div className="flex items-center gap-3">
           <div className="relative flex h-2.5 w-2.5">
             {health.status === "online" && (
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
             )}
             <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${statusColor}`} />
           </div>
@@ -113,7 +113,7 @@ export function TeeStatus() {
         >
           <div className="overflow-hidden">
             <div className="px-5 pb-4 space-y-3">
-              <code className="block text-[10px] font-mono text-text-tertiary leading-relaxed break-all bg-bg-subtle/50 rounded-lg p-3">
+              <code className="block text-[10px] font-mono text-text-tertiary leading-relaxed break-all bg-bg-subtle/50 p-3">
                 {ENCLAVE_MEASUREMENT}
               </code>
               <p className="text-[10px] text-text-tertiary leading-relaxed">

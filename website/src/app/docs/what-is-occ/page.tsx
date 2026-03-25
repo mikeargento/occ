@@ -63,7 +63,7 @@ export default function WhatIsOCCPage() {
 
       <h2 className="text-xl font-semibold mt-12 mb-4">What you get</h2>
       <p className="text-text-secondary leading-relaxed mb-4">
-        An OCC proof is a JSON object (schema version <code className="text-xs font-mono bg-bg-subtle px-1.5 py-0.5 rounded">occ/1</code>) containing:
+        An OCC proof is a JSON object (schema version <code className="text-xs font-mono bg-bg-subtle px-1.5 py-0.5">occ/1</code>) containing:
       </p>
       <ul className="space-y-2 mb-6">
         <li className="text-text-secondary"><strong className="text-text">artifact</strong> - SHA-256 digest of the committed bytes</li>

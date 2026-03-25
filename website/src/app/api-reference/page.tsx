@@ -17,7 +17,7 @@ function Endpoint({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-xl card-hover border border-border-subtle overflow-hidden">
+    <div className="card-hover border border-border-subtle overflow-hidden">
       <div className="flex items-center gap-3 px-6 py-5 border-b border-border-subtle bg-bg-elevated">
         <span className={`method-badge ${method === "POST" ? "bg-info/10 text-info" : "bg-success/10 text-success"}`}>
           {method}
@@ -34,7 +34,7 @@ function Endpoint({
 
 function CodeBlock({ title, code }: { title?: string; code: string }) {
   return (
-    <div className="rounded-xl terminal-glow border border-border-subtle bg-bg-elevated overflow-hidden mb-4">
+    <div className="terminal-glow border border-border-subtle bg-bg-elevated overflow-hidden mb-4">
       {title && (
         <div className="px-4 py-3 border-b border-border-subtle">
           <span className="text-xs font-mono text-text-tertiary">{title}</span>
@@ -61,7 +61,7 @@ export default function APIReferencePage() {
           REST API for committing artifacts and verifying proofs. The commit
           endpoint runs inside an AWS Nitro Enclave.
         </p>
-        <div className="mt-6 rounded-xl terminal-glow border border-border-subtle bg-bg-elevated p-4">
+        <div className="mt-6 terminal-glow border border-border-subtle bg-bg-elevated p-4">
           <div className="text-[11px] font-medium uppercase tracking-[0.15em] text-text-tertiary mb-2">
             Base URL
           </div>

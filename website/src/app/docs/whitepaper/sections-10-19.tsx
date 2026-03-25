@@ -462,7 +462,7 @@ export default function Sections10to19() {
             Three enforcement tiers capture the practically relevant points in this assurance space:
           </p>
 
-          <div className="my-5 rounded-r-lg border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
             <p className="text-sm text-text leading-relaxed mb-3">
               <strong>Definition 12.1</strong> (Enforcement Tiers). Let <M c="B" /> be a boundary
               implementation. The <em>enforcement tier</em> of <M c="B" /> is a declaration of the
@@ -529,7 +529,7 @@ export default function Sections10to19() {
             held.
           </p>
 
-          <div className="my-5 rounded-r-lg border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
             <p className="text-sm text-text-secondary leading-relaxed">
               <strong className="text-text">Remark 12.2</strong> (Hardware-Bound Key is Not Causal
               Enforcement). The <M c={"\\tau_{\\text{hw}}"} /> tier corresponds to devices such as
@@ -607,7 +607,7 @@ export default function Sections10to19() {
           </p>
 
           {/* Figure 6: Enforced Provenance Chains */}
-          <div className="my-6 rounded-lg border border-border-subtle bg-bg-elevated p-5">
+          <div className="my-6 border border-border-subtle bg-bg-elevated p-5">
             {/* Desktop layout */}
             <div className="hidden sm:flex items-start justify-center gap-3 flex-wrap text-xs">
               <div className="text-center pt-2">
@@ -889,7 +889,7 @@ export default function Sections10to19() {
         </p>
 
         {/* Figure 7: Birth-Death Semantics */}
-        <div className="my-6 rounded-lg border border-border-subtle bg-bg-elevated p-5">
+        <div className="my-6 border border-border-subtle bg-bg-elevated p-5">
           {/* Desktop layout */}
           <div className="hidden sm:flex items-start justify-center gap-8">
             {/* Detect-After Model */}
@@ -1048,7 +1048,7 @@ export default function Sections10to19() {
             Given correct enforcement of measurement and monotonicity within the boundary, OCC
             guarantees:
           </p>
-          <div className="my-5 rounded-r-lg border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
             <p className="text-sm text-text leading-relaxed">
               <strong>Property (Single-Successor).</strong> At most one valid successor can be
               produced from any given parent authority within the verifier-accepted measurement and

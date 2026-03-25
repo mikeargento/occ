@@ -25,7 +25,7 @@ export default function AgentSdkPage() {
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Quick start</h2>
       <p className="text-text-secondary mb-4">
-        The built-in <code className="text-xs font-mono bg-bg-subtle px-1.5 py-0.5 rounded">fetch_url</code> tool
+        The built-in <code className="text-xs font-mono bg-bg-subtle px-1.5 py-0.5">fetch_url</code> tool
         is ready to use. Wrap it, call it, and get back your output with an OCC proof attached.
       </p>
       <div className="code-block">
@@ -129,14 +129,14 @@ const receipt = loadReceipt(await fs.readFile("receipt.json", "utf8"));
       </div>
       <div className="border-l-2 border-l-text-tertiary pl-6 mb-6">
         <p className="text-sm text-text italic">
-          The receipt format is <code className="text-xs font-mono bg-bg-subtle px-1.5 py-0.5 rounded">occ-agent/receipt/1</code>. It contains everything needed for offline verification. Hand it to anyone and they can verify without contacting OCC.
+          The receipt format is <code className="text-xs font-mono bg-bg-subtle px-1.5 py-0.5">occ-agent/receipt/1</code>. It contains everything needed for offline verification. Hand it to anyone and they can verify without contacting OCC.
         </p>
       </div>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Verify a receipt</h2>
       <p className="text-text-secondary mb-4">
         Verification is offline. Given an envelope and proof, anyone can check
-        that the execution was committed through OCC. Works with a <code className="text-xs font-mono bg-bg-subtle px-1.5 py-0.5 rounded">VerifiedToolResult</code> or a loaded receipt.
+        that the execution was committed through OCC. Works with a <code className="text-xs font-mono bg-bg-subtle px-1.5 py-0.5">VerifiedToolResult</code> or a loaded receipt.
       </p>
       <div className="code-block">
         <div className="code-block-header"><span>TypeScript</span></div>
@@ -184,7 +184,7 @@ v.checks.signatureValid;    // Ed25519 signature valid`}</pre>
 
       <h3 className="text-lg font-semibold mt-8 mb-3">wrapTool(tool, config)</h3>
       <p className="text-text-secondary mb-4">
-        Returns an async function that executes the tool and returns a <code className="text-xs font-mono bg-bg-subtle px-1.5 py-0.5 rounded">VerifiedToolResult</code>.
+        Returns an async function that executes the tool and returns a <code className="text-xs font-mono bg-bg-subtle px-1.5 py-0.5">VerifiedToolResult</code>.
       </p>
       <div className="overflow-x-auto mb-6">
         <table>

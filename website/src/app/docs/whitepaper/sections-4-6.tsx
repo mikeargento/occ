@@ -18,7 +18,7 @@ export default function Sections4Through6() {
           invariants hold:
         </p>
 
-        <div className="my-5 rounded-r-lg border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+        <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
           <p className="text-sm text-text">
             <strong>Invariant 4.1</strong> (Authenticated Reachability).
             Authenticated durable state exists if and only if a successful
@@ -27,7 +27,7 @@ export default function Sections4Through6() {
           </p>
         </div>
 
-        <div className="my-5 rounded-r-lg border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+        <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
           <p className="text-sm text-text">
             <strong>Invariant 4.2</strong> (Binding Evidence). Every
             authenticated artifact has associated verification
@@ -44,7 +44,7 @@ export default function Sections4Through6() {
           </p>
         </div>
 
-        <div className="my-5 rounded-r-lg border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+        <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
           <p className="text-sm text-text">
             <strong>Invariant 4.3</strong> (Policy-Anchored Verification). An
             artifact verifies if and only if its verification material validates
@@ -52,7 +52,7 @@ export default function Sections4Through6() {
           </p>
         </div>
 
-        <div className="my-5 rounded-r-lg border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+        <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
           <p className="text-sm text-text">
             <strong>Invariant 4.4</strong> (Distinguishability). Durable state
             not produced via boundary finalization cannot satisfy verification
@@ -60,7 +60,7 @@ export default function Sections4Through6() {
           </p>
         </div>
 
-        <div className="my-5 rounded-r-lg border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+        <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
           <p className="text-sm text-text">
             <strong>Invariant 4.5</strong> (Authenticity as Reachability).
             Authenticated durable state is defined by enforced state transitions,
@@ -175,7 +175,7 @@ export default function Sections4Through6() {
             Functional Properties
           </h3>
 
-          <div className="my-5 rounded-r-lg border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
             <p className="text-sm text-text">
               <strong>Property 5.1</strong> (Scarcity). Each authenticated
               artifact corresponds to exactly one token that existed prior to
@@ -183,14 +183,14 @@ export default function Sections4Through6() {
             </p>
           </div>
 
-          <div className="my-5 rounded-r-lg border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
             <p className="text-sm text-text">
               <strong>Property 5.2</strong> (Non-Replay). Tokens cannot be
               reused. Each token authorizes exactly one finalization event.
             </p>
           </div>
 
-          <div className="my-5 rounded-r-lg border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
             <p className="text-sm text-text">
               <strong>Property 5.3</strong> (Non-Retroactivity). Tokens cannot be
               applied after durable state already exists. Authorization must
@@ -198,7 +198,7 @@ export default function Sections4Through6() {
             </p>
           </div>
 
-          <div className="my-5 rounded-r-lg border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
             <p className="text-sm text-text">
               <strong>Property 5.4</strong> (Commit-Path Enforcement). Token
               consumption and finalization occur within the same indivisible
@@ -295,7 +295,7 @@ export default function Sections4Through6() {
         </ul>
 
         {/* Figure 1: Token-Nonce Duality */}
-        <div className="my-8 rounded-lg border border-border-subtle bg-bg-elevated p-6">
+        <div className="my-8 border border-border-subtle bg-bg-elevated p-6">
           {/* Desktop layout */}
           <div className="hidden sm:flex items-start justify-center gap-12">
             {/* TOTA side */}
@@ -524,7 +524,7 @@ export default function Sections4Through6() {
           </p>
 
           {/* Figure 2: Atomic Causality */}
-          <div className="my-8 rounded-lg border border-border-subtle bg-bg-elevated p-6">
+          <div className="my-8 border border-border-subtle bg-bg-elevated p-6">
             {/* Desktop layout */}
             <div className="hidden sm:flex items-start justify-center gap-12">
               {/* OCC side */}

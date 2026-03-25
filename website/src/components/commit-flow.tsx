@@ -106,7 +106,7 @@ export function CommitFlow() {
                   "linear-gradient(to bottom, transparent 0%, var(--c-text-tertiary) 20%, var(--c-text-tertiary) 80%, transparent 100%)",
               }}
             />
-            <div className="absolute top-1/2 -translate-y-1/2 hidden sm:flex items-center bg-bg/80 backdrop-blur-sm px-3 py-1.5 rounded-full border border-border-subtle">
+            <div className="absolute top-1/2 -translate-y-1/2 hidden sm:flex items-center bg-bg/80 backdrop-blur-sm px-3 py-1.5 border border-border-subtle">
               <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-tertiary whitespace-nowrap">
                 Secure Commit
               </span>
@@ -130,7 +130,7 @@ export function CommitFlow() {
                   <div className="absolute top-1/2 -translate-y-1/2 left-0 flex items-center gap-2">
                     {/* Artifact pill */}
                     <div
-                      className={`cf-glow-${i} flex items-center gap-2 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg border border-border-subtle bg-bg-elevated`}
+                      className={`cf-glow-${i} flex items-center gap-2 px-2.5 py-1.5 sm:px-3 sm:py-2 border border-border-subtle bg-bg-elevated`}
                     >
                       <ArtifactIcon>{artifact.icon}</ArtifactIcon>
                       <span className="text-xs font-mono text-text-tertiary hidden sm:inline">
@@ -140,7 +140,7 @@ export function CommitFlow() {
 
                     {/* Proof badge */}
                     <div className={`cf-badge-${i}`}>
-                      <div className="w-5 h-5 rounded-full bg-success/15 flex items-center justify-center">
+                      <div className="w-5 h-5 bg-success/15 flex items-center justify-center">
                         <svg
                           width="12"
                           height="12"
@@ -161,7 +161,7 @@ export function CommitFlow() {
                     <div
                       className={`cf-card-${i} absolute -top-14 left-4 hidden lg:block pointer-events-none`}
                     >
-                      <div className="rounded-lg border border-border-subtle bg-bg-elevated/95 backdrop-blur-sm p-2 shadow-lg shadow-black/10">
+                      <div className="border border-border-subtle bg-bg-elevated/95 backdrop-blur-sm p-2">
                         <div className="text-[10px] font-mono leading-relaxed space-y-0.5 whitespace-nowrap">
                           <div className="text-success">artifact &#10003;</div>
                           <div className="text-success">actor &#10003;</div>

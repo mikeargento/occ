@@ -10,7 +10,7 @@ export default function ProofFormatPage() {
     <article className="prose-doc">
       <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-6">Proof Format: occ/1</h1>
       <p className="text-text-secondary mb-10">
-        Normative specification for the <code className="text-xs font-mono bg-bg-subtle px-1.5 py-0.5 rounded">occ/1</code> proof format. Derived from the reference implementation.
+        Normative specification for the <code className="text-xs font-mono bg-bg-subtle px-1.5 py-0.5">occ/1</code> proof format. Derived from the reference implementation.
       </p>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Proof JSON schema</h2>
@@ -77,7 +77,7 @@ export default function ProofFormatPage() {
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Signed body</h2>
       <p className="text-text-secondary mb-4">
-        The Ed25519 signature covers the canonical serialization of a <code className="text-xs font-mono bg-bg-subtle px-1.5 py-0.5 rounded">SignedBody</code> object:
+        The Ed25519 signature covers the canonical serialization of a <code className="text-xs font-mono bg-bg-subtle px-1.5 py-0.5">SignedBody</code> object:
       </p>
       <div className="code-block mb-4">
         <div className="code-block-header"><span>SignedBody</span></div>
@@ -178,7 +178,7 @@ export default function ProofFormatPage() {
       </p>
       <ol className="space-y-2 mb-6 text-sm text-text-secondary">
         <li>1. Recursively sort all object keys in Unicode code-point order</li>
-        <li>2. Serialize with <code className="text-xs font-mono bg-bg-subtle px-1 rounded">JSON.stringify()</code> -- no whitespace</li>
+        <li>2. Serialize with <code className="text-xs font-mono bg-bg-subtle px-1">JSON.stringify()</code> -- no whitespace</li>
         <li>3. Encode the resulting string as UTF-8 (no BOM)</li>
       </ol>
       <p className="text-text-secondary mb-4">Top-level key order after sort:</p>

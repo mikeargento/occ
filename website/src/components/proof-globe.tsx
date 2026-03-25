@@ -35,7 +35,7 @@ function ProofLine() {
 
 export function ProofGlobe() {
   return (
-    <div className="aspect-square max-w-[480px] w-full rounded-full overflow-hidden">
+    <div className="aspect-square max-w-[480px] w-full overflow-hidden">
       <div
         className="w-full h-full select-none overflow-hidden p-2"
         aria-hidden="true"

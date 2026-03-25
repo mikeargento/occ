@@ -15,12 +15,12 @@ export function Nav() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 bg-bg/80 backdrop-blur-xl border-b border-border-subtle/50">
+    <header className="sticky top-0 z-50 bg-[#efefef] border-b border-border-subtle/50">
       <div className="mx-auto max-w-6xl px-6">
         <nav className="flex h-16 items-center justify-between">
           <Link
             href="/"
-            className="text-[20px] tracking-[-0.02em] font-black text-text"
+            className="text-[28px] tracking-[-0.03em] font-black text-text"
           >
             OCC
           </Link>
@@ -33,7 +33,7 @@ export function Nav() {
                   <a
                     key={l.href}
                     href={l.href}
-                    className="text-sm font-semibold px-3 py-1.5 transition-colors text-text-tertiary hover:text-text"
+                    className="text-sm font-semibold px-6 py-2.5 ml-2 bg-[#2563EB] text-white hover:bg-[#1D4ED8] transition-colors"
                   >
                     {l.label}
                   </a>
@@ -46,13 +46,13 @@ export function Nav() {
                   className={`text-sm font-semibold px-3 py-1.5 transition-colors inline-flex items-center gap-1.5 ${
                     pathname.startsWith(l.href)
                       ? "text-text"
-                      : "text-text-tertiary hover:text-text"
+                      : "text-text hover:opacity-70"
                   }`}
                 >
                   {l.indicator && (
                     <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
                     </span>
                   )}
                   {l.label}
@@ -65,7 +65,7 @@ export function Nav() {
           <div className="flex items-center gap-1 md:hidden">
             <button
               onClick={() => setOpen(!open)}
-              className="flex h-9 w-9 items-center justify-center rounded-md hover:bg-bg-subtle"
+              className="flex h-9 w-9 items-center justify-center hover:bg-bg-subtle"
               aria-label="Toggle menu"
             >
               <svg
@@ -104,7 +104,7 @@ export function Nav() {
                   key={l.href}
                   href={l.href}
                   onClick={() => setOpen(false)}
-                  className="rounded-lg px-3 py-2.5 text-sm font-semibold text-text-secondary hover:text-text"
+                  className="px-3 py-2.5 text-sm font-semibold text-text-secondary hover:text-text"
                 >
                   {l.label}
                 </a>
@@ -113,7 +113,7 @@ export function Nav() {
                   key={l.href}
                   href={l.href}
                   onClick={() => setOpen(false)}
-                  className={`rounded-lg px-3 py-2.5 text-sm font-semibold inline-flex items-center gap-1.5 ${
+                  className={`px-3 py-2.5 text-sm font-semibold inline-flex items-center gap-1.5 ${
                     pathname.startsWith(l.href)
                       ? "text-text"
                       : "text-text-secondary hover:text-text"
@@ -121,8 +121,8 @@ export function Nav() {
                 >
                   {l.indicator && (
                     <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
                     </span>
                   )}
                   {l.label}

@@ -425,7 +425,7 @@ export default function BWDemoPage() {
           onClick={handleConvert}
           disabled={!file || busy}
           className={`
-            w-full h-11 rounded-lg text-sm font-semibold uppercase tracking-wider transition-all
+            w-full h-11 text-sm font-semibold uppercase tracking-wider transition-all
             ${
               !file || busy
                 ? "bg-bg-subtle text-text-tertiary cursor-not-allowed"
@@ -443,7 +443,7 @@ export default function BWDemoPage() {
         </button>
 
         {error && (
-          <div className="mt-4 rounded-lg border border-error/30 bg-error/5 p-4">
+          <div className="mt-4 border border-error/30 bg-error/5 p-4">
             <div className="text-sm text-error font-medium mb-1">Error</div>
             <div className="text-sm text-text-secondary">{error}</div>
           </div>
@@ -460,7 +460,7 @@ export default function BWDemoPage() {
                 <div className="text-[10px] font-medium uppercase tracking-wider text-text-tertiary mb-3">
                   Original (color)
                 </div>
-                <div className="rounded-lg overflow-hidden border border-border-subtle bg-bg-elevated">
+                <div className="overflow-hidden border border-border-subtle bg-bg-elevated">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={originalPreview}
@@ -473,7 +473,7 @@ export default function BWDemoPage() {
                 <div className="text-[10px] font-medium uppercase tracking-wider text-text-tertiary mb-3">
                   Output (converted inside TEE)
                 </div>
-                <div className="rounded-lg overflow-hidden border border-border-subtle bg-bg-elevated">
+                <div className="overflow-hidden border border-border-subtle bg-bg-elevated">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={bwImageUrl}
@@ -506,7 +506,7 @@ export default function BWDemoPage() {
             </div>
             <button
               onClick={handleDownloadZip}
-              className="inline-flex items-center gap-2 rounded-md bg-success px-4 py-2 text-xs font-semibold text-bg hover:bg-success/85 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-2 bg-success px-4 py-2 text-xs font-semibold text-bg hover:bg-success/85 transition-colors cursor-pointer"
             >
               <svg
                 width="14"
@@ -524,7 +524,7 @@ export default function BWDemoPage() {
           </div>
 
           {/* Explanation */}
-          <div className="rounded-lg border border-border-subtle bg-bg-elevated p-5">
+          <div className="border border-border-subtle bg-bg-elevated p-5">
             <p className="text-sm text-text-secondary leading-relaxed">
               The proof below certifies that the grayscale conversion was
               performed inside an AWS Nitro Enclave. The proof&apos;s artifact
@@ -607,7 +607,7 @@ function InfoCard({
   items: { label: string; value: string }[];
 }) {
   return (
-    <div className="rounded-lg border border-border-subtle bg-bg-elevated p-4">
+    <div className="border border-border-subtle bg-bg-elevated p-4">
       <div className="text-xs font-medium uppercase tracking-wider text-text-tertiary mb-3">
         {title}
       </div>

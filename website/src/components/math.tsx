@@ -23,7 +23,7 @@ export function MBlock({ children, c }: { children?: string; c?: string }) {
   });
   return (
     <div
-      className="my-4 overflow-x-auto rounded-r-lg border-l-[3px] border-border-subtle bg-bg-elevated px-4 py-3"
+      className="my-4 overflow-x-auto border-l-[3px] border-border-subtle bg-bg-elevated px-4 py-3"
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );

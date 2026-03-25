@@ -12,7 +12,7 @@ export function CopyButton({ text }: { text: string }) {
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
       }}
-      className="shrink-0 p-1.5 rounded-md text-text-tertiary hover:text-text hover:bg-bg-subtle transition-colors"
+      className="shrink-0 p-1.5 text-text-tertiary hover:text-text hover:bg-bg-subtle transition-colors"
       title="Copy"
     >
       {copied ? (

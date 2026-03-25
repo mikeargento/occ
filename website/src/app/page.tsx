@@ -28,7 +28,7 @@ function InstallButton() {
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
       }}
-      className="hero-animate mt-8 group relative inline-flex items-center gap-3 px-6 py-3 rounded-full bg-bg-elevated/80 border border-border-subtle cursor-pointer transition-all duration-200 hover:bg-bg-elevated hover:border-border hover:scale-[1.02] active:scale-[0.98]"
+      className="hero-animate mt-8 group relative inline-flex items-center gap-3 px-6 py-3 bg-bg-elevated/80 border border-border-subtle cursor-pointer transition-all duration-200 hover:bg-bg-elevated hover:border-border hover:scale-[1.02] active:scale-[0.98]"
       style={{ animationDelay: "160ms" }}
     >
       <code className="text-base sm:text-lg font-mono text-text-secondary group-hover:text-text transition-colors">
@@ -407,7 +407,7 @@ function LiveProofFeed() {
   }
 
   return (
-    <div className="rounded-xl border border-border-subtle bg-bg overflow-hidden divide-y divide-border-subtle">
+    <div className="border border-border-subtle bg-bg overflow-hidden divide-y divide-border-subtle">
       {proofs.map((p) => (
         <HomeProofRow key={p.id} proof={p} />
       ))}
@@ -529,7 +529,7 @@ function HomeProofRow({ proof: p }: { proof: HomeProofSummary }) {
               </div>
               <Link
                 href={`/explorer/${encodeURIComponent(toUrlSafeB64(p.digestB64))}`}
-                className="inline-flex items-center gap-1.5 text-xs text-emerald-600 hover:text-emerald-500 transition-colors mt-1"
+                className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-500 transition-colors mt-1"
               >
                 View full proof
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -569,7 +569,7 @@ export default function Home() {
             </p>
             <div className="hero-animate" style={{ animationDelay: "180ms" }}>
               <a href="https://agent.occ.wtf"
-                className="inline-flex items-center justify-center rounded-full bg-text text-bg px-10 py-3.5 text-base font-semibold hover:opacity-90 transition-all">
+                className="inline-flex items-center justify-center bg-[#2563EB] text-white px-10 py-3.5 text-base font-semibold hover:bg-[#1D4ED8] transition-colors">
                 Try OCC
               </a>
             </div>
@@ -578,7 +578,7 @@ export default function Home() {
             {heroLogos.map((h) => (
               <div
                 key={h.key}
-                className="flex items-center justify-center w-14 h-14 sm:w-20 sm:h-20 rounded-xl transition-all duration-150 bg-bg-elevated/50 hover:bg-bg-elevated hover:scale-105 border border-transparent hover:border-border-subtle"
+                className="flex items-center justify-center w-14 h-14 sm:w-20 sm:h-20 transition-all duration-150 bg-bg-elevated/50 hover:bg-bg-elevated hover:scale-105 border border-transparent hover:border-border-subtle"
                 title={h.key}
               >
                 {h.logo}
@@ -594,14 +594,14 @@ export default function Home() {
       {/* Live Proof Explorer */}
       <section className="mb-20 sm:mb-32">
         <ScrollReveal>
-        <div className="rounded-2xl border border-border bg-bg-elevated/80 backdrop-blur-sm p-6 sm:p-10 md:p-14 shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
+        <div className="border border-border bg-bg-elevated/80 backdrop-blur-sm p-6 sm:p-10 md:p-14">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-semibold tracking-[-0.02em]">
               Live Proofs
             </h2>
             <Link
               href="/explorer"
-              className="inline-flex items-center gap-1.5 text-sm text-emerald-600 hover:text-emerald-500 transition-colors"
+              className="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-500 transition-colors"
             >
               View all in Explorer
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -626,7 +626,7 @@ export default function Home() {
           <h2 className="text-2xl font-semibold tracking-[-0.02em]">
             Orchestrators
           </h2>
-          <span className="inline-flex items-center rounded-full bg-bg-subtle px-2.5 py-0.5 text-xs font-medium text-text-tertiary">
+          <span className="inline-flex items-center bg-bg-subtle px-2.5 py-0.5 text-xs font-medium text-text-tertiary">
             Agent platforms
           </span>
         </div>
@@ -690,9 +690,9 @@ export default function Home() {
           ] as const).map((o, i) => (
             <ScrollReveal key={o.name} delay={i * 40}>
             <div
-              className={`rounded-xl border p-5 flex flex-col h-full transition-all duration-300 hover:border-border ${
+              className={`border p-5 flex flex-col h-full transition-all duration-300 hover:border-border ${
                 o.status === "available"
-                  ? "border-emerald-500/30 bg-emerald-500/[0.03]"
+                  ? "border-blue-500/30 bg-blue-500/[0.03]"
                   : "border-border-subtle bg-bg-elevated"
               }`}
             >
@@ -702,9 +702,9 @@ export default function Home() {
                   <h3 className="text-sm font-semibold">{o.name}</h3>
                 </div>
                 <span
-                  className={`shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                  className={`shrink-0 inline-flex items-center px-2 py-0.5 text-[11px] font-medium ${
                     o.status === "available"
-                      ? "bg-emerald-500/10 text-emerald-400"
+                      ? "bg-blue-500/10 text-blue-400"
                       : "bg-bg-subtle text-text-tertiary"
                   }`}
                 >
@@ -735,10 +735,10 @@ function FrameworkCard({ framework }: { framework: Framework }) {
 
   return (
     <div
-      className={`group rounded-2xl border p-6 flex flex-col h-full transition-all duration-150 ${
+      className={`group border p-6 flex flex-col h-full transition-all duration-150 ${
         isMCP
-          ? "border-emerald-500/30 bg-emerald-500/[0.03] hover:border-emerald-500/50 hover:shadow-[0_4px_20px_rgba(34,197,94,0.08)]"
-          : "border-border-subtle bg-bg-elevated/80 hover:border-border hover:bg-bg-elevated hover:shadow-[0_4px_20px_rgba(0,0,0,0.2)]"
+          ? "border-blue-500/30 bg-blue-500/[0.03] hover:border-blue-500/50"
+          : "border-border-subtle bg-bg-elevated/80 hover:border-border hover:bg-bg-elevated"
       }`}
     >
       <div className="flex items-start justify-between gap-3 mb-3">
@@ -749,9 +749,9 @@ function FrameworkCard({ framework }: { framework: Framework }) {
           <h3 className="text-base font-semibold">{name}</h3>
         </div>
         <span
-          className={`shrink-0 inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${
+          className={`shrink-0 inline-flex items-center px-2 py-0.5 text-[11px] font-medium ${
             isAvailable
-              ? "bg-emerald-500/10 text-emerald-400"
+              ? "bg-blue-500/10 text-blue-400"
               : "bg-bg-subtle text-text-tertiary"
           }`}
         >
@@ -765,7 +765,7 @@ function FrameworkCard({ framework }: { framework: Framework }) {
 
       {install && (
         <div className="mt-auto">
-          <div className="flex items-center gap-1 bg-bg/80 rounded-lg px-3 py-2 min-w-0 border border-border-subtle/50">
+          <div className="flex items-center gap-1 bg-bg/80 px-3 py-2 min-w-0 border border-border-subtle/50">
             <code className="flex-1 text-[11px] sm:text-xs font-mono text-text-tertiary overflow-x-auto whitespace-nowrap">
               {install}
             </code>

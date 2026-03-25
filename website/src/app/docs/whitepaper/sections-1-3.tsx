@@ -4,7 +4,7 @@ export default function Sections1Through3() {
       {/* ── Abstract ── */}
       <div
         id="abstract"
-        className="rounded-xl border border-border-subtle bg-bg-elevated p-6 mb-10"
+        className="border border-border-subtle bg-bg-elevated p-6 mb-10"
       >
         <div className="text-xs font-bold uppercase tracking-wider text-text-tertiary mb-3">
           Abstract
@@ -127,7 +127,7 @@ export default function Sections1Through3() {
           strengthen the enforcement guarantees those mechanisms provide.
         </p>
 
-        <div className="my-5 rounded-r-lg border-l-[3px] border-border-subtle bg-bg-elevated p-5">
+        <div className="my-5 border-l-[3px] border-border-subtle bg-bg-elevated p-5">
           <p>
             <strong>Non-Goal.</strong> This architecture does not attempt to
             establish the semantic truth, correctness, or factual validity of
@@ -375,7 +375,7 @@ export default function Sections1Through3() {
           Terminology
         </h2>
 
-        <div className="my-5 rounded-r-lg border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+        <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
           <p>
             <strong>Definition 3.1</strong> (Atomic Execution Boundary). A
             protected execution domain that enforces isolation and ordering
@@ -386,7 +386,7 @@ export default function Sections1Through3() {
           </p>
         </div>
 
-        <div className="my-5 rounded-r-lg border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+        <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
           <p>
             <strong>Definition 3.2</strong> (Protected Commit Interface). The
             sole interface permitted to finalize authenticated durable state.
@@ -396,7 +396,7 @@ export default function Sections1Through3() {
           </p>
         </div>
 
-        <div className="my-5 rounded-r-lg border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+        <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
           <p>
             <strong>Definition 3.3</strong> (Boundary-Held Capability). A
             capability available only inside the boundary and required to
@@ -405,7 +405,7 @@ export default function Sections1Through3() {
           </p>
         </div>
 
-        <div className="my-5 rounded-r-lg border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+        <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
           <p>
             <strong>Definition 3.4</strong> (Boundary-Fresh Cryptographic
             Computation). Cryptographic computation performed inside the
@@ -419,7 +419,7 @@ export default function Sections1Through3() {
           </p>
         </div>
 
-        <div className="my-5 rounded-r-lg border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+        <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
           <p>
             <strong>Definition 3.5</strong> (Candidate Digital State). Transient,
             internal, mutable representations of content prior to finalization.
@@ -427,7 +427,7 @@ export default function Sections1Through3() {
           </p>
         </div>
 
-        <div className="my-5 rounded-r-lg border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+        <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
           <p>
             <strong>Definition 3.6</strong> (Authenticated Durable State).
             Externally visible or persistent digital state whose authenticated
@@ -436,7 +436,7 @@ export default function Sections1Through3() {
           </p>
         </div>
 
-        <div className="my-5 rounded-r-lg border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+        <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
           <p>
             <strong>Definition 3.7</strong> (Binding). A cryptographic
             construction that combines boundary-fresh output with a
@@ -445,7 +445,7 @@ export default function Sections1Through3() {
           </p>
         </div>
 
-        <div className="my-5 rounded-r-lg border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+        <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
           <p>
             <strong>Definition 3.8</strong> (Verification Material). Data bound
             to content and to boundary-fresh output that enables a verifier to
@@ -455,7 +455,7 @@ export default function Sections1Through3() {
           </p>
         </div>
 
-        <div className="my-5 rounded-r-lg border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+        <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
           <p>
             <strong>Definition 3.9</strong> (Authorization). Successful use of a
             boundary-held capability via the protected commit interface to

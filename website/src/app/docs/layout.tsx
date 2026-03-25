@@ -22,7 +22,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
     <div className="mx-auto max-w-6xl px-6 py-16 sm:py-20">
       {/* Mobile nav */}
       <div className="lg:hidden mb-10">
-        <div className="rounded-xl border border-border-subtle bg-bg-elevated overflow-hidden">
+        <div className="border border-border-subtle bg-bg-elevated overflow-hidden">
           <select
             onChange={(e) => window.location.href = e.target.value}
             value={pathname}
@@ -48,7 +48,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
                 <Link
                   key={s.href}
                   href={s.href}
-                  className={`block rounded-lg px-4 py-2 text-sm transition-colors ${
+                  className={`block px-4 py-2 text-sm transition-colors ${
                     pathname === s.href
                       ? "sidebar-active text-text font-semibold"
                       : "text-text-secondary hover:text-text"

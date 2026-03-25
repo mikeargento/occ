@@ -25,7 +25,7 @@ export default function Sections7to9() {
             and Transition System
           </h3>
 
-          <div className="my-5 rounded-r-lg border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
             <p className="text-sm text-text leading-relaxed mb-3">
               <strong>Definition 7.1</strong> (OCC System). An OCC system is a
               labeled transition system{" "}
@@ -85,7 +85,7 @@ export default function Sections7to9() {
             An OCC-compliant system enforces three invariants:
           </p>
 
-          <div className="my-5 rounded-r-lg border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
             <p className="text-sm text-text leading-relaxed mb-2">
               <strong>Invariant 7.2</strong> (Constructibility — Closure
               Property).
@@ -110,7 +110,7 @@ export default function Sections7to9() {
             </p>
           </div>
 
-          <div className="my-5 rounded-r-lg border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
             <p className="text-sm text-text leading-relaxed mb-2">
               <strong>Invariant 7.3</strong> (Constructor Completeness —
               Unforgeability).
@@ -128,7 +128,7 @@ export default function Sections7to9() {
             </p>
           </div>
 
-          <div className="my-5 rounded-r-lg border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
             <p className="text-sm text-text leading-relaxed mb-2">
               <strong>Invariant 7.4</strong> (Atomic Causality —
               Indivisibility).
@@ -215,7 +215,7 @@ export default function Sections7to9() {
             mechanisms:
           </p>
 
-          <div className="my-5 rounded-r-lg border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
             <p className="text-sm text-text leading-relaxed">
               <strong>Definition 7.5</strong> (Injective Genesis). A system
               enforces injective genesis if and only if the map{" "}
@@ -271,7 +271,7 @@ export default function Sections7to9() {
             from collision resistance and freshness guarantees.
           </p>
 
-          <div className="my-5 rounded-r-lg border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
             <p className="text-sm text-text leading-relaxed mb-3">
               <strong>Remark 7.6</strong> (Structural Non-Reusability).
               Injective genesis ensures that no authorization event can
@@ -367,7 +367,7 @@ export default function Sections7to9() {
             Origin Forgery
           </h3>
 
-          <div className="my-5 rounded-r-lg border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
             <p className="text-sm text-text leading-relaxed mb-3">
               <strong>Definition 8.1</strong> (Origin Forgery Game). The game{" "}
               <M
@@ -415,7 +415,7 @@ export default function Sections7to9() {
             </ol>
           </div>
 
-          <div className="my-5 rounded-r-lg border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
             <p className="text-sm text-text leading-relaxed mb-2">
               <strong>Definition 8.2</strong> (OCC Security). An OCC system is{" "}
               <em>secure</em> if for all probabilistic polynomial-time
@@ -428,7 +428,7 @@ export default function Sections7to9() {
             />
           </div>
 
-          <div className="my-5 rounded-r-lg border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
             <p className="text-sm text-text leading-relaxed">
               <strong>Proposition 8.3</strong> (Security Reduction). If the
               signature scheme is existentially unforgeable under
@@ -438,7 +438,7 @@ export default function Sections7to9() {
             </p>
           </div>
 
-          <div className="my-5 rounded-r-lg border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
             <p className="text-sm text-text leading-relaxed mb-3">
               <strong>Proof sketch.</strong> Suppose adversary{" "}
               <M c={"\\mathcal{A}"} /> wins the Origin Forgery Game with
@@ -607,10 +607,10 @@ export default function Sections7to9() {
           </p>
 
           {/* Figure 3: State Transition Model */}
-          <div className="my-6 rounded-lg border border-border-subtle bg-bg-elevated p-5">
+          <div className="my-6 border border-border-subtle bg-bg-elevated p-5">
             {/* Desktop layout */}
             <div className="hidden sm:flex items-center justify-center gap-0 flex-wrap">
-              <div className="border border-border-subtle rounded px-5 py-3 text-sm text-center bg-bg-elevated">
+              <div className="border border-border-subtlepx-5 py-3 text-sm text-center bg-bg-elevated">
                 Candidate
                 <br />
                 Digital State
@@ -622,11 +622,11 @@ export default function Sections7to9() {
                 <div className="text-xs text-text-tertiary mb-0.5">submit</div>
                 <div className="text-text-tertiary text-lg">&rarr;</div>
               </div>
-              <div className="border-2 border-border-subtle bg-bg-elevated rounded px-4 py-5 text-center">
+              <div className="border-2 border-border-subtle bg-bg-elevatedpx-4 py-5 text-center">
                 <div className="font-bold text-[11px] text-text-tertiary mb-2 tracking-wider uppercase">
                   Atomic Execution Boundary
                 </div>
-                <div className="border border-border-subtle rounded px-4 py-2.5 text-sm bg-bg-elevated">
+                <div className="border border-border-subtlepx-4 py-2.5 text-sm bg-bg-elevated">
                   Protected Commit
                   <br />
                   Interface
@@ -638,7 +638,7 @@ export default function Sections7to9() {
                 </div>
                 <div className="text-text-tertiary text-lg">&rarr;</div>
               </div>
-              <div className="border border-border-subtle rounded px-5 py-3 text-sm text-center bg-bg-elevated">
+              <div className="border border-border-subtlepx-5 py-3 text-sm text-center bg-bg-elevated">
                 Authenticated
                 <br />
                 Durable State
@@ -649,7 +649,7 @@ export default function Sections7to9() {
             </div>
             {/* Mobile layout */}
             <div className="flex sm:hidden flex-col items-center gap-2 text-sm">
-              <div className="border border-border-subtle rounded px-5 py-3 bg-bg-elevated w-full text-center">
+              <div className="border border-border-subtlepx-5 py-3 bg-bg-elevated w-full text-center">
                 Candidate Digital State
                 <br />
                 <span className="text-xs text-text-tertiary">
@@ -657,18 +657,18 @@ export default function Sections7to9() {
                 </span>
               </div>
               <div className="text-xs text-text-tertiary">submit &darr;</div>
-              <div className="border-2 border-border-subtle bg-bg-elevated rounded p-4 w-full text-center">
+              <div className="border-2 border-border-subtle bg-bg-elevatedp-4 w-full text-center">
                 <div className="font-bold text-[11px] text-text-tertiary mb-2 tracking-wider uppercase">
                   Atomic Execution Boundary
                 </div>
-                <div className="border border-border-subtle rounded px-2.5 py-2 text-sm bg-bg-elevated">
+                <div className="border border-border-subtlepx-2.5 py-2 text-sm bg-bg-elevated">
                   Protected Commit Interface
                 </div>
               </div>
               <div className="text-xs text-text-tertiary">
                 finalize &darr;
               </div>
-              <div className="border border-border-subtle rounded px-5 py-3 bg-bg-elevated w-full text-center">
+              <div className="border border-border-subtlepx-5 py-3 bg-bg-elevated w-full text-center">
                 Authenticated Durable State
                 <br />
                 <span className="text-xs text-text-tertiary">
@@ -871,14 +871,14 @@ export default function Sections7to9() {
           </p>
 
           {/* Figure 4: Verification Independence */}
-          <div className="my-6 rounded-lg border border-border-subtle bg-bg-elevated p-5">
+          <div className="my-6 border border-border-subtle bg-bg-elevated p-5">
             <div className="font-bold text-sm text-center mb-4 tracking-wide">
               Verification Independence from Proof Transport
             </div>
             {/* Desktop layout */}
             <div className="hidden sm:flex items-start justify-center gap-3 flex-wrap text-sm">
               <div className="text-center">
-                <div className="border border-text-tertiary rounded px-3.5 py-2.5 bg-bg-elevated">
+                <div className="border border-text-tertiarypx-3.5 py-2.5 bg-bg-elevated">
                   OCC Boundary
                   <br />
                   <span className="text-xs text-text-tertiary">(genesis)</span>
@@ -889,7 +889,7 @@ export default function Sections7to9() {
                       store proof
                     </div>
                     <div className="text-text-tertiary">&darr;</div>
-                    <div className="border border-text-tertiary rounded px-3 py-2 text-xs bg-bg-elevated">
+                    <div className="border border-text-tertiarypx-3 py-2 text-xs bg-bg-elevated">
                       Reference Point
                       <br />
                       <span className="font-mono text-xs">
@@ -900,7 +900,7 @@ export default function Sections7to9() {
                   <div className="flex flex-col items-center">
                     <div className="text-xs text-text-tertiary">finalize</div>
                     <div className="text-text-tertiary">&darr;</div>
-                    <div className="border border-border-subtle rounded px-3.5 py-2 text-xs">
+                    <div className="border border-border-subtlepx-3.5 py-2 text-xs">
                       Artifact
                       <br />
                       <span className="text-xs text-text-tertiary">
@@ -916,22 +916,22 @@ export default function Sections7to9() {
               </div>
               <div className="flex flex-col gap-2.5 pt-2.5">
                 <div className="flex items-center gap-2">
-                  <div className="border border-border-subtle rounded px-3 py-1.5 text-xs">
+                  <div className="border border-border-subtlepx-3 py-1.5 text-xs">
                     Copy (with proof)
                   </div>
                   <span className="text-text-tertiary">&rarr;</span>
-                  <div className="border border-text-tertiary rounded px-3 py-1.5 text-xs bg-bg-elevated">
+                  <div className="border border-text-tertiarypx-3 py-1.5 text-xs bg-bg-elevated">
                     Verify
                     <br />
                     <span className="text-[11px]">(portable proof)</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="border border-border-subtle rounded px-3 py-1.5 text-xs">
+                  <div className="border border-border-subtlepx-3 py-1.5 text-xs">
                     Copy (stripped)
                   </div>
                   <span className="text-text-tertiary">&rarr;</span>
-                  <div className="border border-text-tertiary rounded px-3 py-1.5 text-xs bg-bg-elevated">
+                  <div className="border border-text-tertiarypx-3 py-1.5 text-xs bg-bg-elevated">
                     Verify
                     <br />
                     <span className="text-[11px]">(reference lookup)</span>
@@ -941,7 +941,7 @@ export default function Sections7to9() {
             </div>
             {/* Mobile layout */}
             <div className="flex sm:hidden flex-col items-center gap-2 text-sm">
-              <div className="border border-text-tertiary rounded px-3.5 py-2.5 bg-bg-elevated w-full text-center">
+              <div className="border border-text-tertiarypx-3.5 py-2.5 bg-bg-elevated w-full text-center">
                 OCC Boundary
                 <br />
                 <span className="text-xs text-text-tertiary">(genesis)</span>
@@ -950,7 +950,7 @@ export default function Sections7to9() {
                 <div className="flex-1 flex flex-col items-center gap-1">
                   <div className="text-xs text-text-tertiary">store proof</div>
                   <div className="text-text-tertiary">&darr;</div>
-                  <div className="border border-text-tertiary rounded p-2 text-xs text-center w-full bg-bg-elevated">
+                  <div className="border border-text-tertiaryp-2 text-xs text-center w-full bg-bg-elevated">
                     Reference Point
                     <br />
                     <span className="font-mono text-xs">
@@ -961,7 +961,7 @@ export default function Sections7to9() {
                 <div className="flex-1 flex flex-col items-center gap-1">
                   <div className="text-xs text-text-tertiary">finalize</div>
                   <div className="text-text-tertiary">&darr;</div>
-                  <div className="border border-border-subtle rounded p-2 text-xs text-center w-full">
+                  <div className="border border-border-subtlep-2 text-xs text-center w-full">
                     Artifact
                     <br />
                     <span className="text-xs text-text-tertiary">
@@ -973,22 +973,22 @@ export default function Sections7to9() {
               <div className="text-xs text-text-tertiary">&darr; distribute</div>
               <div className="flex flex-col gap-1.5 w-full">
                 <div className="flex items-center gap-1.5 text-xs">
-                  <div className="border border-border-subtle rounded px-2 py-1.5 flex-1 text-center">
+                  <div className="border border-border-subtlepx-2 py-1.5 flex-1 text-center">
                     Copy (with proof)
                   </div>
                   <span className="text-text-tertiary">&rarr;</span>
-                  <div className="border border-text-tertiary rounded px-2 py-1.5 flex-1 text-center bg-bg-elevated">
+                  <div className="border border-text-tertiarypx-2 py-1.5 flex-1 text-center bg-bg-elevated">
                     Verify
                     <br />
                     <span className="text-[10px]">(portable)</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5 text-xs">
-                  <div className="border border-border-subtle rounded px-2 py-1.5 flex-1 text-center">
+                  <div className="border border-border-subtlepx-2 py-1.5 flex-1 text-center">
                     Copy (stripped)
                   </div>
                   <span className="text-text-tertiary">&rarr;</span>
-                  <div className="border border-text-tertiary rounded px-2 py-1.5 flex-1 text-center bg-bg-elevated">
+                  <div className="border border-text-tertiarypx-2 py-1.5 flex-1 text-center bg-bg-elevated">
                     Verify
                     <br />
                     <span className="text-[10px]">(ref lookup)</span>
@@ -1070,7 +1070,7 @@ export default function Sections7to9() {
           </p>
 
           {/* Figure 5: Verification Structure */}
-          <div className="my-6 rounded-lg border border-border-subtle bg-bg-elevated p-5">
+          <div className="my-6 border border-border-subtle bg-bg-elevated p-5">
             {/* Desktop layout */}
             <div className="hidden sm:flex items-start justify-center gap-8 flex-wrap text-sm">
               <div className="min-w-[220px]">
@@ -1103,20 +1103,20 @@ export default function Sections7to9() {
                 <div className="font-bold text-xs text-center text-text-tertiary mb-2.5 tracking-wider">
                   Verifier
                 </div>
-                <div className="border border-border-subtle rounded px-3.5 py-2 text-xs mb-1.5">
+                <div className="border border-border-subtlepx-3.5 py-2 text-xs mb-1.5">
                   1. Recompute hash of content
                 </div>
-                <div className="border border-border-subtle rounded px-3.5 py-2 text-xs mb-1.5">
+                <div className="border border-border-subtlepx-3.5 py-2 text-xs mb-1.5">
                   2. Verify H matches recomputed hash
                 </div>
-                <div className="border border-border-subtle rounded px-3.5 py-2 text-xs mb-1.5">
+                <div className="border border-border-subtlepx-3.5 py-2 text-xs mb-1.5">
                   3. Validate signature under trusted key
                 </div>
-                <div className="border border-border-subtle rounded px-3.5 py-2 text-xs mb-2.5">
+                <div className="border border-border-subtlepx-3.5 py-2 text-xs mb-2.5">
                   4. Check policy constraints
                 </div>
                 <div className="text-center text-text-tertiary">&darr;</div>
-                <div className="border border-text-tertiary rounded px-3.5 py-2 text-sm font-bold text-center mt-1 bg-bg-elevated">
+                <div className="border border-text-tertiarypx-3.5 py-2 text-sm font-bold text-center mt-1 bg-bg-elevated">
                   Accept / Reject
                 </div>
               </div>
@@ -1150,19 +1150,19 @@ export default function Sections7to9() {
               <div className="font-bold text-xs text-center text-text-tertiary mb-2.5 tracking-wider">
                 Verifier
               </div>
-              <div className="border border-border-subtle rounded px-3.5 py-2 text-xs mb-1.5">
+              <div className="border border-border-subtlepx-3.5 py-2 text-xs mb-1.5">
                 1. Recompute hash of content
               </div>
-              <div className="border border-border-subtle rounded px-3.5 py-2 text-xs mb-1.5">
+              <div className="border border-border-subtlepx-3.5 py-2 text-xs mb-1.5">
                 2. Verify H matches recomputed hash
               </div>
-              <div className="border border-border-subtle rounded px-3.5 py-2 text-xs mb-1.5">
+              <div className="border border-border-subtlepx-3.5 py-2 text-xs mb-1.5">
                 3. Validate signature under trusted key
               </div>
-              <div className="border border-border-subtle rounded px-3.5 py-2 text-xs mb-2.5">
+              <div className="border border-border-subtlepx-3.5 py-2 text-xs mb-2.5">
                 4. Check policy constraints
               </div>
-              <div className="border border-text-tertiary rounded px-3.5 py-2 text-sm font-bold text-center bg-bg-elevated">
+              <div className="border border-text-tertiarypx-3.5 py-2 text-sm font-bold text-center bg-bg-elevated">
                 Accept / Reject
               </div>
             </div>
@@ -1212,7 +1212,7 @@ export default function Sections7to9() {
             Properties
           </h3>
 
-          <div className="my-5 rounded-r-lg border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
             <p className="text-sm text-text leading-relaxed">
               <strong>Property 9.1</strong> (Non-Retroactivity). Authenticated
               durable state cannot be produced after the fact for pre-existing
@@ -1220,7 +1220,7 @@ export default function Sections7to9() {
             </p>
           </div>
 
-          <div className="my-5 rounded-r-lg border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
             <p className="text-sm text-text leading-relaxed">
               <strong>Property 9.2</strong> (Creation-Path Exclusivity).
               Authenticated durable state is structurally reachable only through
@@ -1229,14 +1229,14 @@ export default function Sections7to9() {
             </p>
           </div>
 
-          <div className="my-5 rounded-r-lg border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
             <p className="text-sm text-text leading-relaxed">
               <strong>Property 9.3</strong> (Content Integrity). Verification
               material binds authenticated state to specific content bytes.
             </p>
           </div>
 
-          <div className="my-5 rounded-r-lg border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
             <p className="text-sm text-text leading-relaxed">
               <strong>Property 9.4</strong> (Replay Resistance). Boundary-fresh
               cryptographic output prevents reuse of prior authorization events.

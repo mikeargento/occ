@@ -15,7 +15,7 @@ export default function VerificationPage() {
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Five-step algorithm</h2>
       <p className="text-text-secondary mb-6">
-        Input: a proof (<code className="text-xs font-mono bg-bg-subtle px-1 rounded">OCCProof</code>), the original bytes (<code className="text-xs font-mono bg-bg-subtle px-1 rounded">Uint8Array</code>), and an optional verification policy.
+        Input: a proof (<code className="text-xs font-mono bg-bg-subtle px-1">OCCProof</code>), the original bytes (<code className="text-xs font-mono bg-bg-subtle px-1">Uint8Array</code>), and an optional verification policy.
       </p>
 
       <div className="space-y-6 mb-12">
@@ -48,7 +48,7 @@ export default function VerificationPage() {
         ].map((item) => (
           <div key={item.step} className="border-l-2 border-l-text-tertiary pl-6">
             <div className="flex items-center gap-3 mb-3">
-              <span className="inline-flex w-7 h-7 items-center justify-center rounded-md bg-bg-subtle text-xs font-mono font-semibold">
+              <span className="inline-flex w-7 h-7 items-center justify-center bg-bg-subtle text-xs font-mono font-semibold">
                 {item.step}
               </span>
               <h3 className="text-base font-semibold">{item.title}</h3>

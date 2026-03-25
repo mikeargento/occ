@@ -78,7 +78,7 @@ export default function UseCasesPage() {
       <div className="space-y-10">
         {useCases.map((uc, i) => (
           <ScrollReveal key={uc.title} delay={i * 80}>
-            <div className="rounded-xl border border-border-subtle bg-bg-elevated p-8 card-hover hover:border-border">
+            <div className="border border-border-subtle bg-bg-elevated p-8 card-hover hover:border-border">
               <div className="text-[11px] font-medium uppercase tracking-[0.15em] text-text-tertiary mb-3">{uc.subtitle}</div>
               <h2 className="text-xl font-semibold tracking-[-0.02em] mb-4">{uc.title}</h2>
               <p className="text-sm text-text-secondary leading-relaxed mb-4">
@@ -112,13 +112,13 @@ export default function UseCasesPage() {
       <div className="mt-12 flex flex-wrap gap-4">
         <Link
           href="https://agent.occ.wtf"
-          className="inline-flex h-12 items-center rounded-xl bg-text px-8 text-sm font-semibold text-bg transition-colors hover:opacity-85 active:scale-[0.98]"
+          className="inline-flex h-12 items-center bg-text px-8 text-sm font-semibold text-bg transition-colors hover:opacity-85 active:scale-[0.98]"
         >
           Try the Dashboard
         </Link>
         <Link
           href="/docs"
-          className="inline-flex h-12 items-center rounded-xl border border-border px-8 text-sm font-semibold text-text-secondary transition-colors hover:text-text hover:border-text-tertiary active:scale-[0.98]"
+          className="inline-flex h-12 items-center border border-border px-8 text-sm font-semibold text-text-secondary transition-colors hover:text-text hover:border-text-tertiary active:scale-[0.98]"
         >
           Read the Docs
         </Link>

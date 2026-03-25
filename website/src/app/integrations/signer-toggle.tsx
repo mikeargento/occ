@@ -12,7 +12,7 @@ function CopyInline({ text }: { text: string }) {
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
       }}
-      className="absolute top-3 right-3 p-1.5 rounded-md text-text-tertiary hover:text-text hover:bg-bg-subtle/50 transition-colors duration-150"
+      className="absolute top-3 right-3 p-1.5 text-text-tertiary hover:text-text hover:bg-bg-subtle/50 transition-colors duration-150"
       title="Copy"
     >
       {copied ? (
@@ -38,12 +38,12 @@ export function SignerToggle({ onChange }: { onChange?: (mode: "local" | "tee") 
   }
 
   return (
-    <div className="inline-flex items-center rounded-full border border-border-subtle bg-bg p-1 gap-0.5">
+    <div className="inline-flex items-center border border-border-subtle bg-bg p-1 gap-0.5">
       <button
         onClick={() => toggle("local")}
-        className={`px-5 py-1.5 text-sm font-medium rounded-full transition-all duration-150 ${
+        className={`px-5 py-1.5 text-sm font-medium transition-all duration-150 ${
           mode === "local"
-            ? "bg-emerald-500 text-white shadow-[0_0_12px_rgba(34,197,94,0.3)]"
+            ? "bg-blue-500 text-white "
             : "text-text-tertiary hover:text-text"
         }`}
       >
@@ -51,9 +51,9 @@ export function SignerToggle({ onChange }: { onChange?: (mode: "local" | "tee") 
       </button>
       <button
         onClick={() => toggle("tee")}
-        className={`px-5 py-1.5 text-sm font-medium rounded-full transition-all duration-150 ${
+        className={`px-5 py-1.5 text-sm font-medium transition-all duration-150 ${
           mode === "tee"
-            ? "bg-emerald-500 text-white shadow-[0_0_12px_rgba(34,197,94,0.3)]"
+            ? "bg-blue-500 text-white "
             : "text-text-tertiary hover:text-text"
         }`}
       >
@@ -111,7 +111,7 @@ export function InteractiveSignerSection() {
   const configCmd = mode === "local" ? localConfig : teeConfig;
 
   return (
-    <div className="rounded-2xl border border-border bg-bg-elevated/80 backdrop-blur-sm p-4 sm:p-8 md:p-10 mb-20 sm:mb-32 overflow-hidden shadow-[0_4px_24px_rgba(0,0,0,0.2)]">
+    <div className="border border-border bg-bg-elevated/80 backdrop-blur-sm p-4 sm:p-8 md:p-10 mb-20 sm:mb-32 overflow-hidden">
       <div className="flex flex-col gap-3 mb-6">
         <div>
           <h2 className="text-xl font-semibold tracking-[-0.02em] mb-1">
@@ -130,20 +130,20 @@ export function InteractiveSignerSection() {
 
       <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Terminal command */}
-        <div className="relative rounded-xl border border-border-subtle overflow-hidden flex flex-col">
+        <div className="relative border border-border-subtle overflow-hidden flex flex-col">
           <div className="flex items-center justify-between px-4 py-2.5 border-b border-border-subtle bg-bg-subtle/30">
             <div className="flex items-center gap-2">
               <div className="flex gap-1.5">
-                <div className="w-2.5 h-2.5 rounded-full bg-text-tertiary/30" />
-                <div className="w-2.5 h-2.5 rounded-full bg-text-tertiary/30" />
-                <div className="w-2.5 h-2.5 rounded-full bg-text-tertiary/30" />
+                <div className="w-2.5 h-2.5 bg-text-tertiary/30" />
+                <div className="w-2.5 h-2.5 bg-text-tertiary/30" />
+                <div className="w-2.5 h-2.5 bg-text-tertiary/30" />
               </div>
               <span className="text-[10px] font-mono text-text-tertiary uppercase tracking-wider ml-1">Terminal</span>
             </div>
             <CopyInline text={bashCmd} />
           </div>
           <div className="p-4 bg-bg flex-1 flex items-start">
-            <pre className="text-sm font-mono text-emerald-400 leading-relaxed whitespace-pre-wrap break-all">
+            <pre className="text-sm font-mono text-blue-400 leading-relaxed whitespace-pre-wrap break-all">
               <span className="text-text-tertiary select-none">$ </span><code>{bashCmd}</code>
             </pre>
           </div>
@@ -157,7 +157,7 @@ export function InteractiveSignerSection() {
         </div>
 
         {/* Claude Desktop config */}
-        <div className="relative rounded-xl border border-border-subtle overflow-hidden flex flex-col">
+        <div className="relative border border-border-subtle overflow-hidden flex flex-col">
           <div className="flex items-center justify-between px-4 py-2.5 border-b border-border-subtle bg-bg-subtle/30">
             <div className="flex items-center gap-2">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-text-tertiary">
@@ -183,7 +183,7 @@ export function InteractiveSignerSection() {
 
       {/* What's the difference */}
       <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="rounded-xl border border-border-subtle p-5 bg-bg/50">
+        <div className="border border-border-subtle p-5 bg-bg/50">
           <div className="flex items-center gap-2.5 mb-3">
             <div className="font-medium text-text text-sm">Local signing</div>
           </div>
@@ -206,7 +206,7 @@ export function InteractiveSignerSection() {
             </li>
           </ul>
         </div>
-        <div className="rounded-xl border border-border-subtle p-5 bg-bg/50">
+        <div className="border border-border-subtle p-5 bg-bg/50">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2.5">
               <div className="font-medium text-text text-sm">TEE signing (Hardware)</div>
@@ -214,19 +214,19 @@ export function InteractiveSignerSection() {
           </div>
           <ul className="space-y-2 text-text-secondary text-xs">
             <li className="flex items-start gap-2">
-              <span className="text-emerald-500 mt-0.5 shrink-0">&#x2713;</span>
+              <span className="text-blue-500 mt-0.5 shrink-0">&#x2713;</span>
               AWS Nitro Enclave — sealed, auditable
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-emerald-500 mt-0.5 shrink-0">&#x2713;</span>
+              <span className="text-blue-500 mt-0.5 shrink-0">&#x2713;</span>
               Only a 32-byte hash crosses the network
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-emerald-500 mt-0.5 shrink-0">&#x2713;</span>
+              <span className="text-blue-500 mt-0.5 shrink-0">&#x2713;</span>
               Attestation certificate in every proof
             </li>
             <li className="flex items-start gap-2">
-              <span className="text-emerald-500 mt-0.5 shrink-0">&#x2713;</span>
+              <span className="text-blue-500 mt-0.5 shrink-0">&#x2713;</span>
               Good for production &amp; compliance
             </li>
           </ul>

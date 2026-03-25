@@ -30,7 +30,7 @@ export function ProofViewer({ proof, defaultExpanded = false }: ProofViewerProps
   };
 
   return (
-    <div className="terminal-glow rounded-xl border border-border-subtle bg-bg-elevated overflow-hidden">
+    <div className="terminal-glow border border-border-subtle bg-bg-elevated overflow-hidden">
       <div
         role="button"
         tabIndex={0}
@@ -41,7 +41,7 @@ export function ProofViewer({ proof, defaultExpanded = false }: ProofViewerProps
         <div className="flex items-center gap-2.5">
           <svg
             width="14" height="14" viewBox="0 0 14 14" fill="currentColor"
-            className={`text-emerald-600 transition-transform duration-200 ${expanded ? "rotate-90" : ""}`}
+            className={`text-blue-600 transition-transform duration-200 ${expanded ? "rotate-90" : ""}`}
           >
             <path d="M4 1.5l5.5 5.5-5.5 5.5" />
           </svg>

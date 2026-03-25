@@ -116,7 +116,7 @@ export default function ProofDetailPage() {
       {/* Hero */}
       <div className="mt-6">
         <div className="flex items-center gap-3 mb-3">
-          <span className="text-xs font-mono text-text-tertiary bg-bg-subtle/60 px-2 py-0.5 rounded">
+          <span className="text-xs font-mono text-text-tertiary bg-bg-subtle/60 px-2 py-0.5">
             {proof.version}
           </span>
           <span className={`text-sm font-medium ${enforcementColor(proof.environment.enforcement)}`}>
@@ -140,7 +140,7 @@ export default function ProofDetailPage() {
 
       {/* Multiple proofs notice */}
       {results.length > 1 && (
-        <div className="mt-4 rounded-lg bg-bg-subtle/50 border border-border-subtle px-4 py-3 text-sm text-text-secondary">
+        <div className="mt-4 bg-bg-subtle/50 border border-border-subtle px-4 py-3 text-sm text-text-secondary">
           This file has been proven {results.length} times. Showing the most recent.
         </div>
       )}
@@ -201,7 +201,7 @@ function SectionCard({ title, children, sectionKey }: { title: string; children:
   const [open, setOpen] = useState(true);
 
   return (
-    <div className="rounded-xl border border-border-subtle bg-bg-elevated overflow-hidden">
+    <div className="border border-border-subtle bg-bg-elevated overflow-hidden">
       <div
         role={isCollapsible ? "button" : undefined}
         tabIndex={isCollapsible ? 0 : undefined}
@@ -358,7 +358,7 @@ function CollapsibleArray({ items }: { items: unknown[] }) {
       {hasMore && (
         <button
           onClick={() => setExpanded(!expanded)}
-          className="inline-flex items-center gap-1.5 text-[11px] text-emerald-600 hover:text-emerald-500 transition-colors mt-2 font-medium"
+          className="inline-flex items-center gap-1.5 text-[11px] text-blue-600 hover:text-blue-500 transition-colors mt-2 font-medium"
         >
           <svg
             width="10" height="10" viewBox="0 0 14 14" fill="currentColor"
@@ -408,7 +408,7 @@ function ValueRow({ label, value, rawKey }: { label: string; value: unknown; raw
           {isBlob && (
             <button
               onClick={() => setBlobExpanded(!blobExpanded)}
-              className="inline-flex items-center gap-1.5 text-[11px] text-emerald-600 hover:text-emerald-500 transition-colors mt-1.5 ml-auto font-medium"
+              className="inline-flex items-center gap-1.5 text-[11px] text-blue-600 hover:text-blue-500 transition-colors mt-1.5 ml-auto font-medium"
             >
               <svg
                 width="10" height="10" viewBox="0 0 14 14" fill="currentColor"

@@ -230,7 +230,7 @@ export function AttestationVerifier({ reportB64, measurement }: Props) {
   }, [reportB64, measurement]);
 
   return (
-    <div className="mt-4 rounded-xl border border-border-subtle bg-bg-elevated overflow-hidden">
+    <div className="mt-4 border border-border-subtle bg-bg-elevated overflow-hidden">
       <div className="px-5 py-3.5 border-b border-border-subtle flex items-center justify-between">
         <h3 className="text-xs font-medium text-text-tertiary uppercase tracking-wider">
           Attestation Verification
@@ -239,7 +239,7 @@ export function AttestationVerifier({ reportB64, measurement }: Props) {
           <button
             onClick={verify}
             disabled={running}
-            className="text-xs font-medium text-emerald-400 hover:text-emerald-300 transition-colors disabled:opacity-50"
+            className="text-xs font-medium text-blue-400 hover:text-blue-300 transition-colors disabled:opacity-50"
           >
             {running ? "Decoding..." : "Verify Attestation"}
           </button>
@@ -269,8 +269,8 @@ export function AttestationVerifier({ reportB64, measurement }: Props) {
         <div className="px-5 py-4 space-y-4">
           {/* Verification result */}
           <div className="flex items-center gap-3">
-            <div className={`w-2.5 h-2.5 rounded-full ${verified ? "bg-emerald-500" : "bg-red-500"}`} />
-            <span className={`text-sm font-medium ${verified ? "text-emerald-400" : "text-red-400"}`}>
+            <div className={`w-2.5 h-2.5 rounded-full ${verified ? "bg-blue-500" : "bg-red-500"}`} />
+            <span className={`text-sm font-medium ${verified ? "text-blue-400" : "text-red-400"}`}>
               {verified
                 ? "PCR0 matches proof measurement"
                 : "PCR0 does NOT match proof measurement"}

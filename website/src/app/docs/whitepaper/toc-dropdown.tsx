@@ -77,7 +77,7 @@ export default function TocDropdown() {
     <div ref={ref} className="relative mb-8">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-4 py-3 rounded-lg border border-border-subtle bg-bg-elevated text-sm text-text-secondary hover:text-text hover:border-text-tertiary transition-colors"
+        className="w-full flex items-center justify-between px-4 py-3 border border-border-subtle bg-bg-elevated text-sm text-text-secondary hover:text-text hover:border-text-tertiary transition-colors"
       >
         <span className="font-medium">Table of Contents</span>
         <svg
@@ -92,7 +92,7 @@ export default function TocDropdown() {
       </button>
 
       {open && (
-        <div className="absolute z-50 mt-1 w-full max-h-[70vh] overflow-y-auto rounded-lg border border-border-subtle bg-bg-elevated shadow-lg">
+        <div className="absolute z-50 mt-1 w-full max-h-[70vh] overflow-y-auto border border-border-subtle bg-bg-elevated">
           {sections.map((s) => (
             <button
               key={s.id}

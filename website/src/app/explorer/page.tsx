@@ -223,17 +223,17 @@ function ExplorerPage() {
         {droppedProof && verifyResult && !hashing && (
           <div className="mt-4 space-y-4 animate-in fade-in duration-500">
             {/* Status banner */}
-            <div className={`rounded-xl border p-5 ${
+            <div className={`border p-5 ${
               verifyResult.valid
-                ? "border-emerald-600/30 bg-emerald-500/10"
+                ? "border-blue-600/30 bg-blue-500/10"
                 : "border-red-600/30 bg-red-500/10"
             }`}>
               <div className="flex items-center gap-3">
-                <div className={`flex items-center justify-center w-10 h-10 rounded-full ${
-                  verifyResult.valid ? "bg-emerald-500/20" : "bg-red-500/20"
+                <div className={`flex items-center justify-center w-10 h-10 ${
+                  verifyResult.valid ? "bg-blue-500/20" : "bg-red-500/20"
                 }`}>
                   {verifyResult.valid ? (
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-emerald-600">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-blue-600">
                       <path d="M20 6L9 17l-5-5" />
                     </svg>
                   ) : (
@@ -244,7 +244,7 @@ function ExplorerPage() {
                 </div>
                 <div>
                   <div className={`text-lg font-semibold ${
-                    verifyResult.valid ? "text-emerald-600" : "text-red-600"
+                    verifyResult.valid ? "text-blue-600" : "text-red-600"
                   }`}>
                     {verifyResult.valid ? "Signature Valid" : "Signature Invalid"}
                   </div>
@@ -258,7 +258,7 @@ function ExplorerPage() {
             </div>
 
             {/* Verification checks */}
-            <div className="rounded-xl border border-border-subtle bg-bg-elevated overflow-hidden">
+            <div className="border border-border-subtle bg-bg-elevated overflow-hidden">
               <div className="px-5 py-3 border-b border-border-subtle">
                 <span className="text-xs text-text-tertiary font-medium">Verification checks</span>
               </div>
@@ -267,7 +267,7 @@ function ExplorerPage() {
                   <div key={i} className="flex items-start gap-3 px-5 py-3">
                     <div className="shrink-0 mt-0.5">
                       {check.status === "pass" ? (
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-emerald-600">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-blue-600">
                           <path d="M20 6L9 17l-5-5" />
                         </svg>
                       ) : check.status === "fail" ? (
@@ -293,7 +293,7 @@ function ExplorerPage() {
             </div>
 
             {/* Proof identity */}
-            <div className="rounded-xl border border-border-subtle bg-bg-elevated p-5 space-y-3">
+            <div className="border border-border-subtle bg-bg-elevated p-5 space-y-3">
               <div>
                 <div className="text-xs text-text-tertiary mb-1">Artifact digest</div>
                 <code className="text-sm font-mono text-text break-all">{droppedProof.artifact.digestB64}</code>
@@ -314,13 +314,13 @@ function ExplorerPage() {
 
             {/* Explorer index lookup */}
             {lookupResults !== null && lookupResults.length > 0 && (
-              <div className="rounded-xl border border-border-subtle bg-bg-elevated p-5">
+              <div className="border border-border-subtle bg-bg-elevated p-5">
                 <div className="text-xs text-text-tertiary mb-3">
                   Also indexed in Explorer ({lookupResults.length} record{lookupResults.length !== 1 ? "s" : ""})
                 </div>
                 <Link
                   href={`/explorer/${encodeURIComponent(toUrlSafeB64(droppedProof.artifact.digestB64))}`}
-                  className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-600 hover:text-emerald-500 transition-colors"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-500 transition-colors"
                 >
                   View in Explorer
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -339,7 +339,7 @@ function ExplorerPage() {
 
         {/* ── Regular file hash results (non-proof) ── */}
         {digestB64 && !hashing && !droppedProof && (
-          <div className="mt-4 rounded-xl border border-border-subtle bg-bg-elevated p-5">
+          <div className="mt-4 border border-border-subtle bg-bg-elevated p-5">
             <div className="text-xs text-text-tertiary mb-1">SHA-256 Digest</div>
             <code className="text-sm font-mono text-text break-all">{digestB64}</code>
 
@@ -348,7 +348,7 @@ function ExplorerPage() {
             )}
 
             {lookupResults !== null && lookupResults.length === 0 && (
-              <div className="mt-4 py-3 px-4 rounded-lg bg-bg-subtle/50 text-sm text-text-secondary">
+              <div className="mt-4 py-3 px-4 bg-bg-subtle/50 text-sm text-text-secondary">
                 No proofs found for this file. It hasn&apos;t been committed through OCC yet.
               </div>
             )}
@@ -356,15 +356,15 @@ function ExplorerPage() {
             {lookupResults !== null && lookupResults.length > 0 && (
               <div className="mt-5 space-y-4 animate-in fade-in duration-500">
                 {/* Verified banner */}
-                <div className="rounded-xl border border-emerald-600/30 bg-emerald-500/10 p-5">
+                <div className="border border-blue-600/30 bg-blue-500/10 p-5">
                   <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-emerald-500/20">
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-emerald-600">
+                    <div className="flex items-center justify-center w-10 h-10 bg-blue-500/20">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-blue-600">
                         <path d="M20 6L9 17l-5-5" />
                       </svg>
                     </div>
                     <div>
-                      <div className="text-lg font-semibold text-emerald-600">Proven</div>
+                      <div className="text-lg font-semibold text-blue-600">Proven</div>
                       <div className="text-xs text-text-tertiary">
                         {lookupResults.length} proof{lookupResults.length !== 1 ? "s" : ""} on record for this file
                       </div>
@@ -373,7 +373,7 @@ function ExplorerPage() {
                 </div>
 
                 {/* List all proofs */}
-                <div className="rounded-xl border border-border-subtle bg-bg-elevated overflow-hidden divide-y divide-border-subtle">
+                <div className="border border-border-subtle bg-bg-elevated overflow-hidden divide-y divide-border-subtle">
                   {lookupResults.map((r, i) => {
                     const p = r.proof;
                     return (
@@ -411,7 +411,7 @@ function ExplorerPage() {
                               {new Date(p.commit.time).toLocaleDateString()}
                             </span>
                           )}
-                          <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 group-hover:text-emerald-500 transition-colors">
+                          <span className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 group-hover:text-blue-500 transition-colors">
                             View proof
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="group-hover:translate-x-0.5 transition-transform duration-150">
                               <path d="M5 12h14M12 5l7 7-7 7" />
@@ -440,12 +440,12 @@ function ExplorerPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
             placeholder="Search by digest, attribution, signer key, or counter..."
-            className="flex-1 h-12 rounded-xl border border-border-subtle bg-bg-elevated px-4 text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:border-text/30 transition-colors"
+            className="flex-1 h-12 border border-border-subtle bg-bg-elevated px-4 text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:border-text/30 transition-colors"
           />
           <button
             onClick={handleSearch}
             disabled={searching || searchQuery.trim().length < 2}
-            className="h-12 px-6 rounded-xl bg-text text-bg text-sm font-medium hover:bg-text/90 transition-colors disabled:opacity-40"
+            className="h-12 px-6 bg-text text-bg text-sm font-medium hover:bg-text/90 transition-colors disabled:opacity-40"
           >
             {searching ? "..." : "Search"}
           </button>
@@ -476,7 +476,7 @@ function ExplorerPage() {
         {loading ? (
           <div className="text-sm text-text-tertiary animate-pulse">Loading...</div>
         ) : recent.length === 0 ? (
-          <div className="rounded-xl border border-border-subtle bg-bg-elevated p-8 text-center">
+          <div className="border border-border-subtle bg-bg-elevated p-8 text-center">
             <div className="text-text-secondary">No proofs indexed yet.</div>
             <div className="text-sm text-text-tertiary mt-1">
               Commit a file through{" "}
@@ -494,7 +494,7 @@ function ExplorerPage() {
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="px-3 py-1.5 rounded-lg text-xs font-medium border border-border-subtle bg-bg-elevated text-text-secondary hover:text-text hover:border-border transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="px-3 py-1.5 text-xs font-medium border border-border-subtle bg-bg-elevated text-text-secondary hover:text-text hover:border-border transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   Previous
                 </button>
@@ -504,7 +504,7 @@ function ExplorerPage() {
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
-                  className="px-3 py-1.5 rounded-lg text-xs font-medium border border-border-subtle bg-bg-elevated text-text-secondary hover:text-text hover:border-border transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="px-3 py-1.5 text-xs font-medium border border-border-subtle bg-bg-elevated text-text-secondary hover:text-text hover:border-border transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   Next
                 </button>
@@ -521,7 +521,7 @@ function ExplorerPage() {
 
 function ProofTable({ proofs, label }: { proofs: ProofSummary[]; label?: string }) {
   return (
-    <div className="rounded-xl border border-border-subtle bg-bg-elevated overflow-hidden">
+    <div className="border border-border-subtle bg-bg-elevated overflow-hidden">
       {label && (
         <div className="px-5 py-3 border-b border-border-subtle">
           <span className="text-xs text-text-tertiary">{label}</span>
@@ -668,7 +668,7 @@ function ProofRow({ proof: p }: { proof: ProofSummary }) {
               {/* View full proof link */}
               <Link
                 href={`/explorer/${encodeURIComponent(toUrlSafeB64(p.digestB64))}`}
-                className="inline-flex items-center gap-1.5 text-xs text-emerald-600 hover:text-emerald-500 transition-colors mt-1"
+                className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-500 transition-colors mt-1"
               >
                 View full proof
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

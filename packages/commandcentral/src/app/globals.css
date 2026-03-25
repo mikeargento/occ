@@ -9,14 +9,14 @@
 }
 
 :root {
-  --bg: #f5f3f0;
+  --bg: #efefef;
   --card: #ffffff;
-  --border: #e0ddd8;
-  --text-primary: #1a1a1a;
-  --text-secondary: #777370;
-  --text-tertiary: #b0ada8;
-  --accent: #059669;
-  --accent-light: #34d399;
+  --border: #d9d9d9;
+  --text-primary: #000000;
+  --text-secondary: #555555;
+  --text-tertiary: #999999;
+  --accent: #3B82F6;
+  --accent-light: #60A5FA;
 }
 
 html {
@@ -32,17 +32,17 @@ body {
 }
 
 ::selection {
-  background: rgba(52, 211, 153, 0.15);
+  background: rgba(59, 130, 246, 0.15);
 }
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #e5e5e5; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #ccc; }
+::-webkit-scrollbar-thumb { background: #ccc; border-radius: 0; }
+::-webkit-scrollbar-thumb:hover { background: #aaa; }
 
 *:focus-visible {
-  outline: 1.5px solid #34d399;
+  outline: 1.5px solid #3B82F6;
   outline-offset: 2px;
 }
 
