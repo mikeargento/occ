@@ -102,8 +102,8 @@ export default function App() {
 
 function Shell({ user, children }: { user?: any; children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-[#efefef] text-[#000000]">
-      <header className="sticky top-0 z-50 bg-[#efefef]/80 backdrop-blur-xl border-b border-[#d9d9d9]/50">
+    <div className="min-h-screen bg-white text-[#000000]">
+      <header className="sticky top-0 z-50 bg-[#efefef] border-b border-[#d9d9d9]/50">
         <nav className="mx-auto max-w-6xl px-6 flex h-16 items-center justify-between">
           <a href="https://occ.wtf" className="text-[28px] tracking-[-0.03em] font-black">OCC</a>
           <div className="flex items-center gap-1">
