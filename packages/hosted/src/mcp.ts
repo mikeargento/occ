@@ -292,8 +292,9 @@ export async function handleMcp(req: IncomingMessage, res: ServerResponse, pathn
         // The execution proof references the authorization's digest.
         // This is the causal link: authorization came first, execution depends on it.
         const principal = { id: user.id, provider: user.provider ?? undefined };
+        const execChainId = `${user.id}:${agentId}`;
         const { proof: execProof, digest: execDigest } = await createExecutionProof(
-          user.id, agentId, toolName, args, authObj.proofDigest, user.id, principal
+          user.id, agentId, toolName, args, authObj.proofDigest, execChainId, principal
         );
 
         // 5. Handle built-in tools

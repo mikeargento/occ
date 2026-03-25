@@ -426,7 +426,8 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
       // ── CREATE AUTHORIZATION OBJECT ──
       // This is NOT a flag flip. This creates a cryptographic object
       // that must exist before execution is reachable.
-      const authResult = await createAuthorizationObject(userId, req_entry.agent_id, req_entry.tool, undefined, userId, await getPrincipal());
+      const chainId = `${userId}:${req_entry.agent_id}`;
+      const authResult = await createAuthorizationObject(userId, req_entry.agent_id, req_entry.tool, undefined, chainId, await getPrincipal());
       digestB64 = authResult.digest;
       proof = authResult.proof;
     }
@@ -463,7 +464,8 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
 
     // ── CREATE REVOCATION OBJECT ──
     // This supersedes the authorization. After this, no execution path exists.
-    const { proof, digest } = await createRevocationObject(userId, agentId, tool, authObj.proofDigest, userId, await getPrincipal());
+    const revokeChainId = `${userId}:${agentId}`;
+    const { proof, digest } = await createRevocationObject(userId, agentId, tool, authObj.proofDigest, revokeChainId, await getPrincipal());
 
     await db.revokePermission(userId, agentId, tool, digest, proof);
     await db.addProof(userId, {
