@@ -235,10 +235,10 @@ export async function getPolicy(): Promise<{ policy: (PolicyData & Partial<Agent
   return apiFetch("/policy");
 }
 
-export async function commitPolicy(categories: Record<string, boolean>, customRules: string[]): Promise<{ policyDigestB64: string; committedAt: number }> {
+export async function commitPolicy(categories: Record<string, boolean>, customRules: string[], agentId?: string): Promise<{ policyDigestB64: string; committedAt: number }> {
   return apiFetch("/policy", {
     method: "PUT",
-    body: JSON.stringify({ categories, customRules, name: "default", allowedTools: [] }),
+    body: JSON.stringify({ categories, customRules, name: "default", allowedTools: [], agentId }),
   });
 }
 

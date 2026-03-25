@@ -219,10 +219,12 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
     const body = JSON.parse(await readBody(req));
     // Commit the policy through TEE — the proof IS the rule
     const { commitPolicyProof } = await import("./authorization.js");
+    const policyAgentId = body.agentId ?? "default";
+    const policyChainId = `${userId}:${policyAgentId}`;
     const { proof, digest } = await commitPolicyProof(userId, {
       categories: body.categories ?? {},
       customRules: body.customRules ?? [],
-    }, userId, await getPrincipal());
+    }, policyChainId, await getPrincipal());
     const policy = await db.createPolicy(userId, {
       name: body.name ?? "default",
       allowedTools: body.allowedTools ?? [],

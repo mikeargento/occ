@@ -239,7 +239,7 @@ function Dashboard({ userName }: { userName: string }) {
   const handleCommit = async () => {
     setCommitting(true);
     try {
-      const result = await commitPolicy(categories, customRules);
+      const result = await commitPolicy(categories, customRules, selectedAgent);
       setCommittedCategories({ ...categories });
       setCommittedCustomRules([...customRules]);
       setCommittedToolOverrides({ ...toolOverrides });
