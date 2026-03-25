@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { insertProofs, listProofs } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   try {
     const url = req.nextUrl;
