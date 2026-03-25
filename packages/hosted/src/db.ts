@@ -105,6 +105,10 @@ export const db = {
       -- Add blocked_tools column to agents
       ALTER TABLE occ_agents ADD COLUMN IF NOT EXISTS blocked_tools TEXT[] DEFAULT '{}';
 
+      -- Per-agent MCP tokens (each agent gets its own URL)
+      ALTER TABLE occ_agents ADD COLUMN IF NOT EXISTS mcp_token TEXT;
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_occ_agents_mcp_token ON occ_agents(mcp_token) WHERE mcp_token IS NOT NULL;
+
       -- Authorization objects — the core of the authorization-object model
       -- Each row IS a cryptographic authorization (or revocation).
       -- Not a permission flag. An object that must exist for execution to be reachable.
@@ -129,6 +133,18 @@ export const db = {
       VALUES ('anonymous', 'anon@occ.wtf', 'Anonymous', 'anonymous', 'anonymous', 'anon-token')
       ON CONFLICT (id) DO NOTHING;
     `);
+
+    // Backfill: generate MCP tokens for agents that don't have one
+    const { randomBytes } = await import("node:crypto");
+    const noToken = await p.query("SELECT id, user_id FROM occ_agents WHERE mcp_token IS NULL");
+    for (const row of noToken.rows) {
+      const tok = randomBytes(24).toString("hex");
+      await p.query("UPDATE occ_agents SET mcp_token = $1 WHERE id = $2 AND user_id = $3", [tok, row.id, row.user_id]);
+    }
+    if (noToken.rows.length > 0) {
+      console.log(`  Database: backfilled ${noToken.rows.length} agent MCP tokens`);
+    }
+
     console.log("  Database: connected and migrated");
   },
 
@@ -214,14 +230,30 @@ export const db = {
     return res.rows[0] ?? null;
   },
 
-  async upsertAgent(userId: string, agent: { id: string; name: string; allowedTools?: string[] }) {
+  async upsertAgent(userId: string, agent: { id: string; name: string; allowedTools?: string[]; mcpToken?: string }) {
     const p = getPool();
     await p.query(
-      `INSERT INTO occ_agents (id, user_id, name, allowed_tools)
-       VALUES ($1, $2, $3, $4)
+      `INSERT INTO occ_agents (id, user_id, name, allowed_tools, mcp_token)
+       VALUES ($1, $2, $3, $4, $5)
        ON CONFLICT (id, user_id) DO UPDATE SET name = $3, allowed_tools = $4`,
-      [agent.id, userId, agent.name, agent.allowedTools ?? []]
+      [agent.id, userId, agent.name, agent.allowedTools ?? [], agent.mcpToken ?? null]
     );
+  },
+
+  async getAgentByToken(token: string) {
+    const p = getPool();
+    const res = await p.query(
+      `SELECT a.*, u.id as owner_id, u.email, u.provider, u.provider_id
+       FROM occ_agents a JOIN occ_users u ON a.user_id = u.id
+       WHERE a.mcp_token = $1`,
+      [token]
+    );
+    return res.rows[0] ?? null;
+  },
+
+  async renameAgent(userId: string, agentId: string, name: string) {
+    const p = getPool();
+    await p.query("UPDATE occ_agents SET name = $3 WHERE user_id = $1 AND id = $2", [userId, agentId, name]);
   },
 
   async deleteAgent(userId: string, agentId: string) {

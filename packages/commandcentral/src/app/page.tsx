@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { getAllPermissions, approvePermission, denyPermission, revokePermission, getConnectConfig, getPolicy, commitPolicy, type Permission } from "@/lib/api";
+import { getAllPermissions, approvePermission, denyPermission, revokePermission, getConnectConfig, getPolicy, commitPolicy, getAgents, createAgent, deleteAgent, renameAgent, type Permission } from "@/lib/api";
 
 /* ── Helpers ── */
 
@@ -160,7 +160,16 @@ function AuthButton({ href, icon, label }: { href: string; icon: React.ReactNode
    Dashboard — two columns: Rules (left) + Activity (right)
    ═══════════════════════════════════════════════════════════════ */
 
+type Agent = { id: string; name: string; mcpUrl: string | null; status: string; totalCalls: number; createdAt: number };
+
 function Dashboard({ userName }: { userName: string }) {
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [selectedAgent, setSelectedAgent] = useState<string>("default");
+  const [addingAgent, setAddingAgent] = useState(false);
+  const [newAgentName, setNewAgentName] = useState("");
+  const [editingName, setEditingName] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+
   const [perms, setPerms] = useState<Permission[]>([]);
   const [mcpUrl, setMcpUrl] = useState("");
   const [copied, setCopied] = useState(false);
@@ -187,13 +196,20 @@ function Dashboard({ userName }: { userName: string }) {
 
   const refresh = useCallback(async () => {
     try {
-      const [permData, policyData, configData] = await Promise.all([
+      const [permData, policyData, configData, agentsData] = await Promise.all([
         getAllPermissions(),
         getPolicy().catch(() => ({ policy: null, policyDigestB64: null, committedAt: null })),
         getConnectConfig().catch(() => ({ mcpUrl: "" })),
+        getAgents().catch(() => ({ agents: [] })),
       ]);
       setPerms(permData.permissions ?? []);
-      setMcpUrl((configData as any).mcpUrl ?? "");
+      const agentList = (agentsData.agents ?? []) as Agent[];
+      setAgents(agentList);
+
+      // Use selected agent's MCP URL if available, else fall back to user-level
+      const sel = agentList.find(a => a.id === selectedAgent);
+      setMcpUrl(sel?.mcpUrl ?? (configData as any).mcpUrl ?? "");
+
       if (policyData.policy) {
         const c = policyData.policy.categories ?? {};
         const cr = policyData.policy.customRules ?? [];
@@ -204,7 +220,7 @@ function Dashboard({ userName }: { userName: string }) {
         setLastCommitDigest(policyData.policyDigestB64);
       }
     } catch {}
-  }, []);
+  }, [selectedAgent]);
 
   useEffect(() => {
     refresh();
@@ -274,7 +290,48 @@ function Dashboard({ userName }: { userName: string }) {
     <div className="mx-auto max-w-6xl px-6 py-6">
 
       {/* Greeting */}
-      <h1 className="text-2xl font-bold tracking-[-0.02em] mb-6">Hi, {firstName}</h1>
+      <h1 className="text-2xl font-bold tracking-[-0.02em] mb-4">Hi, {firstName}</h1>
+
+      {/* Agent selector */}
+      <div className="flex items-center gap-2 mb-6 flex-wrap">
+        {agents.map(a => (
+          <button key={a.id} onClick={() => { setSelectedAgent(a.id); }}
+            className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
+              selectedAgent === a.id
+                ? "bg-[#111] dark:bg-white text-white dark:text-[#111] border-transparent font-semibold"
+                : "border-[#ddd] dark:border-[#2a2a2a] text-[#666] dark:text-[#999] hover:text-[#111] dark:hover:text-white hover:border-[#bbb] dark:hover:border-[#444]"
+            }`}>
+            {editingName === a.id ? (
+              <input value={editName} onChange={e => setEditName(e.target.value)} autoFocus
+                className="bg-transparent outline-none w-24 text-sm"
+                onBlur={async () => { if (editName.trim()) await renameAgent(a.id, editName.trim()); setEditingName(null); await refresh(); }}
+                onKeyDown={e => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }} />
+            ) : (
+              <span onDoubleClick={() => { setEditingName(a.id); setEditName(a.name); }}>{a.name}</span>
+            )}
+          </button>
+        ))}
+        {addingAgent ? (
+          <div className="flex items-center gap-1">
+            <input value={newAgentName} onChange={e => setNewAgentName(e.target.value)} placeholder="Agent name" autoFocus
+              className="px-2 py-1 text-sm rounded-lg border border-[#ddd] dark:border-[#2a2a2a] bg-transparent outline-none w-32"
+              onKeyDown={async e => {
+                if (e.key === "Enter" && newAgentName.trim()) {
+                  await createAgent(newAgentName.trim());
+                  setNewAgentName(""); setAddingAgent(false); await refresh();
+                }
+                if (e.key === "Escape") { setAddingAgent(false); setNewAgentName(""); }
+              }} />
+            <button onClick={() => { setAddingAgent(false); setNewAgentName(""); }}
+              className="text-[#999] hover:text-[#666] text-sm">✕</button>
+          </div>
+        ) : (
+          <button onClick={() => setAddingAgent(true)}
+            className="px-3 py-1.5 text-sm rounded-lg border border-dashed border-[#ccc] dark:border-[#333] text-[#999] dark:text-[#666] hover:text-[#111] dark:hover:text-white hover:border-[#999] dark:hover:border-[#555] transition-colors">
+            + Add agent
+          </button>
+        )}
+      </div>
 
       {/* Two column layout */}
       <div className="flex flex-col lg:flex-row gap-6">

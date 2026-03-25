@@ -96,6 +96,17 @@ export async function deleteAgent(agentId: string): Promise<{ deleted: boolean }
   return apiFetch(`/agents/${encodeURIComponent(agentId)}`, { method: "DELETE" });
 }
 
+export async function renameAgent(agentId: string, name: string): Promise<{ renamed: boolean }> {
+  return apiFetch(`/agents/${encodeURIComponent(agentId)}`, {
+    method: "PUT",
+    body: JSON.stringify({ name }),
+  });
+}
+
+export async function getAgentActivity(agentId: string): Promise<{ entries: any[] }> {
+  return apiFetch(`/agents/${encodeURIComponent(agentId)}/activity`);
+}
+
 export async function updateAgentPolicy(agentId: string, policy: AgentPolicy): Promise<{ policy: AgentPolicy }> {
   return apiFetch(`/agents/${encodeURIComponent(agentId)}/policy`, {
     method: "PUT",

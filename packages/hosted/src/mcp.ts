@@ -146,10 +146,21 @@ export async function handleMcp(req: IncomingMessage, res: ServerResponse, pathn
     return json(res, { error: "Missing token" }, 401);
   }
 
-  // Authenticate by token
-  const user = await db.getUserByToken(token);
-  if (!user) {
-    return json(res, { error: "Invalid token" }, 401);
+  // Authenticate by token — try per-agent token first, then fall back to user token
+  let user: any;
+  let agentId = "default";
+
+  const agentByToken = await db.getAgentByToken(token);
+  if (agentByToken) {
+    // Per-agent token — maps directly to a specific agent
+    user = { id: agentByToken.user_id, email: agentByToken.email, provider: agentByToken.provider, provider_id: agentByToken.provider_id };
+    agentId = agentByToken.id;
+  } else {
+    // Fall back to user-level token (backward compat)
+    user = await db.getUserByToken(token);
+    if (!user) {
+      return json(res, { error: "Invalid token" }, 401);
+    }
   }
 
   const method = req.method ?? "GET";
@@ -238,7 +249,7 @@ export async function handleMcp(req: IncomingMessage, res: ServerResponse, pathn
         const args = body.params?.arguments ?? {};
 
         const agents = await db.getAgents(user.id);
-        const agentId = agents.length > 0 ? agents[0].id : "default-agent";
+        // agentId is already resolved from the token at the top of handleMcp
         trackConnection(req, token, agentId);
         const agent = agents.find((a: any) => a.id === agentId);
         const isPaused = agent?.paused ?? false;

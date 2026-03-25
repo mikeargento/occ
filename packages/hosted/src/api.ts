@@ -55,11 +55,14 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
   // ── Agents ──
   if (path === "/agents" && method === "GET") {
     const agents = await db.getAgents(userId);
+    const host = req.headers.host ?? "agent.occ.wtf";
+    const proto = host.includes("localhost") ? "http" : "https";
     const summaries = agents.map((a: any) => {
       const tools = a.allowed_tools ?? [];
       return {
         id: a.id,
         name: a.name,
+        mcpUrl: a.mcp_token ? `${proto}://${host}/mcp/${a.mcp_token}` : null,
         policy: tools.length > 0 ? {
           version: "occ/policy/1",
           name: a.name,
@@ -74,15 +77,18 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
         auditCount: a.total_calls ?? 0,
       };
     });
-    // No auto-creation — let the user create their own agents
     return json(res, { agents: summaries });
   }
 
   if (path === "/agents" && method === "POST") {
+    const crypto = await import("node:crypto");
     const body = JSON.parse(await readBody(req));
     const id = body.name?.toLowerCase().replace(/[^a-z0-9-]/g, "-") ?? "agent-" + Date.now();
-    await db.upsertAgent(userId, { id, name: body.name ?? id, allowedTools: body.allowedTools });
-    return json(res, { agent: { id, name: body.name ?? id, status: "active", createdAt: Date.now() } }, 201);
+    const agentToken = crypto.randomBytes(24).toString("hex");
+    await db.upsertAgent(userId, { id, name: body.name ?? id, allowedTools: body.allowedTools, mcpToken: agentToken });
+    const host = req.headers.host ?? "agent.occ.wtf";
+    const proto = host.includes("localhost") ? "http" : "https";
+    return json(res, { agent: { id, name: body.name ?? id, status: "active", createdAt: Date.now(), mcpUrl: `${proto}://${host}/mcp/${agentToken}` } }, 201);
   }
 
   // /agents/:id
@@ -120,6 +126,27 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
       await db.deleteAgent(userId, agentId);
       return json(res, { deleted: true });
     }
+    if (method === "PUT") {
+      const body = JSON.parse(await readBody(req));
+      if (body.name) {
+        await db.renameAgent(userId, agentId, body.name);
+        return json(res, { renamed: true, name: body.name });
+      }
+      return json(res, { error: "Nothing to update" }, 400);
+    }
+  }
+
+  // /agents/:id/activity — per-agent proof log
+  const activityMatch = path.match(/^\/agents\/([^/]+)\/activity$/);
+  if (activityMatch && method === "GET") {
+    const agentId = decodeURIComponent(activityMatch[1]!);
+    const p = (await import("pg")).default;
+    const pool = new p.Pool({ connectionString: process.env.DATABASE_URL, ssl: process.env.DATABASE_URL?.includes("railway") ? { rejectUnauthorized: false } : undefined });
+    const res2 = await pool.query(
+      "SELECT * FROM occ_proofs WHERE user_id = $1 AND agent_id = $2 ORDER BY created_at DESC LIMIT 50",
+      [userId, agentId]
+    );
+    return json(res, { entries: res2.rows });
   }
 
   // /agents/:id/policy
