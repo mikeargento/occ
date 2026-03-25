@@ -136,8 +136,16 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
       });
     }
     if (method === "DELETE") {
+      // Death proof — final slot on this agent's chain. Seals it permanently.
+      const { commitPolicyProof } = await import("./authorization.js");
+      const deathChainId = `${userId}:${agentId}`;
+      const deathProof = await commitPolicyProof(userId, {
+        categories: {},
+        customRules: [`Agent "${agentId}" terminated`],
+      }, deathChainId, await getPrincipal()).catch(() => null);
+
       await db.deleteAgent(userId, agentId);
-      return json(res, { deleted: true });
+      return json(res, { deleted: true, deathProof: deathProof?.proof ?? null });
     }
     if (method === "PUT") {
       const body = JSON.parse(await readBody(req));

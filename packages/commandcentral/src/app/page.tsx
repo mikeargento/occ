@@ -169,6 +169,7 @@ function Dashboard({ userName }: { userName: string }) {
   const [newAgentName, setNewAgentName] = useState("");
   const [editingName, setEditingName] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   const [perms, setPerms] = useState<Permission[]>([]);
   const [mcpUrl, setMcpUrl] = useState("");
@@ -324,7 +325,21 @@ function Dashboard({ userName }: { userName: string }) {
                     selectedAgent === a.id ? "text-white/60 dark:text-[#111]/60" : ""
                   }`}
                   title="Rename">✎</span>
+                <span onClick={e => { e.stopPropagation(); setConfirmDelete(a.id); }}
+                  className={`opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity cursor-pointer text-[11px] ${
+                    selectedAgent === a.id ? "text-white/60 dark:text-[#111]/60" : ""
+                  }`}
+                  title="Delete">✕</span>
               </button>
+              {confirmDelete === a.id && (
+                <div className="flex items-center gap-1 ml-1 px-2 py-1 rounded-lg border border-red-400 bg-white dark:bg-[#111] text-xs">
+                  <span className="text-red-500">Delete?</span>
+                  <button onClick={async () => { await deleteAgent(a.id); setConfirmDelete(null); if (selectedAgent === a.id) setSelectedAgent(agents[0]?.id ?? ""); await refresh(); }}
+                    className="text-red-500 hover:text-red-400 font-bold px-1">✓</button>
+                  <button onClick={() => setConfirmDelete(null)}
+                    className="text-[#999] hover:text-[#666] px-0.5">✕</button>
+                </div>
+              )}
             )}
           </div>
         ))}
