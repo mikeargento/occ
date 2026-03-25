@@ -577,28 +577,35 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
             )}
           </div>
 
-          {/* Pending requests */}
+        </div>
+
+        {/* ── RIGHT: Pending + Activity ── */}
+        <div className="flex-1 min-w-0 space-y-4">
+
+          {/* Pending requests — top of activity panel */}
           {pending.length > 0 && (
-            <div className="mt-4">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-500 mb-2 px-1">
-                {pending.length} pending request{pending.length > 1 ? "s" : ""}
-              </p>
-              <div className="space-y-2">
+            <div className="bg-white dark:bg-[#111] rounded-2xl border border-amber-200/50 dark:border-amber-500/10 overflow-hidden">
+              <div className="px-5 py-3 border-b border-amber-100 dark:border-amber-500/10">
+                <h2 className="text-[14px] font-bold text-amber-600 dark:text-amber-400">
+                  {pending.length} pending request{pending.length > 1 ? "s" : ""}
+                </h2>
+              </div>
+              <div className="divide-y divide-amber-100/50 dark:divide-amber-500/5">
                 {pending.map(p => (
-                  <div key={p.id} className="bg-white dark:bg-[#111] rounded-xl border border-amber-200/50 dark:border-amber-500/10 p-4">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                      <span className="text-[14px] font-medium flex-1">{p.tool}</span>
-                      <span className="text-[11px] text-[#888] dark:text-[#888]">{p.clientName}</span>
+                  <div key={p.id} className="flex items-center gap-3 px-5 py-3">
+                    <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <span className="text-[14px] font-medium">{p.tool}</span>
+                      <span className="text-[12px] text-[#999] dark:text-[#777] ml-2">{p.clientName}</span>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-shrink-0">
                       <button onClick={() => act(p.id, () => approvePermission(p.id))} disabled={busy === p.id}
-                        className="h-8 px-4 text-[12px] font-semibold rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-40 transition-all active:scale-[0.97] flex items-center gap-1.5">
+                        className="h-7 px-3 text-[12px] font-semibold rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-40 transition-all active:scale-[0.97] flex items-center gap-1.5">
                         {busy === p.id && <Spinner size={10} color="white" />}
                         Allow
                       </button>
                       <button onClick={() => act(p.id, () => denyPermission(p.id))} disabled={busy === p.id}
-                        className="h-8 px-4 text-[12px] font-medium rounded-lg text-[#999] dark:text-[#888] hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] disabled:opacity-40 transition-all">
+                        className="h-7 px-3 text-[12px] font-medium rounded-lg text-[#999] dark:text-[#888] hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] disabled:opacity-40 transition-all">
                         Block
                       </button>
                     </div>
@@ -607,10 +614,8 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
               </div>
             </div>
           )}
-        </div>
 
-        {/* ── RIGHT: Activity ── */}
-        <div className="flex-1 min-w-0">
+          {/* Activity log */}
           <div className="bg-white dark:bg-[#111] rounded-2xl border border-[#ddd] dark:border-[#1a1a1a] overflow-hidden">
             <div className="px-5 py-4 border-b border-[#f0f0f0] dark:border-[#1a1a1a]">
               <h2 className="text-[16px] font-bold">Activity</h2>
