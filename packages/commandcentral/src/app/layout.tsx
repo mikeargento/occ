@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en">
       <head>
         <link rel="stylesheet" href="https://use.typekit.net/svq0oqy.css" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -17,7 +17,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='black'/></svg>" />
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
       </head>
-      <body className="bg-white text-[#111] dark:bg-[#0a0a0a] dark:text-[#e5e5e5]">
+      <body className="bg-[#f5f3f0] text-[#1a1a1a]">
         {children}
       </body>
     </html>

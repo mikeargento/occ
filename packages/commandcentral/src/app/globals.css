@@ -1,13 +1,22 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:where(.dark, .dark *));
-
 @theme {
   --font-sans: "acumin-pro", "Helvetica Neue", Helvetica, sans-serif;
   --font-mono: "JetBrains Mono", "SF Mono", ui-monospace, monospace;
   --color-success: #34d399;
   --color-warning: #fbbf24;
   --color-error: #f87171;
+}
+
+:root {
+  --bg: #f5f3f0;
+  --card: #ffffff;
+  --border: #e0ddd8;
+  --text-primary: #1a1a1a;
+  --text-secondary: #777370;
+  --text-tertiary: #b0ada8;
+  --accent: #059669;
+  --accent-light: #34d399;
 }
 
 html {
@@ -19,22 +28,18 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  background-color: var(--bg);
 }
 
 ::selection {
   background: rgba(52, 211, 153, 0.15);
 }
 
-/* Light scrollbar */
+/* Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #e5e5e5; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #ccc; }
-
-@media (prefers-color-scheme: dark) {
-  ::-webkit-scrollbar-thumb { background: #333; }
-  ::-webkit-scrollbar-thumb:hover { background: #555; }
-}
 
 *:focus-visible {
   outline: 1.5px solid #34d399;

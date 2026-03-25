@@ -62,7 +62,7 @@ function Logo({ src, alt, invert }: { src: string; alt: string; invert?: boolean
     <img
       src={src}
       alt={alt}
-      className={`w-9 h-9${invert ? " dark:invert" : ""}`}
+      className={`w-9 h-9${invert ? " invert" : ""}`}
     />
   );
 }
@@ -472,14 +472,14 @@ function HomeProofRow({ proof: p }: { proof: HomeProofSummary }) {
           </div>
           <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-2 sm:ml-4">
             {p.hasAgency && (
-              <span className="text-blue-600 dark:text-blue-400" title="Device-authorized">
+              <span className="text-blue-600" title="Device-authorized">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                 </svg>
               </span>
             )}
             {p.hasTsa && (
-              <span className="text-purple-600 dark:text-purple-400" title="RFC 3161 timestamped">
+              <span className="text-purple-600" title="RFC 3161 timestamped">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="12" cy="12" r="10" />
                   <path d="M12 6v6l4 2" />
@@ -529,7 +529,7 @@ function HomeProofRow({ proof: p }: { proof: HomeProofSummary }) {
               </div>
               <Link
                 href={`/explorer/${encodeURIComponent(toUrlSafeB64(p.digestB64))}`}
-                className="inline-flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors mt-1"
+                className="inline-flex items-center gap-1.5 text-xs text-emerald-600 hover:text-emerald-500 transition-colors mt-1"
               >
                 View full proof
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -601,7 +601,7 @@ export default function Home() {
             </h2>
             <Link
               href="/explorer"
-              className="inline-flex items-center gap-1.5 text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors"
+              className="inline-flex items-center gap-1.5 text-sm text-emerald-600 hover:text-emerald-500 transition-colors"
             >
               View all in Explorer
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

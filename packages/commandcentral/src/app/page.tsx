@@ -101,27 +101,24 @@ export default function App() {
    ═══════════════════════════════════════════════════════════════ */
 
 function Shell({ user, children }: { user?: any; children: React.ReactNode }) {
-  // menuOpen removed — sign out is always visible
-
   return (
-    <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a] text-[#111] dark:text-[#e5e5e5]">
-      <header className="sticky top-0 z-50 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-xl border-b border-[#ddd]/50 dark:border-[#1a1a1a]/50">
+    <div className="min-h-screen bg-[#f5f3f0] text-[#1a1a1a]">
+      <header className="sticky top-0 z-50 bg-[#f5f3f0]/80 backdrop-blur-xl border-b border-[#e0ddd8]/50">
         <nav className="mx-auto max-w-6xl px-6 flex h-16 items-center justify-between">
           <a href="https://occ.wtf" className="text-[20px] tracking-[-0.02em] font-black">OCC</a>
           <div className="flex items-center gap-1">
-            <a href="https://occ.wtf/explorer" className="hidden sm:block text-sm font-semibold px-3 py-1.5 text-[#999] dark:text-[#666] hover:text-[#111] dark:hover:text-[#e5e5e5] transition-colors">Explorer</a>
-            <a href="https://occ.wtf/docs" className="hidden sm:block text-sm font-semibold px-3 py-1.5 text-[#999] dark:text-[#666] hover:text-[#111] dark:hover:text-[#e5e5e5] transition-colors">Docs</a>
-            <ThemeToggle />
+            <a href="https://occ.wtf/explorer" className="hidden sm:block text-sm font-semibold px-3 py-1.5 text-[#777370] hover:text-[#1a1a1a] transition-colors">Explorer</a>
+            <a href="https://occ.wtf/docs" className="hidden sm:block text-sm font-semibold px-3 py-1.5 text-[#777370] hover:text-[#1a1a1a] transition-colors">Docs</a>
             {user && (
               <div className="flex items-center gap-3 ml-2">
-                <a href="/settings" className="text-[#999] dark:text-[#666] hover:text-[#111] dark:hover:text-[#e5e5e5] transition-colors" title="Settings">
+                <a href="/settings" className="text-[#777370] hover:text-[#1a1a1a] transition-colors" title="Settings">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="12" r="3" />
                     <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
                   </svg>
                 </a>
-                {user.avatar ? <img src={user.avatar} className="w-7 h-7 rounded-full" alt="" /> : <div className="w-7 h-7 rounded-full bg-[#ddd] dark:bg-[#333]" />}
-                <a href="/auth/logout" className="text-[13px] text-[#999] dark:text-[#666] hover:text-red-500 dark:hover:text-red-400 transition-colors">Sign out</a>
+                {user.avatar ? <img src={user.avatar} className="w-7 h-7 rounded-full" alt="" /> : <div className="w-7 h-7 rounded-full bg-[#e0ddd8]" />}
+                <a href="/auth/logout" className="text-[13px] text-[#777370] hover:text-red-500 transition-colors">Sign out</a>
               </div>
             )}
           </div>
@@ -143,7 +140,7 @@ function Login() {
         <h1 className="text-[44px] font-black tracking-[-0.04em] leading-[1.05] mb-4">
           Sign in to OCC
         </h1>
-        <p className="text-[15px] text-[#999] dark:text-[#888] mb-10 leading-relaxed">
+        <p className="text-[15px] text-[#777370] mb-10 leading-relaxed">
           Define what your AI agents can do.
         </p>
         <div className="flex flex-col gap-3">
@@ -159,7 +156,7 @@ function Login() {
 function AuthButton({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
   return (
     <a href={href}
-      className="inline-flex items-center justify-center gap-2.5 h-12 px-8 text-[14px] font-semibold rounded-full border border-[#e0e0e0] dark:border-[#2a2a2a] bg-white dark:bg-[#111] hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] transition-colors">
+      className="inline-flex items-center justify-center gap-2.5 h-12 px-8 text-[14px] font-semibold rounded-full border border-[#e0ddd8] bg-white hover:bg-[#ece9e4] transition-colors">
       {icon}
       {label}
     </a>
@@ -314,14 +311,14 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
 
       {/* Greeting */}
       <h1 className="text-2xl font-bold tracking-[-0.02em] mb-1">Hi, {firstName}</h1>
-      {provider && <p className="text-xs text-[#999] dark:text-[#666] mb-4">Signed in via {provider}</p>}
+      {provider && <p className="text-xs text-[#777370] mb-4">Signed in via {provider}</p>}
 
       {/* Death notice */}
       {deathNotice && (
-        <div className="mb-4 px-4 py-3 rounded-lg border border-red-300 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 flex items-center justify-between">
+        <div className="mb-4 px-4 py-3 rounded-lg border border-red-300 bg-red-50 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-red-500 text-sm">&#x1F480;</span>
-            <span className="text-sm text-red-700 dark:text-red-400">
+            <span className="text-sm text-red-700">
               Agent &quot;{deathNotice.name}&quot; terminated — death proof sealed on chain
             </span>
           </div>
@@ -330,7 +327,7 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
               className="text-xs text-blue-500 hover:text-blue-400 transition-colors">
               View proof ↗
             </a>
-            <button onClick={() => setDeathNotice(null)} className="text-xs text-[#999] hover:text-[#666]">✕</button>
+            <button onClick={() => setDeathNotice(null)} className="text-xs text-[#777370] hover:text-[#1a1a1a]">✕</button>
           </div>
         </div>
       )}
@@ -340,9 +337,9 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
         {agents.map(a => (
           <div key={a.id} className="flex items-center gap-0.5">
             {editingName === a.id ? (
-              <div className="flex items-center gap-1 px-2 py-1 rounded-lg border border-blue-400 dark:border-blue-500 bg-white dark:bg-[#111]">
+              <div className="flex items-center gap-1 px-2 py-1 rounded-lg border border-blue-400 bg-white">
                 <input value={editName} onChange={e => setEditName(e.target.value)} autoFocus
-                  className="bg-transparent outline-none w-28 text-sm text-[#111] dark:text-[#e5e5e5]"
+                  className="bg-transparent outline-none w-28 text-sm text-[#1a1a1a]"
                   onKeyDown={async e => {
                     if (e.key === "Enter" && editName.trim()) {
                       await renameAgent(a.id, editName.trim()); setEditingName(null); await refresh();
@@ -352,10 +349,10 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
                 <button onClick={async () => { if (editName.trim()) { await renameAgent(a.id, editName.trim()); setEditingName(null); await refresh(); } }}
                   className="text-emerald-500 hover:text-emerald-400 text-sm font-bold px-1">✓</button>
                 <button onClick={() => setEditingName(null)}
-                  className="text-[#999] hover:text-[#666] text-sm px-0.5">✕</button>
+                  className="text-[#777370] hover:text-[#1a1a1a] text-sm px-0.5">✕</button>
               </div>
             ) : confirmDelete === a.id ? (
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-red-400 dark:border-red-500 bg-white dark:bg-[#111] text-sm">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-red-400 bg-white text-sm">
                 <span className="text-red-500 font-medium">Delete &quot;{a.name}&quot;?</span>
                 <button onClick={async () => {
                   const result = await deleteAgent(a.id);
@@ -370,24 +367,24 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
                 }}
                   className="text-red-500 hover:text-red-400 font-bold">Yes</button>
                 <button onClick={() => setConfirmDelete(null)}
-                  className="text-[#999] hover:text-[#666]">No</button>
+                  className="text-[#777370] hover:text-[#1a1a1a]">No</button>
               </div>
             ) : (
               <button onClick={() => setSelectedAgent(a.id)}
                 className={`group flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border transition-colors ${
                   selectedAgent === a.id
-                    ? "bg-[#111] dark:bg-white text-white dark:text-[#111] border-transparent font-semibold"
-                    : "border-[#ddd] dark:border-[#2a2a2a] text-[#666] dark:text-[#999] hover:text-[#111] dark:hover:text-white hover:border-[#bbb] dark:hover:border-[#444]"
+                    ? "bg-[#1a1a1a] text-white border-transparent font-semibold"
+                    : "border-[#e0ddd8] text-[#777370] hover:text-[#1a1a1a] hover:border-[#b0ada8]"
                 }`}>
                 {a.name}
                 <span onClick={e => { e.stopPropagation(); setEditingName(a.id); setEditName(a.name); }}
                   className={`opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity cursor-pointer text-[11px] ${
-                    selectedAgent === a.id ? "text-white/60 dark:text-[#111]/60" : ""
+                    selectedAgent === a.id ? "text-white/60" : ""
                   }`}
                   title="Rename">✎</span>
                 <span onClick={e => { e.stopPropagation(); setConfirmDelete(a.id); }}
                   className={`opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity cursor-pointer text-[11px] ${
-                    selectedAgent === a.id ? "text-white/60 dark:text-[#111]/60" : ""
+                    selectedAgent === a.id ? "text-white/60" : ""
                   }`}
                   title="Delete">✕</span>
               </button>
@@ -395,9 +392,9 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
           </div>
         ))}
         {addingAgent ? (
-          <div className="flex items-center gap-1 px-2 py-1 rounded-lg border border-blue-400 dark:border-blue-500 bg-white dark:bg-[#111]">
+          <div className="flex items-center gap-1 px-2 py-1 rounded-lg border border-blue-400 bg-white">
             <input value={newAgentName} onChange={e => setNewAgentName(e.target.value)} placeholder="Agent name" autoFocus
-              className="bg-transparent outline-none w-32 text-sm text-[#111] dark:text-[#e5e5e5] placeholder:text-[#aaa] dark:placeholder:text-[#555] caret-emerald-500"
+              className="bg-transparent outline-none w-32 text-sm text-[#1a1a1a] placeholder:text-[#b0ada8] caret-emerald-500"
               onKeyDown={async e => {
                 if (e.key === "Enter" && newAgentName.trim()) {
                   await createAgent(newAgentName.trim());
@@ -408,11 +405,11 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
             <button onClick={async () => { if (newAgentName.trim()) { const result = await createAgent(newAgentName.trim()); setNewAgentName(""); setAddingAgent(false); await refresh(); if (result?.agent?.id) setSelectedAgent(result.agent.id); } }}
               className="text-emerald-500 hover:text-emerald-400 text-sm font-bold px-1">✓</button>
             <button onClick={() => { setAddingAgent(false); setNewAgentName(""); }}
-              className="text-[#999] hover:text-[#666] text-sm px-0.5">✕</button>
+              className="text-[#777370] hover:text-[#1a1a1a] text-sm px-0.5">✕</button>
           </div>
         ) : (
           <button onClick={() => setAddingAgent(true)}
-            className="px-3 py-1.5 text-sm rounded-lg border border-dashed border-[#ccc] dark:border-[#333] text-[#999] dark:text-[#666] hover:text-[#111] dark:hover:text-white hover:border-[#999] dark:hover:border-[#555] transition-colors">
+            className="px-3 py-1.5 text-sm rounded-lg border border-dashed border-[#e0ddd8] text-[#777370] hover:text-[#1a1a1a] hover:border-[#b0ada8] transition-colors">
             + Add agent
           </button>
         )}
@@ -423,13 +420,13 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
         <div className="text-center py-16">
           <div className="text-4xl mb-4">🤖</div>
           <h2 className="text-xl font-bold mb-2">Create your first agent</h2>
-          <p className="text-sm text-[#999] dark:text-[#666] mb-6 max-w-xs mx-auto text-balance">
+          <p className="text-sm text-[#777370] mb-6 max-w-xs mx-auto text-balance">
             Each agent gets its own MCP link, its own rules, and its own proof chain.
           </p>
           {addingAgent ? (
             <div className="flex items-center justify-center gap-2">
               <input value={newAgentName} onChange={e => setNewAgentName(e.target.value)} placeholder="Agent name" autoFocus
-                className="px-3 py-2 text-sm rounded-lg border border-[#ccc] dark:border-[#444] bg-white dark:bg-[#1a1a1a] text-[#111] dark:text-[#e5e5e5] outline-none focus:border-emerald-500 w-48 caret-emerald-500"
+                className="px-3 py-2 text-sm rounded-lg border border-[#e0ddd8] bg-white text-[#1a1a1a] outline-none focus:border-emerald-500 w-48 caret-emerald-500"
                 onKeyDown={async e => {
                   if (e.key === "Enter" && newAgentName.trim()) {
                     const result = await createAgent(newAgentName.trim());
@@ -440,11 +437,11 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
               <button onClick={async () => { if (newAgentName.trim()) { const result = await createAgent(newAgentName.trim()); setNewAgentName(""); setAddingAgent(false); await refresh(); if (result?.agent?.id) setSelectedAgent(result.agent.id); } }}
                 className="px-3 py-2 text-sm font-bold rounded-lg bg-emerald-500 text-white hover:bg-emerald-400 transition-colors">Create</button>
               <button onClick={() => { setAddingAgent(false); setNewAgentName(""); }}
-                className="px-2 py-2 text-sm text-[#999] hover:text-[#666]">Cancel</button>
+                className="px-2 py-2 text-sm text-[#777370] hover:text-[#1a1a1a]">Cancel</button>
             </div>
           ) : (
             <button onClick={() => setAddingAgent(true)}
-              className="px-6 py-2.5 text-sm font-semibold rounded-xl bg-[#111] dark:bg-white text-white dark:text-[#111] hover:opacity-90 transition-opacity">
+              className="px-6 py-2.5 text-sm font-semibold rounded-xl bg-[#1a1a1a] text-white hover:opacity-90 transition-opacity">
               + Create agent
             </button>
           )}
@@ -456,16 +453,16 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
 
         {/* ── LEFT: Rules ── */}
         <div className="lg:w-[400px] flex-shrink-0">
-          <div className="bg-white dark:bg-[#111] rounded-2xl border border-[#ddd] dark:border-[#1a1a1a] overflow-hidden">
+          <div className="bg-white rounded-2xl border border-[#e0ddd8] overflow-hidden">
 
             {/* Header + commit button */}
-            <div className="px-5 py-4 flex items-center justify-between border-b border-[#f0f0f0] dark:border-[#1a1a1a]">
+            <div className="px-5 py-4 flex items-center justify-between border-b border-[#ece9e4]">
               <h2 className="text-[16px] font-bold">Rules</h2>
               <button onClick={handleCommit} disabled={!isDirty || committing}
                 className={`h-8 px-4 text-[12px] font-semibold rounded-lg transition-all active:scale-[0.97] flex items-center gap-2 ${
                   isDirty
                     ? "bg-emerald-500 text-white hover:bg-emerald-600"
-                    : "bg-[#f0f0f0] dark:bg-[#1a1a1a] text-[#999] dark:text-[#777] cursor-default"
+                    : "bg-[#ece9e4] text-[#777370] cursor-default"
                 }`}>
                 {committing && <Spinner size={12} color="white" />}
                 {committing ? "Signing..." : isDirty ? "Commit to chain" : "Rules saved"}
@@ -473,22 +470,22 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
             </div>
 
             {/* Categories */}
-            <div className="divide-y divide-[#f5f5f5] dark:divide-[#151515]">
+            <div className="divide-y divide-[#ece9e4]">
               {CATEGORIES.map(cat => {
                 const isOn = categories[cat.key] ?? false;
                 const isExpanded = expanded === cat.key;
                 const activeToolsInCat = cat.tools.filter(t => allowedTools.has(t.key)).length;
                 return (
                   <div key={cat.key}>
-                    <div className="flex items-center gap-3 px-5 py-3 hover:bg-[#fafafa] dark:hover:bg-[#0e0e0e] transition-colors">
+                    <div className="flex items-center gap-3 px-5 py-3 hover:bg-[#f5f3f0] transition-colors">
                       <button onClick={() => setExpanded(isExpanded ? null : cat.key)}
-                        className="text-[10px] text-[#999] dark:text-[#777] w-4 flex-shrink-0 transition-transform"
+                        className="text-[10px] text-[#b0ada8] w-4 flex-shrink-0 transition-transform"
                         style={{ transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)" }}>
                         ▶
                       </button>
                       <div className="flex-1 min-w-0">
                         <span className="text-[14px] font-medium">{cat.label}</span>
-                        <span className="text-[12px] text-[#888] dark:text-[#888] ml-2">{cat.desc}</span>
+                        <span className="text-[12px] text-[#777370] ml-2">{cat.desc}</span>
                         {!isOn && activeToolsInCat > 0 && (
                           <span className="ml-2 inline-flex items-center gap-1 text-[10px] text-emerald-500">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
@@ -499,12 +496,12 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
                       <Toggle on={isOn} onChange={() => toggleCategory(cat.key)} />
                     </div>
                     {isExpanded && (
-                      <div className="bg-[#fafafa] dark:bg-[#0a0a0a] border-t border-[#f0f0f0] dark:border-[#151515]">
+                      <div className="bg-[#f5f3f0] border-t border-[#ece9e4]">
                         {cat.tools.map(tool => {
                           const toolOn = toolOverrides[tool.key] ?? allowedTools.has(tool.key) ?? isOn;
                           return (
                             <div key={tool.key} className="flex items-center gap-3 pl-12 pr-5 py-2.5">
-                              <span className="text-[13px] text-[#666] dark:text-[#888] flex-1">{tool.label}</span>
+                              <span className="text-[13px] text-[#777370] flex-1">{tool.label}</span>
                               {allowedTools.has(tool.key) && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />}
                               <Toggle on={toolOn} onChange={() => toggleTool(tool.key, isOn)} small />
                             </div>
@@ -522,14 +519,14 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
                     <div className="w-4 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <span className="text-[14px] font-medium">Other</span>
-                      <span className="text-[12px] text-[#888] dark:text-[#888] ml-2">Tools allowed via permissions</span>
+                      <span className="text-[12px] text-[#777370] ml-2">Tools allowed via permissions</span>
                     </div>
                     <span className="text-[11px] text-emerald-500 font-medium">{uncategorizedTools.length} active</span>
                   </div>
-                  <div className="bg-[#fafafa] dark:bg-[#0a0a0a] border-t border-[#f0f0f0] dark:border-[#151515]">
+                  <div className="bg-[#f5f3f0] border-t border-[#ece9e4]">
                     {uncategorizedTools.map(tool => (
                       <div key={tool} className="flex items-center gap-3 pl-12 pr-5 py-2.5">
-                        <span className="text-[13px] text-[#666] dark:text-[#888] flex-1">{tool}</span>
+                        <span className="text-[13px] text-[#777370] flex-1">{tool}</span>
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
                         <button onClick={() => act(0, () => revokePermission(selectedAgent, tool))}
                           className="text-[11px] text-red-400 hover:text-red-300 transition-colors">Revoke</button>
@@ -541,22 +538,22 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
             </div>
 
             {/* Custom rules */}
-            <div className="border-t border-[#f0f0f0] dark:border-[#1a1a1a] px-5 py-4">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-[#888] dark:text-[#888] mb-3">Custom rules</p>
+            <div className="border-t border-[#ece9e4] px-5 py-4">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-[#777370] mb-3">Custom rules</p>
               {customRules.map((rule, i) => (
                 <div key={i} className="flex items-start gap-2 mb-2 group">
-                  <span className="text-[13px] text-[#666] dark:text-[#888] flex-1 leading-snug">{rule}</span>
+                  <span className="text-[13px] text-[#777370] flex-1 leading-snug">{rule}</span>
                   <button onClick={() => removeCustomRule(i)}
-                    className="text-[11px] text-[#aaa] dark:text-[#666] hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0 mt-0.5">✕</button>
+                    className="text-[11px] text-[#b0ada8] hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0 mt-0.5">✕</button>
                 </div>
               ))}
               <div className="flex gap-2 mt-2">
                 <input value={newRule} onChange={e => setNewRule(e.target.value)}
                   onKeyDown={e => e.key === "Enter" && addCustomRule()}
                   placeholder="e.g. Never delete production files"
-                  className="flex-1 h-9 px-3 text-[13px] rounded-lg bg-[#f7f7f7] dark:bg-[#0a0a0a] border border-[#ddd] dark:border-[#1a1a1a] placeholder:text-[#999] dark:placeholder:text-[#333] focus:outline-none focus:ring-1 focus:ring-emerald-400/30" />
+                  className="flex-1 h-9 px-3 text-[13px] rounded-lg bg-[#f0ede8] border border-[#e0ddd8] placeholder:text-[#b0ada8] focus:outline-none focus:ring-1 focus:ring-emerald-400/30" />
                 <button onClick={addCustomRule} disabled={!newRule.trim()}
-                  className="h-9 px-3 text-[12px] font-medium rounded-lg bg-[#f0f0f0] dark:bg-[#1a1a1a] text-[#999] dark:text-[#888] hover:text-[#666] dark:hover:text-[#888] disabled:opacity-30 transition-colors">
+                  className="h-9 px-3 text-[12px] font-medium rounded-lg bg-[#ece9e4] text-[#777370] hover:text-[#1a1a1a] disabled:opacity-30 transition-colors">
                   Add
                 </button>
               </div>
@@ -565,7 +562,7 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
 
             {/* Policy proof */}
             {lastCommitDigest && (
-              <div className="border-t border-[#f0f0f0] dark:border-[#1a1a1a] px-5 py-3.5">
+              <div className="border-t border-[#ece9e4] px-5 py-3.5">
                 <a href={explorerUrl(lastCommitDigest)}                  className="flex items-center gap-3 group">
                   <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -573,10 +570,10 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
                     </svg>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[12px] font-medium text-emerald-600 dark:text-emerald-400">Rules committed to chain</p>
-                    <p className="text-[11px] font-mono text-[#888] dark:text-[#777] group-hover:text-emerald-500 transition-colors truncate">{lastCommitDigest}</p>
+                    <p className="text-[12px] font-medium text-emerald-600">Rules committed to chain</p>
+                    <p className="text-[11px] font-mono text-[#777370] group-hover:text-emerald-500 transition-colors truncate">{lastCommitDigest}</p>
                   </div>
-                  <span className="text-[11px] text-[#999] dark:text-[#666] group-hover:text-emerald-500 transition-colors flex-shrink-0">View proof ↗</span>
+                  <span className="text-[11px] text-[#777370] group-hover:text-emerald-500 transition-colors flex-shrink-0">View proof ↗</span>
                 </a>
               </div>
             )}
@@ -589,13 +586,13 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
 
           {/* Pending requests — top of activity panel */}
           {pending.length > 0 && (
-            <div className="bg-white dark:bg-[#111] rounded-2xl border border-amber-200/50 dark:border-amber-500/10 overflow-hidden">
-              <div className="px-5 py-3 border-b border-amber-100 dark:border-amber-500/10">
-                <h2 className="text-[14px] font-bold text-amber-600 dark:text-amber-400">
+            <div className="bg-white rounded-2xl border border-amber-200/50 overflow-hidden">
+              <div className="px-5 py-3 border-b border-amber-100">
+                <h2 className="text-[14px] font-bold text-amber-600">
                   {pending.length} pending request{pending.length > 1 ? "s" : ""}
                 </h2>
               </div>
-              <div className="divide-y divide-amber-100/50 dark:divide-amber-500/5">
+              <div className="divide-y divide-amber-100/50">
                 {pending.map(p => {
                   const isOpen = expandedRequests.has(p.id);
                   const displayName = p.toolDescription || humanizeToolName(p.tool);
@@ -605,14 +602,14 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
                         <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <span className="text-[14px] font-medium">{displayName}</span>
-                          <span className="text-[12px] text-[#999] dark:text-[#777] ml-2">{p.clientName}</span>
+                          <span className="text-[12px] text-[#777370] ml-2">{p.clientName}</span>
                         </div>
                         <button onClick={() => setExpandedRequests(prev => {
                           const next = new Set(prev);
                           isOpen ? next.delete(p.id) : next.add(p.id);
                           return next;
                         })}
-                          className="text-[11px] text-[#999] dark:text-[#666] hover:text-[#666] dark:hover:text-[#999] transition-colors flex-shrink-0">
+                          className="text-[11px] text-[#777370] hover:text-[#1a1a1a] transition-colors flex-shrink-0">
                           {isOpen ? "Hide" : "Details"}
                         </button>
                         <div className="flex gap-2 flex-shrink-0">
@@ -622,31 +619,31 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
                             Allow
                           </button>
                           <button onClick={() => act(p.id, () => denyPermission(p.id))} disabled={busy === p.id}
-                            className="h-7 px-3 text-[12px] font-medium rounded-lg text-[#999] dark:text-[#888] hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] disabled:opacity-40 transition-all">
+                            className="h-7 px-3 text-[12px] font-medium rounded-lg text-[#777370] hover:bg-[#ece9e4] disabled:opacity-40 transition-all">
                             Block
                           </button>
                         </div>
                       </div>
                       {isOpen && (
-                        <div className="mt-3 ml-5 pl-3 border-l-2 border-amber-200/30 dark:border-amber-500/10 space-y-2">
+                        <div className="mt-3 ml-5 pl-3 border-l-2 border-amber-200/30 space-y-2">
                           <div className="flex items-center gap-2">
-                            <span className="text-[11px] text-[#999] dark:text-[#666]">Tool:</span>
-                            <code className="text-[11px] font-mono bg-[#f5f5f5] dark:bg-[#0a0a0a] px-1.5 py-0.5 rounded">{p.tool}</code>
+                            <span className="text-[11px] text-[#777370]">Tool:</span>
+                            <code className="text-[11px] font-mono bg-[#ece9e4] px-1.5 py-0.5 rounded">{p.tool}</code>
                           </div>
                           {p.requestArgs != null && (
                             <div>
-                              <span className="text-[11px] text-[#999] dark:text-[#666]">Arguments:</span>
-                              <pre className="mt-1 text-[11px] font-mono bg-[#f5f5f5] dark:bg-[#0a0a0a] rounded-lg p-3 overflow-x-auto max-h-[200px] overflow-y-auto text-[#666] dark:text-[#888]">
+                              <span className="text-[11px] text-[#777370]">Arguments:</span>
+                              <pre className="mt-1 text-[11px] font-mono bg-[#ece9e4] rounded-lg p-3 overflow-x-auto max-h-[200px] overflow-y-auto text-[#777370]">
                                 {JSON.stringify(p.requestArgs, null, 2)}
                               </pre>
                             </div>
                           )}
                           <div className="flex items-center gap-2">
-                            <span className="text-[11px] text-[#999] dark:text-[#666]">Client:</span>
+                            <span className="text-[11px] text-[#777370]">Client:</span>
                             <span className="text-[11px]">{p.clientName}</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-[11px] text-[#999] dark:text-[#666]">Requested:</span>
+                            <span className="text-[11px] text-[#777370]">Requested:</span>
                             <span className="text-[11px]">{new Date(p.requestedAt).toLocaleString()}</span>
                           </div>
                         </div>
@@ -659,31 +656,31 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
           )}
 
           {/* Activity log */}
-          <div className="bg-white dark:bg-[#111] rounded-2xl border border-[#ddd] dark:border-[#1a1a1a] overflow-hidden">
-            <div className="px-5 py-4 border-b border-[#f0f0f0] dark:border-[#1a1a1a]">
+          <div className="bg-white rounded-2xl border border-[#e0ddd8] overflow-hidden">
+            <div className="px-5 py-4 border-b border-[#ece9e4]">
               <h2 className="text-[16px] font-bold">Activity</h2>
             </div>
 
             {activity.length === 0 ? (
               <div className="text-center py-20">
-                <div className="w-10 h-10 rounded-full bg-[#f5f5f5] dark:bg-[#151515] flex items-center justify-center mx-auto mb-4">
-                  <div className="w-2 h-2 rounded-full bg-[#ddd] dark:bg-[#333] animate-pulse" />
+                <div className="w-10 h-10 rounded-full bg-[#ece9e4] flex items-center justify-center mx-auto mb-4">
+                  <div className="w-2 h-2 rounded-full bg-[#e0ddd8] animate-pulse" />
                 </div>
-                <p className="text-[14px] text-[#888] dark:text-[#777]">No activity yet</p>
-                <p className="text-[12px] text-[#aaa] dark:text-[#2a2a2a] mt-1">Actions will appear here as your AI works</p>
+                <p className="text-[14px] text-[#777370]">No activity yet</p>
+                <p className="text-[12px] text-[#b0ada8] mt-1">Actions will appear here as your AI works</p>
               </div>
             ) : (
-              <div className="divide-y divide-[#f5f5f5] dark:divide-[#151515]">
+              <div className="divide-y divide-[#ece9e4]">
                 {activity.map(p => (
-                  <div key={p.id} className="flex items-center gap-3 px-5 py-3.5 hover:bg-[#fafafa] dark:hover:bg-[#0e0e0e] transition-colors group">
+                  <div key={p.id} className="flex items-center gap-3 px-5 py-3.5 hover:bg-[#f5f3f0] transition-colors group">
                     <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
                       p.status === "approved" ? "bg-emerald-400" : "bg-red-400"
                     }`} />
                     <div className="flex-1 min-w-0">
                       <span className="text-[14px] font-medium">{p.tool}</span>
-                      <span className="text-[12px] text-[#999] dark:text-[#777] ml-2">{p.clientName}</span>
+                      <span className="text-[12px] text-[#777370] ml-2">{p.clientName}</span>
                     </div>
-                    <span className="text-[11px] text-[#aaa] dark:text-[#666] flex-shrink-0">{timeLabel(p.resolvedAt ?? p.requestedAt)}</span>
+                    <span className="text-[11px] text-[#b0ada8] flex-shrink-0">{timeLabel(p.resolvedAt ?? p.requestedAt)}</span>
                     {p.proofDigest && (
                       <a href={explorerUrl(p.proofDigest)}                        className="text-[11px] text-blue-500 hover:text-blue-400 transition-colors flex-shrink-0">
                         proof ↗
@@ -699,8 +696,8 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
 
       {/* Footer */}
       <div className="mt-12 pb-8 text-center">
-        <p className="text-[11px] text-[#aaa] dark:text-[#2a2a2a]">
-          Every action is created through a Trusted Execution Environment · <a href="https://occ.wtf" target="_self" className="hover:text-[#999] dark:hover:text-[#555] transition-colors">occ.wtf</a>
+        <p className="text-[11px] text-[#b0ada8]">
+          Every action is created through a Trusted Execution Environment · <a href="https://occ.wtf" target="_self" className="hover:text-[#777370] transition-colors">occ.wtf</a>
         </p>
       </div>
     </div>
@@ -711,39 +708,6 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
    Components
    ═══════════════════════════════════════════════════════════════ */
 
-function ThemeToggle() {
-  const [dark, setDark] = useState(true);
-  useEffect(() => {
-    // Check localStorage first, then cross-domain cookie
-    const saved = localStorage.getItem("occ-theme");
-    const cookie = document.cookie.match(/occ-theme=(dark|light)/);
-    const theme = saved ?? cookie?.[1] ?? "dark";
-    const isDark = theme !== "light";
-    setDark(isDark);
-    document.documentElement.classList.toggle("dark", isDark);
-  }, []);
-  const toggle = () => {
-    const next = !dark;
-    setDark(next);
-    document.documentElement.classList.toggle("dark", next);
-    localStorage.setItem("occ-theme", next ? "dark" : "light");
-    document.cookie = `occ-theme=${next ? "dark" : "light"}; path=/; domain=.occ.wtf; max-age=31536000; SameSite=Lax`;
-  };
-  return (
-    <button onClick={toggle} className="p-2 text-[#888] dark:text-[#888] hover:text-[#666] dark:hover:text-[#999] transition-colors" aria-label="Toggle theme">
-      {dark ? (
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
-        </svg>
-      ) : (
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
-        </svg>
-      )}
-    </button>
-  );
-}
-
 function Toggle({ on, onChange, small }: { on: boolean; onChange: () => void; small?: boolean }) {
   const w = small ? "w-8" : "w-10";
   const h = small ? "h-[18px]" : "h-[22px]";
@@ -752,7 +716,7 @@ function Toggle({ on, onChange, small }: { on: boolean; onChange: () => void; sm
   return (
     <button onClick={onChange}
       className={`${w} ${h} rounded-full transition-colors duration-150 flex items-center px-[2px] flex-shrink-0 ${
-        on ? "bg-emerald-500" : "bg-[#ccc] dark:bg-[#2a2a2a]"
+        on ? "bg-emerald-500" : "bg-[#e0ddd8]"
       }`}>
       <div className={`${dot} rounded-full bg-white shadow-sm transition-transform duration-150 ${on ? translate : "translate-x-0"}`} />
     </button>

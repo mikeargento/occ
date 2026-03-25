@@ -41,7 +41,7 @@ export function ProofViewer({ proof, defaultExpanded = false }: ProofViewerProps
         <div className="flex items-center gap-2.5">
           <svg
             width="14" height="14" viewBox="0 0 14 14" fill="currentColor"
-            className={`text-emerald-600 dark:text-emerald-400 transition-transform duration-200 ${expanded ? "rotate-90" : ""}`}
+            className={`text-emerald-600 transition-transform duration-200 ${expanded ? "rotate-90" : ""}`}
           >
             <path d="M4 1.5l5.5 5.5-5.5 5.5" />
           </svg>

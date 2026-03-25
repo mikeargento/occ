@@ -225,26 +225,26 @@ function ExplorerPage() {
             {/* Status banner */}
             <div className={`rounded-xl border p-5 ${
               verifyResult.valid
-                ? "border-emerald-600/30 dark:border-emerald-500/30 bg-emerald-500/10 dark:bg-emerald-500/5"
-                : "border-red-600/30 dark:border-red-500/30 bg-red-500/10 dark:bg-red-500/5"
+                ? "border-emerald-600/30 bg-emerald-500/10"
+                : "border-red-600/30 bg-red-500/10"
             }`}>
               <div className="flex items-center gap-3">
                 <div className={`flex items-center justify-center w-10 h-10 rounded-full ${
                   verifyResult.valid ? "bg-emerald-500/20" : "bg-red-500/20"
                 }`}>
                   {verifyResult.valid ? (
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-emerald-600 dark:text-emerald-400">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-emerald-600">
                       <path d="M20 6L9 17l-5-5" />
                     </svg>
                   ) : (
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-red-600 dark:text-red-400">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-red-600">
                       <path d="M18 6L6 18M6 6l12 12" />
                     </svg>
                   )}
                 </div>
                 <div>
                   <div className={`text-lg font-semibold ${
-                    verifyResult.valid ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"
+                    verifyResult.valid ? "text-emerald-600" : "text-red-600"
                   }`}>
                     {verifyResult.valid ? "Signature Valid" : "Signature Invalid"}
                   </div>
@@ -267,11 +267,11 @@ function ExplorerPage() {
                   <div key={i} className="flex items-start gap-3 px-5 py-3">
                     <div className="shrink-0 mt-0.5">
                       {check.status === "pass" ? (
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-emerald-600 dark:text-emerald-400">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-emerald-600">
                           <path d="M20 6L9 17l-5-5" />
                         </svg>
                       ) : check.status === "fail" ? (
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-red-600 dark:text-red-400">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-red-600">
                           <path d="M18 6L6 18M6 6l12 12" />
                         </svg>
                       ) : (
@@ -320,7 +320,7 @@ function ExplorerPage() {
                 </div>
                 <Link
                   href={`/explorer/${encodeURIComponent(toUrlSafeB64(droppedProof.artifact.digestB64))}`}
-                  className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-600 hover:text-emerald-500 transition-colors"
                 >
                   View in Explorer
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -356,15 +356,15 @@ function ExplorerPage() {
             {lookupResults !== null && lookupResults.length > 0 && (
               <div className="mt-5 space-y-4 animate-in fade-in duration-500">
                 {/* Verified banner */}
-                <div className="rounded-xl border border-emerald-600/30 dark:border-emerald-500/30 bg-emerald-500/10 dark:bg-emerald-500/5 p-5">
+                <div className="rounded-xl border border-emerald-600/30 bg-emerald-500/10 p-5">
                   <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-emerald-500/20 dark:bg-emerald-500/15">
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-emerald-600 dark:text-emerald-400">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-emerald-500/20">
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-emerald-600">
                         <path d="M20 6L9 17l-5-5" />
                       </svg>
                     </div>
                     <div>
-                      <div className="text-lg font-semibold text-emerald-600 dark:text-emerald-400">Proven</div>
+                      <div className="text-lg font-semibold text-emerald-600">Proven</div>
                       <div className="text-xs text-text-tertiary">
                         {lookupResults.length} proof{lookupResults.length !== 1 ? "s" : ""} on record for this file
                       </div>
@@ -390,14 +390,14 @@ function ExplorerPage() {
                             {enforcementLabel(p.environment.enforcement)}
                           </span>
                           {p.agency && (
-                            <span className="text-blue-600 dark:text-blue-400 shrink-0" title="Device-authorized">
+                            <span className="text-blue-600 shrink-0" title="Device-authorized">
                               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                               </svg>
                             </span>
                           )}
                           {p.timestamps && (
-                            <span className="text-purple-600 dark:text-purple-400 shrink-0" title="RFC 3161 timestamped">
+                            <span className="text-purple-600 shrink-0" title="RFC 3161 timestamped">
                               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <circle cx="12" cy="12" r="10" />
                                 <path d="M12 6v6l4 2" />
@@ -411,7 +411,7 @@ function ExplorerPage() {
                               {new Date(p.commit.time).toLocaleDateString()}
                             </span>
                           )}
-                          <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 dark:text-emerald-400 group-hover:text-emerald-500 dark:group-hover:text-emerald-300 transition-colors">
+                          <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 group-hover:text-emerald-500 transition-colors">
                             View proof
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="group-hover:translate-x-0.5 transition-transform duration-150">
                               <path d="M5 12h14M12 5l7 7-7 7" />
@@ -594,14 +594,14 @@ function ProofRow({ proof: p }: { proof: ProofSummary }) {
           </div>
           <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-2 sm:ml-4">
             {p.hasAgency && (
-              <span className="text-blue-600 dark:text-blue-400" title="Device-authorized">
+              <span className="text-blue-600" title="Device-authorized">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                 </svg>
               </span>
             )}
             {p.hasTsa && (
-              <span className="text-purple-600 dark:text-purple-400" title="RFC 3161 timestamped">
+              <span className="text-purple-600" title="RFC 3161 timestamped">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="12" cy="12" r="10" />
                   <path d="M12 6v6l4 2" />
@@ -654,13 +654,13 @@ function ProofRow({ proof: p }: { proof: ProofSummary }) {
                 {!!(detail as unknown as Record<string, unknown>).agency && (
                   <div>
                     <div className="text-[10px] text-text-tertiary uppercase tracking-wider">Device</div>
-                    <span className="text-blue-600 dark:text-blue-400 font-medium">Passkey verified</span>
+                    <span className="text-blue-600 font-medium">Passkey verified</span>
                   </div>
                 )}
                 {detail.timestamps?.artifact?.authority && (
                   <div>
                     <div className="text-[10px] text-text-tertiary uppercase tracking-wider">Timestamp</div>
-                    <span className="text-purple-600 dark:text-purple-400 font-medium">{detail.timestamps.artifact.authority}</span>
+                    <span className="text-purple-600 font-medium">{detail.timestamps.artifact.authority}</span>
                   </div>
                 )}
               </div>
@@ -668,7 +668,7 @@ function ProofRow({ proof: p }: { proof: ProofSummary }) {
               {/* View full proof link */}
               <Link
                 href={`/explorer/${encodeURIComponent(toUrlSafeB64(p.digestB64))}`}
-                className="inline-flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 transition-colors mt-1"
+                className="inline-flex items-center gap-1.5 text-xs text-emerald-600 hover:text-emerald-500 transition-colors mt-1"
               >
                 View full proof
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
