@@ -109,9 +109,14 @@ export default function ProofDetailPage() {
   return (
     <div className="mx-auto max-w-6xl px-6 py-16 sm:py-24">
       {/* Breadcrumb */}
-      <Link href="/explorer" className="text-sm text-text-tertiary hover:text-text transition-colors">
-        &larr; Explorer
-      </Link>
+      <div className="flex items-center gap-4">
+        <Link href="/explorer" className="text-sm text-text-tertiary hover:text-text transition-colors">
+          &larr; Explorer
+        </Link>
+        <a href="https://agent.occ.wtf" className="text-sm text-text-tertiary hover:text-text transition-colors">
+          &larr; Dashboard
+        </a>
+      </div>
 
       {/* Hero */}
       <div className="mt-6">
