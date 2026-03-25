@@ -49,9 +49,9 @@ async function createOrGetUser(provider: string, providerId: string, email: stri
   if (byEmail) return byEmail.id; // Log them in as the existing user
 
   const mcpToken = crypto.randomBytes(24).toString("hex");
-  const agentToken = crypto.randomBytes(24).toString("hex");
   await db.upsertUser({ id: userId, email, name, avatar, provider, providerId, mcpToken });
-  await db.upsertAgent(userId, { id: "default", name: "Default", mcpToken: agentToken });
+  // No default agent — user must create their first agent explicitly.
+  // Creating an agent produces a birth proof (slot 0 on the agent's chain).
   return userId;
 }
 

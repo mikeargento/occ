@@ -86,9 +86,22 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
     const id = body.name?.toLowerCase().replace(/[^a-z0-9-]/g, "-") ?? "agent-" + Date.now();
     const agentToken = crypto.randomBytes(24).toString("hex");
     await db.upsertAgent(userId, { id, name: body.name ?? id, allowedTools: body.allowedTools, mcpToken: agentToken });
+
+    // Birth proof — slot 0 on this agent's chain.
+    // The agent cannot exist without this proof existing first.
+    const { commitPolicyProof } = await import("./authorization.js");
+    const birthChainId = `${userId}:${id}`;
+    const birthProof = await commitPolicyProof(userId, {
+      categories: {},
+      customRules: [`Agent "${body.name ?? id}" created`],
+    }, birthChainId, await getPrincipal()).catch(() => null);
+
     const host = req.headers.host ?? "agent.occ.wtf";
     const proto = host.includes("localhost") ? "http" : "https";
-    return json(res, { agent: { id, name: body.name ?? id, status: "active", createdAt: Date.now(), mcpUrl: `${proto}://${host}/mcp/${agentToken}` } }, 201);
+    return json(res, {
+      agent: { id, name: body.name ?? id, status: "active", createdAt: Date.now(), mcpUrl: `${proto}://${host}/mcp/${agentToken}` },
+      birthProof: birthProof?.proof ?? null,
+    }, 201);
   }
 
   // /agents/:id

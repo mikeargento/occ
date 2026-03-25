@@ -352,8 +352,23 @@ function Dashboard({ userName }: { userName: string }) {
         )}
       </div>
 
-      {/* Two column layout */}
-      <div className="flex flex-col lg:flex-row gap-6">
+      {/* No agents — prompt to create first one */}
+      {agents.length === 0 && !addingAgent && (
+        <div className="text-center py-16">
+          <div className="text-4xl mb-4">🤖</div>
+          <h2 className="text-xl font-bold mb-2">Create your first agent</h2>
+          <p className="text-sm text-[#999] dark:text-[#666] mb-6 max-w-sm mx-auto">
+            Each agent gets its own MCP link, its own rules, and its own proof chain.
+          </p>
+          <button onClick={() => setAddingAgent(true)}
+            className="px-6 py-2.5 text-sm font-semibold rounded-xl bg-[#111] dark:bg-white text-white dark:text-[#111] hover:opacity-90 transition-opacity">
+            + Create agent
+          </button>
+        </div>
+      )}
+
+      {/* Two column layout — only show when agents exist */}
+      {agents.length > 0 && <div className="flex flex-col lg:flex-row gap-6">
 
         {/* ── LEFT: Rules ── */}
         <div className="lg:w-[400px] flex-shrink-0">
@@ -563,7 +578,7 @@ function Dashboard({ userName }: { userName: string }) {
             )}
           </div>
         </div>
-      </div>
+      </div>}
 
       {/* Footer */}
       <div className="mt-12 pb-8 text-center">
