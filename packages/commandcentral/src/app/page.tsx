@@ -208,9 +208,14 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
       const agentList = (agentsData.agents ?? []) as Agent[];
       setAgents(agentList);
 
-      // Use selected agent's MCP URL if available, else fall back to user-level
+      // Auto-select first agent if none selected or selected doesn't exist
       const sel = agentList.find(a => a.id === selectedAgent);
-      setMcpUrl(sel?.mcpUrl ?? (configData as any).mcpUrl ?? "");
+      if (!sel && agentList.length > 0) {
+        setSelectedAgent(agentList[0].id);
+        setMcpUrl(agentList[0].mcpUrl ?? (configData as any).mcpUrl ?? "");
+      } else {
+        setMcpUrl(sel?.mcpUrl ?? (configData as any).mcpUrl ?? "");
+      }
 
       if (policyData.policy) {
         const c = policyData.policy.categories ?? {};
