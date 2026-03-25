@@ -15,7 +15,7 @@ export function Nav() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 bg-[#efefef] border-b border-border-subtle/50">
+    <header className="sticky top-0 z-50 bg-white border-b border-border-subtle/50">
       <div className="mx-auto max-w-6xl px-6">
         <nav className="flex h-16 items-center justify-between">
           <Link

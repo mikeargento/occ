@@ -29,8 +29,8 @@
 
 /* ── Clean Light ── */
 :root {
-  --bg: #efefef;
-  --bg-elevated: #ffffff;
+  --bg: #ffffff;
+  --bg-elevated: #efefef;
   --bg-subtle: #e5e5e5;
   --c-border: #d9d9d9;
   --c-border-subtle: #e0e0e0;
