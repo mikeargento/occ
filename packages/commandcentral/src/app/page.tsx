@@ -284,6 +284,10 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
   }
 
   const agentPerms = useMemo(() => perms.filter(p => p.agentId === selectedAgent), [perms, selectedAgent]);
+  const allowedTools = useMemo(() => new Set(agentPerms.filter(p => p.status === "approved").map(p => p.tool)), [agentPerms]);
+  // Tools that are allowed but don't belong to any category
+  const allCatTools = useMemo(() => new Set(CATEGORIES.flatMap(c => c.tools.map(t => t.key))), []);
+  const uncategorizedTools = useMemo(() => [...allowedTools].filter(t => !allCatTools.has(t)), [allowedTools, allCatTools]);
   const activity = useMemo(() =>
     agentPerms.filter(p => p.status !== "pending").sort((a, b) => (b.resolvedAt ?? b.requestedAt) - (a.resolvedAt ?? a.requestedAt)),
     [agentPerms]
@@ -503,6 +507,7 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
               {CATEGORIES.map(cat => {
                 const isOn = categories[cat.key] ?? false;
                 const isExpanded = expanded === cat.key;
+                const activeToolsInCat = cat.tools.filter(t => allowedTools.has(t.key)).length;
                 return (
                   <div key={cat.key}>
                     <div className="flex items-center gap-3 px-5 py-3 hover:bg-[#fafafa] dark:hover:bg-[#0e0e0e] transition-colors">
@@ -514,16 +519,23 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
                       <div className="flex-1 min-w-0">
                         <span className="text-[14px] font-medium">{cat.label}</span>
                         <span className="text-[12px] text-[#888] dark:text-[#888] ml-2">{cat.desc}</span>
+                        {!isOn && activeToolsInCat > 0 && (
+                          <span className="ml-2 inline-flex items-center gap-1 text-[10px] text-emerald-500">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                            {activeToolsInCat} active
+                          </span>
+                        )}
                       </div>
                       <Toggle on={isOn} onChange={() => toggleCategory(cat.key)} />
                     </div>
                     {isExpanded && (
                       <div className="bg-[#fafafa] dark:bg-[#0a0a0a] border-t border-[#f0f0f0] dark:border-[#151515]">
                         {cat.tools.map(tool => {
-                          const toolOn = toolOverrides[tool.key] ?? isOn;
+                          const toolOn = toolOverrides[tool.key] ?? allowedTools.has(tool.key) ?? isOn;
                           return (
                             <div key={tool.key} className="flex items-center gap-3 pl-12 pr-5 py-2.5">
                               <span className="text-[13px] text-[#666] dark:text-[#888] flex-1">{tool.label}</span>
+                              {allowedTools.has(tool.key) && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />}
                               <Toggle on={toolOn} onChange={() => toggleTool(tool.key, isOn)} small />
                             </div>
                           );
@@ -533,6 +545,29 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
                   </div>
                 );
               })}
+              {/* Uncategorized allowed tools */}
+              {uncategorizedTools.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-3 px-5 py-3">
+                    <div className="w-4 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <span className="text-[14px] font-medium">Other</span>
+                      <span className="text-[12px] text-[#888] dark:text-[#888] ml-2">Tools allowed via permissions</span>
+                    </div>
+                    <span className="text-[11px] text-emerald-500 font-medium">{uncategorizedTools.length} active</span>
+                  </div>
+                  <div className="bg-[#fafafa] dark:bg-[#0a0a0a] border-t border-[#f0f0f0] dark:border-[#151515]">
+                    {uncategorizedTools.map(tool => (
+                      <div key={tool} className="flex items-center gap-3 pl-12 pr-5 py-2.5">
+                        <span className="text-[13px] text-[#666] dark:text-[#888] flex-1">{tool}</span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
+                        <button onClick={() => act(0, () => revokePermission(selectedAgent, tool))}
+                          className="text-[11px] text-red-400 hover:text-red-300 transition-colors">Revoke</button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Custom rules */}
