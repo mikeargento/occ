@@ -681,7 +681,7 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
                             <span className="text-[11px] text-[#999] dark:text-[#666]">Tool:</span>
                             <code className="text-[11px] font-mono bg-[#f5f5f5] dark:bg-[#0a0a0a] px-1.5 py-0.5 rounded">{p.tool}</code>
                           </div>
-                          {p.requestArgs && (
+                          {p.requestArgs != null && (
                             <div>
                               <span className="text-[11px] text-[#999] dark:text-[#666]">Arguments:</span>
                               <pre className="mt-1 text-[11px] font-mono bg-[#f5f5f5] dark:bg-[#0a0a0a] rounded-lg p-3 overflow-x-auto max-h-[200px] overflow-y-auto text-[#666] dark:text-[#888]">

@@ -170,6 +170,13 @@ export async function handleMcp(req: IncomingMessage, res: ServerResponse, pathn
     const body = JSON.parse(await readBody(req));
     const rpcMethod = body.method;
 
+    // Built-in OCC tools (shared across tools/list and tools/call)
+    const occTools = [
+      { name: "occ_create_issue", description: "Create a new issue/task in OCC Agent" },
+      { name: "occ_list_proofs", description: "List recent proof log entries" },
+      { name: "occ_get_policy", description: "Get the current active policy" },
+    ];
+
     // Handle MCP JSON-RPC methods
     switch (rpcMethod) {
       case "initialize": {
@@ -206,8 +213,8 @@ export async function handleMcp(req: IncomingMessage, res: ServerResponse, pathn
           inputSchema: { type: "object", properties: {} },
         }));
 
-        // Always include built-in OCC tools
-        const occTools = [
+        // Always include built-in OCC tools (with full schemas for listing)
+        const occToolsFull = [
           {
             name: "occ_create_issue",
             description: "Create a new issue/task in OCC Agent",
@@ -240,7 +247,7 @@ export async function handleMcp(req: IncomingMessage, res: ServerResponse, pathn
         return json(res, {
           jsonrpc: "2.0",
           id: body.id,
-          result: { tools: [...occTools, ...tools] },
+          result: { tools: [...occToolsFull, ...tools] },
         });
       }
 
@@ -274,7 +281,7 @@ export async function handleMcp(req: IncomingMessage, res: ServerResponse, pathn
         if (!authObj) {
           // Look up tool description for human-readable context
           const occTool = occTools.find(t => t.name === toolName);
-          const toolDesc = occTool?.description ?? null;
+          const toolDesc = occTool?.description ?? undefined;
 
           // Create a pending permission request so the user can authorize it
           const permReq = await db.createPermissionRequest(user.id, agentId, toolName, clientName, args, toolDesc);
