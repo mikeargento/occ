@@ -312,6 +312,14 @@ function Dashboard({ userName }: { userName: string }) {
                 <button onClick={() => setEditingName(null)}
                   className="text-[#999] hover:text-[#666] text-sm px-0.5">✕</button>
               </div>
+            ) : confirmDelete === a.id ? (
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-red-400 dark:border-red-500 bg-white dark:bg-[#111] text-sm">
+                <span className="text-red-500 font-medium">Delete &quot;{a.name}&quot;?</span>
+                <button onClick={async () => { await deleteAgent(a.id); setConfirmDelete(null); if (selectedAgent === a.id) setSelectedAgent(agents[0]?.id ?? ""); await refresh(); }}
+                  className="text-red-500 hover:text-red-400 font-bold">Yes</button>
+                <button onClick={() => setConfirmDelete(null)}
+                  className="text-[#999] hover:text-[#666]">No</button>
+              </div>
             ) : (
               <button onClick={() => setSelectedAgent(a.id)}
                 className={`group flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border transition-colors ${
@@ -331,15 +339,6 @@ function Dashboard({ userName }: { userName: string }) {
                   }`}
                   title="Delete">✕</span>
               </button>
-              {confirmDelete === a.id && (
-                <div className="flex items-center gap-1 ml-1 px-2 py-1 rounded-lg border border-red-400 bg-white dark:bg-[#111] text-xs">
-                  <span className="text-red-500">Delete?</span>
-                  <button onClick={async () => { await deleteAgent(a.id); setConfirmDelete(null); if (selectedAgent === a.id) setSelectedAgent(agents[0]?.id ?? ""); await refresh(); }}
-                    className="text-red-500 hover:text-red-400 font-bold px-1">✓</button>
-                  <button onClick={() => setConfirmDelete(null)}
-                    className="text-[#999] hover:text-[#666] px-0.5">✕</button>
-                </div>
-              )}
             )}
           </div>
         ))}
