@@ -94,7 +94,7 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
     const birthProof = await commitPolicyProof(userId, {
       categories: {},
       customRules: [`Agent "${body.name ?? id}" created`],
-    }, birthChainId, await getPrincipal()).catch(() => null);
+    }, birthChainId, await getPrincipal()).catch(e => { console.error("  [occ] Birth proof failed:", e.message); return null; });
 
     const host = req.headers.host ?? "agent.occ.wtf";
     const proto = host.includes("localhost") ? "http" : "https";
@@ -142,7 +142,7 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
       const deathProof = await commitPolicyProof(userId, {
         categories: {},
         customRules: [`Agent "${agentId}" terminated`],
-      }, deathChainId, await getPrincipal()).catch(() => null);
+      }, deathChainId, await getPrincipal()).catch(e => { console.error("  [occ] Death proof failed:", e.message); return null; });
 
       await db.deleteAgent(userId, agentId);
       return json(res, { deleted: true, deathProof: deathProof?.proof ?? null });

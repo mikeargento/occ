@@ -55,7 +55,9 @@ async function teeCommit(digestB64: string, metadata: Record<string, unknown>, p
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ proof }),
-    }).catch(() => {});
+    }).then(r => {
+      if (!r.ok) console.warn("  [occ] Explorer forward failed:", r.status);
+    }).catch(e => console.warn("  [occ] Explorer forward error:", e.message));
 
     return { proof, digestB64: proof?.artifact?.digestB64 ?? digestB64 };
   } catch (err) {
