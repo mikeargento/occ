@@ -78,7 +78,7 @@ const CATEGORIES: { key: string; label: string; desc: string; tools: { key: stri
    ═══════════════════════════════════════════════════════════════ */
 
 export default function App() {
-  const [user, setUser] = useState<{ id: string; name: string; email: string; avatar: string } | null>(null);
+  const [user, setUser] = useState<{ id: string; name: string; email: string; avatar: string; provider?: string } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
