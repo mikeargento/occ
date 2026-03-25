@@ -715,8 +715,8 @@ function Toggle({ on, onChange, small }: { on: boolean; onChange: () => void; sm
   const translate = small ? "translate-x-[14px]" : "translate-x-[20px]";
   return (
     <button onClick={onChange}
-      className={`${w} ${h} transition-colors duration-150 flex items-center px-[2px] flex-shrink-0 ${
-        on ? "bg-blue-500" : "bg-[#bbb]"
+      className={`${w} ${h} transition-colors duration-150 flex items-center px-[2px] flex-shrink-0 border ${
+        on ? "bg-blue-500 border-blue-500" : "bg-[#bbb] border-[#bbb]"
       }`}>
       <div className={`${dot} bg-white transition-transform duration-150 ${on ? translate : "translate-x-0"}`} />
     </button>
