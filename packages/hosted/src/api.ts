@@ -37,7 +37,7 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
   }
 
   if (path === "/status") {
-    return json(res, { ok: true, mode: "hosted", timestamp: Date.now() });
+    return json(res, { ok: true, mode: "hosted", version: "2025-03-25-await-fwd", timestamp: Date.now() });
   }
 
   // Auth-gated endpoints
