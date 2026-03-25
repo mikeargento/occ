@@ -58,7 +58,7 @@ html {
 }
 
 body {
-  background: var(--bg);
+  background: #ffffff;
   color: var(--c-text);
   font-family: var(--font-serif);
   -webkit-font-smoothing: antialiased;
