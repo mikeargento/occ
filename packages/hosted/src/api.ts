@@ -386,6 +386,7 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
     return json(res, { permissions: all.map((r: any) => ({
       id: r.id, agentId: r.agent_id, tool: r.tool, status: r.status,
       clientName: r.client_name || "Unknown",
+      toolDescription: r.tool_description || null,
       requestedAt: new Date(r.requested_at).getTime(),
       resolvedAt: r.resolved_at ? new Date(r.resolved_at).getTime() : null,
       requestArgs: r.request_args,
@@ -398,6 +399,7 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
     const pending = await db.getPendingPermissions(userId);
     return json(res, { requests: pending.map((r: any) => ({
       id: r.id, agentId: r.agent_id, tool: r.tool, clientName: r.client_name,
+      toolDescription: r.tool_description || null,
       requestedAt: new Date(r.requested_at).getTime(), requestArgs: r.request_args,
     }))});
   }

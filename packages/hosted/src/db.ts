@@ -99,6 +99,8 @@ export const db = {
         resolved_at TIMESTAMPTZ
       );
 
+      ALTER TABLE occ_permission_requests ADD COLUMN IF NOT EXISTS tool_description TEXT;
+
       CREATE INDEX IF NOT EXISTS idx_occ_perm_user_status ON occ_permission_requests(user_id, status);
       CREATE INDEX IF NOT EXISTS idx_occ_perm_user_agent_tool ON occ_permission_requests(user_id, agent_id, tool);
 
@@ -306,7 +308,7 @@ export const db = {
 
   // ── Permissions ──
 
-  async createPermissionRequest(userId: string, agentId: string, tool: string, clientName: string, args?: unknown) {
+  async createPermissionRequest(userId: string, agentId: string, tool: string, clientName: string, args?: unknown, toolDescription?: string) {
     const p = getPool();
     // Dedup: don't create another pending request for the same tool
     const existing = await p.query(
@@ -315,9 +317,9 @@ export const db = {
     );
     if (existing.rows.length > 0) return existing.rows[0];
     const res = await p.query(
-      `INSERT INTO occ_permission_requests (user_id, agent_id, tool, client_name, request_args)
-       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [userId, agentId, tool, clientName, JSON.stringify(args)]
+      `INSERT INTO occ_permission_requests (user_id, agent_id, tool, client_name, request_args, tool_description)
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+      [userId, agentId, tool, clientName, JSON.stringify(args), toolDescription || null]
     );
     return res.rows[0];
   },

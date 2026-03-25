@@ -10,6 +10,10 @@ function explorerUrl(digest: string): string {
   return `https://occ.wtf/explorer/${safe}`;
 }
 
+function humanizeToolName(raw: string): string {
+  return raw.replace(/[_-]/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+}
+
 function timeLabel(ts: number | string | null): string {
   if (!ts) return "";
   const d = new Date(ts);
@@ -187,6 +191,8 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
   const [lastCommitDigest, setLastCommitDigest] = useState<string | null>(null);
   const [committing, setCommitting] = useState(false);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [expandedRequests, setExpandedRequests] = useState<Set<number>>(new Set());
+  const [showConnect, setShowConnect] = useState(false);
   // Per-tool overrides within categories
   const [toolOverrides, setToolOverrides] = useState<Record<string, boolean>>({});
   const [committedToolOverrides, setCommittedToolOverrides] = useState<Record<string, boolean>>({});
@@ -447,50 +453,19 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
         <div className="lg:w-[400px] flex-shrink-0">
           <div className="bg-white dark:bg-[#111] rounded-2xl border border-[#ddd] dark:border-[#1a1a1a] overflow-hidden">
 
-            {/* Connect link */}
-            <div className="px-5 py-3.5 border-b border-[#f0f0f0] dark:border-[#1a1a1a]">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex gap-1">
-                  {(["url", "terminal", "json"] as const).map(t => (
-                    <button key={t} onClick={() => setConnectTab(t)}
-                      className={`px-2.5 py-0.5 text-[11px] font-medium rounded-md transition-colors ${
-                        connectTab === t
-                          ? "bg-[#f0f0f0] dark:bg-[#1a1a1a] text-[#111] dark:text-[#e5e5e5]"
-                          : "text-[#888] dark:text-[#888] hover:text-[#888]"
-                      }`}>
-                      {t === "url" ? "URL" : t === "terminal" ? "Terminal" : "JSON"}
-                    </button>
-                  ))}
-                </div>
-                <button onClick={() => {
-                  const text = connectTab === "url" ? mcpUrl
-                    : connectTab === "terminal" ? `claude mcp add occ --transport http ${mcpUrl}`
-                    : JSON.stringify({ mcpServers: { occ: { url: mcpUrl } } }, null, 2);
-                  navigator.clipboard.writeText(text);
-                  setCopied(true);
-                  setTimeout(() => setCopied(false), 2000);
-                }}
-                  className="h-7 px-3 text-[11px] font-semibold rounded-md bg-[#111] dark:bg-white text-white dark:text-[#111] hover:bg-[#333] dark:hover:bg-[#ddd] transition-all active:scale-[0.97]">
-                  {copied ? "✓" : "Copy"}
+            {/* Header + commit button + connect toggle */}
+            <div className="px-5 py-4 flex items-center justify-between border-b border-[#f0f0f0] dark:border-[#1a1a1a]">
+              <div className="flex items-center gap-3">
+                <h2 className="text-[16px] font-bold">Rules</h2>
+                <button onClick={() => setShowConnect(prev => !prev)}
+                  className={`text-[11px] font-medium px-2 py-0.5 rounded-md transition-colors ${
+                    showConnect
+                      ? "bg-[#f0f0f0] dark:bg-[#1a1a1a] text-[#111] dark:text-[#e5e5e5]"
+                      : "text-[#999] dark:text-[#666] hover:text-[#666] dark:hover:text-[#999]"
+                  }`}>
+                  Connect
                 </button>
               </div>
-              <div className="h-8 flex items-center px-3 rounded-lg bg-[#f7f7f7] dark:bg-[#0a0a0a] border border-[#ddd] dark:border-[#151515] overflow-hidden">
-                <code className="text-[11px] font-mono text-[#999] dark:text-[#888] truncate">
-                  {connectTab === "url" && mcpUrl}
-                  {connectTab === "terminal" && `claude mcp add occ --transport http ${mcpUrl}`}
-                  {connectTab === "json" && `{ "mcpServers": { "occ": { "url": "${mcpUrl}" } } }`}
-                </code>
-              </div>
-              <p className="text-[10px] text-[#999] dark:text-[#666] mt-1.5">
-                {connectTab === "url" && "Paste into your AI's MCP settings"}
-                {connectTab === "terminal" && "Run in your terminal"}
-                {connectTab === "json" && "Add to your MCP config file"}
-              </p>
-            </div>
-
-            {/* Header + commit button */}
-            <div className="px-5 py-4 flex items-center justify-between border-b border-[#f0f0f0] dark:border-[#1a1a1a]">
-              <h2 className="text-[16px] font-bold">Rules</h2>
               <button onClick={handleCommit} disabled={!isDirty || committing}
                 className={`h-8 px-4 text-[12px] font-semibold rounded-lg transition-all active:scale-[0.97] flex items-center gap-2 ${
                   isDirty
@@ -501,6 +476,49 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
                 {committing ? "Signing..." : isDirty ? "Commit to chain" : "Rules saved"}
               </button>
             </div>
+
+            {/* Connect link — collapsible */}
+            {showConnect && (
+              <div className="px-5 py-3.5 border-b border-[#f0f0f0] dark:border-[#1a1a1a]">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex gap-1">
+                    {(["url", "terminal", "json"] as const).map(t => (
+                      <button key={t} onClick={() => setConnectTab(t)}
+                        className={`px-2.5 py-0.5 text-[11px] font-medium rounded-md transition-colors ${
+                          connectTab === t
+                            ? "bg-[#f0f0f0] dark:bg-[#1a1a1a] text-[#111] dark:text-[#e5e5e5]"
+                            : "text-[#888] dark:text-[#888] hover:text-[#888]"
+                        }`}>
+                        {t === "url" ? "URL" : t === "terminal" ? "Terminal" : "JSON"}
+                      </button>
+                    ))}
+                  </div>
+                  <button onClick={() => {
+                    const text = connectTab === "url" ? mcpUrl
+                      : connectTab === "terminal" ? `claude mcp add occ --transport http ${mcpUrl}`
+                      : JSON.stringify({ mcpServers: { occ: { url: mcpUrl } } }, null, 2);
+                    navigator.clipboard.writeText(text);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                    className="h-7 px-3 text-[11px] font-semibold rounded-md bg-[#111] dark:bg-white text-white dark:text-[#111] hover:bg-[#333] dark:hover:bg-[#ddd] transition-all active:scale-[0.97]">
+                    {copied ? "✓" : "Copy"}
+                  </button>
+                </div>
+                <div className="h-8 flex items-center px-3 rounded-lg bg-[#f7f7f7] dark:bg-[#0a0a0a] border border-[#ddd] dark:border-[#151515] overflow-hidden">
+                  <code className="text-[11px] font-mono text-[#999] dark:text-[#888] truncate">
+                    {connectTab === "url" && mcpUrl}
+                    {connectTab === "terminal" && `claude mcp add occ --transport http ${mcpUrl}`}
+                    {connectTab === "json" && `{ "mcpServers": { "occ": { "url": "${mcpUrl}" } } }`}
+                  </code>
+                </div>
+                <p className="text-[10px] text-[#999] dark:text-[#666] mt-1.5">
+                  {connectTab === "url" && "Paste into your AI's MCP settings"}
+                  {connectTab === "terminal" && "Run in your terminal"}
+                  {connectTab === "json" && "Add to your MCP config file"}
+                </p>
+              </div>
+            )}
 
             {/* Categories */}
             <div className="divide-y divide-[#f5f5f5] dark:divide-[#151515]">
@@ -626,26 +644,64 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
                 </h2>
               </div>
               <div className="divide-y divide-amber-100/50 dark:divide-amber-500/5">
-                {pending.map(p => (
-                  <div key={p.id} className="flex items-center gap-3 px-5 py-3">
-                    <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <span className="text-[14px] font-medium">{p.tool}</span>
-                      <span className="text-[12px] text-[#999] dark:text-[#777] ml-2">{p.clientName}</span>
+                {pending.map(p => {
+                  const isOpen = expandedRequests.has(p.id);
+                  const displayName = p.toolDescription || humanizeToolName(p.tool);
+                  return (
+                    <div key={p.id} className="px-5 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <span className="text-[14px] font-medium">{displayName}</span>
+                          <span className="text-[12px] text-[#999] dark:text-[#777] ml-2">{p.clientName}</span>
+                        </div>
+                        <button onClick={() => setExpandedRequests(prev => {
+                          const next = new Set(prev);
+                          isOpen ? next.delete(p.id) : next.add(p.id);
+                          return next;
+                        })}
+                          className="text-[11px] text-[#999] dark:text-[#666] hover:text-[#666] dark:hover:text-[#999] transition-colors flex-shrink-0">
+                          {isOpen ? "Hide" : "Details"}
+                        </button>
+                        <div className="flex gap-2 flex-shrink-0">
+                          <button onClick={() => act(p.id, () => approvePermission(p.id))} disabled={busy === p.id}
+                            className="h-7 px-3 text-[12px] font-semibold rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-40 transition-all active:scale-[0.97] flex items-center gap-1.5">
+                            {busy === p.id && <Spinner size={10} color="white" />}
+                            Allow
+                          </button>
+                          <button onClick={() => act(p.id, () => denyPermission(p.id))} disabled={busy === p.id}
+                            className="h-7 px-3 text-[12px] font-medium rounded-lg text-[#999] dark:text-[#888] hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] disabled:opacity-40 transition-all">
+                            Block
+                          </button>
+                        </div>
+                      </div>
+                      {isOpen && (
+                        <div className="mt-3 ml-5 pl-3 border-l-2 border-amber-200/30 dark:border-amber-500/10 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[11px] text-[#999] dark:text-[#666]">Tool:</span>
+                            <code className="text-[11px] font-mono bg-[#f5f5f5] dark:bg-[#0a0a0a] px-1.5 py-0.5 rounded">{p.tool}</code>
+                          </div>
+                          {p.requestArgs && (
+                            <div>
+                              <span className="text-[11px] text-[#999] dark:text-[#666]">Arguments:</span>
+                              <pre className="mt-1 text-[11px] font-mono bg-[#f5f5f5] dark:bg-[#0a0a0a] rounded-lg p-3 overflow-x-auto max-h-[200px] overflow-y-auto text-[#666] dark:text-[#888]">
+                                {JSON.stringify(p.requestArgs, null, 2)}
+                              </pre>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-2">
+                            <span className="text-[11px] text-[#999] dark:text-[#666]">Client:</span>
+                            <span className="text-[11px]">{p.clientName}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[11px] text-[#999] dark:text-[#666]">Requested:</span>
+                            <span className="text-[11px]">{new Date(p.requestedAt).toLocaleString()}</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <div className="flex gap-2 flex-shrink-0">
-                      <button onClick={() => act(p.id, () => approvePermission(p.id))} disabled={busy === p.id}
-                        className="h-7 px-3 text-[12px] font-semibold rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-40 transition-all active:scale-[0.97] flex items-center gap-1.5">
-                        {busy === p.id && <Spinner size={10} color="white" />}
-                        Allow
-                      </button>
-                      <button onClick={() => act(p.id, () => denyPermission(p.id))} disabled={busy === p.id}
-                        className="h-7 px-3 text-[12px] font-medium rounded-lg text-[#999] dark:text-[#888] hover:bg-[#f5f5f5] dark:hover:bg-[#1a1a1a] disabled:opacity-40 transition-all">
-                        Block
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -692,7 +748,7 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
       {/* Footer */}
       <div className="mt-12 pb-8 text-center">
         <p className="text-[11px] text-[#aaa] dark:text-[#2a2a2a]">
-          Every action is signed through a Trusted Execution Environment · <a href="https://occ.wtf" target="_self" className="hover:text-[#999] dark:hover:text-[#555] transition-colors">occ.wtf</a>
+          Every action is created through a Trusted Execution Environment · <a href="https://occ.wtf" target="_self" className="hover:text-[#999] dark:hover:text-[#555] transition-colors">occ.wtf</a>
         </p>
       </div>
     </div>

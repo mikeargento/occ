@@ -272,8 +272,12 @@ export async function handleMcp(req: IncomingMessage, res: ServerResponse, pathn
 
         // 3. No authorization object → execution path does not exist
         if (!authObj) {
+          // Look up tool description for human-readable context
+          const occTool = occTools.find(t => t.name === toolName);
+          const toolDesc = occTool?.description ?? null;
+
           // Create a pending permission request so the user can authorize it
-          const permReq = await db.createPermissionRequest(user.id, agentId, toolName, clientName, args);
+          const permReq = await db.createPermissionRequest(user.id, agentId, toolName, clientName, args, toolDesc);
           await db.incrementAgentCalls(user.id, agentId, false);
 
           eventBus.emit(user.id, {
