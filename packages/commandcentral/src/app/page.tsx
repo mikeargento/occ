@@ -130,7 +130,7 @@ function PendingRow({
         )}
       </div>
       <span className="text-xs text-[var(--text-tertiary)] shrink-0">
-        {request.agentId.slice(0, 8)}
+        {(request.agentId ?? "").slice(0, 12)}
       </span>
       <span className="text-xs text-[var(--text-tertiary)] shrink-0 w-14 text-right">
         {timeAgo(request.createdAt)}
@@ -175,7 +175,7 @@ function ActivityRow({ item }: { item: V2ActivityItem }) {
         {item.tool}
       </span>
       <span className="text-xs text-[var(--text-tertiary)] shrink-0">
-        {item.agentId.slice(0, 8)}
+        {(item.agentId ?? "").slice(0, 12)}
       </span>
       <span className="text-xs text-[var(--text-tertiary)] shrink-0 w-14 text-right">
         {timeAgo(item.createdAt)}

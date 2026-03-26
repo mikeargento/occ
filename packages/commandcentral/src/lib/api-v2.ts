@@ -38,63 +38,83 @@ async function fetchJSON<T>(url: string, init?: RequestInit): Promise<T> {
 
 // --- Overview ---
 
-export function v2GetOverview(): Promise<V2Overview> {
-  return fetchJSON("/api/v2/overview");
+export async function v2GetOverview(): Promise<V2Overview> {
+  const data = await fetchJSON<any>("/api/v2/overview");
+  return {
+    pending: data.pending ?? 0,
+    todayApproved: data.todayApproved ?? 0,
+    todayDenied: data.todayDenied ?? 0,
+    todayTotal: data.todayTotal ?? 0,
+    activeRuns: data.activeRuns ?? 0,
+    recentActivity: Array.isArray(data.recentActivity) ? data.recentActivity.map((r: any) => ({
+      id: r.id,
+      tool: r.tool,
+      status: r.status,
+      agentId: r.agent_id ?? r.agentId ?? "",
+      riskLane: r.risk_lane ?? r.riskLane ?? "unknown",
+      summary: r.summary,
+      createdAt: r.created_at ?? r.createdAt ?? new Date().toISOString(),
+    })) : [],
+  };
 }
 
 // --- Requests ---
 
-export function v2GetRequests(filters?: V2RequestFilters): Promise<V2Request[]> {
+export async function v2GetRequests(filters?: V2RequestFilters): Promise<V2Request[]> {
   const query = filters
     ? qs({
         status: filters.status,
-        riskLane: filters.riskLane,
-        agentId: filters.agentId,
+        risk_lane: filters.riskLane,
+        agent_id: filters.agentId,
         limit: filters.limit,
         offset: filters.offset,
       })
     : "";
-  return fetchJSON(`/api/v2/requests${query}`);
+  const data = await fetchJSON<any>(`/api/v2/requests${query}`);
+  return Array.isArray(data.requests) ? data.requests : Array.isArray(data) ? data : [];
 }
 
-export function v2GetPendingRequests(): Promise<V2Request[]> {
-  return fetchJSON("/api/v2/requests/pending");
+export async function v2GetPendingRequests(): Promise<V2Request[]> {
+  const data = await fetchJSON<any>("/api/v2/requests/pending");
+  return Array.isArray(data.requests) ? data.requests : Array.isArray(data) ? data : [];
 }
 
-export function v2GetRequestStats(): Promise<V2RequestStats> {
-  return fetchJSON("/api/v2/requests/stats");
+export async function v2GetRequestStats(): Promise<V2RequestStats> {
+  const data = await fetchJSON<any>("/api/v2/requests/stats");
+  return data.stats ?? data ?? [];
 }
 
-export function v2GetRequest(id: number): Promise<V2RequestDetail> {
-  return fetchJSON(`/api/v2/requests/${id}`);
+export async function v2GetRequest(id: number): Promise<V2RequestDetail> {
+  const data = await fetchJSON<any>(`/api/v2/requests/${id}`);
+  return data.request ?? data;
 }
 
-export function v2ApproveRequest(
+export async function v2ApproveRequest(
   id: number,
-  mode: string = "manual"
-): Promise<{ ok: boolean }> {
+  mode: string = "once"
+): Promise<any> {
   return fetchJSON(`/api/v2/requests/${id}/approve`, {
     method: "POST",
     body: JSON.stringify({ mode }),
   });
 }
 
-export function v2DenyRequest(
+export async function v2DenyRequest(
   id: number,
-  mode: string = "manual",
+  mode: string = "once",
   reason?: string
-): Promise<{ ok: boolean }> {
+): Promise<any> {
   return fetchJSON(`/api/v2/requests/${id}/deny`, {
     method: "POST",
     body: JSON.stringify({ mode, reason }),
   });
 }
 
-export function v2BulkAction(
+export async function v2BulkAction(
   ids: number[],
   action: "approve" | "deny",
-  mode: string = "manual"
-): Promise<{ ok: boolean; count: number }> {
+  mode: string = "once"
+): Promise<any> {
   return fetchJSON("/api/v2/requests/bulk", {
     method: "POST",
     body: JSON.stringify({ ids, action, mode }),
@@ -103,47 +123,54 @@ export function v2BulkAction(
 
 // --- Runs ---
 
-export function v2GetRuns(filters?: V2RunFilters): Promise<V2Run[]> {
+export async function v2GetRuns(filters?: V2RunFilters): Promise<V2Run[]> {
   const query = filters
     ? qs({
-        agentId: filters.agentId,
+        agent_id: filters.agentId,
         status: filters.status,
         limit: filters.limit,
         offset: filters.offset,
       })
     : "";
-  return fetchJSON(`/api/v2/runs${query}`);
+  const data = await fetchJSON<any>(`/api/v2/runs${query}`);
+  return Array.isArray(data.runs) ? data.runs : Array.isArray(data) ? data : [];
 }
 
-export function v2GetRun(id: number): Promise<V2RunDetail> {
-  return fetchJSON(`/api/v2/runs/${id}`);
+export async function v2GetRun(id: number): Promise<V2RunDetail> {
+  const data = await fetchJSON<any>(`/api/v2/runs/${id}`);
+  return data.run ?? data;
 }
 
 // --- Proofs ---
 
-export function v2GetProofs(filters?: V2ProofFilters): Promise<V2Proof[]> {
+export async function v2GetProofs(filters?: V2ProofFilters): Promise<{ proofs: V2Proof[]; total: number }> {
   const query = filters
     ? qs({
-        agentId: filters.agentId,
+        agent_id: filters.agentId,
         tool: filters.tool,
-        allowed: filters.allowed,
+        digest: filters.digest,
         limit: filters.limit,
         offset: filters.offset,
       })
     : "";
-  return fetchJSON(`/api/v2/proofs${query}`);
+  const data = await fetchJSON<any>(`/api/v2/proofs${query}`);
+  return {
+    proofs: Array.isArray(data.proofs) ? data.proofs : [],
+    total: data.total ?? 0,
+  };
 }
 
 // --- Policy / Risk Lanes ---
 
-export function v2GetRiskLanes(): Promise<V2RiskLane[]> {
-  return fetchJSON("/api/v2/policy/lanes");
+export async function v2GetRiskLanes(): Promise<V2RiskLane[]> {
+  const data = await fetchJSON<any>("/api/v2/policy/lanes");
+  return Array.isArray(data.lanes) ? data.lanes : Array.isArray(data) ? data : [];
 }
 
-export function v2SetRiskLane(
+export async function v2SetRiskLane(
   lane: RiskLane,
   mode: LaneMode
-): Promise<{ ok: boolean }> {
+): Promise<any> {
   return fetchJSON(`/api/v2/policy/lanes/${lane}`, {
     method: "PUT",
     body: JSON.stringify({ mode }),
@@ -152,6 +179,6 @@ export function v2SetRiskLane(
 
 // --- Seed ---
 
-export function v2SeedDemo(): Promise<{ ok: boolean; message: string }> {
+export async function v2SeedDemo(): Promise<any> {
   return fetchJSON("/api/v2/seed", { method: "POST" });
 }

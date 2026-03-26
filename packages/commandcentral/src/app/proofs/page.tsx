@@ -181,7 +181,7 @@ export default function ProofsPage() {
         }),
       ]);
       setOverview(ov);
-      setProofs(p);
+      setProofs(p.proofs ?? []);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load");

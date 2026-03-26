@@ -136,6 +136,7 @@ export interface V2RunFilters {
 export interface V2ProofFilters {
   agentId?: string;
   tool?: string;
+  digest?: string;
   allowed?: boolean;
   limit?: number;
   offset?: number;
