@@ -476,21 +476,23 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
                 const activeToolsInCat = cat.tools.filter(t => allowedTools.has(t.key)).length;
                 return (
                   <div key={cat.key}>
-                    <div className="flex items-center gap-3 px-5 py-3 hover:bg-[#efefef] transition-colors">
-                      <button onClick={() => setExpanded(isExpanded ? null : cat.key)}
-                        className="text-[#666666] w-4 flex-shrink-0 transition-transform"
-                        style={{ transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)" }}>
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-                      </button>
-                      <div className="flex-1 min-w-0">
-                        <span className="text-[14px] font-medium">{cat.label}</span>
-                        <span className="text-[12px] text-[#333333] ml-2">{cat.desc}</span>
-                        {!isOn && activeToolsInCat > 0 && (
-                          <span className="ml-2 inline-flex items-center gap-1 text-[10px] text-blue-500">
-                            <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-                            {activeToolsInCat} active
-                          </span>
-                        )}
+                    <div className="flex items-center gap-3 px-5 py-3 hover:bg-[#f5f5f5] transition-colors">
+                      <div className="flex-1 min-w-0 flex items-center gap-3 cursor-pointer" onClick={() => setExpanded(isExpanded ? null : cat.key)}>
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                          className="text-[#999] flex-shrink-0 transition-transform duration-200"
+                          style={{ transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)" }}>
+                          <path d="M6 4l4 4-4 4" />
+                        </svg>
+                        <div className="flex-1 min-w-0">
+                          <span className="text-[14px] font-medium">{cat.label}</span>
+                          <span className="text-[12px] text-[#666] ml-2">{cat.desc}</span>
+                          {!isOn && activeToolsInCat > 0 && (
+                            <span className="ml-2 inline-flex items-center gap-1 text-[10px] text-blue-500">
+                              <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                              {activeToolsInCat} active
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <Toggle on={isOn} onChange={() => toggleCategory(cat.key)} />
                     </div>
