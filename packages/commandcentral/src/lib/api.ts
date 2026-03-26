@@ -59,7 +59,21 @@ export async function deleteApiKey(): Promise<{ ok: boolean }> {
   return api("/settings/api-key", { method: "DELETE" });
 }
 
+// User's proofs (TEE proof log)
+export async function getProofs(): Promise<{ entries: ProofEntry[] }> {
+  return api("/audit?limit=100");
+}
+
 // Types
+export interface ProofEntry {
+  id: string;
+  agentId: string;
+  tool: string;
+  decision: { allowed: boolean; reason?: string };
+  proofDigestB64: string | null;
+  timestamp: number;
+}
+
 export interface FeedItem {
   id: number;
   agentId: string;

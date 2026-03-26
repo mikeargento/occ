@@ -1,41 +1,32 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { getMe, getFeed, approve, deny, type FeedItem } from "@/lib/api";
+import { getMe, getFeed, getProofs, approve, deny, type FeedItem, type ProofEntry } from "@/lib/api";
 
 /* ═══════════════════════════════════════════
    Helpers
    ═══════════════════════════════════════════ */
 
-function timeAgo(iso: string): string {
-  const ms = Date.now() - new Date(iso).getTime();
+function timeAgo(ts: string | number): string {
+  const ms = Date.now() - (typeof ts === "number" ? ts : new Date(ts).getTime());
   if (ms < 60_000) return "now";
   if (ms < 3_600_000) return `${Math.floor(ms / 60_000)}m`;
   if (ms < 86_400_000) return `${Math.floor(ms / 3_600_000)}h`;
   return `${Math.floor(ms / 86_400_000)}d`;
 }
 
-function fullTime(iso: string): string {
-  return new Date(iso).toLocaleString(undefined, {
-    month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
-  });
+function fullTime(ts: string | number): string {
+  const d = typeof ts === "number" ? new Date(ts) : new Date(ts);
+  return d.toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 }
 
 function toolName(raw: string): string {
   return raw.replace(/[_-]/g, " ").replace(/\b\w/g, c => c.toUpperCase());
 }
 
-function statusDot(s: string): string {
-  if (s === "pending") return "bg-amber-400";
-  if (s === "approved" || s === "auto_approved") return "bg-emerald-400";
-  if (s === "denied" || s === "expired") return "bg-red-400";
-  return "bg-neutral-300";
-}
-
-function statusText(s: string): string {
-  if (s === "auto_approved") return "Auto-approved";
-  if (s === "expired") return "Expired";
-  return s.charAt(0).toUpperCase() + s.slice(1);
+function truncHash(h: string | null, len = 16): string {
+  if (!h) return "—";
+  return h.length > len ? h.slice(0, len) + "..." : h;
 }
 
 /* ═══════════════════════════════════════════
@@ -56,7 +47,7 @@ export default function App() {
     </div>
   );
   if (!user) return <Login />;
-  return <Feed user={user} />;
+  return <Dashboard user={user} />;
 }
 
 /* ═══════════════════════════════════════════
@@ -90,19 +81,21 @@ function AuthBtn({ provider, label, icon }: { provider: string; label: string; i
 }
 
 /* ═══════════════════════════════════════════
-   Feed — the entire product
+   Dashboard — pending + proof feed
    ═══════════════════════════════════════════ */
 
-function Feed({ user }: { user: { id: string; name: string; email: string; avatar: string } }) {
-  const [items, setItems] = useState<FeedItem[]>([]);
+function Dashboard({ user }: { user: { id: string; name: string; email: string; avatar: string } }) {
+  const [feed, setFeed] = useState<FeedItem[]>([]);
+  const [proofs, setProofs] = useState<ProofEntry[]>([]);
   const [acting, setActing] = useState<number | null>(null);
   const [dismissed, setDismissed] = useState<Set<number>>(new Set());
-  const [expanded, setExpanded] = useState<number | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     try {
-      const data = await getFeed();
-      setItems(data.requests ?? []);
+      const [f, p] = await Promise.all([getFeed(), getProofs()]);
+      setFeed(f.requests ?? []);
+      setProofs(p.entries ?? []);
     } catch {}
   }, []);
 
@@ -117,7 +110,7 @@ function Feed({ user }: { user: { id: string; name: string; email: string; avata
     try {
       await approve(id, mode);
       setDismissed(prev => new Set(prev).add(id));
-      setTimeout(() => refresh(), 300);
+      setTimeout(() => refresh(), 400);
     } finally { setActing(null); }
   }
 
@@ -126,18 +119,17 @@ function Feed({ user }: { user: { id: string; name: string; email: string; avata
     try {
       await deny(id, "once");
       setDismissed(prev => new Set(prev).add(id));
-      setTimeout(() => refresh(), 300);
+      setTimeout(() => refresh(), 400);
     } finally { setActing(null); }
   }
 
-  const pending = items.filter(i => i.status === "pending");
-  const resolved = items.filter(i => i.status !== "pending");
+  const pending = feed.filter(i => i.status === "pending");
 
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="sticky top-0 z-20 h-12 bg-white/90 backdrop-blur-lg border-b border-neutral-100">
-        <div className="max-w-xl mx-auto flex items-center justify-between h-full px-4">
+        <div className="max-w-2xl mx-auto flex items-center justify-between h-full px-4">
           <span className="text-[15px] font-black tracking-[-0.03em] text-black">OCC</span>
           <div className="flex items-center gap-2.5">
             {pending.length > 0 && (
@@ -160,23 +152,24 @@ function Feed({ user }: { user: { id: string; name: string; email: string; avata
         </div>
       </header>
 
-      <main className="max-w-xl mx-auto px-4 py-5">
+      <main className="max-w-2xl mx-auto px-4 py-5">
 
         {/* ── Pending ── */}
         {pending.length > 0 && (
           <section className="mb-8">
-            <SectionLabel>Waiting for you</SectionLabel>
+            <h2 className="text-[11px] font-semibold text-neutral-400 uppercase tracking-[0.08em] mb-3">
+              Waiting for you
+            </h2>
             <div className="space-y-2">
               {pending.map(item => (
                 <div key={item.id}
-                  className={`bg-white border border-neutral-200 p-4 transition-all ${dismissed.has(item.id) ? "opacity-0 -translate-y-1 h-0 p-0 overflow-hidden" : ""}`}>
+                  className={`bg-white border border-neutral-200 p-4 transition-all duration-300 ${dismissed.has(item.id) ? "opacity-0 scale-95 h-0 p-0 m-0 overflow-hidden" : ""}`}>
                   <p className="text-[14px] font-medium text-black leading-snug">
                     {item.summary || toolName(item.tool)}
                   </p>
                   <p className="text-[12px] font-mono text-neutral-400 mt-1">{item.tool}</p>
 
-                  {/* Args preview */}
-                  {typeof item.args === "object" && item.args !== null && Object.keys(item.args as Record<string,unknown>).length > 0 && (
+                  {typeof item.args === "object" && item.args !== null && Object.keys(item.args as Record<string, unknown>).length > 0 && (
                     <div className="mt-3 bg-neutral-50 border border-neutral-100 p-3">
                       {Object.entries(item.args as Record<string, unknown>).slice(0, 4).map(([k, v]) => (
                         <div key={k} className="flex gap-2 text-[12px] leading-relaxed">
@@ -208,50 +201,113 @@ function Feed({ user }: { user: { id: string; name: string; email: string; avata
           </section>
         )}
 
-        {/* ── History ── */}
-        {resolved.length > 0 && (
+        {/* ── Proofs — exact explorer style ── */}
+        {proofs.length > 0 && (
           <section>
-            <SectionLabel>Proofs</SectionLabel>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-[11px] font-semibold text-neutral-400 uppercase tracking-[0.08em]">
+                Your Proofs
+              </h2>
+              <span className="text-[11px] text-neutral-300">{proofs.length}</span>
+            </div>
             <div className="border border-neutral-200 divide-y divide-neutral-100">
-              {resolved.map(item => {
-                const isOpen = expanded === item.id;
+              {proofs.map(p => {
+                const key = p.id;
+                const isOpen = expanded === key;
+                const allowed = p.decision.allowed;
                 return (
-                  <div key={item.id}>
-                    {/* Row */}
-                    <button onClick={() => setExpanded(isOpen ? null : item.id)}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-neutral-50 transition-colors">
-                      <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusDot(item.status)}`} />
-                      <span className="flex-1 text-[13px] text-black truncate">
-                        {item.summary || toolName(item.tool)}
-                      </span>
-                      <span className="text-[11px] text-neutral-400 flex-shrink-0">{statusText(item.status)}</span>
-                      <span className="text-[11px] text-neutral-300 flex-shrink-0 w-6 text-right tabular-nums">{timeAgo(item.createdAt)}</span>
-                      <svg className={`w-3.5 h-3.5 text-neutral-300 flex-shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`}
-                        viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="m6 9 6 6 6-6"/>
+                  <div key={key}>
+                    {/* Collapsed row — explorer style */}
+                    <button
+                      onClick={() => setExpanded(isOpen ? null : key)}
+                      className="w-full flex items-center px-4 py-3 text-left hover:bg-neutral-50 transition-colors"
+                    >
+                      {/* Chevron */}
+                      <svg
+                        width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5"
+                        className={`shrink-0 mr-3 text-neutral-400 transition-transform duration-150 ${isOpen ? "rotate-90" : ""}`}
+                      >
+                        <path d="M3 1.5L7 5L3 8.5" />
                       </svg>
+
+                      {/* Digest */}
+                      <code className="text-[12px] font-mono text-black truncate min-w-0 flex-1">
+                        {p.proofDigestB64 || `#${p.id}`}
+                      </code>
+
+                      {/* Decision dot + label */}
+                      <span className={`text-[10px] font-medium shrink-0 ml-3 ${allowed ? "text-emerald-600" : "text-red-500"}`}>
+                        {allowed ? "Allowed" : "Denied"}
+                      </span>
+
+                      {/* Tool name */}
+                      <span className="text-[11px] text-neutral-400 shrink-0 ml-3 hidden sm:inline">
+                        {toolName(p.tool)}
+                      </span>
+
+                      {/* Time */}
+                      <span className="text-[11px] text-neutral-300 shrink-0 ml-3 w-8 text-right tabular-nums">
+                        {timeAgo(p.timestamp)}
+                      </span>
                     </button>
 
-                    {/* Expanded detail */}
+                    {/* Expanded detail — explorer style */}
                     {isOpen && (
-                      <div className="px-4 pb-4 bg-neutral-50 border-t border-neutral-100 animate-in">
-                        <div className="grid grid-cols-2 gap-x-6 gap-y-3 py-4">
-                          <Field label="Tool" value={item.tool} mono />
-                          <Field label="Decision" value={statusText(item.status)} />
-                          <Field label="Time" value={fullTime(item.createdAt)} />
-                          <Field label="Source" value={item.originClient || "Claude Code"} />
-                          {item.riskLane && <Field label="Category" value={item.riskLane} />}
-                          {item.label && <Field label="Label" value={item.label} />}
-                        </div>
+                      <div className="px-4 pb-4 pt-1 bg-neutral-50 border-t border-neutral-100">
+                        <div className="space-y-3">
+                          {/* Digest full */}
+                          {p.proofDigestB64 && (
+                            <div>
+                              <div className="text-[10px] text-neutral-400 uppercase tracking-wider mb-1">SHA-256 Digest</div>
+                              <code className="text-[11px] font-mono text-black break-all">{p.proofDigestB64}</code>
+                            </div>
+                          )}
 
-                        {/* Args */}
-                        {typeof item.args === "object" && item.args !== null && Object.keys(item.args as Record<string,unknown>).length > 0 && (
-                          <div className="mt-2">
-                            <p className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider mb-2">Arguments</p>
-                            <pre className="text-[11px] font-mono text-neutral-600 bg-white border border-neutral-100 p-3 overflow-auto max-h-40">
-{JSON.stringify(item.args, null, 2)}</pre>
+                          {/* Key fields grid */}
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2 text-[12px]">
+                            <div>
+                              <div className="text-[10px] text-neutral-400 uppercase tracking-wider">Tool</div>
+                              <code className="font-mono text-black">{p.tool}</code>
+                            </div>
+                            <div>
+                              <div className="text-[10px] text-neutral-400 uppercase tracking-wider">Decision</div>
+                              <span className={`font-medium ${allowed ? "text-emerald-600" : "text-red-500"}`}>
+                                {allowed ? "Allowed" : "Denied"}
+                              </span>
+                            </div>
+                            <div>
+                              <div className="text-[10px] text-neutral-400 uppercase tracking-wider">Time</div>
+                              <span className="text-black">{fullTime(p.timestamp)}</span>
+                            </div>
+                            {p.agentId && (
+                              <div>
+                                <div className="text-[10px] text-neutral-400 uppercase tracking-wider">Agent</div>
+                                <span className="text-black">{p.agentId}</span>
+                              </div>
+                            )}
+                            {p.decision.reason && (
+                              <div className="col-span-2">
+                                <div className="text-[10px] text-neutral-400 uppercase tracking-wider">Reason</div>
+                                <span className="text-black">{p.decision.reason}</span>
+                              </div>
+                            )}
                           </div>
-                        )}
+
+                          {/* Link to global explorer */}
+                          {p.proofDigestB64 && (
+                            <a
+                              href={`https://occ.wtf/explorer?digest=${encodeURIComponent(p.proofDigestB64)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 text-[11px] text-blue-600 hover:text-blue-500 transition-colors mt-1"
+                            >
+                              View in Explorer
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M5 12h14M12 5l7 7-7 7" />
+                              </svg>
+                            </a>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -262,7 +318,7 @@ function Feed({ user }: { user: { id: string; name: string; email: string; avata
         )}
 
         {/* ── Empty ── */}
-        {items.length === 0 && (
+        {pending.length === 0 && proofs.length === 0 && (
           <div className="text-center py-24">
             <h2 className="text-[16px] font-semibold text-black mb-2">No activity yet</h2>
             <p className="text-[13px] text-neutral-400 max-w-[260px] mx-auto leading-relaxed mb-6">
@@ -274,26 +330,6 @@ function Feed({ user }: { user: { id: string; name: string; email: string; avata
           </div>
         )}
       </main>
-    </div>
-  );
-}
-
-/* ═══════════════════════════════════════════
-   Primitives
-   ═══════════════════════════════════════════ */
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <h2 className="text-[11px] font-semibold text-neutral-400 uppercase tracking-[0.08em] mb-3">{children}</h2>
-  );
-}
-
-function Field({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
-  if (!value) return null;
-  return (
-    <div>
-      <p className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">{label}</p>
-      <p className={`text-[13px] text-black mt-0.5 ${mono ? "font-mono text-[12px]" : ""}`}>{value}</p>
     </div>
   );
 }
