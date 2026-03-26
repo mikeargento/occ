@@ -463,54 +463,13 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
 
         </div>
 
-        {/* Proof log — collapsible */}
-        <div className="bg-[#efefef] border border-[#d9d9d9] overflow-hidden">
-          <button onClick={() => setShowProofs(!showProofs)}
-            className="w-full px-5 py-4 flex items-center justify-between hover:bg-[#e5e5e5] transition-colors">
-            <h2 className="text-[16px] font-bold">{currentAgent?.name ?? "Agent"} proofs</h2>
-            <div className="flex items-center gap-3">
-              <a href="https://occ.wtf/explorer" target="_blank" rel="noopener noreferrer"
-                onClick={e => e.stopPropagation()}
-                className="text-[11px] text-blue-500 hover:text-blue-600 transition-colors">
-                Explorer
-              </a>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                className="text-[#999] transition-transform duration-200"
-                style={{ transform: showProofs ? "rotate(90deg)" : "rotate(0deg)" }}>
-                <path d="M6 4l4 4-4 4" />
-              </svg>
-            </div>
-          </button>
-          {showProofs && (
-            <div className="border-t border-[#d9d9d9]">
-              {proofLog.length === 0 ? (
-                <div className="px-5 py-8 text-center">
-                  <p className="text-[13px] text-[#666]">No proofs yet</p>
-                  <p className="text-[11px] text-[#999] mt-1">Proofs appear here as tools are used</p>
-                </div>
-              ) : (
-                <div className="divide-y divide-[#d9d9d9] max-h-[400px] overflow-y-auto">
-                  {proofLog.map((p: any, i: number) => (
-                    <div key={p.id ?? i} className="flex items-center gap-3 px-5 py-3 group">
-                      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${p.allowed ? "bg-blue-400" : "bg-red-400"}`} />
-                      <div className="flex-1 min-w-0">
-                        <span className="text-[13px] font-medium">{humanizeToolName(p.tool)}</span>
-                        {p.reason && <span className="text-[11px] text-[#999] ml-2">{p.reason.slice(0, 40)}</span>}
-                      </div>
-                      <span className="text-[11px] text-[#999] flex-shrink-0">{timeLabel(p.created_at ?? p.createdAt)}</span>
-                      {p.proof_digest && (
-                        <a href={explorerUrl(p.proof_digest)} target="_blank" rel="noopener noreferrer"
-                          className="text-[11px] text-blue-500 hover:text-blue-600 transition-colors flex-shrink-0">
-                          proof
-                        </a>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+        {/* Per-agent proof log — mini explorer */}
+        <AgentProofLog
+          agentName={currentAgent?.name ?? "Agent"}
+          proofLog={proofLog}
+          showProofs={showProofs}
+          onToggle={() => setShowProofs(!showProofs)}
+        />
 
       </div>}
 
@@ -528,6 +487,152 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
    Components
    ═══════════════════════════════════════════════════════════════ */
 
+
+/* ═══════════════════════════════════════════════════════════════
+   Agent Proof Log — mini explorer filtered to one agent
+   ═══════════════════════════════════════════════════════════════ */
+
+function AgentProofLog({ agentName, proofLog, showProofs, onToggle }: {
+  agentName: string; proofLog: any[]; showProofs: boolean; onToggle: () => void;
+}) {
+  const [expandedProof, setExpandedProof] = useState<number | null>(null);
+
+  function enforcementLabel(receipt: any): { label: string; color: string } {
+    const env = receipt?.occProof?.environment ?? receipt?.environment ?? {};
+    const enforcement = env?.enforcement ?? receipt?.occProof?.artifact?.enforcement ?? "";
+    if (enforcement === "measured-tee" || env?.attestation) return { label: "Hardware Enclave", color: "text-blue-600 bg-blue-50 border-blue-200" };
+    if (enforcement === "hw-key") return { label: "Hardware Key", color: "text-blue-600 bg-blue-50 border-blue-200" };
+    return { label: "Software", color: "text-amber-600 bg-amber-50 border-amber-200" };
+  }
+
+  function getDigest(p: any): string {
+    return p.proof_digest ?? p.receipt?.occProof?.artifact?.digestB64 ?? "";
+  }
+
+  function getSigner(p: any): string {
+    return p.receipt?.occProof?.signer?.publicKeyB64 ?? p.receipt?.occProof?.commit?.signerB64 ?? "";
+  }
+
+  function getCommitTime(p: any): string {
+    const t = p.receipt?.occProof?.commit?.time ?? p.receipt?.occProof?.artifact?.committedAt;
+    if (!t) return "";
+    return new Date(typeof t === "number" ? t : t).toLocaleString();
+  }
+
+  function getCounter(p: any): number | null {
+    return p.receipt?.occProof?.artifact?.counter ?? p.receipt?.occProof?.commit?.counter ?? null;
+  }
+
+  return (
+    <div className="bg-[#efefef] border border-[#d9d9d9] overflow-hidden">
+      <button onClick={onToggle}
+        className="w-full px-5 py-4 flex items-center justify-between hover:bg-[#e5e5e5] transition-colors">
+        <h2 className="text-[16px] font-bold">{agentName} proofs</h2>
+        <div className="flex items-center gap-3">
+          {proofLog.length > 0 && <span className="text-[11px] text-[#999]">{proofLog.length} entries</span>}
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+            className="text-[#999] transition-transform duration-200"
+            style={{ transform: showProofs ? "rotate(90deg)" : "rotate(0deg)" }}>
+            <path d="M6 4l4 4-4 4" />
+          </svg>
+        </div>
+      </button>
+      {showProofs && (
+        <div className="border-t border-[#d9d9d9]">
+          {proofLog.length === 0 ? (
+            <div className="px-5 py-8 text-center">
+              <p className="text-[13px] text-[#666]">No proofs yet</p>
+              <p className="text-[11px] text-[#999] mt-1">Proofs appear here as tools are used</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-[#d9d9d9] max-h-[600px] overflow-y-auto">
+              {proofLog.map((p: any, i: number) => {
+                const isExpanded = expandedProof === (p.id ?? i);
+                const digest = getDigest(p);
+                const enforcement = enforcementLabel(p.receipt);
+                const counter = getCounter(p);
+                return (
+                  <div key={p.id ?? i}>
+                    {/* Collapsed row */}
+                    <div className="flex items-center gap-3 px-5 py-3 hover:bg-[#e5e5e5] transition-colors cursor-pointer"
+                      onClick={() => setExpandedProof(isExpanded ? null : (p.id ?? i))}>
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                        className="text-[#999] flex-shrink-0 transition-transform duration-200"
+                        style={{ transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)" }}>
+                        <path d="M6 4l4 4-4 4" />
+                      </svg>
+                      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${p.allowed ? "bg-blue-400" : "bg-red-400"}`} />
+                      {digest && <code className="text-[11px] font-mono text-[#666] truncate max-w-[180px]">{digest}</code>}
+                      <span className={`text-[10px] font-medium px-1.5 py-0.5 border flex-shrink-0 ${enforcement.color}`}>
+                        {enforcement.label}
+                      </span>
+                      {counter !== null && <span className="text-[10px] text-[#999] flex-shrink-0">#{counter}</span>}
+                      <span className="text-[11px] text-[#999] flex-shrink-0 ml-auto">{timeLabel(p.created_at)}</span>
+                    </div>
+                    {/* Expanded detail */}
+                    {isExpanded && (
+                      <div className="px-5 pb-4 pt-1 bg-[#e5e5e5] border-t border-[#d9d9d9]">
+                        <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-[12px]">
+                          <div>
+                            <span className="text-[10px] font-semibold uppercase tracking-wider text-[#999]">Digest</span>
+                            <p className="font-mono text-[11px] text-[#333] break-all mt-0.5">{digest || "—"}</p>
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-semibold uppercase tracking-wider text-[#999]">Tool</span>
+                            <p className="font-medium mt-0.5">{humanizeToolName(p.tool)}</p>
+                            <code className="text-[10px] font-mono text-[#999]">{p.tool}</code>
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-semibold uppercase tracking-wider text-[#999]">Decision</span>
+                            <p className={`font-medium mt-0.5 ${p.allowed ? "text-blue-600" : "text-red-500"}`}>
+                              {p.allowed ? "Allowed" : "Denied"}
+                            </p>
+                            {p.reason && <p className="text-[10px] text-[#999] mt-0.5">{p.reason}</p>}
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-semibold uppercase tracking-wider text-[#999]">Enforcement</span>
+                            <p className="mt-0.5">
+                              <span className={`text-[10px] font-medium px-1.5 py-0.5 border ${enforcement.color}`}>
+                                {enforcement.label}
+                              </span>
+                            </p>
+                          </div>
+                          {getSigner(p) && (
+                            <div>
+                              <span className="text-[10px] font-semibold uppercase tracking-wider text-[#999]">Signer</span>
+                              <p className="font-mono text-[10px] text-[#666] break-all mt-0.5">{getSigner(p).slice(0, 44)}...</p>
+                            </div>
+                          )}
+                          {getCommitTime(p) && (
+                            <div>
+                              <span className="text-[10px] font-semibold uppercase tracking-wider text-[#999]">Committed</span>
+                              <p className="text-[11px] mt-0.5">{getCommitTime(p)}</p>
+                            </div>
+                          )}
+                        </div>
+                        {digest && (
+                          <a href={explorerUrl(digest)} target="_blank" rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 mt-4 text-[12px] font-medium text-blue-500 hover:text-blue-600 transition-colors">
+                            View full proof in Explorer
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                              <polyline points="15 3 21 3 21 9" />
+                              <line x1="10" y1="14" x2="21" y2="3" />
+                            </svg>
+                          </a>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function Center({ children }: { children: React.ReactNode }) {
   return <div className="flex items-center justify-center" style={{ minHeight: "calc(100vh - 56px)" }}>{children}</div>;
