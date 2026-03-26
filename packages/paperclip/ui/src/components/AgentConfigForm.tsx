@@ -1507,8 +1507,7 @@ function McpUrlsEditor({
     }
   }, [value]);
 
-  function commit(updated: Row[]) {
-    setRows(updated);
+  function flush(updated: Row[]) {
     const rec: Record<string, string> = {};
     for (const r of updated) {
       if (r.name.trim() && r.url.trim()) rec[r.name.trim()] = r.url.trim();
@@ -1521,13 +1520,18 @@ function McpUrlsEditor({
     const next = rows.map((r, j) => (j === i ? { ...r, [field]: v } : r));
     const last = next[next.length - 1];
     if (last && (last.name || last.url)) next.push({ name: "", url: "" });
-    commit(next);
+    setRows(next);
+  }
+
+  function commitRow() {
+    flush(rows);
   }
 
   function removeRow(i: number) {
     const next = rows.filter((_, j) => j !== i);
     if (next.length === 0) next.push({ name: "", url: "" });
-    commit(next);
+    setRows(next);
+    flush(next);
   }
 
   return (
@@ -1539,12 +1543,14 @@ function McpUrlsEditor({
             placeholder="Name (e.g. jimbo)"
             value={row.name}
             onChange={(e) => updateRow(i, "name", e.target.value)}
+            onBlur={commitRow}
           />
           <input
             className="flex-[3] min-w-0 px-2 py-1.5 text-sm rounded border bg-background font-mono"
             placeholder="https://agent.occ.wtf/mcp/..."
             value={row.url}
             onChange={(e) => updateRow(i, "url", e.target.value)}
+            onBlur={commitRow}
           />
           {(row.name || row.url) && (
             <button

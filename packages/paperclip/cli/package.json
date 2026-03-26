@@ -1,27 +1,29 @@
 {
-  "name": "paperclipai",
-  "version": "0.3.1",
-  "description": "Paperclip CLI — orchestrate AI agent teams to run a business",
+  "name": "occ-paperclip",
+  "version": "1.0.1",
+  "description": "Paperclip with OCC MCP-per-agent support — orchestrate governed AI agent teams",
   "type": "module",
   "bin": {
-    "paperclipai": "./dist/index.js"
+    "occ-paperclip": "dist/index.js"
   },
   "keywords": [
     "paperclip",
+    "occ",
     "ai",
     "agents",
     "orchestration",
+    "mcp",
     "cli"
   ],
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/paperclipai/paperclip",
-    "directory": "cli"
+    "url": "https://github.com/mikeargento/occ",
+    "directory": "packages/paperclip/cli"
   },
-  "homepage": "https://github.com/paperclipai/paperclip",
+  "homepage": "https://occ.wtf",
   "bugs": {
-    "url": "https://github.com/paperclipai/paperclip/issues"
+    "url": "https://github.com/mikeargento/occ/issues"
   },
   "files": [
     "dist"
@@ -37,22 +39,15 @@
   },
   "dependencies": {
     "@clack/prompts": "^0.10.0",
-    "@paperclipai/adapter-claude-local": "workspace:*",
-    "@paperclipai/adapter-codex-local": "workspace:*",
-    "@paperclipai/adapter-cursor-local": "workspace:*",
-    "@paperclipai/adapter-gemini-local": "workspace:*",
-    "@paperclipai/adapter-opencode-local": "workspace:*",
-    "@paperclipai/adapter-pi-local": "workspace:*",
-    "@paperclipai/adapter-openclaw-gateway": "workspace:*",
-    "@paperclipai/adapter-utils": "workspace:*",
-    "@paperclipai/db": "workspace:*",
-    "@paperclipai/server": "workspace:*",
-    "@paperclipai/shared": "workspace:*",
-    "drizzle-orm": "0.38.4",
-    "dotenv": "^17.0.1",
+    "@paperclipai/server": "2026.325.0",
     "commander": "^13.1.0",
+    "dotenv": "^17.0.1",
+    "drizzle-orm": "0.38.4",
     "embedded-postgres": "^18.1.0-beta.16",
-    "picocolors": "^1.1.1"
+    "picocolors": "^1.1.1",
+    "postgres": "^3.4.5",
+    "ws": "^8.18.0",
+    "zod": "^3.24.0"
   },
   "devDependencies": {
     "@types/node": "^22.12.0",
