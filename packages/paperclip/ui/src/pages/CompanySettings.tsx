@@ -1,14 +1,14 @@
 import { ChangeEvent, useEffect, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCompany } from "../context/CompanyContext";
 import { useBreadcrumbs } from "../context/BreadcrumbContext";
+import { useToast } from "../context/ToastContext";
 import { companiesApi } from "../api/companies";
 import { accessApi } from "../api/access";
 import { assetsApi } from "../api/assets";
-import { secretsApi } from "../api/secrets";
 import { queryKeys } from "../lib/queryKeys";
 import { Button } from "@/components/ui/button";
-import { Settings, Check, Eye, EyeOff, RotateCw, Trash2, Plus, Plug, Copy, CheckCircle, Download } from "lucide-react";
+import { Settings, Check, Download, Upload } from "lucide-react";
 import { CompanyPatternIcon } from "../components/CompanyPatternIcon";
 import {
   Field,
@@ -30,8 +30,8 @@ export function CompanySettings() {
     setSelectedCompanyId
   } = useCompany();
   const { setBreadcrumbs } = useBreadcrumbs();
+  const { pushToast } = useToast();
   const queryClient = useQueryClient();
-
   // General settings local state
   const [companyName, setCompanyName] = useState("");
   const [description, setDescription] = useState("");
@@ -175,6 +175,7 @@ export function CompanySettings() {
     setSnippetCopied(false);
     setSnippetCopyDelightId(0);
   }, [selectedCompanyId]);
+
   const archiveMutation = useMutation({
     mutationFn: ({
       companyId,
@@ -462,15 +463,32 @@ export function CompanySettings() {
         </div>
       </div>
 
-      {/* Connect Your AI */}
-      {selectedCompanyId && (
-        <ConnectYourAI companyId={selectedCompanyId} />
-      )}
-
-      {/* API Keys */}
-      {selectedCompanyId && (
-        <CompanyApiKeys companyId={selectedCompanyId} />
-      )}
+      {/* Import / Export */}
+      <div className="space-y-4">
+        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+          Company Packages
+        </div>
+        <div className="rounded-md border border-border px-4 py-4">
+          <p className="text-sm text-muted-foreground">
+            Import and export have moved to dedicated pages accessible from the{" "}
+            <a href="/org" className="underline hover:text-foreground">Org Chart</a> header.
+          </p>
+          <div className="mt-3 flex items-center gap-2">
+            <Button size="sm" variant="outline" asChild>
+              <a href="/company/export">
+                <Download className="mr-1.5 h-3.5 w-3.5" />
+                Export
+              </a>
+            </Button>
+            <Button size="sm" variant="outline" asChild>
+              <a href="/company/import">
+                <Upload className="mr-1.5 h-3.5 w-3.5" />
+                Import
+              </a>
+            </Button>
+          </div>
+        </div>
+      </div>
 
       {/* Danger Zone */}
       <div className="space-y-4">
@@ -524,413 +542,6 @@ export function CompanySettings() {
           </div>
         </div>
       </div>
-
-    </div>
-  );
-}
-
-function ConnectYourAI({ companyId }: { companyId: string }) {
-  const [copied, setCopied] = useState(false);
-  const [copiedDelightId, setCopiedDelightId] = useState(0);
-
-  const { data, isLoading } = useQuery({
-    queryKey: ["mcp-config", companyId],
-    queryFn: async () => {
-      const res = await fetch(`/mcp/config/${companyId}`, {
-        credentials: "include",
-      });
-      if (!res.ok) throw new Error("Failed to load connection config");
-      return res.json() as Promise<{
-        token: string;
-        url: string;
-        snippet: { mcpServers: { "occ-agent": { url: string } } };
-      }>;
-    },
-  });
-
-  const snippetJson = data
-    ? JSON.stringify(data.snippet, null, 2)
-    : "";
-
-  async function handleCopy() {
-    if (!snippetJson) return;
-    try {
-      await navigator.clipboard.writeText(snippetJson);
-      setCopied(true);
-      setCopiedDelightId((prev) => prev + 1);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      /* clipboard may not be available */
-    }
-  }
-
-  function handleDownload() {
-    if (!snippetJson) return;
-    const blob = new Blob([snippetJson], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "claude_desktop_config.json";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          Connect Your AI
-        </div>
-      </div>
-      <div className="space-y-3 rounded-md border border-border px-4 py-4">
-        <div className="flex items-center gap-2">
-          <Plug className="h-4 w-4 text-emerald-500" />
-          <span className="text-sm font-medium">
-            Use your own AI with OCC Agent
-          </span>
-        </div>
-        <p className="text-xs text-muted-foreground leading-relaxed">
-          Connect Claude Desktop, Cursor, Windsurf, or any MCP-compatible AI to
-          your OCC Agent dashboard. Your AI subscription powers the compute.
-          OCC Agent is the control plane.
-        </p>
-
-        {isLoading && (
-          <p className="text-xs text-muted-foreground">Loading connection config...</p>
-        )}
-
-        {data && (
-          <>
-            <div className="relative">
-              <pre className="rounded-lg border border-border bg-muted/30 px-3 py-3 font-mono text-xs leading-relaxed overflow-x-auto select-all">
-                {snippetJson}
-              </pre>
-              <div className="absolute top-2 right-2 flex items-center gap-1">
-                <button
-                  onClick={handleDownload}
-                  className="flex items-center gap-1 rounded-md bg-background/80 border border-border/50 px-2 py-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <Download className="h-3 w-3" />
-                  Save File
-                </button>
-                <button
-                  onClick={handleCopy}
-                  className="flex items-center gap-1 rounded-md bg-background/80 border border-border/50 px-2 py-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {copied ? (
-                    <>
-                      <CheckCircle key={copiedDelightId} className="h-3 w-3 text-emerald-500" />
-                      <span className="text-emerald-500">Copied</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="h-3 w-3" />
-                      Copy
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-
-            <div className="space-y-2 pt-1">
-              <p className="text-[11px] text-muted-foreground/70 font-medium uppercase tracking-wide">
-                How to connect
-              </p>
-              <ol className="text-xs text-muted-foreground space-y-1.5 list-decimal list-inside">
-                <li>
-                  Click <strong>Save File</strong> to download{" "}
-                  <code className="rounded bg-muted px-1 py-0.5 text-[11px]">
-                    claude_desktop_config.json
-                  </code>
-                </li>
-                <li>
-                  <strong>Claude Desktop:</strong> Move the file to{" "}
-                  <code className="rounded bg-muted px-1 py-0.5 text-[11px]">
-                    ~/Library/Application Support/Claude/
-                  </code>{" "}
-                  (Mac) or{" "}
-                  <code className="rounded bg-muted px-1 py-0.5 text-[11px]">
-                    %APPDATA%\Claude\
-                  </code>{" "}
-                  (Windows)
-                </li>
-                <li>
-                  <strong>Cursor / Windsurf:</strong> Add as an MCP server in settings
-                </li>
-                <li>
-                  Restart your AI — it can now create issues, manage agents, and view your dashboard
-                </li>
-              </ol>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-const KNOWN_API_KEYS = [
-  { value: "ANTHROPIC_API_KEY", label: "Anthropic (Claude)" },
-  { value: "OPENAI_API_KEY", label: "OpenAI (Codex / GPT)" },
-  { value: "GEMINI_API_KEY", label: "Google (Gemini)" },
-  { value: "CURSOR_API_KEY", label: "Cursor" },
-] as const;
-
-function CompanyApiKeys({ companyId }: { companyId: string }) {
-  const queryClient = useQueryClient();
-  const [newKeyName, setNewKeyName] = useState("");
-  const [newKeyValue, setNewKeyValue] = useState("");
-  const [showNewValue, setShowNewValue] = useState(false);
-  const [rotateId, setRotateId] = useState<string | null>(null);
-  const [rotateValue, setRotateValue] = useState("");
-  const [showRotateValue, setShowRotateValue] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const { data: secrets = [], isLoading } = useQuery({
-    queryKey: ["company-secrets", companyId],
-    queryFn: () => secretsApi.list(companyId),
-  });
-
-  // Filter to only show secrets that match known API key names
-  const apiKeySecrets = secrets.filter((s) =>
-    KNOWN_API_KEYS.some((k) => k.value === s.name)
-  );
-  const availableKeys = KNOWN_API_KEYS.filter(
-    (k) => !secrets.some((s) => s.name === k.value)
-  );
-
-  const createMutation = useMutation({
-    mutationFn: (data: { name: string; value: string }) =>
-      secretsApi.create(companyId, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["company-secrets", companyId] });
-      setNewKeyName("");
-      setNewKeyValue("");
-      setShowNewValue(false);
-      setError(null);
-    },
-    onError: (err) => {
-      setError(err instanceof Error ? err.message : "Failed to save key");
-    },
-  });
-
-  const rotateMutation = useMutation({
-    mutationFn: ({ id, value }: { id: string; value: string }) =>
-      secretsApi.rotate(id, { value }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["company-secrets", companyId] });
-      setRotateId(null);
-      setRotateValue("");
-      setShowRotateValue(false);
-      setError(null);
-    },
-    onError: (err) => {
-      setError(err instanceof Error ? err.message : "Failed to rotate key");
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => secretsApi.remove(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["company-secrets", companyId] });
-      setError(null);
-    },
-    onError: (err) => {
-      setError(err instanceof Error ? err.message : "Failed to delete key");
-    },
-  });
-
-  function handleCreate() {
-    if (!newKeyName || !newKeyValue) return;
-    createMutation.mutate({ name: newKeyName, value: newKeyValue });
-  }
-
-  function handleRotate(id: string) {
-    if (!rotateValue) return;
-    rotateMutation.mutate({ id, value: rotateValue });
-  }
-
-  function handleDelete(id: string, name: string) {
-    if (!window.confirm(`Delete ${name}? All agents using this key will stop working.`)) return;
-    deleteMutation.mutate(id);
-  }
-
-  const labelFor = (name: string) =>
-    KNOWN_API_KEYS.find((k) => k.value === name)?.label ?? name;
-
-  return (
-    <div className="space-y-4">
-      <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-        API Keys
-      </div>
-      <div className="space-y-3 rounded-md border border-border px-4 py-4">
-        <p className="text-xs text-muted-foreground">
-          API keys set here are inherited by all agents in this company. Agent-level keys override these defaults.
-        </p>
-
-        {/* Existing keys */}
-        {isLoading && (
-          <p className="text-xs text-muted-foreground">Loading...</p>
-        )}
-        {apiKeySecrets.map((secret) => (
-          <div
-            key={secret.id}
-            className="flex items-center gap-2 rounded-md border border-border bg-muted/20 px-3 py-2"
-          >
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium">{labelFor(secret.name)}</div>
-              <div className="text-xs text-muted-foreground font-mono">{secret.name}</div>
-            </div>
-            {rotateId === secret.id ? (
-              <div className="flex items-center gap-1.5">
-                <div className="relative">
-                  <input
-                    type={showRotateValue ? "text" : "password"}
-                    className="w-56 rounded-md border border-border bg-transparent px-2.5 py-1 text-xs font-mono outline-none pr-7"
-                    placeholder="New key value"
-                    value={rotateValue}
-                    onChange={(e) => setRotateValue(e.target.value)}
-                  />
-                  <button
-                    type="button"
-                    className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    onClick={() => setShowRotateValue(!showRotateValue)}
-                  >
-                    {showRotateValue ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-                  </button>
-                </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleRotate(secret.id)}
-                  disabled={!rotateValue || rotateMutation.isPending}
-                >
-                  {rotateMutation.isPending ? "..." : "Save"}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => { setRotateId(null); setRotateValue(""); setShowRotateValue(false); }}
-                >
-                  Cancel
-                </Button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-1">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setRotateId(secret.id)}
-                  title="Rotate key"
-                >
-                  <RotateCw className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => handleDelete(secret.id, secret.name)}
-                  className="text-muted-foreground hover:text-destructive"
-                  title="Delete key"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            )}
-          </div>
-        ))}
-
-        {/* Also show non-API-key secrets if any */}
-        {secrets.filter((s) => !KNOWN_API_KEYS.some((k) => k.value === s.name)).map((secret) => (
-          <div
-            key={secret.id}
-            className="flex items-center gap-2 rounded-md border border-border bg-muted/20 px-3 py-2"
-          >
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium font-mono">{secret.name}</div>
-              {secret.description && (
-                <div className="text-xs text-muted-foreground">{secret.description}</div>
-              )}
-            </div>
-            <div className="flex items-center gap-1">
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setRotateId(secret.id)}
-                title="Rotate"
-              >
-                <RotateCw className="h-3.5 w-3.5" />
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => handleDelete(secret.id, secret.name)}
-                className="text-muted-foreground hover:text-destructive"
-                title="Delete"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
-            </div>
-          </div>
-        ))}
-
-        {/* Add new key */}
-        {availableKeys.length > 0 && (
-          <div className="flex items-center gap-1.5 pt-1">
-            <select
-              className="flex-[2] rounded-md border border-border bg-background px-2.5 py-1.5 text-sm outline-none"
-              value={newKeyName}
-              onChange={(e) => setNewKeyName(e.target.value)}
-            >
-              <option value="">Add API key...</option>
-              {availableKeys.map((k) => (
-                <option key={k.value} value={k.value}>
-                  {k.label}
-                </option>
-              ))}
-            </select>
-            {newKeyName && (
-              <>
-                <div className="relative flex-[3]">
-                  <input
-                    type={showNewValue ? "text" : "password"}
-                    className="w-full rounded-md border border-border bg-transparent px-2.5 py-1.5 text-sm font-mono outline-none pr-8"
-                    placeholder="sk-ant-..."
-                    value={newKeyValue}
-                    onChange={(e) => setNewKeyValue(e.target.value)}
-                  />
-                  <button
-                    type="button"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    onClick={() => setShowNewValue(!showNewValue)}
-                  >
-                    {showNewValue ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                  </button>
-                </div>
-                <Button
-                  size="sm"
-                  onClick={handleCreate}
-                  disabled={!newKeyValue || createMutation.isPending}
-                >
-                  <Plus className="h-3.5 w-3.5 mr-1" />
-                  {createMutation.isPending ? "Saving..." : "Add"}
-                </Button>
-              </>
-            )}
-          </div>
-        )}
-
-        {error && (
-          <p className="text-xs text-destructive">{error}</p>
-        )}
-
-        {apiKeySecrets.length === 0 && !isLoading && (
-          <p className="text-xs text-muted-foreground/60 pt-1">
-            No API keys configured. Add one to enable AI agents.
-          </p>
-        )}
-      </div>
     </div>
   );
 }
@@ -946,35 +557,35 @@ function buildAgentSnippet(input: AgentSnippetInput) {
 
   const connectivityBlock =
     candidateUrls.length === 0
-      ? `No candidate URLs are available. Ask your user to configure a reachable hostname in OCC Agent, then retry.
+      ? `No candidate URLs are available. Ask your user to configure a reachable hostname in Paperclip, then retry.
 Suggested steps:
-- choose a hostname that resolves to the OCC Agent host from your runtime
+- choose a hostname that resolves to the Paperclip host from your runtime
 - run: pnpm paperclipai allowed-hostname <host>
-- restart OCC Agent
+- restart Paperclip
 - verify with: curl -fsS http://<host>:3100/api/health
 - regenerate this invite snippet`
-      : `If none are reachable, ask your user to add a reachable hostname in OCC Agent, restart, and retry.
+      : `If none are reachable, ask your user to add a reachable hostname in Paperclip, restart, and retry.
 Suggested command:
 - pnpm paperclipai allowed-hostname <host>
 Then verify with: curl -fsS <base-url>/api/health`;
 
   const resolutionLine = resolutionTestUrl
-    ? `\nYou MUST test OCC Agent-to-gateway reachability, call: ${resolutionTestUrl}?url=<urlencoded-gateway-url> (using the hostname that worked above). Do not assume your 172.x is necessarily reachable from OCC Agent. Test it. `
+    ? `\nYou MUST test Paperclip-to-gateway reachability, call: ${resolutionTestUrl}?url=<urlencoded-gateway-url> (using the hostname that worked above). Do not assume your 172.x is necessarily reachable from Paperclip. Test it. `
     : "";
 
-  return `You're invited to join an OCC Agent organization.
+  return `You're invited to join a Paperclip organization.
 
 The URLs you should try are:
 ${candidateList}
 
 Connectivity guidance:
-If you are running on a different machine than OCC Agent, OCC Agent must be reachable at one of the hostnames used above.
+If you are running on a different machine than Paperclip, Paperclip must be reachable at one of the hostnames used above.
 Verify the hostname works from your runtime with: GET <base-url>/api/health
 
 ${connectivityBlock}
 
 For your "agentName", just use your own agent name (OpenClaw or whatever your name is) and send it directly.
-You also need to send a gateway URL that OCC Agent can access. Check your config and include that URL.${resolutionLine}
+You also need to send a gateway URL that Paperclip can access. Check your config and include that URL.${resolutionLine}
 
 ---
 
@@ -984,14 +595,14 @@ When you submit the join request, use:
 - \`agentDefaultsPayload.url\` as your \`ws://\` or \`wss://\` gateway URL
 - \`agentDefaultsPayload.headers["x-openclaw-token"]\` with your gateway token
 - (legacy accepted) \`agentDefaultsPayload.headers["x-openclaw-auth"]\`
-- Keep device auth enabled (recommended). If \`devicePrivateKeyPem\` is omitted, OCC Agent will generate and persist one during join so pairing approvals remain stable.
+- Keep device auth enabled (recommended). If \`devicePrivateKeyPem\` is omitted, Paperclip will generate and persist one during join so pairing approvals remain stable.
 - Only use \`disableDeviceAuth=true\` for special environments where pairing cannot be completed.
 
 Do NOT use \`/v1/responses\` or \`/hooks/*\` in this join flow.
 
-Before you do anything, please respond to your user that you understand the instructions and you're going to work on them. Then do the step above in another session called "occ-agent-onboarding" and then tell your user when you're done. Update your user in intermediate steps along the way so they know what's going on.
+Before you do anything, please respond to your user that you understand the instructions and you're going to work on them. Then do the step above in another session called "paperclip-onboarding" and then tell your user when you're done. Update your user in intermediate steps along the way so they know what's going on.
 
-Then after you've connected to OCC Agent (exchanged keys etc.) you MUST review and follow the onboarding instructions in onboarding.txt they give you.
+Then after you've connected to Paperclip (exchanged keys etc.) you MUST review and follow the onboarding instructions in onboarding.txt they give you.
 
 `;
 }

@@ -13,6 +13,8 @@ import { Projects } from "./pages/Projects";
 import { ProjectDetail } from "./pages/ProjectDetail";
 import { Issues } from "./pages/Issues";
 import { IssueDetail } from "./pages/IssueDetail";
+import { Routines } from "./pages/Routines";
+import { RoutineDetail } from "./pages/RoutineDetail";
 import { ExecutionWorkspaceDetail } from "./pages/ExecutionWorkspaceDetail";
 import { Goals } from "./pages/Goals";
 import { GoalDetail } from "./pages/GoalDetail";
@@ -20,10 +22,13 @@ import { Approvals } from "./pages/Approvals";
 import { ApprovalDetail } from "./pages/ApprovalDetail";
 import { Costs } from "./pages/Costs";
 import { Activity } from "./pages/Activity";
-import { ProofLog } from "./pages/ProofLog";
 import { Inbox } from "./pages/Inbox";
 import { CompanySettings } from "./pages/CompanySettings";
+import { CompanySkills } from "./pages/CompanySkills";
+import { CompanyExport } from "./pages/CompanyExport";
+import { CompanyImport } from "./pages/CompanyImport";
 import { DesignGuide } from "./pages/DesignGuide";
+import { InstanceGeneralSettings } from "./pages/InstanceGeneralSettings";
 import { InstanceSettings } from "./pages/InstanceSettings";
 import { InstanceExperimentalSettings } from "./pages/InstanceExperimentalSettings";
 import { PluginManager } from "./pages/PluginManager";
@@ -34,9 +39,9 @@ import { OrgChart } from "./pages/OrgChart";
 import { NewAgent } from "./pages/NewAgent";
 import { AuthPage } from "./pages/Auth";
 import { BoardClaimPage } from "./pages/BoardClaim";
+import { CliAuthPage } from "./pages/CliAuth";
 import { InviteLandingPage } from "./pages/InviteLanding";
 import { NotFoundPage } from "./pages/NotFound";
-import { ControlPlane } from "./pages/ControlPlane";
 import { queryKeys } from "./lib/queryKeys";
 import { useCompany } from "./context/CompanyContext";
 import { useDialog } from "./context/DialogContext";
@@ -50,11 +55,11 @@ function BootstrapPendingPage({ hasActiveInvite = false }: { hasActiveInvite?: b
         <h1 className="text-xl font-semibold">Instance setup required</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {hasActiveInvite
-            ? "No instance admin exists yet. A bootstrap invite is already active. Check your OCC Agent startup logs for the first admin invite URL, or run this command to rotate it:"
-            : "No instance admin exists yet. Run this command in your OCC Agent environment to generate the first admin invite URL:"}
+            ? "No instance admin exists yet. A bootstrap invite is already active. Check your Paperclip startup logs for the first admin invite URL, or run this command to rotate it:"
+            : "No instance admin exists yet. Run this command in your Paperclip environment to generate the first admin invite URL:"}
         </p>
         <pre className="mt-4 overflow-x-auto rounded-md border border-border bg-muted/30 p-3 text-xs">
-{`pnpm occ-agent auth bootstrap-ceo`}
+{`pnpm paperclipai auth bootstrap-ceo`}
         </pre>
       </div>
     </div>
@@ -118,6 +123,9 @@ function boardRoutes() {
       <Route path="onboarding" element={<OnboardingRoutePage />} />
       <Route path="companies" element={<Companies />} />
       <Route path="company/settings" element={<CompanySettings />} />
+      <Route path="company/export/*" element={<CompanyExport />} />
+      <Route path="company/import" element={<CompanyImport />} />
+      <Route path="skills/*" element={<CompanySkills />} />
       <Route path="settings" element={<LegacySettingsRedirect />} />
       <Route path="settings/*" element={<LegacySettingsRedirect />} />
       <Route path="plugins/:pluginId" element={<PluginPage />} />
@@ -145,6 +153,8 @@ function boardRoutes() {
       <Route path="issues/done" element={<Navigate to="/issues" replace />} />
       <Route path="issues/recent" element={<Navigate to="/issues" replace />} />
       <Route path="issues/:issueId" element={<IssueDetail />} />
+      <Route path="routines" element={<Routines />} />
+      <Route path="routines/:routineId" element={<RoutineDetail />} />
       <Route path="execution-workspaces/:workspaceId" element={<ExecutionWorkspaceDetail />} />
       <Route path="goals" element={<Goals />} />
       <Route path="goals/:goalId" element={<GoalDetail />} />
@@ -154,8 +164,6 @@ function boardRoutes() {
       <Route path="approvals/:approvalId" element={<ApprovalDetail />} />
       <Route path="costs" element={<Costs />} />
       <Route path="activity" element={<Activity />} />
-      <Route path="proof-log" element={<ProofLog />} />
-      <Route path="control-plane" element={<ControlPlane />} />
       <Route path="inbox" element={<InboxRootRedirect />} />
       <Route path="inbox/recent" element={<Inbox />} />
       <Route path="inbox/unread" element={<Inbox />} />
@@ -175,7 +183,7 @@ function InboxRootRedirect() {
 
 function LegacySettingsRedirect() {
   const location = useLocation();
-  return <Navigate to={`/instance/settings/heartbeats${location.search}${location.hash}`} replace />;
+  return <Navigate to={`/instance/settings/general${location.search}${location.hash}`} replace />;
 }
 
 function OnboardingRoutePage() {
@@ -206,7 +214,7 @@ function OnboardingRoutePage() {
           <Button
             onClick={() =>
               matchedCompany
-                ? openOnboarding({ companyId: matchedCompany.id })
+                ? openOnboarding({ initialStep: 2, companyId: matchedCompany.id })
                 : openOnboarding()
             }
           >
@@ -295,14 +303,16 @@ export function App() {
       <Routes>
         <Route path="auth" element={<AuthPage />} />
         <Route path="board-claim/:token" element={<BoardClaimPage />} />
+        <Route path="cli-auth/:id" element={<CliAuthPage />} />
         <Route path="invite/:token" element={<InviteLandingPage />} />
 
         <Route element={<CloudAccessGate />}>
           <Route index element={<CompanyRootRedirect />} />
           <Route path="onboarding" element={<OnboardingRoutePage />} />
-          <Route path="instance" element={<Navigate to="/instance/settings/heartbeats" replace />} />
+          <Route path="instance" element={<Navigate to="/instance/settings/general" replace />} />
           <Route path="instance/settings" element={<Layout />}>
-            <Route index element={<Navigate to="heartbeats" replace />} />
+            <Route index element={<Navigate to="general" replace />} />
+            <Route path="general" element={<InstanceGeneralSettings />} />
             <Route path="heartbeats" element={<InstanceSettings />} />
             <Route path="experimental" element={<InstanceExperimentalSettings />} />
             <Route path="plugins" element={<PluginManager />} />
@@ -311,6 +321,9 @@ export function App() {
           <Route path="companies" element={<UnprefixedBoardRedirect />} />
           <Route path="issues" element={<UnprefixedBoardRedirect />} />
           <Route path="issues/:issueId" element={<UnprefixedBoardRedirect />} />
+          <Route path="routines" element={<UnprefixedBoardRedirect />} />
+          <Route path="routines/:routineId" element={<UnprefixedBoardRedirect />} />
+          <Route path="skills/*" element={<UnprefixedBoardRedirect />} />
           <Route path="settings" element={<LegacySettingsRedirect />} />
           <Route path="settings/*" element={<LegacySettingsRedirect />} />
           <Route path="agents" element={<UnprefixedBoardRedirect />} />
@@ -325,8 +338,6 @@ export function App() {
           <Route path="projects/:projectId/issues/:filter" element={<UnprefixedBoardRedirect />} />
           <Route path="projects/:projectId/configuration" element={<UnprefixedBoardRedirect />} />
           <Route path="tests/ux/runs" element={<UnprefixedBoardRedirect />} />
-          <Route path="proof-log" element={<UnprefixedBoardRedirect />} />
-          <Route path="control-plane" element={<UnprefixedBoardRedirect />} />
           <Route path=":companyPrefix" element={<Layout />}>
             {boardRoutes()}
           </Route>

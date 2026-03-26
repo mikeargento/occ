@@ -6,8 +6,7 @@ RUN corepack enable
 
 FROM base AS deps
 WORKDIR /app
-COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
-RUN echo 'auto-install-peers=true' > .npmrc
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml .npmrc ./
 COPY cli/package.json cli/
 COPY server/package.json server/
 COPY ui/package.json ui/
@@ -22,17 +21,18 @@ COPY packages/adapters/openclaw-gateway/package.json packages/adapters/openclaw-
 COPY packages/adapters/opencode-local/package.json packages/adapters/opencode-local/
 COPY packages/adapters/pi-local/package.json packages/adapters/pi-local/
 COPY packages/plugins/sdk/package.json packages/plugins/sdk/
-COPY packages/plugins/create-paperclip-plugin/package.json packages/plugins/create-paperclip-plugin/
+COPY patches/ patches/
 
 RUN pnpm install --frozen-lockfile
 
 FROM base AS build
 WORKDIR /app
 COPY --from=deps /app /app
-ARG RAILWAY_GIT_COMMIT_SHA
 COPY . .
-RUN rm -rf server/ui-dist
-RUN pnpm --filter @occ-agent/server... --filter @occ-agent/ui... --filter '!@occ-agent/server' build
+RUN pnpm --filter @paperclipai/ui build
+RUN pnpm --filter @paperclipai/plugin-sdk build
+RUN pnpm --filter @paperclipai/server build
+RUN test -f server/dist/index.js || (echo "ERROR: server build output missing" && exit 1)
 
 FROM base AS production
 WORKDIR /app
@@ -50,11 +50,10 @@ ENV NODE_ENV=production \
   PAPERCLIP_INSTANCE_ID=default \
   PAPERCLIP_CONFIG=/paperclip/instances/default/config.json \
   PAPERCLIP_DEPLOYMENT_MODE=authenticated \
-  PAPERCLIP_DEPLOYMENT_EXPOSURE=private \
-  PAPERCLIP_MIGRATION_AUTO_APPLY=true \
-  PAPERCLIP_MIGRATION_PROMPT=never
+  PAPERCLIP_DEPLOYMENT_EXPOSURE=private
 
+VOLUME ["/paperclip"]
 EXPOSE 3100
 
 USER node
-CMD ["node", "--import", "./server/node_modules/tsx/dist/loader.mjs", "server/src/index.ts"]
+CMD ["node", "--import", "./server/node_modules/tsx/dist/loader.mjs", "server/dist/index.js"]

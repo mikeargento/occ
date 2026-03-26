@@ -21,10 +21,10 @@ export function BreadcrumbProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (breadcrumbs.length === 0) {
-      document.title = "OCC Agent";
+      document.title = "Paperclip";
     } else {
       const parts = [...breadcrumbs].reverse().map((b) => b.label);
-      document.title = `${parts.join(" · ")} · OCC Agent`;
+      document.title = `${parts.join(" · ")} · Paperclip`;
     }
   }, [breadcrumbs]);
 

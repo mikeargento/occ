@@ -21,13 +21,13 @@ export function resolveRouteOnboardingOptions(params: {
   pathname: string;
   companyPrefix?: string;
   companies: OnboardingRouteCompany[];
-}): { companyId?: string } | null {
+}): { initialStep: 1 | 2; companyId?: string } | null {
   const { pathname, companyPrefix, companies } = params;
 
   if (!isOnboardingPath(pathname)) return null;
 
   if (!companyPrefix) {
-    return {};
+    return { initialStep: 1 };
   }
 
   const matchedCompany =
@@ -37,10 +37,10 @@ export function resolveRouteOnboardingOptions(params: {
     ) ?? null;
 
   if (!matchedCompany) {
-    return {};
+    return { initialStep: 1 };
   }
 
-  return { companyId: matchedCompany.id };
+  return { initialStep: 2, companyId: matchedCompany.id };
 }
 
 export function shouldRedirectCompanylessRouteToOnboarding(params: {

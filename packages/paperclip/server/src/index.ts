@@ -26,11 +26,10 @@ import { createApp } from "./app.js";
 import { loadConfig } from "./config.js";
 import { logger } from "./middleware/logger.js";
 import { setupLiveEventsWebSocketServer } from "./realtime/live-events-ws.js";
-import { heartbeatService, reconcilePersistedRuntimeServicesOnStartup } from "./services/index.js";
+import { heartbeatService, reconcilePersistedRuntimeServicesOnStartup, routineService } from "./services/index.js";
 import { createStorageServiceFromConfig } from "./storage/index.js";
 import { printStartupBanner } from "./startup-banner.js";
 import { getBoardClaimWarningUrl, initializeBoardClaimChallenge } from "./board-claim.js";
-import { ensureMasterKeyFromDb } from "./secrets/db-master-key.js";
 
 type BetterAuthSessionUser = {
   id: string;
@@ -348,7 +347,7 @@ export async function startServer(): Promise<StartedServer> {
           password: "paperclip",
           port,
           persistent: true,
-          initdbFlags: ["--encoding=UTF8", "--locale=C"],
+          initdbFlags: ["--encoding=UTF8", "--locale=C", "--lc-messages=C"],
           onLog: appendEmbeddedPostgresLog,
           onError: appendEmbeddedPostgresLog,
         });
@@ -399,11 +398,6 @@ export async function startServer(): Promise<StartedServer> {
     startupDbInfo = { mode: "embedded-postgres", dataDir, port };
   }
   
-  // In containerized environments (Railway), persist the secrets master key in
-  // the database so it survives container restarts. Must run after DB is ready
-  // but before any code touches the secrets provider.
-  await ensureMasterKeyFromDb(db);
-
   if (config.deploymentMode === "local_trusted" && !isLoopbackHost(config.host)) {
     throw new Error(
       `local_trusted mode requires loopback host binding (received: ${config.host}). ` +
@@ -532,6 +526,7 @@ export async function startServer(): Promise<StartedServer> {
   
   if (config.heartbeatSchedulerEnabled) {
     const heartbeat = heartbeatService(db as any);
+    const routines = routineService(db as any);
   
     // Reap orphaned running runs at startup while in-memory execution state is empty,
     // then resume any persisted queued runs that were waiting on the previous process.
@@ -551,6 +546,17 @@ export async function startServer(): Promise<StartedServer> {
         })
         .catch((err) => {
           logger.error({ err }, "heartbeat timer tick failed");
+        });
+
+      void routines
+        .tickScheduledTriggers(new Date())
+        .then((result) => {
+          if (result.triggered > 0) {
+            logger.info({ ...result }, "routine scheduler tick enqueued runs");
+          }
+        })
+        .catch((err) => {
+          logger.error({ err }, "routine scheduler tick failed");
         });
   
       // Periodically reap orphaned runs (5-min staleness threshold) and make sure
@@ -713,7 +719,7 @@ function isMainModule(metaUrl: string): boolean {
 
 if (isMainModule(import.meta.url)) {
   void startServer().catch((err) => {
-    logger.error({ err }, "OCC Agent server failed to start");
+    logger.error({ err }, "Paperclip server failed to start");
     process.exit(1);
   });
 }

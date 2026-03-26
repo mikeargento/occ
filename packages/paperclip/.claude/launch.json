@@ -2,15 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "paperclip",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["tsx", "src/index.ts"],
-      "port": 3100,
-      "env": {
-        "OCC_MODE": "tee",
-        "PAPERCLIP_MIGRATION_AUTO_APPLY": "true"
-      },
-      "cwd": "server"
+      "name": "paperclip-dev",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3100
     }
   ]
 }

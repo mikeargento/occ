@@ -134,7 +134,7 @@ export function OpenClawGatewayConfigFields({
 
       {!isCreate && (
         <>
-          <Field label="OCC Agent API URL override">
+          <Field label="Paperclip API URL override">
             <DraftInput
               value={
                 eff(
@@ -146,7 +146,7 @@ export function OpenClawGatewayConfigFields({
               onCommit={(v) => mark("adapterConfig", "paperclipApiUrl", v || undefined)}
               immediate
               className={inputClass}
-              placeholder="https://occ-agent.example"
+              placeholder="https://paperclip.example"
             />
           </Field>
 
@@ -226,7 +226,7 @@ export function OpenClawGatewayConfigFields({
 
           <Field label="Device auth">
             <div className="text-xs text-muted-foreground leading-relaxed">
-              Always enabled for gateway agents. OCC Agent persists a device key during onboarding so pairing approvals
+              Always enabled for gateway agents. Paperclip persists a device key during onboarding so pairing approvals
               remain stable across runs.
             </div>
           </Field>

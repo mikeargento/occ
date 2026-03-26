@@ -1,5 +1,4 @@
 import fs from "node:fs/promises";
-import fsSync from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -13,6 +12,7 @@ import {
   parseObject,
   parseJson,
   buildPaperclipEnv,
+  readPaperclipRuntimeSkillEntries,
   joinPromptSections,
   redactEnvForLogs,
   ensureAbsoluteDirectory,
@@ -28,40 +28,32 @@ import {
   isClaudeMaxTurnsResult,
   isClaudeUnknownSessionError,
 } from "./parse.js";
+import { resolveClaudeDesiredSkillNames } from "./skills.js";
 
 const __moduleDir = path.dirname(fileURLToPath(import.meta.url));
-const PAPERCLIP_SKILLS_CANDIDATES = [
-  path.resolve(__moduleDir, "../../skills"),         // published: <pkg>/dist/server/ -> <pkg>/skills/
-  path.resolve(__moduleDir, "../../../../../skills"), // dev: src/server/ -> repo root/skills/
-];
-
-async function resolvePaperclipSkillsDir(): Promise<string | null> {
-  for (const candidate of PAPERCLIP_SKILLS_CANDIDATES) {
-    const isDir = await fs.stat(candidate).then((s) => s.isDirectory()).catch(() => false);
-    if (isDir) return candidate;
-  }
-  return null;
-}
 
 /**
  * Create a tmpdir with `.claude/skills/` containing symlinks to skills from
  * the repo's `skills/` directory, so `--add-dir` makes Claude Code discover
  * them as proper registered skills.
  */
-async function buildSkillsDir(): Promise<string> {
+async function buildSkillsDir(config: Record<string, unknown>): Promise<string> {
   const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "paperclip-skills-"));
   const target = path.join(tmp, ".claude", "skills");
   await fs.mkdir(target, { recursive: true });
-  const skillsDir = await resolvePaperclipSkillsDir();
-  if (!skillsDir) return tmp;
-  const entries = await fs.readdir(skillsDir, { withFileTypes: true });
-  for (const entry of entries) {
-    if (entry.isDirectory()) {
-      await fs.symlink(
-        path.join(skillsDir, entry.name),
-        path.join(target, entry.name),
-      );
-    }
+  const availableEntries = await readPaperclipRuntimeSkillEntries(config, __moduleDir);
+  const desiredNames = new Set(
+    resolveClaudeDesiredSkillNames(
+      config,
+      availableEntries,
+    ),
+  );
+  for (const entry of availableEntries) {
+    if (!desiredNames.has(entry.key)) continue;
+    await fs.symlink(
+      entry.source,
+      path.join(target, entry.runtimeName),
+    );
   }
   return tmp;
 }
@@ -304,18 +296,17 @@ export async function runClaudeLogin(input: {
 }
 
 export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExecutionResult> {
-  const { runId, agent, runtime, config, context, onLog, onMeta, authToken } = ctx;
+  const { runId, agent, runtime, config, context, onLog, onMeta, onSpawn, authToken } = ctx;
 
   const promptTemplate = asString(
     config.promptTemplate,
-    "You are agent {{agent.id}} ({{agent.name}}). Continue your OCC Agent work.",
+    "You are agent {{agent.id}} ({{agent.name}}). Continue your Paperclip work.",
   );
   const model = asString(config.model, "");
   const effort = asString(config.effort, "");
   const chrome = asBoolean(config.chrome, false);
   const maxTurns = asNumber(config.maxTurnsPerRun, 0);
   const dangerouslySkipPermissions = asBoolean(config.dangerouslySkipPermissions, false);
-  const occMcpUrl = asString(config.occMcpUrl, "").trim();
   const instructionsFilePath = asString(config.instructionsFilePath, "").trim();
   const instructionsFileDir = instructionsFilePath ? `${path.dirname(instructionsFilePath)}/` : "";
   const commandNotes = instructionsFilePath
@@ -348,33 +339,41 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     ),
   );
   const billingType = resolveClaudeBillingType(effectiveEnv);
-  const skillsDir = await buildSkillsDir();
+  const skillsDir = await buildSkillsDir(config);
+
+  // MCP server configuration — write temp file if mcpUrls are set
+  const mcpUrls = (config.mcpUrls ?? {}) as Record<string, string>;
+  let mcpConfigPath: string | undefined;
+  if (Object.keys(mcpUrls).length > 0) {
+    const mcpServers: Record<string, { url: string }> = {};
+    for (const [name, url] of Object.entries(mcpUrls)) {
+      if (url) mcpServers[name] = { url };
+    }
+    if (Object.keys(mcpServers).length > 0) {
+      mcpConfigPath = path.join(skillsDir, "mcp-config.json");
+      await fs.writeFile(mcpConfigPath, JSON.stringify({ mcpServers }, null, 2), "utf-8");
+    }
+  }
 
   // When instructionsFilePath is configured, create a combined temp file that
   // includes both the file content and the path directive, so we only need
   // --append-system-prompt-file (Claude CLI forbids using both flags together).
-  let effectiveInstructionsFilePath = instructionsFilePath;
+  let effectiveInstructionsFilePath: string | undefined = instructionsFilePath;
   if (instructionsFilePath) {
-    const instructionsContent = await fs.readFile(instructionsFilePath, "utf-8");
-    const pathDirective = `\nThe above agent instructions were loaded from ${instructionsFilePath}. Resolve any relative file references from ${instructionsFileDir}.`;
-    const combinedPath = path.join(skillsDir, "agent-instructions.md");
-    await fs.writeFile(combinedPath, instructionsContent + pathDirective, "utf-8");
-    effectiveInstructionsFilePath = combinedPath;
-  }
-
-  // Write a temporary MCP config file when an OCC MCP URL is configured.
-  let occMcpConfigPath: string | null = null;
-  if (occMcpUrl) {
-    occMcpConfigPath = path.join(os.tmpdir(), `occ-mcp-${runId}.json`);
-    fsSync.writeFileSync(
-      occMcpConfigPath,
-      JSON.stringify({
-        mcpServers: {
-          occ: { url: occMcpUrl },
-        },
-      }),
-      "utf-8",
-    );
+    try {
+      const instructionsContent = await fs.readFile(instructionsFilePath, "utf-8");
+      const pathDirective = `\nThe above agent instructions were loaded from ${instructionsFilePath}. Resolve any relative file references from ${instructionsFileDir}.`;
+      const combinedPath = path.join(skillsDir, "agent-instructions.md");
+      await fs.writeFile(combinedPath, instructionsContent + pathDirective, "utf-8");
+      effectiveInstructionsFilePath = combinedPath;
+    } catch (err) {
+      const reason = err instanceof Error ? err.message : String(err);
+      await onLog(
+        "stderr",
+        `[paperclip] Warning: could not read agent instructions file "${instructionsFilePath}": ${reason}\n`,
+      );
+      effectiveInstructionsFilePath = undefined;
+    }
   }
 
   const runtimeSessionParams = parseObject(runtime.sessionParams);
@@ -386,7 +385,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
   const sessionId = canResumeSession ? runtimeSessionId : null;
   if (runtimeSessionId && !canResumeSession) {
     await onLog(
-      "stderr",
+      "stdout",
       `[paperclip] Claude session "${runtimeSessionId}" was saved for cwd "${runtimeSessionCwd}" and will not be resumed in "${cwd}".\n`,
     );
   }
@@ -430,7 +429,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       args.push("--append-system-prompt-file", effectiveInstructionsFilePath);
     }
     args.push("--add-dir", skillsDir);
-    if (occMcpConfigPath) args.push("--mcp-config", occMcpConfigPath);
+    if (mcpConfigPath) args.push("--mcp-config", mcpConfigPath);
     if (extraArgs.length > 0) args.push(...extraArgs);
     return args;
   };
@@ -473,6 +472,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       stdin: prompt,
       timeoutSec,
       graceSec,
+      onSpawn,
       onLog,
     });
 
@@ -590,7 +590,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       isClaudeUnknownSessionError(initial.parsed)
     ) {
       await onLog(
-        "stderr",
+        "stdout",
         `[paperclip] Claude resume session "${sessionId}" is unavailable; retrying with a fresh session.\n`,
       );
       const retry = await runAttempt(null);
@@ -600,8 +600,5 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     return toAdapterResult(initial, { fallbackSessionId: runtimeSessionId || runtime.sessionId });
   } finally {
     fs.rm(skillsDir, { recursive: true, force: true }).catch(() => {});
-    if (occMcpConfigPath) {
-      fs.rm(occMcpConfigPath, { force: true }).catch(() => {});
-    }
   }
 }

@@ -14,7 +14,7 @@ import { queryKeys } from "../lib/queryKeys";
 import { MetricCard } from "../components/MetricCard";
 import { EmptyState } from "../components/EmptyState";
 import { StatusIcon } from "../components/StatusIcon";
-import { PriorityIcon } from "../components/PriorityIcon";
+
 import { ActivityRow } from "../components/ActivityRow";
 import { Identity } from "../components/Identity";
 import { timeAgo } from "../lib/timeAgo";
@@ -168,7 +168,7 @@ export function Dashboard() {
       return (
         <EmptyState
           icon={LayoutDashboard}
-          message="Welcome to OCC Agent. Set up your first company and agent to get started."
+          message="Welcome to Paperclip. Set up your first company and agent to get started."
           action="Get Started"
           onAction={openOnboarding}
         />
@@ -198,7 +198,7 @@ export function Dashboard() {
             </p>
           </div>
           <button
-            onClick={() => openOnboarding({ companyId: selectedCompanyId! })}
+            onClick={() => openOnboarding({ initialStep: 2, companyId: selectedCompanyId! })}
             className="text-sm font-medium text-amber-700 hover:text-amber-900 dark:text-amber-300 dark:hover:text-amber-100 underline underline-offset-2 shrink-0"
           >
             Create one here
@@ -356,7 +356,6 @@ export function Dashboard() {
                             {issue.title}
                           </span>
                           <span className="flex items-center gap-2 sm:order-1 sm:shrink-0">
-                            <span className="hidden sm:inline-flex"><PriorityIcon priority={issue.priority} /></span>
                             <span className="hidden sm:inline-flex"><StatusIcon status={issue.status} /></span>
                             <span className="text-xs font-mono text-muted-foreground">
                               {issue.identifier ?? issue.id.slice(0, 8)}

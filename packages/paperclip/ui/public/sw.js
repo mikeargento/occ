@@ -1,4 +1,4 @@
-const CACHE_NAME = "occ-agent-v1";
+const CACHE_NAME = "paperclip-v2";
 
 self.addEventListener("install", () => {
   self.skipWaiting();

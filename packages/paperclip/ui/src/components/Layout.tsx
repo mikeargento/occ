@@ -15,6 +15,7 @@ import { NewAgentDialog } from "./NewAgentDialog";
 import { ToastViewport } from "./ToastViewport";
 import { MobileBottomNav } from "./MobileBottomNav";
 import { WorktreeBanner } from "./WorktreeBanner";
+import { DevRestartBanner } from "./DevRestartBanner";
 import { useDialog } from "../context/DialogContext";
 import { usePanel } from "../context/PanelContext";
 import { useCompany } from "../context/CompanyContext";
@@ -78,6 +79,11 @@ export function Layout() {
     queryKey: queryKeys.health,
     queryFn: () => healthApi.get(),
     retry: false,
+    refetchInterval: (query) => {
+      const data = query.state.data as { devServer?: { enabled?: boolean } } | undefined;
+      return data?.devServer?.enabled ? 2000 : false;
+    },
+    refetchIntervalInBackground: true,
   });
 
   useEffect(() => {
@@ -266,6 +272,7 @@ export function Layout() {
         Skip to Main Content
       </a>
       <WorktreeBanner />
+      <DevRestartBanner devServer={health?.devServer} />
       <div className={cn("min-h-0 flex-1", isMobile ? "w-full" : "flex overflow-hidden")}>
         {isMobile && sidebarOpen && (
           <button
@@ -290,7 +297,7 @@ export function Layout() {
             <div className="border-t border-r border-border px-3 py-2 bg-background">
               <div className="flex items-center gap-1">
                 <a
-                  href="https://proofstudio.xyz/docs"
+                  href="https://docs.paperclip.ing/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors text-foreground/80 hover:bg-accent/50 hover:text-foreground flex-1 min-w-0"
@@ -348,7 +355,7 @@ export function Layout() {
             <div className="border-t border-r border-border px-3 py-2">
               <div className="flex items-center gap-1">
                 <a
-                  href="https://proofstudio.xyz/docs"
+                  href="https://docs.paperclip.ing/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors text-foreground/80 hover:bg-accent/50 hover:text-foreground flex-1 min-w-0"

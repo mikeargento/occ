@@ -11,16 +11,17 @@ import { boardMutationGuard } from "./middleware/board-mutation-guard.js";
 import { privateHostnameGuard, resolvePrivateHostnameAllowSet } from "./middleware/private-hostname-guard.js";
 import { healthRoutes } from "./routes/health.js";
 import { companyRoutes } from "./routes/companies.js";
+import { companySkillRoutes } from "./routes/company-skills.js";
 import { agentRoutes } from "./routes/agents.js";
 import { projectRoutes } from "./routes/projects.js";
 import { issueRoutes } from "./routes/issues.js";
+import { routineRoutes } from "./routes/routines.js";
 import { executionWorkspaceRoutes } from "./routes/execution-workspaces.js";
 import { goalRoutes } from "./routes/goals.js";
 import { approvalRoutes } from "./routes/approvals.js";
 import { secretRoutes } from "./routes/secrets.js";
 import { costRoutes } from "./routes/costs.js";
 import { activityRoutes } from "./routes/activity.js";
-import { proofRoutes } from "./routes/proofs.js";
 import { dashboardRoutes } from "./routes/dashboard.js";
 import { sidebarBadgeRoutes } from "./routes/sidebar-badges.js";
 import { instanceSettingsRoutes } from "./routes/instance-settings.js";
@@ -29,10 +30,8 @@ import { assetRoutes } from "./routes/assets.js";
 import { accessRoutes } from "./routes/access.js";
 import { pluginRoutes } from "./routes/plugins.js";
 import { pluginUiStaticRoutes } from "./routes/plugin-ui-static.js";
-import { proxyControlRoutes } from "./routes/proxy-control.js";
 import { applyUiBranding } from "./ui-branding.js";
 import { logger } from "./middleware/logger.js";
-import { mcpRoutes } from "./mcp/index.js";
 import { DEFAULT_LOCAL_PLUGIN_DIR, pluginLoader } from "./services/plugin-loader.js";
 import { createPluginWorkerManager } from "./services/plugin-worker-manager.js";
 import { createPluginJobScheduler } from "./services/plugin-job-scheduler.js";
@@ -80,6 +79,8 @@ export async function createApp(
   const app = express();
 
   app.use(express.json({
+    // Company import/export payloads can inline full portable packages.
+    limit: "10mb",
     verify: (req, _res, buf) => {
       (req as unknown as { rawBody: Buffer }).rawBody = buf;
     },
@@ -126,9 +127,6 @@ export async function createApp(
   }
   app.use(llmRoutes(db));
 
-  // MCP server endpoint — lets users connect any AI to their dashboard
-  app.use(mcpRoutes(db));
-
   // Mount API routes
   const api = Router();
   api.use(boardMutationGuard());
@@ -141,18 +139,19 @@ export async function createApp(
       companyDeletionEnabled: opts.companyDeletionEnabled,
     }),
   );
-  api.use("/companies", companyRoutes(db));
+  api.use("/companies", companyRoutes(db, opts.storageService));
+  api.use(companySkillRoutes(db));
   api.use(agentRoutes(db));
   api.use(assetRoutes(db, opts.storageService));
   api.use(projectRoutes(db));
   api.use(issueRoutes(db, opts.storageService));
+  api.use(routineRoutes(db));
   api.use(executionWorkspaceRoutes(db));
   api.use(goalRoutes(db));
   api.use(approvalRoutes(db));
   api.use(secretRoutes(db));
   api.use(costRoutes(db));
   api.use(activityRoutes(db));
-  api.use(proofRoutes(db));
   api.use(dashboardRoutes(db));
   api.use(sidebarBadgeRoutes(db));
   api.use(instanceSettingsRoutes(db));
@@ -227,7 +226,6 @@ export async function createApp(
       allowedHostnames: opts.allowedHostnames,
     }),
   );
-  api.use(proxyControlRoutes());
   app.use("/api", api);
   app.use("/api", (_req, res) => {
     res.status(404).json({ error: "API route not found" });

@@ -23,7 +23,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { FolderOpen, Heart, ChevronDown, X, Shield, Plus, Minus } from "lucide-react";
+import { FolderOpen, Heart, ChevronDown, X } from "lucide-react";
 import { cn } from "../lib/utils";
 import { extractModelName, extractProviderId } from "../lib/model-utils";
 import { queryKeys } from "../lib/queryKeys";
@@ -44,6 +44,8 @@ import { ClaudeLocalAdvancedFields } from "../adapters/claude-local/config-field
 import { MarkdownEditor } from "./MarkdownEditor";
 import { ChoosePathButton } from "./PathInstructionsModal";
 import { OpenCodeLogoIcon } from "./OpenCodeLogoIcon";
+import { ReportsToPicker } from "./ReportsToPicker";
+import { shouldShowLegacyWorkingDirectoryField } from "../lib/legacy-agent-config";
 
 /* ---- Create mode values ---- */
 
@@ -60,6 +62,12 @@ type AgentConfigFormProps = {
   onSaveActionChange?: (save: (() => void) | null) => void;
   onCancelActionChange?: (cancel: (() => void) | null) => void;
   hideInlineSave?: boolean;
+  showAdapterTypeField?: boolean;
+  showAdapterTestEnvironmentButton?: boolean;
+  showCreateRunPolicySection?: boolean;
+  hideInstructionsFile?: boolean;
+  /** Hide the prompt template field from the Identity section (used when it's shown in a separate Prompts tab). */
+  hidePromptTemplate?: boolean;
   /** "cards" renders each section as heading + bordered card (for settings pages). Default: "inline" (border-b dividers). */
   sectionLayout?: "inline" | "cards";
 } & (
@@ -84,7 +92,6 @@ interface Overlay {
   adapterConfig: Record<string, unknown>;
   heartbeat: Record<string, unknown>;
   runtime: Record<string, unknown>;
-  occPolicy: Record<string, unknown>;
 }
 
 const emptyOverlay: Overlay = {
@@ -92,7 +99,6 @@ const emptyOverlay: Overlay = {
   adapterConfig: {},
   heartbeat: {},
   runtime: {},
-  occPolicy: {},
 };
 
 /** Stable empty object used as fallback for missing env config to avoid new-object-per-render. */
@@ -104,8 +110,7 @@ function isOverlayDirty(o: Overlay): boolean {
     o.adapterType !== undefined ||
     Object.keys(o.adapterConfig).length > 0 ||
     Object.keys(o.heartbeat).length > 0 ||
-    Object.keys(o.runtime).length > 0 ||
-    Object.keys(o.occPolicy).length > 0
+    Object.keys(o.runtime).length > 0
   );
 }
 
@@ -166,6 +171,10 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
   const { mode, adapterModels: externalModels } = props;
   const isCreate = mode === "create";
   const cards = props.sectionLayout === "cards";
+  const showAdapterTypeField = props.showAdapterTypeField ?? true;
+  const showAdapterTestEnvironmentButton = props.showAdapterTestEnvironmentButton ?? true;
+  const showCreateRunPolicySection = props.showCreateRunPolicySection ?? true;
+  const hideInstructionsFile = props.hideInstructionsFile ?? false;
   const { selectedCompanyId } = useCompany();
   const queryClient = useQueryClient();
 
@@ -254,13 +263,6 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
     if (Object.keys(overlay.runtime).length > 0) {
       Object.assign(patch, overlay.runtime);
     }
-    if (Object.keys(overlay.occPolicy).length > 0) {
-      const existingOcc = ((agent.metadata as Record<string, unknown>)?.occPolicy ?? {}) as Record<string, unknown>;
-      patch.metadata = {
-        ...((agent.metadata ?? {}) as Record<string, unknown>),
-        occPolicy: { ...existingOcc, ...overlay.occPolicy },
-      };
-    }
 
     props.onSave(patch);
   }, [isCreate, isDirty, overlay, props]);
@@ -295,7 +297,10 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
     adapterType === "codex_local" ||
     adapterType === "gemini_local" ||
     adapterType === "opencode_local" ||
+    adapterType === "pi_local" ||
     adapterType === "cursor";
+  const showLegacyWorkingDirectoryField =
+    isLocal && shouldShowLegacyWorkingDirectoryField({ isCreate, adapterConfig: config });
   const uiAdapter = useMemo(() => getUIAdapter(adapterType), [adapterType]);
 
   // Fetch adapter models for the effective adapter type
@@ -311,6 +316,12 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
   });
   const models = fetchedModels ?? externalModels ?? [];
 
+  const { data: companyAgents = [] } = useQuery({
+    queryKey: selectedCompanyId ? queryKeys.agents.list(selectedCompanyId) : ["agents", "none", "list"],
+    queryFn: () => agentsApi.list(selectedCompanyId!),
+    enabled: Boolean(!isCreate && selectedCompanyId),
+  });
+
   /** Props passed to adapter-specific config field components */
   const adapterFieldProps = {
     mode,
@@ -322,18 +333,11 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
     eff: eff as <T>(group: "adapterConfig", field: string, original: T) => T,
     mark: mark as (group: "adapterConfig", field: string, value: unknown) => void,
     models,
+    hideInstructionsFile,
   };
 
   // Section toggle state — advanced always starts collapsed
   const [runPolicyAdvancedOpen, setRunPolicyAdvancedOpen] = useState(false);
-  const [occPolicyOpen, setOccPolicyOpen] = useState(false);
-
-  // OCC Policy — resolve from agent metadata
-  const occPolicyData = useMemo(() => {
-    if (isCreate) return {};
-    const meta = (props.agent.metadata ?? {}) as Record<string, unknown>;
-    return (meta.occPolicy ?? {}) as Record<string, unknown>;
-  }, [isCreate, !isCreate ? props.agent : undefined]); // eslint-disable-line react-hooks/exhaustive-deps
   // Popover states
   const [modelOpen, setModelOpen] = useState(false);
   const [thinkingEffortOpen, setThinkingEffortOpen] = useState(false);
@@ -465,6 +469,15 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
                 placeholder="e.g. VP of Engineering"
               />
             </Field>
+            <Field label="Reports to" hint={help.reportsTo}>
+              <ReportsToPicker
+                agents={companyAgents}
+                value={eff("identity", "reportsTo", props.agent.reportsTo ?? null)}
+                onChange={(id) => mark("identity", "reportsTo", id)}
+                excludeAgentIds={[props.agent.id]}
+                chooseLabel="Choose manager…"
+              />
+            </Field>
             <Field label="Capabilities" hint={help.capabilities}>
               <MarkdownEditor
                 value={eff("identity", "capabilities", props.agent.capabilities ?? "")}
@@ -480,7 +493,7 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
                 }}
               />
             </Field>
-            {isLocal && (
+            {isLocal && !props.hidePromptTemplate && (
               <>
                 <Field label="Prompt Template" hint={help.promptTemplate}>
                   <MarkdownEditor
@@ -515,69 +528,73 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
             ? <h3 className="text-sm font-medium">Adapter</h3>
             : <span className="text-xs font-medium text-muted-foreground">Adapter</span>
           }
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-7 px-2.5 text-xs"
-            onClick={() => testEnvironment.mutate()}
-            disabled={testEnvironment.isPending || !selectedCompanyId}
-          >
-            {testEnvironment.isPending ? "Testing..." : "Test environment"}
-          </Button>
+          {showAdapterTestEnvironmentButton && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 px-2.5 text-xs"
+              onClick={() => testEnvironment.mutate()}
+              disabled={testEnvironment.isPending || !selectedCompanyId}
+            >
+              {testEnvironment.isPending ? "Testing..." : "Test environment"}
+            </Button>
+          )}
         </div>
         <div className={cn(cards ? "border border-border rounded-lg p-4 space-y-3" : "px-4 pb-3 space-y-3")}>
-          <Field label="Adapter type" hint={help.adapterType}>
-            <AdapterTypeDropdown
-              value={adapterType}
-              onChange={(t) => {
-                if (isCreate) {
-                  // Reset all adapter-specific fields to defaults when switching adapter type
-                  const { adapterType: _at, ...defaults } = defaultCreateValues;
-                  const nextValues: CreateConfigValues = { ...defaults, adapterType: t };
-                  if (t === "codex_local") {
-                    nextValues.model = DEFAULT_CODEX_LOCAL_MODEL;
-                    nextValues.dangerouslyBypassSandbox =
-                      DEFAULT_CODEX_LOCAL_BYPASS_APPROVALS_AND_SANDBOX;
-                  } else if (t === "gemini_local") {
-                    nextValues.model = DEFAULT_GEMINI_LOCAL_MODEL;
-                  } else if (t === "cursor") {
-                    nextValues.model = DEFAULT_CURSOR_LOCAL_MODEL;
-                  } else if (t === "opencode_local") {
-                    nextValues.model = "";
+          {showAdapterTypeField && (
+            <Field label="Adapter type" hint={help.adapterType}>
+              <AdapterTypeDropdown
+                value={adapterType}
+                onChange={(t) => {
+                  if (isCreate) {
+                    // Reset all adapter-specific fields to defaults when switching adapter type
+                    const { adapterType: _at, ...defaults } = defaultCreateValues;
+                    const nextValues: CreateConfigValues = { ...defaults, adapterType: t };
+                    if (t === "codex_local") {
+                      nextValues.model = DEFAULT_CODEX_LOCAL_MODEL;
+                      nextValues.dangerouslyBypassSandbox =
+                        DEFAULT_CODEX_LOCAL_BYPASS_APPROVALS_AND_SANDBOX;
+                    } else if (t === "gemini_local") {
+                      nextValues.model = DEFAULT_GEMINI_LOCAL_MODEL;
+                    } else if (t === "cursor") {
+                      nextValues.model = DEFAULT_CURSOR_LOCAL_MODEL;
+                    } else if (t === "opencode_local") {
+                      nextValues.model = "";
+                    }
+                    set!(nextValues);
+                  } else {
+                    // Clear all adapter config and explicitly blank out model + effort/mode keys
+                    // so the old adapter's values don't bleed through via eff()
+                    setOverlay((prev) => ({
+                      ...prev,
+                      adapterType: t,
+                      adapterConfig: {
+                        model:
+                          t === "codex_local"
+                            ? DEFAULT_CODEX_LOCAL_MODEL
+                            : t === "gemini_local"
+                              ? DEFAULT_GEMINI_LOCAL_MODEL
+                            : t === "cursor"
+                              ? DEFAULT_CURSOR_LOCAL_MODEL
+                            : "",
+                        effort: "",
+                        modelReasoningEffort: "",
+                        variant: "",
+                        mode: "",
+                        ...(t === "codex_local"
+                          ? {
+                              dangerouslyBypassApprovalsAndSandbox:
+                                DEFAULT_CODEX_LOCAL_BYPASS_APPROVALS_AND_SANDBOX,
+                            }
+                          : {}),
+                      },
+                    }));
                   }
-                  set!(nextValues);
-                } else {
-                  // Clear all adapter config and explicitly blank out model + effort/mode keys
-                  // so the old adapter's values don't bleed through via eff()
-                  setOverlay((prev) => ({
-                    ...prev,
-                    adapterType: t,
-                    adapterConfig: {
-                      model:
-                        t === "codex_local"
-                          ? DEFAULT_CODEX_LOCAL_MODEL
-                          : t === "gemini_local"
-                            ? DEFAULT_GEMINI_LOCAL_MODEL
-                          : t === "cursor"
-                            ? DEFAULT_CURSOR_LOCAL_MODEL
-                          : "",
-                      effort: "",
-                      modelReasoningEffort: "",
-                      variant: "",
-                      mode: "",
-                      ...(t === "codex_local"
-                        ? {
-                            dangerouslyBypassApprovalsAndSandbox:
-                              DEFAULT_CODEX_LOCAL_BYPASS_APPROVALS_AND_SANDBOX,
-                          }
-                        : {}),
-                    },
-                  }));
-                }
-              }}
-            />
-          </Field>
+                }}
+              />
+            </Field>
+          )}
 
           {testEnvironment.error && (
             <div className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
@@ -592,8 +609,8 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
           )}
 
           {/* Working directory */}
-          {isLocal && (
-            <Field label="Working directory" hint={help.cwd}>
+          {showLegacyWorkingDirectoryField && (
+            <Field label="Working directory (deprecated)" hint={help.cwd}>
               <div className="flex items-center gap-2 rounded-md border border-border px-2.5 py-1.5">
                 <FolderOpen className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                 <DraftInput
@@ -671,8 +688,10 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
                       ? "codex"
                       : adapterType === "gemini_local"
                         ? "gemini"
-                      : adapterType === "cursor"
-                        ? "agent"
+                        : adapterType === "pi_local"
+                          ? "pi"
+                        : adapterType === "cursor"
+                          ? "agent"
                         : adapterType === "opencode_local"
                           ? "opencode"
                           : "claude"
@@ -754,6 +773,21 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
                 <ClaudeLocalAdvancedFields {...adapterFieldProps} />
               )}
 
+              <Field label="MCP server URLs" hint={help.mcpUrls}>
+                <McpUrlsEditor
+                  value={
+                    isCreate
+                      ? (val!.mcpUrls ?? {})
+                      : ((eff("adapterConfig", "mcpUrls", (config.mcpUrls ?? {})) ?? {}) as Record<string, string>)
+                  }
+                  onChange={(urls) =>
+                    isCreate
+                      ? set!({ mcpUrls: urls })
+                      : mark("adapterConfig", "mcpUrls", Object.keys(urls).length > 0 ? urls : undefined)
+                  }
+                />
+              </Field>
+
               <Field label="Extra args (comma-separated)" hint={help.extraArgs}>
                 <DraftInput
                   value={
@@ -774,7 +808,6 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
 
               <Field label="Environment variables" hint={help.envVars}>
                 <EnvVarEditor
-                  adapterType={adapterType}
                   value={
                     isCreate
                       ? ((val!.envBindings ?? EMPTY_ENV) as Record<string, EnvBinding>)
@@ -828,7 +861,7 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
       )}
 
       {/* ---- Run Policy ---- */}
-      {isCreate ? (
+      {isCreate && showCreateRunPolicySection ? (
         <div className={cn(!cards && "border-b border-border")}>
           {cards
             ? <h3 className="text-sm font-medium flex items-center gap-2 mb-3"><Heart className="h-3 w-3" /> Run Policy</h3>
@@ -849,7 +882,7 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
             />
           </div>
         </div>
-      ) : (
+      ) : !isCreate ? (
         <div className={cn(!cards && "border-b border-border")}>
           {cards
             ? <h3 className="text-sm font-medium flex items-center gap-2 mb-3"><Heart className="h-3 w-3" /> Run Policy</h3>
@@ -915,218 +948,8 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
           </CollapsibleSection>
           </div>
         </div>
-      )}
+      ) : null}
 
-      {/* ---- OCC Policy ---- */}
-      {!isCreate && (
-        <div className={cn(!cards && "border-b border-border")}>
-          {cards
-            ? <h3 className="text-sm font-medium flex items-center gap-2 mb-3"><Shield className="h-3 w-3" /> OCC Policy</h3>
-            : <button
-                className="flex items-center gap-2 w-full px-4 py-2 text-xs font-medium text-muted-foreground hover:bg-accent/30 transition-colors"
-                onClick={() => setOccPolicyOpen(!occPolicyOpen)}
-              >
-                {occPolicyOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronDown className="h-3 w-3 -rotate-90" />}
-                <Shield className="h-3 w-3" />
-                OCC Policy
-              </button>
-          }
-          {(cards || occPolicyOpen) && (
-            <div className={cn(cards ? "border border-border rounded-lg p-4 space-y-5" : "px-4 pb-4 space-y-5")}>
-              <p className="text-[11px] text-muted-foreground">{help.occPolicy}</p>
-
-              {/* Skills */}
-              <OccSkillsGrid
-                value={(eff("occPolicy", "allowedSkills", (occPolicyData.allowedSkills ?? [])) as string[])}
-                onChange={(v) => mark("occPolicy", "allowedSkills", v)}
-              />
-
-              {/* File Boundaries */}
-              <OccFileBoundaries
-                canRead={(eff("occPolicy", "canRead", (occPolicyData.canRead ?? [])) as string[])}
-                canWrite={(eff("occPolicy", "canWrite", (occPolicyData.canWrite ?? [])) as string[])}
-                onChangeRead={(v) => mark("occPolicy", "canRead", v)}
-                onChangeWrite={(v) => mark("occPolicy", "canWrite", v)}
-              />
-
-              {/* Action Permissions */}
-              <OccActionPermissions
-                value={(eff("occPolicy", "actionPermissions", (occPolicyData.actionPermissions ?? {})) as Record<string, boolean>)}
-                onChange={(v) => mark("occPolicy", "actionPermissions", v)}
-              />
-
-            </div>
-          )}
-        </div>
-      )}
-
-    </div>
-  );
-}
-
-/* ---- OCC Policy sub-components ---- */
-
-const OCC_SKILLS = [
-  "algorithmic-art", "brand-guidelines", "canvas-design", "claude-api", "doc-coauthoring", "docx",
-  "frontend-design", "internal-comms", "mcp-builder", "pdf", "pptx", "skill-creator", "slack-gif-creator",
-  "theme-factory", "web-artifacts-builder", "webapp-testing", "xlsx", "changelog-generator",
-  "competitive-ads-extractor", "connect-apps", "content-research-writer", "developer-growth-analysis",
-  "domain-name-brainstormer", "file-organizer", "image-enhancer", "invoice-organizer",
-  "lead-research-assistant", "meeting-insights-analyzer", "twitter-algorithm-optimizer",
-] as const;
-
-const OCC_ACTIONS = [
-  { key: "canWriteCode", label: "Can write code" },
-  { key: "canCreateIssues", label: "Can create issues" },
-  { key: "canComment", label: "Can comment" },
-  { key: "canDelegateTasks", label: "Can delegate tasks" },
-  { key: "canDeploy", label: "Can deploy" },
-  { key: "canApproveHires", label: "Can approve hires" },
-  { key: "canModifyBudget", label: "Can modify budget" },
-  { key: "canAccessSecrets", label: "Can access secrets" },
-] as const;
-
-function OccSkillsGrid({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
-  const set = new Set(value);
-  const toggle = (skill: string) => {
-    const next = new Set(set);
-    if (next.has(skill)) next.delete(skill);
-    else next.add(skill);
-    onChange(Array.from(next));
-  };
-  return (
-    <div>
-      <div className="flex items-center gap-1.5 mb-2">
-        <span className="text-xs font-medium text-muted-foreground">Allowed Skills</span>
-        <span className="text-[11px] text-muted-foreground/50">({value.length} enabled)</span>
-      </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1.5">
-        {OCC_SKILLS.map((skill) => {
-          const on = set.has(skill);
-          return (
-            <button
-              key={skill}
-              type="button"
-              onClick={() => toggle(skill)}
-              className={cn(
-                "flex items-center justify-between gap-1.5 rounded-md border px-2 py-1 text-[11px] transition-colors",
-                on
-                  ? "border-green-600/40 bg-green-600/10 text-green-400"
-                  : "border-border bg-transparent text-muted-foreground hover:bg-accent/30"
-              )}
-            >
-              <span className="truncate">{skill}</span>
-              <span className={cn(
-                "inline-block h-2.5 w-2.5 rounded-full shrink-0 transition-colors",
-                on ? "bg-green-500" : "bg-muted"
-              )} />
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function OccPathList({
-  label,
-  paths,
-  onChange,
-}: {
-  label: string;
-  paths: string[];
-  onChange: (v: string[]) => void;
-}) {
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-1.5">
-        <span className="text-xs text-muted-foreground">{label}</span>
-        <button
-          type="button"
-          onClick={() => onChange([...paths, ""])}
-          className="inline-flex items-center gap-1 rounded-md border border-border px-1.5 py-0.5 text-[11px] text-muted-foreground hover:bg-accent/30 transition-colors"
-        >
-          <Plus className="h-2.5 w-2.5" /> Add
-        </button>
-      </div>
-      {paths.length === 0 && (
-        <p className="text-[11px] text-muted-foreground/50 italic">No paths configured</p>
-      )}
-      <div className="space-y-1.5">
-        {paths.map((p, i) => (
-          <div key={i} className="flex items-center gap-1.5">
-            <input
-              className="flex-1 rounded-md border border-border px-2 py-1 bg-transparent outline-none text-xs font-mono placeholder:text-muted-foreground/40"
-              placeholder="/path/to/directory"
-              value={p}
-              onChange={(e) => {
-                const next = [...paths];
-                next[i] = e.target.value;
-                onChange(next);
-              }}
-            />
-            <button
-              type="button"
-              onClick={() => onChange(paths.filter((_, j) => j !== i))}
-              className="inline-flex items-center rounded-md border border-border p-1 text-muted-foreground hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30 transition-colors"
-            >
-              <Minus className="h-3 w-3" />
-            </button>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function OccFileBoundaries({
-  canRead,
-  canWrite,
-  onChangeRead,
-  onChangeWrite,
-}: {
-  canRead: string[];
-  canWrite: string[];
-  onChangeRead: (v: string[]) => void;
-  onChangeWrite: (v: string[]) => void;
-}) {
-  return (
-    <div>
-      <div className="flex items-center gap-1.5 mb-2">
-        <span className="text-xs font-medium text-muted-foreground">File Boundaries</span>
-        <span className="text-[11px] text-muted-foreground/50">({help.fileBoundaries})</span>
-      </div>
-      <div className="space-y-3">
-        <OccPathList label="Can Read" paths={canRead} onChange={onChangeRead} />
-        <OccPathList label="Can Write" paths={canWrite} onChange={onChangeWrite} />
-      </div>
-    </div>
-  );
-}
-
-function OccActionPermissions({
-  value,
-  onChange,
-}: {
-  value: Record<string, boolean>;
-  onChange: (v: Record<string, boolean>) => void;
-}) {
-  return (
-    <div>
-      <div className="flex items-center gap-1.5 mb-2">
-        <span className="text-xs font-medium text-muted-foreground">Action Permissions</span>
-        <span className="text-[11px] text-muted-foreground/50">({help.actionPermissions})</span>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        {OCC_ACTIONS.map(({ key, label }) => (
-          <ToggleField
-            key={key}
-            label={label}
-            checked={Boolean(value[key])}
-            onChange={(v) => onChange({ ...value, [key]: v })}
-          />
-        ))}
-      </div>
     </div>
   );
 }
@@ -1168,7 +991,7 @@ function AdapterEnvironmentResult({ result }: { result: AdapterEnvironmentTestRe
 
 /* ---- Internal sub-components ---- */
 
-const ENABLED_ADAPTER_TYPES = new Set(["claude_local", "codex_local", "gemini_local", "opencode_local", "cursor"]);
+const ENABLED_ADAPTER_TYPES = new Set(["claude_local", "codex_local", "gemini_local", "opencode_local", "pi_local", "cursor"]);
 
 /** Display list includes all real adapter types plus UI-only coming-soon entries. */
 const ADAPTER_DISPLAY_LIST: { value: string; label: string; comingSoon: boolean }[] = [
@@ -1227,28 +1050,12 @@ function AdapterTypeDropdown({
   );
 }
 
-/** Suggested env var keys per adapter type */
-const ADAPTER_ENV_SUGGESTIONS: Record<string, string[]> = {
-  claude_local: ["ANTHROPIC_API_KEY"],
-  codex_local: ["OPENAI_API_KEY"],
-  opencode_local: ["OPENAI_API_KEY"],
-  gemini_local: ["GEMINI_API_KEY"],
-  cursor: ["CURSOR_API_KEY"],
-  pi_local: ["PI_API_KEY"],
-  openclaw_gateway: [],
-  hermes_local: [],
-  http: [],
-  process: [],
-};
-
 function EnvVarEditor({
-  adapterType,
   value,
   secrets,
   onCreateSecret,
   onChange,
 }: {
-  adapterType: string;
   value: Record<string, EnvBinding>;
   secrets: CompanySecret[];
   onCreateSecret: (name: string, value: string) => Promise<CompanySecret>;
@@ -1260,8 +1067,6 @@ function EnvVarEditor({
     plainValue: string;
     secretId: string;
   };
-
-  const suggestions = ADAPTER_ENV_SUGGESTIONS[adapterType] ?? [];
 
   function toRows(rec: Record<string, EnvBinding> | null | undefined): Row[] {
     if (!rec || typeof rec !== "object") {
@@ -1410,28 +1215,12 @@ function EnvVarEditor({
           !row.secretId;
         return (
           <div key={i} className="flex items-center gap-1.5">
-            {suggestions.length > 0 && !row.key ? (
-              <select
-                className={cn(inputClass, "flex-[2] bg-background")}
-                value=""
-                onChange={(e) => updateRow(i, { key: e.target.value })}
-              >
-                <option value="">Select variable...</option>
-                {suggestions
-                  .filter((s) => !rows.some((r, idx) => idx !== i && r.key === s))
-                  .map((s) => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                <option value="__custom">Custom...</option>
-              </select>
-            ) : (
-              <input
-                className={cn(inputClass, "flex-[2]")}
-                placeholder="KEY"
-                value={row.key === "__custom" ? "" : row.key}
-                onChange={(e) => updateRow(i, { key: e.target.value })}
-              />
-            )}
+            <input
+              className={cn(inputClass, "flex-[2]")}
+              placeholder="KEY"
+              value={row.key}
+              onChange={(e) => updateRow(i, { key: e.target.value })}
+            />
             <select
               className={cn(inputClass, "flex-[1] bg-background")}
               value={row.source}
@@ -1504,7 +1293,7 @@ function EnvVarEditor({
       })}
       {sealError && <p className="text-[11px] text-destructive">{sealError}</p>}
       <p className="text-[11px] text-muted-foreground/60">
-        OCC_* variables are injected automatically at runtime.
+        PAPERCLIP_* variables are injected automatically at runtime.
       </p>
     </div>
   );
@@ -1689,5 +1478,85 @@ function ThinkingEffortDropdown({
         </PopoverContent>
       </Popover>
     </Field>
+  );
+}
+
+/* ---- MCP URLs Editor ---- */
+
+function McpUrlsEditor({
+  value,
+  onChange,
+}: {
+  value: Record<string, string>;
+  onChange: (urls: Record<string, string>) => void;
+}) {
+  type Row = { name: string; url: string };
+
+  function toRows(rec: Record<string, string>): Row[] {
+    const entries = Object.entries(rec).map(([name, url]) => ({ name, url }));
+    return [...entries, { name: "", url: "" }];
+  }
+
+  const [rows, setRows] = useState<Row[]>(() => toRows(value));
+  const valueRef = useRef(value);
+
+  useEffect(() => {
+    if (value !== valueRef.current) {
+      valueRef.current = value;
+      setRows(toRows(value));
+    }
+  }, [value]);
+
+  function commit(updated: Row[]) {
+    setRows(updated);
+    const rec: Record<string, string> = {};
+    for (const r of updated) {
+      if (r.name.trim() && r.url.trim()) rec[r.name.trim()] = r.url.trim();
+    }
+    valueRef.current = rec;
+    onChange(rec);
+  }
+
+  function updateRow(i: number, field: "name" | "url", v: string) {
+    const next = rows.map((r, j) => (j === i ? { ...r, [field]: v } : r));
+    const last = next[next.length - 1];
+    if (last && (last.name || last.url)) next.push({ name: "", url: "" });
+    commit(next);
+  }
+
+  function removeRow(i: number) {
+    const next = rows.filter((_, j) => j !== i);
+    if (next.length === 0) next.push({ name: "", url: "" });
+    commit(next);
+  }
+
+  return (
+    <div className="space-y-2">
+      {rows.map((row, i) => (
+        <div key={i} className="flex gap-2 items-center">
+          <input
+            className="flex-[1] min-w-0 px-2 py-1.5 text-sm rounded border bg-background"
+            placeholder="Name (e.g. jimbo)"
+            value={row.name}
+            onChange={(e) => updateRow(i, "name", e.target.value)}
+          />
+          <input
+            className="flex-[3] min-w-0 px-2 py-1.5 text-sm rounded border bg-background font-mono"
+            placeholder="https://agent.occ.wtf/mcp/..."
+            value={row.url}
+            onChange={(e) => updateRow(i, "url", e.target.value)}
+          />
+          {(row.name || row.url) && (
+            <button
+              type="button"
+              className="text-muted-foreground hover:text-destructive text-sm px-1"
+              onClick={() => removeRow(i)}
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      ))}
+    </div>
   );
 }

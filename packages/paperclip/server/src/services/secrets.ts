@@ -159,6 +159,7 @@ export function secretService(db: Db) {
 
     getById,
     getByName,
+    resolveSecretValue,
 
     create: async (
       companyId: string,
@@ -336,49 +337,32 @@ export function secretService(db: Db) {
     resolveAdapterConfigForRuntime: async (companyId: string, adapterConfig: Record<string, unknown>): Promise<{ config: Record<string, unknown>; secretKeys: Set<string> }> => {
       const resolved = { ...adapterConfig };
       const secretKeys = new Set<string>();
-
-      // --- Inherit company-level secrets as defaults ---
-      // Company secrets whose names match known env var patterns (e.g. ANTHROPIC_API_KEY)
-      // are injected automatically. Agent-level env vars take priority.
-      const companySecretRows = await db
-        .select()
-        .from(companySecrets)
-        .where(eq(companySecrets.companyId, companyId));
-      const companyEnvDefaults: Record<string, string> = {};
-      for (const secret of companySecretRows) {
-        if (ENV_KEY_RE.test(secret.name)) {
-          try {
-            companyEnvDefaults[secret.name] = await resolveSecretValue(companyId, secret.id, "latest");
-            secretKeys.add(secret.name);
-          } catch {
-            // Skip secrets that fail to resolve
-          }
-        }
+      if (!Object.prototype.hasOwnProperty.call(adapterConfig, "env")) {
+        return { config: resolved, secretKeys };
       }
-
       const record = asRecord(adapterConfig.env);
-      const agentEnv: Record<string, string> = {};
-      if (record) {
-        for (const [key, rawBinding] of Object.entries(record)) {
-          if (!ENV_KEY_RE.test(key)) {
-            throw unprocessable(`Invalid environment variable name: ${key}`);
-          }
-          const parsed = envBindingSchema.safeParse(rawBinding);
-          if (!parsed.success) {
-            throw unprocessable(`Invalid environment binding for key: ${key}`);
-          }
-          const binding = canonicalizeBinding(parsed.data as EnvBinding);
-          if (binding.type === "plain") {
-            agentEnv[key] = binding.value;
-          } else {
-            agentEnv[key] = await resolveSecretValue(companyId, binding.secretId, binding.version);
-            secretKeys.add(key);
-          }
+      if (!record) {
+        resolved.env = {};
+        return { config: resolved, secretKeys };
+      }
+      const env: Record<string, string> = {};
+      for (const [key, rawBinding] of Object.entries(record)) {
+        if (!ENV_KEY_RE.test(key)) {
+          throw unprocessable(`Invalid environment variable name: ${key}`);
+        }
+        const parsed = envBindingSchema.safeParse(rawBinding);
+        if (!parsed.success) {
+          throw unprocessable(`Invalid environment binding for key: ${key}`);
+        }
+        const binding = canonicalizeBinding(parsed.data as EnvBinding);
+        if (binding.type === "plain") {
+          env[key] = binding.value;
+        } else {
+          env[key] = await resolveSecretValue(companyId, binding.secretId, binding.version);
+          secretKeys.add(key);
         }
       }
-
-      // Merge: company defaults first, agent-level overrides on top
-      resolved.env = { ...companyEnvDefaults, ...agentEnv };
+      resolved.env = env;
       return { config: resolved, secretKeys };
     },
   };

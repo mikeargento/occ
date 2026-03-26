@@ -17,7 +17,6 @@ export const heartbeatRunEvents = pgTable(
     color: text("color"),
     message: text("message"),
     payload: jsonb("payload").$type<Record<string, unknown>>(),
-    occProof: jsonb("occ_proof").$type<Record<string, unknown>>(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => ({

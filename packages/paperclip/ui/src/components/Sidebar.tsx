@@ -5,11 +5,11 @@ import {
   LayoutDashboard,
   DollarSign,
   History,
-  Shield,
-  ShieldCheck,
   Search,
   SquarePen,
   Network,
+  Boxes,
+  Repeat,
   Settings,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -99,6 +99,7 @@ export function Sidebar() {
 
         <SidebarSection label="Work">
           <SidebarNavItem to="/issues" label="Issues" icon={CircleDot} />
+          <SidebarNavItem to="/routines" label="Routines" icon={Repeat} textBadge="Beta" textBadgeTone="amber" />
           <SidebarNavItem to="/goals" label="Goals" icon={Target} />
         </SidebarSection>
 
@@ -108,10 +109,9 @@ export function Sidebar() {
 
         <SidebarSection label="Company">
           <SidebarNavItem to="/org" label="Org" icon={Network} />
+          <SidebarNavItem to="/skills" label="Skills" icon={Boxes} />
           <SidebarNavItem to="/costs" label="Costs" icon={DollarSign} />
           <SidebarNavItem to="/activity" label="Activity" icon={History} />
-          <SidebarNavItem to="/proof-log" label="Proof Log" icon={Shield} />
-          <SidebarNavItem to="/control-plane" label="Control Plane" icon={ShieldCheck} />
           <SidebarNavItem to="/company/settings" label="Settings" icon={Settings} />
         </SidebarSection>
 
@@ -123,19 +123,6 @@ export function Sidebar() {
           missingBehavior="placeholder"
         />
       </nav>
-
-      {/* Footer */}
-      <div className="shrink-0 border-t border-border/20 px-4 py-3 flex items-center justify-between">
-        <span className="text-[9px] font-black tracking-[-0.02em] opacity-70">OCC.WTF</span>
-        <a
-          href="https://buymeacoffee.com/mikeargento"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-[9px] text-muted-foreground hover:text-foreground transition-colors"
-        >
-          ☕
-        </a>
-      </div>
     </aside>
   );
 }

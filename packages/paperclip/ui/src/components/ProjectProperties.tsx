@@ -687,7 +687,7 @@ export function ProjectProperties({ project, onUpdate, onFieldUpdate, getFieldSa
                     {codebase.effectiveLocalFolder}
                   </div>
                   {codebase.origin === "managed_checkout" && (
-                    <div className="text-[11px] text-muted-foreground">OCC Agent-managed folder.</div>
+                    <div className="text-[11px] text-muted-foreground">Paperclip-managed folder.</div>
                   )}
                 </div>
                 <div className="flex items-center gap-1">
@@ -719,7 +719,7 @@ export function ProjectProperties({ project, onUpdate, onFieldUpdate, getFieldSa
 
             {hasAdditionalLegacyWorkspaces && (
               <div className="text-[11px] text-muted-foreground">
-                Additional legacy workspace records exist on this project. OCC Agent is using the primary workspace as the codebase view.
+                Additional legacy workspace records exist on this project. Paperclip is using the primary workspace as the codebase view.
               </div>
             )}
 
@@ -887,6 +887,7 @@ export function ProjectProperties({ project, onUpdate, onFieldUpdate, getFieldSa
                   </div>
                   {onUpdate || onFieldUpdate ? (
                     <button
+                      data-slot="toggle"
                       className={cn(
                         "relative inline-flex h-5 w-9 items-center rounded-full transition-colors",
                         executionWorkspacesEnabled ? "bg-green-600" : "bg-muted",
@@ -925,6 +926,7 @@ export function ProjectProperties({ project, onUpdate, onFieldUpdate, getFieldSa
                         </div>
                       </div>
                       <button
+                        data-slot="toggle"
                         className={cn(
                           "relative inline-flex h-5 w-9 items-center rounded-full transition-colors",
                           executionWorkspaceDefaultMode === "isolated_workspace" ? "bg-green-600" : "bg-muted",
@@ -1038,7 +1040,7 @@ export function ProjectProperties({ project, onUpdate, onFieldUpdate, getFieldSa
                               })}
                             immediate
                             className="w-full rounded border border-border bg-transparent px-2 py-1 text-xs font-mono outline-none"
-                            placeholder=".occ/worktrees"
+                            placeholder=".paperclip/worktrees"
                           />
                         </div>
                         <div>

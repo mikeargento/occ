@@ -25,7 +25,7 @@ export const help: Record<string, string> = {
   reportsTo: "The agent this one reports to in the org hierarchy.",
   capabilities: "Describes what this agent can do. Shown in the org chart and used for task routing.",
   adapterType: "How this agent runs: local CLI (Claude/Codex/OpenCode), OpenClaw Gateway, spawned process, or generic HTTP webhook.",
-  cwd: "Default working directory fallback for local adapters. Use an absolute path on the machine running OCC Agent.",
+  cwd: "Deprecated legacy working directory fallback for local adapters. Existing agents may still carry this value, but new configurations should use project workspaces instead.",
   promptTemplate: "Sent on every heartbeat. Keep this small and dynamic. Use it for current-task framing, not large static instructions. Supports {{ agent.id }}, {{ agent.name }}, {{ agent.role }} and other template variables.",
   model: "Override the default model used by the adapter.",
   thinkingEffort: "Control model reasoning depth. Supported values vary by adapter/model.",
@@ -33,7 +33,7 @@ export const help: Record<string, string> = {
   dangerouslySkipPermissions: "Run Claude without permission prompts. Required for unattended operation.",
   dangerouslyBypassSandbox: "Run Codex without sandbox restrictions. Required for filesystem/network access.",
   search: "Enable Codex web search capability during runs.",
-  workspaceStrategy: "How OCC Agent should realize an execution workspace for this agent. Keep project_primary for normal cwd execution, or use git_worktree for issue-scoped isolated checkouts.",
+  workspaceStrategy: "How Paperclip should realize an execution workspace for this agent. Keep project_primary for normal cwd execution, or use git_worktree for issue-scoped isolated checkouts.",
   workspaceBaseRef: "Base git ref used when creating a worktree branch. Leave blank to use the resolved workspace ref or HEAD.",
   workspaceBranchTemplate: "Template for naming derived branches. Supports {{issue.identifier}}, {{issue.title}}, {{agent.name}}, {{project.id}}, {{workspace.repoRef}}, and {{slug}}.",
   worktreeParentDir: "Directory where derived worktrees should be created. Absolute, ~-prefixed, and repo-relative paths are supported.",
@@ -43,9 +43,10 @@ export const help: Record<string, string> = {
   localCommand: "Override the path to the CLI command you want the adapter to call (e.g. /usr/local/bin/claude, codex, opencode).",
   args: "Command-line arguments, comma-separated.",
   extraArgs: "Extra CLI arguments for local adapters, comma-separated.",
+  mcpUrls: "MCP server URLs. Each agent run will connect to these servers. Paste your OCC agent MCP link here.",
   envVars: "Environment variables injected into the adapter process. Use plain values or secret references.",
-  bootstrapPrompt: "Only sent when OCC Agent starts a fresh session. Use this for stable setup guidance that should not be repeated on every heartbeat.",
-  payloadTemplateJson: "Optional JSON merged into remote adapter request payloads before OCC Agent adds its standard wake and workspace fields.",
+  bootstrapPrompt: "Only sent when Paperclip starts a fresh session. Use this for stable setup guidance that should not be repeated on every heartbeat.",
+  payloadTemplateJson: "Optional JSON merged into remote adapter request payloads before Paperclip adds its standard wake and workspace fields.",
   webhookUrl: "The URL that receives POST requests when the agent is invoked.",
   heartbeatInterval: "Run this agent automatically on a timer. Useful for periodic tasks like checking for new work.",
   intervalSec: "Seconds between automatic heartbeat invocations.",
@@ -55,10 +56,6 @@ export const help: Record<string, string> = {
   cooldownSec: "Minimum seconds between consecutive heartbeat runs.",
   maxConcurrentRuns: "Maximum number of heartbeat runs that can execute simultaneously for this agent.",
   budgetMonthlyCents: "Monthly spending limit in cents. 0 means no limit.",
-  occPolicy: "OCC policy defines what this agent is authorized to do. Default deny: nothing is allowed unless explicitly enabled.",
-  allowedSkills: "Skills this agent can use. Each skill provides specific capabilities.",
-  fileBoundaries: "Directory paths this agent can read from and write to.",
-  actionPermissions: "Actions this agent is allowed to perform.",
 };
 
 export const adapterLabels: Record<string, string> = {
@@ -121,6 +118,7 @@ export function ToggleField({
         {hint && <HintIcon text={hint} />}
       </div>
       <button
+        data-slot="toggle"
         className={cn(
           "relative inline-flex h-5 w-9 items-center rounded-full transition-colors",
           checked ? "bg-green-600" : "bg-muted"
@@ -169,6 +167,7 @@ export function ToggleWithNumber({
           {hint && <HintIcon text={hint} />}
         </div>
         <button
+          data-slot="toggle"
           className={cn(
             "relative inline-flex h-5 w-9 items-center rounded-full transition-colors shrink-0",
             checked ? "bg-green-600" : "bg-muted"

@@ -20,33 +20,33 @@ describe("isOnboardingPath", () => {
 });
 
 describe("resolveRouteOnboardingOptions", () => {
-  it("returns empty options for the global onboarding route", () => {
+  it("opens company creation for the global onboarding route", () => {
     expect(
       resolveRouteOnboardingOptions({
         pathname: "/onboarding",
         companies: [],
       }),
-    ).toEqual({});
+    ).toEqual({ initialStep: 1 });
   });
 
-  it("returns companyId when the prefixed company exists", () => {
+  it("opens agent creation when the prefixed company exists", () => {
     expect(
       resolveRouteOnboardingOptions({
         pathname: "/pap/onboarding",
         companyPrefix: "pap",
         companies: [{ id: "company-1", issuePrefix: "PAP" }],
       }),
-    ).toEqual({ companyId: "company-1" });
+    ).toEqual({ initialStep: 2, companyId: "company-1" });
   });
 
-  it("falls back to empty options when the prefixed company is missing", () => {
+  it("falls back to company creation when the prefixed company is missing", () => {
     expect(
       resolveRouteOnboardingOptions({
         pathname: "/pap/onboarding",
         companyPrefix: "pap",
         companies: [],
       }),
-    ).toEqual({});
+    ).toEqual({ initialStep: 1 });
   });
 });
 
