@@ -664,8 +664,9 @@ function AgentPanel({ agent, perms, onRefresh, onViewExplorer }: {
             <div className="divide-y divide-[#d9d9d9]">
               {agent.blockedTools.map(tool => {
                 const prov = toolProvenance[tool];
+                const fading = dismissingTools.has(tool);
                 return (
-                  <div key={tool} className="flex items-center gap-3 px-5 py-3">
+                  <div key={tool} className={`flex items-center gap-3 px-5 py-3 transition-all duration-300 ${fading ? "opacity-20 scale-[0.98] pointer-events-none" : "opacity-100"}`}>
                     <div className="w-2 h-2 rounded-full bg-red-400 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <span className="text-[14px] text-[#666]">{humanizeToolName(tool)}</span>
@@ -676,8 +677,10 @@ function AgentPanel({ agent, perms, onRefresh, onViewExplorer }: {
                       )}
                     </div>
                     <button onClick={async () => {
+                      setDismissingTools(prev => new Set(prev).add(tool));
                       await fetch(`/api/agents/${encodeURIComponent(agent.id)}/tools/${encodeURIComponent(tool)}/unblock`, { method: "POST" });
                       await onRefresh();
+                      setDismissingTools(prev => { const next = new Set(prev); next.delete(tool); return next; });
                     }}
                       className="h-7 px-3 text-[11px] font-medium border border-blue-200 text-blue-500 hover:bg-blue-50 hover:border-blue-300 transition-colors flex-shrink-0">
                       Unblock
@@ -732,46 +735,63 @@ function AgentExplorer({ agent }: { agent: Agent }) {
     return { label: "Software", color: "text-amber-600 bg-amber-50 border-amber-200" };
   }
 
+  // Receipt can be nested as receipt.occProof.{artifact,commit} OR directly as receipt.{artifact,commit}
+  function r(p: any) {
+    return p.receipt?.occProof ?? p.receipt ?? {};
+  }
+
   function getDigest(p: any): string {
-    return p.proof_digest ?? p.receipt?.occProof?.artifact?.digestB64 ?? "";
+    return p.proof_digest ?? r(p).artifact?.digestB64 ?? r(p).digestB64 ?? "";
   }
 
   function getSigner(p: any): string {
-    return p.receipt?.occProof?.signer?.publicKeyB64 ?? p.receipt?.occProof?.commit?.signerB64 ?? "";
+    return r(p).signer?.publicKeyB64 ?? r(p).commit?.signerB64 ?? "";
   }
 
   function getCommitTime(p: any): string {
-    const t = p.receipt?.occProof?.commit?.time ?? p.receipt?.occProof?.artifact?.committedAt;
+    const t = r(p).commit?.time ?? r(p).artifact?.committedAt;
     if (!t) return "";
     return new Date(typeof t === "number" ? t : t).toLocaleString();
   }
 
   function getCounter(p: any): number | null {
-    return p.receipt?.occProof?.artifact?.counter ?? p.receipt?.occProof?.commit?.counter ?? null;
+    return r(p).artifact?.counter ?? r(p).commit?.counter ?? null;
   }
 
   function getPrevB64(p: any): string {
-    return p.receipt?.occProof?.artifact?.prevB64 ?? p.receipt?.occProof?.commit?.prevB64 ?? "";
+    return r(p).artifact?.prevB64 ?? r(p).commit?.prevB64 ?? "";
   }
 
   function getSignature(p: any): string {
-    return p.receipt?.occProof?.commit?.signatureB64 ?? p.receipt?.occProof?.artifact?.signatureB64 ?? "";
+    return r(p).commit?.signatureB64 ?? r(p).artifact?.signatureB64 ?? "";
   }
 
   function getNonce(p: any): string {
-    return p.receipt?.occProof?.artifact?.nonceB64 ?? p.receipt?.occProof?.commit?.nonceB64 ?? "";
+    return r(p).artifact?.nonceB64 ?? r(p).commit?.nonceB64 ?? "";
   }
 
   function getVersion(p: any): string {
-    return p.receipt?.occProof?.artifact?.version ?? "";
+    return r(p).artifact?.version ?? "";
   }
 
   function getEpochId(p: any): string {
-    return p.receipt?.occProof?.artifact?.epochId ?? p.receipt?.occProof?.commit?.epochId ?? "";
+    return r(p).artifact?.epochId ?? r(p).commit?.epochId ?? "";
   }
 
   function getPublicKey(p: any): string {
-    return p.receipt?.occProof?.signer?.publicKeyB64 ?? p.receipt?.occProof?.commit?.signerB64 ?? "";
+    return r(p).signer?.publicKeyB64 ?? r(p).commit?.signerB64 ?? "";
+  }
+
+  function getMetadata(p: any): Record<string, unknown> | null {
+    return r(p).metadata ?? r(p).artifact?.metadata ?? null;
+  }
+
+  function getAttestation(p: any): string {
+    return r(p).environment?.attestation ?? r(p).attestation ?? "";
+  }
+
+  function getPrincipal(p: any): { id?: string; provider?: string } | null {
+    return r(p).principal ?? r(p).metadata?.principal ?? null;
   }
 
   const filteredProofs = useMemo(() => {
@@ -859,35 +879,77 @@ function AgentExplorer({ agent }: { agent: Agent }) {
                   <span className="text-[11px] text-[#999] flex-shrink-0 ml-auto">{timeLabel(p.created_at)}</span>
                 </div>
 
-                {/* Expanded detail */}
-                {isExpanded && (
-                  <div className="px-5 pb-5 pt-2 bg-white border-t border-[#d9d9d9]">
-                    <div className="grid grid-cols-1 gap-0">
-                      <ProofField label="Tool" value={`${humanizeToolName(p.tool)} (${p.tool})`} />
-                      <ProofField label="Decision" value={p.allowed ? "Allowed" : "Denied"} color={p.allowed ? "text-blue-600" : "text-red-500"} />
-                      {p.reason && <ProofField label="Reason" value={p.reason} />}
-                      <ProofField label="Time" value={p.created_at ? new Date(p.created_at).toLocaleString() : ""} />
-                      {digest && <ProofField label="Digest" value={digest} mono />}
-                      {counter !== null && <ProofField label="Counter" value={String(counter)} />}
-                      {getEpochId(p) && <ProofField label="Epoch ID" value={getEpochId(p)} mono />}
-                      {getVersion(p) && <ProofField label="Version" value={getVersion(p)} />}
-                      {getNonce(p) && <ProofField label="Nonce (Base64)" value={getNonce(p)} mono />}
-                      {getPublicKey(p) && <ProofField label="Public Key (Base64)" value={getPublicKey(p)} mono />}
-                      {getSignature(p) && <ProofField label="Signature (Base64)" value={getSignature(p)} mono />}
-                      {getPrevB64(p) && <ProofField label="Previous Proof Hash" value={getPrevB64(p)} mono />}
-                      {getCommitTime(p) && <ProofField label="Committed" value={getCommitTime(p)} />}
-                      <ProofField label="Enforcement" value={enforcement.label} />
-                      {p.args && (
-                        <div className="border-b border-[#efefef] pb-2 pt-2">
-                          <span className="text-[12px] text-[#999] block mb-1">Arguments</span>
-                          <pre className="text-[11px] font-mono bg-[#f5f5f5] p-3 overflow-x-auto max-h-[200px] overflow-y-auto text-[#333]">
-                            {typeof p.args === "string" ? p.args : JSON.stringify(p.args, null, 2)}
-                          </pre>
-                        </div>
-                      )}
+                {/* Expanded detail — full explorer */}
+                {isExpanded && (() => {
+                  const principal = getPrincipal(p);
+                  const attestation = getAttestation(p);
+                  const metadata = getMetadata(p);
+                  return (
+                    <div className="px-3 sm:px-5 pb-5 pt-2 bg-white border-t border-[#d9d9d9]">
+                      <div className="grid grid-cols-1 gap-0">
+
+                        {/* Core */}
+                        <ProofField label="Tool" value={`${humanizeToolName(p.tool)} (${p.tool})`} />
+                        <ProofField label="Decision" value={p.allowed ? "Allowed" : "Denied"} color={p.allowed ? "text-blue-600" : "text-red-500"} />
+                        {p.reason && <ProofField label="Reason" value={p.reason} />}
+                        <ProofField label="Time" value={p.created_at ? new Date(p.created_at).toLocaleString() : ""} />
+
+                        {/* Cryptographic fields */}
+                        {digest && <ProofField label="Digest" value={digest} mono />}
+                        {counter !== null && <ProofField label="Counter" value={String(counter)} />}
+                        {getEpochId(p) && <ProofField label="Epoch ID" value={getEpochId(p)} mono />}
+                        {getVersion(p) && <ProofField label="Version" value={getVersion(p)} />}
+                        {getNonce(p) && <ProofField label="Nonce (Base64)" value={getNonce(p)} mono />}
+                        {getPublicKey(p) && <ProofField label="Public Key (Base64)" value={getPublicKey(p)} mono />}
+                        {getSignature(p) && <ProofField label="Signature (Base64)" value={getSignature(p)} mono />}
+                        {getPrevB64(p) && <ProofField label="Previous Proof Hash" value={getPrevB64(p)} mono />}
+                        {getCommitTime(p) && <ProofField label="Committed" value={getCommitTime(p)} />}
+
+                        {/* Enforcement + Attestation */}
+                        <ProofField label="Enforcement" value={enforcement.label} />
+                        {attestation && <ProofField label="Attestation" value={attestation} mono />}
+
+                        {/* Principal */}
+                        {principal && (
+                          <>
+                            <ProofField label="Principal ID" value={principal.id ?? ""} mono />
+                            {principal.provider && <ProofField label="Provider" value={principal.provider} />}
+                          </>
+                        )}
+
+                        {/* Metadata */}
+                        {metadata && (
+                          <div className="border-b border-[#efefef] pb-2 pt-2">
+                            <span className="text-[12px] text-[#999] block mb-1">Metadata</span>
+                            <pre className="text-[11px] font-mono bg-[#f5f5f5] p-3 overflow-x-auto max-h-[200px] overflow-y-auto text-[#333]">
+                              {JSON.stringify(metadata, null, 2)}
+                            </pre>
+                          </div>
+                        )}
+
+                        {/* Arguments */}
+                        {p.args && (
+                          <div className="border-b border-[#efefef] pb-2 pt-2">
+                            <span className="text-[12px] text-[#999] block mb-1">Arguments</span>
+                            <pre className="text-[11px] font-mono bg-[#f5f5f5] p-3 overflow-x-auto max-h-[200px] overflow-y-auto text-[#333]">
+                              {typeof p.args === "string" ? p.args : JSON.stringify(p.args, null, 2)}
+                            </pre>
+                          </div>
+                        )}
+
+                        {/* Raw receipt — collapsed */}
+                        {p.receipt && (
+                          <details className="pt-3">
+                            <summary className="text-[11px] text-[#999] cursor-pointer hover:text-[#666] transition-colors">Raw receipt</summary>
+                            <pre className="mt-2 text-[10px] font-mono bg-[#f5f5f5] p-3 overflow-x-auto max-h-[300px] overflow-y-auto text-[#333]">
+                              {JSON.stringify(p.receipt, null, 2)}
+                            </pre>
+                          </details>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
               </div>
             );
           })}
