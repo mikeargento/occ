@@ -806,8 +806,8 @@ function AgentExplorer({ agent }: { agent: Agent }) {
     return r(p).metadata ?? r(p).artifact?.metadata ?? null;
   }
 
-  function getAttestation(p: any): string {
-    return r(p).environment?.attestation ?? r(p).attestation ?? "";
+  function getAttestation(p: any): any {
+    return r(p).environment?.attestation ?? r(p).attestation ?? null;
   }
 
   function getPrincipal(p: any): { id?: string; provider?: string } | null {
@@ -927,7 +927,11 @@ function AgentExplorer({ agent }: { agent: Agent }) {
 
                         {/* Enforcement + Attestation */}
                         <ProofField label="Enforcement" value={enforcement.label} />
-                        {attestation && <ProofField label="Attestation" value={attestation} mono />}
+                        {attestation && typeof attestation === "object" ? (
+                          <ProofField label="Attestation" value={`${attestation.format ?? "unknown"} (${attestation.reportB64 ? attestation.reportB64.slice(0, 40) + "..." : "no report"})`} mono />
+                        ) : attestation ? (
+                          <ProofField label="Attestation" value={String(attestation)} mono />
+                        ) : null}
 
                         {/* Principal */}
                         {principal && (
