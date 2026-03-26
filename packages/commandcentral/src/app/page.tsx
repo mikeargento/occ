@@ -134,6 +134,48 @@ function AuthButton({ href, icon, label }: { href: string; icon: React.ReactNode
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   Connect Buttons — per-service paste-ready configs
+   ═══════════════════════════════════════════════════════════════ */
+
+const SERVICES = [
+  { id: "claude-code", label: "Claude Code", fmt: (url: string, name: string) => `claude mcp add ${name.toLowerCase().replace(/[^a-z0-9-]/g, "-")} --transport http ${url}` },
+  { id: "cursor", label: "Cursor", fmt: (url: string) => JSON.stringify({ mcpServers: { occ: { url } } }, null, 2) },
+  { id: "claude-desktop", label: "Claude Desktop", fmt: (url: string) => JSON.stringify({ mcpServers: { occ: { url } } }, null, 2) },
+  { id: "windsurf", label: "Windsurf", fmt: (url: string) => JSON.stringify({ mcpServers: { occ: { url } } }, null, 2) },
+  { id: "paperclip", label: "Paperclip", fmt: (url: string) => url },
+  { id: "openai", label: "OpenAI SDK", fmt: (url: string) => `from openai import OpenAI\nclient = OpenAI(base_url="${url}")` },
+  { id: "raw", label: "Raw URL", fmt: (url: string) => url },
+] as const;
+
+function ConnectButtons({ mcpUrl, proxyUrl, agentName, copiedKey, onCopy }: {
+  mcpUrl: string; proxyUrl: string | null; agentName: string;
+  copiedKey: string | null; onCopy: (key: string) => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <div>
+      <div className="flex items-center gap-1.5 flex-wrap">
+        {SERVICES.map(s => (
+          <button key={s.id} onClick={async (e) => {
+            e.stopPropagation();
+            const text = s.fmt(mcpUrl, agentName);
+            await navigator.clipboard.writeText(text);
+            onCopy(`${agentName}-${s.id}`);
+          }}
+            className={`px-2 py-0.5 text-[10px] font-medium border transition-colors ${
+              copiedKey === `${agentName}-${s.id}`
+                ? "border-emerald-400 text-emerald-600 bg-emerald-50"
+                : "border-[#d9d9d9] text-[#666] hover:text-[#000] hover:border-[#999]"
+            }`}>
+            {copiedKey === `${agentName}-${s.id}` ? "Copied!" : s.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
    Dashboard — three-level navigation
    Level 1: Agent picker (cards)
    Level 2: Agent panel (pending / allowed / blocked)
@@ -149,6 +191,7 @@ function Dashboard({ userName, provider, onBellClickRef }: { userName: string; p
   const [deletingAgent, setDeletingAgent] = useState<string | null>(null);
   const [copiedAgent, setCopiedAgent] = useState<string | null>(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [justCreatedAgent, setJustCreatedAgent] = useState<string | null>(null);
 
   // Wire bell click → navigate to first agent with pending requests
   useEffect(() => {
@@ -251,7 +294,7 @@ function Dashboard({ userName, provider, onBellClickRef }: { userName: string; p
                   if (newAgentName.trim()) {
                     const result = await createAgent(newAgentName.trim());
                     setNewAgentName(""); setAddingAgent(false); await refresh();
-                    if (result?.agent?.id) setView({ page: "panel", agentId: result.agent.id });
+                    if (result?.agent?.id) { setJustCreatedAgent(result.agent.id); setView({ page: "panel", agentId: result.agent.id }); }
                   }
                 }}
               />
@@ -338,36 +381,9 @@ function Dashboard({ userName, provider, onBellClickRef }: { userName: string; p
                             Delete
                           </span>
                         </div>
-                        {(a.mcpUrl || a.proxyUrl) && (
-                          <div className="mt-2 pt-2 border-t border-[#d9d9d9] space-y-1" onClick={e => e.stopPropagation()}>
-                            {a.mcpUrl && (
-                              <div className="flex items-center gap-2">
-                                <span className="text-[10px] text-[#999] w-16">MCP:</span>
-                                <button onClick={async (e) => {
-                                  e.stopPropagation();
-                                  await navigator.clipboard.writeText(a.mcpUrl!);
-                                  setCopiedAgent(`${a.id}-mcp`);
-                                  setTimeout(() => setCopiedAgent(null), 2000);
-                                }}
-                                  className={`text-[10px] font-medium transition-colors flex-shrink-0 ${copiedAgent === `${a.id}-mcp` ? "text-emerald-500" : "text-blue-500 hover:text-blue-600"}`}>
-                                  {copiedAgent === `${a.id}-mcp` ? "Copied!" : "Copy URL"}
-                                </button>
-                              </div>
-                            )}
-                            {a.proxyUrl && (
-                              <div className="flex items-center gap-2">
-                                <span className="text-[10px] text-[#999] w-16">API Proxy:</span>
-                                <button onClick={async (e) => {
-                                  e.stopPropagation();
-                                  await navigator.clipboard.writeText(a.proxyUrl!);
-                                  setCopiedAgent(`${a.id}-proxy`);
-                                  setTimeout(() => setCopiedAgent(null), 2000);
-                                }}
-                                  className={`text-[10px] font-medium transition-colors flex-shrink-0 ${copiedAgent === `${a.id}-proxy` ? "text-emerald-500" : "text-blue-500 hover:text-blue-600"}`}>
-                                  {copiedAgent === `${a.id}-proxy` ? "Copied!" : "Copy URL"}
-                                </button>
-                              </div>
-                            )}
+                        {a.mcpUrl && (
+                          <div className="mt-2 pt-2 border-t border-[#d9d9d9]" onClick={e => e.stopPropagation()}>
+                            <ConnectButtons mcpUrl={a.mcpUrl} proxyUrl={a.proxyUrl} agentName={a.name} copiedKey={copiedAgent} onCopy={(key) => { setCopiedAgent(key); setTimeout(() => setCopiedAgent(null), 2000); }} />
                           </div>
                         )}
                       </div>
@@ -419,6 +435,10 @@ function Dashboard({ userName, provider, onBellClickRef }: { userName: string; p
           perms={perms.filter(p => p.agentId === view.agentId)}
           onRefresh={refresh}
           onViewExplorer={() => setView({ page: "explorer", agentId: view.agentId })}
+          justCreated={justCreatedAgent === view.agentId}
+          onDismissCreated={() => setJustCreatedAgent(null)}
+          copiedKey={copiedAgent}
+          onCopy={(key: string) => { setCopiedAgent(key); setTimeout(() => setCopiedAgent(null), 2000); }}
         />
       )}
 
@@ -437,11 +457,15 @@ function Dashboard({ userName, provider, onBellClickRef }: { userName: string; p
    Agent Panel — Pending / Allowed / Blocked
    ═══════════════════════════════════════════════════════════════ */
 
-function AgentPanel({ agent, perms, onRefresh, onViewExplorer }: {
+function AgentPanel({ agent, perms, onRefresh, onViewExplorer, justCreated, onDismissCreated, copiedKey, onCopy }: {
   agent: Agent;
   perms: Permission[];
   onRefresh: () => Promise<void>;
   onViewExplorer: () => void;
+  justCreated?: boolean;
+  onDismissCreated?: () => void;
+  copiedKey?: string | null;
+  onCopy?: (key: string) => void;
 }) {
   const [busy, setBusy] = useState<number | null>(null);
   const [bulkBusy, setBulkBusy] = useState(false);
@@ -519,6 +543,21 @@ function AgentPanel({ agent, perms, onRefresh, onViewExplorer }: {
           </button>
         </div>
       </div>
+
+      {/* ── CONNECT — shown after creation or always available ── */}
+      {agent.mcpUrl && (justCreated || !pending.length) && (
+        <div className={`bg-white border ${justCreated ? "border-blue-400" : "border-[#d9d9d9]"} p-5`}>
+          {justCreated && (
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-[14px] font-bold">Connect {agent.name}</h2>
+              <button onClick={onDismissCreated} className="text-[11px] text-[#999] hover:text-[#000]">Dismiss</button>
+            </div>
+          )}
+          {!justCreated && <h2 className="text-[13px] font-semibold mb-3">Connect</h2>}
+          <p className="text-[11px] text-[#666] mb-3">Click a service to copy the paste-ready config:</p>
+          <ConnectButtons mcpUrl={agent.mcpUrl} proxyUrl={agent.proxyUrl} agentName={agent.name} copiedKey={copiedKey ?? null} onCopy={onCopy ?? (() => {})} />
+        </div>
+      )}
 
       {/* ── PENDING REQUESTS ── */}
       {pending.length > 0 && (
