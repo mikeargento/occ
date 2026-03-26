@@ -171,10 +171,6 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
 
   const currentAgent = useMemo(() => agents.find(a => a.id === selectedAgent), [agents, selectedAgent]);
   const agentPerms = useMemo(() => perms.filter(p => p.agentId === selectedAgent), [perms, selectedAgent]);
-  const activity = useMemo(() =>
-    agentPerms.filter(p => p.status !== "pending").sort((a, b) => (b.resolvedAt ?? b.requestedAt) - (a.resolvedAt ?? a.requestedAt)),
-    [agentPerms]
-  );
   const pending = useMemo(() => agentPerms.filter(p => p.status === "pending"), [agentPerms]);
 
   const firstName = userName?.split(" ")[0] ?? "there";
@@ -320,14 +316,84 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
         </div>
       )}
 
-      {/* Two column layout — only show when agents exist */}
-      {agents.length > 0 && <div className="flex flex-col lg:flex-row gap-6">
+      {/* Main content — only show when agents exist */}
+      {agents.length > 0 && <div className="space-y-6">
 
-        {/* ── LEFT: Allowed + Blocked ── */}
-        <div className="lg:w-[400px] flex-shrink-0 space-y-4">
+        {/* ── PENDING REQUESTS — full width, primary ── */}
+        {pending.length > 0 && (
+          <div className="bg-white border border-amber-300 overflow-hidden">
+            <div className="px-5 py-3 border-b border-amber-200 bg-amber-50">
+              <h2 className="text-[14px] font-bold text-amber-700">
+                {pending.length} pending request{pending.length > 1 ? "s" : ""}
+              </h2>
+            </div>
+            <div className="divide-y divide-amber-100">
+              {pending.map(p => {
+                const isOpen = expandedRequests.has(p.id);
+                const displayName = p.toolDescription || humanizeToolName(p.tool);
+                return (
+                  <div key={p.id} className="px-5 py-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse flex-shrink-0 mt-1" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[15px] font-semibold">{displayName}</span>
+                          <span className="text-[11px] text-[#666] px-1.5 py-0.5 bg-[#efefef]">{p.clientName}</span>
+                          <span className="text-[11px] text-[#999]">{timeLabel(p.requestedAt)}</span>
+                        </div>
+                        <code className="text-[12px] font-mono text-[#666]">{p.tool}</code>
 
-          {/* Allowed tools */}
-          <div className="bg-[#efefef] border border-[#d9d9d9] overflow-hidden">
+                        <button onClick={() => setExpandedRequests(prev => {
+                          const next = new Set(prev);
+                          isOpen ? next.delete(p.id) : next.add(p.id);
+                          return next;
+                        })}
+                          className="block mt-2 text-[11px] text-blue-500 hover:text-blue-600 transition-colors">
+                          {isOpen ? "Hide details" : "View details"}
+                        </button>
+
+                        {isOpen && p.requestArgs != null && (
+                          <div className="mt-3 pl-3 border-l-2 border-amber-200">
+                            <span className="text-[11px] text-[#666] font-medium">Arguments:</span>
+                            <pre className="mt-1 text-[11px] font-mono bg-[#f5f5f5] p-3 overflow-x-auto max-h-[200px] overflow-y-auto text-[#333]">
+                              {JSON.stringify(p.requestArgs, null, 2)}
+                            </pre>
+                          </div>
+                        )}
+
+                        <div className="flex items-center gap-2 mt-3">
+                          <button onClick={() => act(p.id, () => approvePermission(p.id, "always"))} disabled={busy === p.id}
+                            className="h-8 px-4 text-[12px] font-semibold bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-40 transition-all active:scale-[0.97] flex items-center gap-1.5">
+                            {busy === p.id && <Spinner size={10} color="white" />}
+                            Always allow
+                          </button>
+                          <button onClick={() => act(p.id, () => approvePermission(p.id, "once"))} disabled={busy === p.id}
+                            className="h-8 px-4 text-[12px] font-medium border border-blue-300 text-blue-600 hover:bg-blue-50 disabled:opacity-40 transition-all">
+                            Allow once
+                          </button>
+                          <button onClick={() => act(p.id, () => denyPermission(p.id, "once"))} disabled={busy === p.id}
+                            className="h-8 px-3 text-[12px] font-medium text-[#666] hover:text-red-500 hover:bg-red-50 disabled:opacity-40 transition-all">
+                            Deny
+                          </button>
+                          <button onClick={() => act(p.id, () => denyPermission(p.id, "always"))} disabled={busy === p.id}
+                            className="h-8 px-3 text-[12px] font-medium text-[#999] hover:text-red-600 hover:bg-red-50 disabled:opacity-40 transition-all">
+                            Always deny
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ── ALLOWED + BLOCKED side by side ── */}
+        <div className="flex flex-col lg:flex-row gap-6">
+
+          {/* Allowed */}
+          <div className="flex-1 bg-[#efefef] border border-[#d9d9d9] overflow-hidden">
             <div className="px-5 py-4 border-b border-[#d9d9d9]">
               <h2 className="text-[16px] font-bold">Allowed</h2>
             </div>
@@ -337,7 +403,6 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
                   <div key={tool} className="flex items-center gap-3 px-5 py-3 group">
                     <div className="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0" />
                     <span className="text-[14px] flex-1">{humanizeToolName(tool)}</span>
-                    <code className="text-[11px] font-mono text-[#999] hidden group-hover:block">{tool}</code>
                     <button onClick={() => act(0, () => revokePermission(selectedAgent, tool))}
                       className="text-[11px] text-red-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
                       Revoke
@@ -348,24 +413,23 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
             ) : (
               <div className="px-5 py-8 text-center">
                 <p className="text-[13px] text-[#666]">No tools allowed yet</p>
-                <p className="text-[11px] text-[#999] mt-1">Tools appear here when you approve requests</p>
+                <p className="text-[11px] text-[#999] mt-1">Approve requests to build your policy</p>
               </div>
             )}
           </div>
 
-          {/* Blocked tools */}
-          {currentAgent?.blockedTools && currentAgent.blockedTools.length > 0 && (
-            <div className="bg-[#efefef] border border-[#d9d9d9] overflow-hidden">
-              <div className="px-5 py-4 border-b border-[#d9d9d9]">
-                <h2 className="text-[16px] font-bold">Blocked</h2>
-              </div>
+          {/* Blocked */}
+          <div className="flex-1 bg-[#efefef] border border-[#d9d9d9] overflow-hidden">
+            <div className="px-5 py-4 border-b border-[#d9d9d9]">
+              <h2 className="text-[16px] font-bold">Blocked</h2>
+            </div>
+            {currentAgent?.blockedTools && currentAgent.blockedTools.length > 0 ? (
               <div className="divide-y divide-[#d9d9d9]">
                 {currentAgent.blockedTools.map(tool => (
                   <div key={tool} className="flex items-center gap-3 px-5 py-3 group">
                     <div className="w-2 h-2 rounded-full bg-red-400 flex-shrink-0" />
                     <span className="text-[14px] flex-1 text-[#666]">{humanizeToolName(tool)}</span>
                     <button onClick={async () => {
-                      // Unblock = remove from blocked_tools via API
                       await fetch(`/api/agents/${encodeURIComponent(selectedAgent)}/tools/${encodeURIComponent(tool)}`, { method: "DELETE" });
                       await refresh();
                     }}
@@ -375,127 +439,28 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
                   </div>
                 ))}
               </div>
-            </div>
-          )}
-
-        </div>
-
-        {/* ── RIGHT: Pending + Activity ── */}
-        <div className="flex-1 min-w-0 space-y-4">
-
-          {/* ── PENDING REQUESTS — primary interaction ── */}
-          {pending.length > 0 && (
-            <div className="bg-white border border-amber-300 overflow-hidden">
-              <div className="px-5 py-3 border-b border-amber-200 bg-amber-50">
-                <h2 className="text-[14px] font-bold text-amber-700">
-                  {pending.length} pending request{pending.length > 1 ? "s" : ""}
-                </h2>
-              </div>
-              <div className="divide-y divide-amber-100">
-                {pending.map(p => {
-                  const isOpen = expandedRequests.has(p.id);
-                  const displayName = p.toolDescription || humanizeToolName(p.tool);
-                  return (
-                    <div key={p.id} className="px-5 py-4">
-                      <div className="flex items-start gap-3">
-                        <div className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse flex-shrink-0 mt-1" />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-[15px] font-semibold">{displayName}</span>
-                            <span className="text-[11px] text-[#666] px-1.5 py-0.5 bg-[#efefef]">{p.clientName}</span>
-                            <span className="text-[11px] text-[#999]">{timeLabel(p.requestedAt)}</span>
-                          </div>
-                          <code className="text-[12px] font-mono text-[#666]">{p.tool}</code>
-
-                          {/* Expand/collapse details */}
-                          <button onClick={() => setExpandedRequests(prev => {
-                            const next = new Set(prev);
-                            isOpen ? next.delete(p.id) : next.add(p.id);
-                            return next;
-                          })}
-                            className="block mt-2 text-[11px] text-blue-500 hover:text-blue-600 transition-colors">
-                            {isOpen ? "Hide details" : "View details"}
-                          </button>
-
-                          {isOpen && (
-                            <div className="mt-3 pl-3 border-l-2 border-amber-200 space-y-2">
-                              {p.requestArgs != null && (
-                                <div>
-                                  <span className="text-[11px] text-[#666] font-medium">Arguments:</span>
-                                  <pre className="mt-1 text-[11px] font-mono bg-[#f5f5f5] p-3 overflow-x-auto max-h-[200px] overflow-y-auto text-[#333]">
-                                    {JSON.stringify(p.requestArgs, null, 2)}
-                                  </pre>
-                                </div>
-                              )}
-                            </div>
-                          )}
-
-                          {/* Decision buttons — the four options */}
-                          <div className="flex items-center gap-2 mt-3">
-                            <button onClick={() => act(p.id, () => approvePermission(p.id, "always"))} disabled={busy === p.id}
-                              className="h-8 px-4 text-[12px] font-semibold bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-40 transition-all active:scale-[0.97] flex items-center gap-1.5">
-                              {busy === p.id && <Spinner size={10} color="white" />}
-                              Always allow
-                            </button>
-                            <button onClick={() => act(p.id, () => approvePermission(p.id, "once"))} disabled={busy === p.id}
-                              className="h-8 px-4 text-[12px] font-medium border border-blue-300 text-blue-600 hover:bg-blue-50 disabled:opacity-40 transition-all">
-                              Allow once
-                            </button>
-                            <button onClick={() => act(p.id, () => denyPermission(p.id, "once"))} disabled={busy === p.id}
-                              className="h-8 px-3 text-[12px] font-medium text-[#666] hover:text-red-500 hover:bg-red-50 disabled:opacity-40 transition-all">
-                              Deny
-                            </button>
-                            <button onClick={() => act(p.id, () => denyPermission(p.id, "always"))} disabled={busy === p.id}
-                              className="h-8 px-3 text-[12px] font-medium text-[#999] hover:text-red-600 hover:bg-red-50 disabled:opacity-40 transition-all">
-                              Always deny
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Activity log */}
-          <div className="bg-[#efefef] border border-[#d9d9d9] overflow-hidden">
-            <div className="px-5 py-4 border-b border-[#d9d9d9]">
-              <h2 className="text-[16px] font-bold">Activity</h2>
-            </div>
-
-            {activity.length === 0 ? (
-              <div className="text-center py-20">
-                <div className="w-10 h-10 bg-[#e5e5e5] flex items-center justify-center mx-auto mb-4">
-                  <div className="w-2 h-2 rounded-full bg-[#d9d9d9] animate-pulse" />
-                </div>
-                <p className="text-[14px] text-[#333333]">No activity yet</p>
-                <p className="text-[12px] text-[#666666] mt-1">Actions will appear here as your AI works</p>
-              </div>
             ) : (
-              <div className="divide-y divide-[#d9d9d9]">
-                {activity.map(p => (
-                  <div key={p.id} className="flex items-center gap-3 px-5 py-3.5 hover:bg-[#efefef] transition-colors group">
-                    <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                      p.status === "approved" ? "bg-blue-400" : "bg-red-400"
-                    }`} />
-                    <div className="flex-1 min-w-0">
-                      <span className="text-[14px] font-medium">{p.tool}</span>
-                      <span className="text-[12px] text-[#333333] ml-2">{p.clientName}</span>
-                    </div>
-                    <span className="text-[11px] text-[#666666] flex-shrink-0">{timeLabel(p.resolvedAt ?? p.requestedAt)}</span>
-                    {p.proofDigest && (
-                      <a href={explorerUrl(p.proofDigest)}                        className="text-[11px] text-blue-500 hover:text-blue-400 transition-colors flex-shrink-0">
-                        proof ↗
-                      </a>
-                    )}
-                  </div>
-                ))}
+              <div className="px-5 py-8 text-center">
+                <p className="text-[13px] text-[#666]">Nothing blocked</p>
               </div>
             )}
           </div>
+
         </div>
+
+        {/* Proof log button */}
+        <div className="text-center">
+          <a href="https://occ.wtf/explorer" target="_blank" rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 h-10 px-6 text-[13px] font-semibold bg-blue-500 text-white hover:bg-blue-600 transition-colors">
+            View proof log
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+              <polyline points="15 3 21 3 21 9" />
+              <line x1="10" y1="14" x2="21" y2="3" />
+            </svg>
+          </a>
+        </div>
+
       </div>}
 
       {/* Footer */}
