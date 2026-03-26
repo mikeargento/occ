@@ -258,33 +258,41 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
                   }
 
                   return (
-                    <button key={a.id} onClick={() => setView({ page: "panel", agentId: a.id })}
-                      className="text-left w-full px-5 py-4 bg-[#efefef] border border-[#d9d9d9] hover:border-[#999] transition-colors group">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-[16px] font-bold">{a.name}</h3>
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                          className="text-[#ccc] group-hover:text-[#666] transition-colors">
-                          <path d="M6 4l4 4-4 4" />
-                        </svg>
-                      </div>
-                      <div className="flex items-center gap-3 text-[12px] text-[#666]">
-                        {pending > 0 && (
-                          <span className="flex items-center gap-1.5 text-amber-600 font-medium">
-                            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                            {pending} pending
+                    <div key={a.id} className="bg-[#efefef] border border-[#d9d9d9] hover:border-[#999] transition-colors group cursor-pointer"
+                      onClick={() => setView({ page: "panel", agentId: a.id })}>
+                      <div className="px-5 py-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="text-[16px] font-bold">{a.name}</h3>
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                            className="text-[#ccc] group-hover:text-[#666] transition-colors">
+                            <path d="M6 4l4 4-4 4" />
+                          </svg>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3 text-[12px] text-[#666]">
+                            {pending > 0 && (
+                              <span className="flex items-center gap-1.5 text-amber-600 font-medium">
+                                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                                {pending} pending
+                              </span>
+                            )}
+                            {(a.allowedTools?.length ?? 0) > 0 && (
+                              <span>{a.allowedTools!.length} allowed</span>
+                            )}
+                            {(a.blockedTools?.length ?? 0) > 0 && (
+                              <span>{a.blockedTools!.length} blocked</span>
+                            )}
+                            {!pending && !(a.allowedTools?.length) && !(a.blockedTools?.length) && (
+                              <span>No activity yet</span>
+                            )}
+                          </div>
+                          <span onClick={(e) => { e.stopPropagation(); setDeletingAgent(a.id); setDeleteConfirmText(""); }}
+                            className="text-[11px] text-[#ccc] hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
+                            Delete
                           </span>
-                        )}
-                        {(a.allowedTools?.length ?? 0) > 0 && (
-                          <span>{a.allowedTools!.length} allowed</span>
-                        )}
-                        {(a.blockedTools?.length ?? 0) > 0 && (
-                          <span>{a.blockedTools!.length} blocked</span>
-                        )}
-                        {!pending && !(a.allowedTools?.length) && !(a.blockedTools?.length) && (
-                          <span>No activity yet</span>
-                        )}
+                        </div>
                       </div>
-                    </button>
+                    </div>
                   );
                 })}
 
@@ -332,11 +340,6 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
           perms={perms.filter(p => p.agentId === view.agentId)}
           onRefresh={refresh}
           onViewExplorer={() => setView({ page: "explorer", agentId: view.agentId })}
-          onDeleteAgent={async () => {
-            await deleteAgent(view.agentId);
-            await refresh();
-            setView({ page: "agents" });
-          }}
         />
       )}
 
@@ -355,19 +358,16 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
    Agent Panel — Pending / Allowed / Blocked
    ═══════════════════════════════════════════════════════════════ */
 
-function AgentPanel({ agent, perms, onRefresh, onViewExplorer, onDeleteAgent }: {
+function AgentPanel({ agent, perms, onRefresh, onViewExplorer }: {
   agent: Agent;
   perms: Permission[];
   onRefresh: () => Promise<void>;
   onViewExplorer: () => void;
-  onDeleteAgent: () => Promise<void>;
 }) {
   const [busy, setBusy] = useState<number | null>(null);
   const [expandedRequests, setExpandedRequests] = useState<Set<number>>(new Set());
   const [editingName, setEditingName] = useState(false);
   const [editName, setEditName] = useState(agent?.name ?? "");
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const [deleteText, setDeleteText] = useState("");
 
   if (!agent) return null;
 
@@ -412,25 +412,6 @@ function AgentPanel({ agent, perms, onRefresh, onViewExplorer, onDeleteAgent }: 
             className="h-9 px-4 text-[13px] font-semibold bg-[#3B82F6] text-white hover:bg-blue-600 transition-colors">
             View proofs
           </button>
-          {confirmDelete ? (
-            <div className="flex items-center gap-2">
-              <span className="text-[12px] text-[#666]">Type <strong className="text-red-500">{agent.name}</strong> to delete</span>
-              <input value={deleteText} onChange={e => setDeleteText(e.target.value)} autoFocus
-                className="w-28 px-2 py-1 text-[12px] border border-red-300 outline-none focus:border-red-500 caret-red-500"
-                onKeyDown={async e => {
-                  if (e.key === "Enter" && deleteText === agent.name) { await onDeleteAgent(); }
-                  if (e.key === "Escape") { setConfirmDelete(false); setDeleteText(""); }
-                }} />
-              <button onClick={async () => { if (deleteText === agent.name) await onDeleteAgent(); }}
-                disabled={deleteText !== agent.name}
-                className="h-7 px-3 text-[11px] font-semibold bg-red-500 text-white disabled:opacity-30 transition-all">Delete</button>
-              <button onClick={() => { setConfirmDelete(false); setDeleteText(""); }}
-                className="text-[11px] text-[#666] hover:text-[#000]">Cancel</button>
-            </div>
-          ) : (
-            <button onClick={() => setConfirmDelete(true)}
-              className="text-[12px] text-[#999] hover:text-red-500 transition-colors">Delete agent</button>
-          )}
         </div>
       </div>
 
