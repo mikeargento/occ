@@ -192,12 +192,18 @@ export async function getActivePermissions(): Promise<{ permissions: Array<{
   return apiFetch("/permissions/active");
 }
 
-export async function approvePermission(id: number): Promise<unknown> {
-  return apiFetch(`/permissions/${id}/approve`, { method: "POST" });
+export async function approvePermission(id: number, mode: "once" | "always" = "always"): Promise<unknown> {
+  return apiFetch(`/permissions/${id}/approve`, {
+    method: "POST",
+    body: JSON.stringify({ mode }),
+  });
 }
 
-export async function denyPermission(id: number): Promise<unknown> {
-  return apiFetch(`/permissions/${id}/deny`, { method: "POST" });
+export async function denyPermission(id: number, mode: "once" | "always" = "once"): Promise<unknown> {
+  return apiFetch(`/permissions/${id}/deny`, {
+    method: "POST",
+    body: JSON.stringify({ mode }),
+  });
 }
 
 export async function revokePermission(agentId: string, tool: string): Promise<unknown> {

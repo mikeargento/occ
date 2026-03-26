@@ -450,13 +450,13 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
       {/* Two column layout — only show when agents exist */}
       {agents.length > 0 && <div className="flex flex-col lg:flex-row gap-6">
 
-        {/* ── LEFT: Rules ── */}
+        {/* ── LEFT: Rules (remembered policy) ── */}
         <div className="lg:w-[400px] flex-shrink-0">
           <div className="bg-[#efefef] border border-[#d9d9d9] overflow-hidden">
 
             {/* Header + commit button */}
             <div className="px-5 py-4 flex items-center justify-between border-b border-[#d9d9d9]">
-              <h2 className="text-[16px] font-bold">Rules</h2>
+              <h2 className="text-[16px] font-bold">Policy</h2>
               <button onClick={handleCommit} disabled={!isDirty || committing}
                 className={`h-8 px-4 text-[12px] font-semibold transition-all active:scale-[0.97] flex items-center gap-2 ${
                   isDirty
@@ -585,70 +585,75 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
         {/* ── RIGHT: Pending + Activity ── */}
         <div className="flex-1 min-w-0 space-y-4">
 
-          {/* Pending requests — top of activity panel */}
+          {/* ── PENDING REQUESTS — primary interaction ── */}
           {pending.length > 0 && (
-            <div className="bg-[#efefef] border border-amber-200/50 overflow-hidden">
-              <div className="px-5 py-3 border-b border-amber-100">
-                <h2 className="text-[14px] font-bold text-amber-600">
+            <div className="bg-white border border-amber-300 overflow-hidden">
+              <div className="px-5 py-3 border-b border-amber-200 bg-amber-50">
+                <h2 className="text-[14px] font-bold text-amber-700">
                   {pending.length} pending request{pending.length > 1 ? "s" : ""}
                 </h2>
               </div>
-              <div className="divide-y divide-amber-100/50">
+              <div className="divide-y divide-amber-100">
                 {pending.map(p => {
                   const isOpen = expandedRequests.has(p.id);
                   const displayName = p.toolDescription || humanizeToolName(p.tool);
                   return (
-                    <div key={p.id} className="px-5 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse flex-shrink-0" />
+                    <div key={p.id} className="px-5 py-4">
+                      <div className="flex items-start gap-3">
+                        <div className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse flex-shrink-0 mt-1" />
                         <div className="flex-1 min-w-0">
-                          <span className="text-[14px] font-medium">{displayName}</span>
-                          <span className="text-[12px] text-[#333333] ml-2">{p.clientName}</span>
-                        </div>
-                        <button onClick={() => setExpandedRequests(prev => {
-                          const next = new Set(prev);
-                          isOpen ? next.delete(p.id) : next.add(p.id);
-                          return next;
-                        })}
-                          className="text-[11px] text-[#333333] hover:text-[#000000] transition-colors flex-shrink-0">
-                          {isOpen ? "Hide" : "Details"}
-                        </button>
-                        <div className="flex gap-2 flex-shrink-0">
-                          <button onClick={() => act(p.id, () => approvePermission(p.id))} disabled={busy === p.id}
-                            className="h-7 px-3 text-[12px] font-semibold bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-40 transition-all active:scale-[0.97] flex items-center gap-1.5">
-                            {busy === p.id && <Spinner size={10} color="white" />}
-                            Allow
-                          </button>
-                          <button onClick={() => act(p.id, () => denyPermission(p.id))} disabled={busy === p.id}
-                            className="h-7 px-3 text-[12px] font-medium text-[#333333] hover:bg-[#e5e5e5] disabled:opacity-40 transition-all">
-                            Block
-                          </button>
-                        </div>
-                      </div>
-                      {isOpen && (
-                        <div className="mt-3 ml-5 pl-3 border-l-2 border-amber-200/30 space-y-2">
-                          <div className="flex items-center gap-2">
-                            <span className="text-[11px] text-[#333333]">Tool:</span>
-                            <code className="text-[11px] font-mono bg-[#e5e5e5] px-1.5 py-0.5">{p.tool}</code>
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-[15px] font-semibold">{displayName}</span>
+                            <span className="text-[11px] text-[#666] px-1.5 py-0.5 bg-[#efefef]">{p.clientName}</span>
+                            <span className="text-[11px] text-[#999]">{timeLabel(p.requestedAt)}</span>
                           </div>
-                          {p.requestArgs != null && (
-                            <div>
-                              <span className="text-[11px] text-[#333333]">Arguments:</span>
-                              <pre className="mt-1 text-[11px] font-mono bg-[#e5e5e5] p-3 overflow-x-auto max-h-[200px] overflow-y-auto text-[#333333]">
-                                {JSON.stringify(p.requestArgs, null, 2)}
-                              </pre>
+                          <code className="text-[12px] font-mono text-[#666]">{p.tool}</code>
+
+                          {/* Expand/collapse details */}
+                          <button onClick={() => setExpandedRequests(prev => {
+                            const next = new Set(prev);
+                            isOpen ? next.delete(p.id) : next.add(p.id);
+                            return next;
+                          })}
+                            className="block mt-2 text-[11px] text-blue-500 hover:text-blue-600 transition-colors">
+                            {isOpen ? "Hide details" : "View details"}
+                          </button>
+
+                          {isOpen && (
+                            <div className="mt-3 pl-3 border-l-2 border-amber-200 space-y-2">
+                              {p.requestArgs != null && (
+                                <div>
+                                  <span className="text-[11px] text-[#666] font-medium">Arguments:</span>
+                                  <pre className="mt-1 text-[11px] font-mono bg-[#f5f5f5] p-3 overflow-x-auto max-h-[200px] overflow-y-auto text-[#333]">
+                                    {JSON.stringify(p.requestArgs, null, 2)}
+                                  </pre>
+                                </div>
+                              )}
                             </div>
                           )}
-                          <div className="flex items-center gap-2">
-                            <span className="text-[11px] text-[#333333]">Client:</span>
-                            <span className="text-[11px]">{p.clientName}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-[11px] text-[#333333]">Requested:</span>
-                            <span className="text-[11px]">{new Date(p.requestedAt).toLocaleString()}</span>
+
+                          {/* Decision buttons — the four options */}
+                          <div className="flex items-center gap-2 mt-3">
+                            <button onClick={() => act(p.id, () => approvePermission(p.id, "always"))} disabled={busy === p.id}
+                              className="h-8 px-4 text-[12px] font-semibold bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-40 transition-all active:scale-[0.97] flex items-center gap-1.5">
+                              {busy === p.id && <Spinner size={10} color="white" />}
+                              Always allow
+                            </button>
+                            <button onClick={() => act(p.id, () => approvePermission(p.id, "once"))} disabled={busy === p.id}
+                              className="h-8 px-4 text-[12px] font-medium border border-blue-300 text-blue-600 hover:bg-blue-50 disabled:opacity-40 transition-all">
+                              Allow once
+                            </button>
+                            <button onClick={() => act(p.id, () => denyPermission(p.id, "once"))} disabled={busy === p.id}
+                              className="h-8 px-3 text-[12px] font-medium text-[#666] hover:text-red-500 hover:bg-red-50 disabled:opacity-40 transition-all">
+                              Deny
+                            </button>
+                            <button onClick={() => act(p.id, () => denyPermission(p.id, "always"))} disabled={busy === p.id}
+                              className="h-8 px-3 text-[12px] font-medium text-[#999] hover:text-red-600 hover:bg-red-50 disabled:opacity-40 transition-all">
+                              Always deny
+                            </button>
                           </div>
                         </div>
-                      )}
+                      </div>
                     </div>
                   );
                 })}

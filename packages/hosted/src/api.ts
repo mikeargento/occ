@@ -444,40 +444,64 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
     const req_entry = pending.find((r: any) => r.id === requestId);
     if (!req_entry) return json(res, { error: "Permission request not found" }, 404);
 
+    // Parse optional body for approval mode
+    let approvalMode: "once" | "always" = "always";
+    let denyMode: "once" | "always" = "once";
+    try {
+      const body = JSON.parse(await readBody(req));
+      if (decision === "approve" && body.mode === "once") approvalMode = "once";
+      if (decision === "approve" && body.mode === "always") approvalMode = "always";
+      if (decision === "deny" && body.mode === "always") denyMode = "always";
+    } catch { /* no body or invalid JSON — use defaults */ }
+
     let digestB64 = "";
     let proof: any = null;
 
     if (decision === "approve") {
       // ── CREATE AUTHORIZATION OBJECT ──
-      // This is NOT a flag flip. This creates a cryptographic object
-      // that must exist before execution is reachable.
+      // This creates a cryptographic object that must exist before execution.
       const chainId = `${userId}:${req_entry.agent_id}`;
       const authResult = await createAuthorizationObject(userId, req_entry.agent_id, req_entry.tool, undefined, chainId, await getPrincipal());
       digestB64 = authResult.digest;
       proof = authResult.proof;
 
-      // Sync the toggle: add tool to agent's allowed list
-      await db.enableTool(userId, req_entry.agent_id, req_entry.tool);
+      if (approvalMode === "always") {
+        // Durable: add tool to agent's allowed list (remembered policy)
+        await db.enableTool(userId, req_entry.agent_id, req_entry.tool);
+      }
+      // "once" mode: authorization object exists for this execution,
+      // but tool is NOT added to allowed_tools. Next request will ask again.
     }
 
-    // Resolve the permission request (updates status, stores proof ref)
+    if (decision === "deny" && denyMode === "always") {
+      // Durable deny: add to blocked list
+      await db.disableTool(userId, req_entry.agent_id, req_entry.tool);
+    }
+
+    // Resolve the permission request
     await db.resolvePermission(userId, requestId, status as any, digestB64, proof);
 
     // Log to proof table
     await db.addProof(userId, {
       agentId: req_entry.agent_id, tool: req_entry.tool,
       allowed: decision === "approve",
-      reason: decision === "approve" ? `Authorization object created: ${digestB64}` : "Denied — no authorization object created",
+      reason: decision === "approve"
+        ? `${approvalMode === "always" ? "Always allowed" : "Allowed once"} — authorization: ${digestB64}`
+        : `${denyMode === "always" ? "Always denied" : "Denied once"} — no authorization object`,
       proofDigest: digestB64 || undefined, receipt: proof,
     });
 
     eventBus.emit(userId, {
       type: "permission-resolved",
       tool: req_entry.tool, agentId: req_entry.agent_id,
-      decision: status, proofDigest: digestB64, timestamp: Date.now(),
+      decision: status, mode: decision === "approve" ? approvalMode : denyMode,
+      proofDigest: digestB64, timestamp: Date.now(),
     });
 
-    return json(res, { permission: { tool: req_entry.tool, status }, proof: { digestB64 } });
+    return json(res, {
+      permission: { tool: req_entry.tool, status, mode: decision === "approve" ? approvalMode : denyMode },
+      proof: { digestB64 },
+    });
   }
 
   // POST /api/permissions/revoke
