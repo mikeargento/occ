@@ -133,6 +133,8 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
   const [copied, setCopied] = useState(false);
   const [busy, setBusy] = useState<number | null>(null);
   const [expandedRequests, setExpandedRequests] = useState<Set<number>>(new Set());
+  const [proofLog, setProofLog] = useState<any[]>([]);
+  const [showProofs, setShowProofs] = useState(false);
 
   const refresh = useCallback(async () => {
     try {
@@ -158,10 +160,23 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
   useEffect(() => {
     refresh();
     const es = new EventSource("/api/events");
-    es.onmessage = () => refresh();
+    es.onmessage = () => { refresh(); if (showProofs) fetchProofs(); };
     const iv = setInterval(refresh, 8000);
     return () => { es.close(); clearInterval(iv); };
-  }, [refresh]);
+  }, [refresh, showProofs]);
+
+  const fetchProofs = useCallback(async () => {
+    if (!selectedAgent || selectedAgent === "default") return;
+    try {
+      const res = await fetch(`/api/agents/${encodeURIComponent(selectedAgent)}/activity`);
+      const data = await res.json();
+      setProofLog(data.entries ?? []);
+    } catch {}
+  }, [selectedAgent]);
+
+  useEffect(() => {
+    if (showProofs) fetchProofs();
+  }, [showProofs, fetchProofs]);
 
   async function act(id: number, fn: () => Promise<unknown>) {
     setBusy(id);
@@ -448,17 +463,53 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
 
         </div>
 
-        {/* Proof log button */}
-        <div className="text-center">
-          <a href="https://occ.wtf/explorer" target="_blank" rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 h-10 px-6 text-[13px] font-semibold bg-blue-500 text-white hover:bg-blue-600 transition-colors">
-            View proof log
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-              <polyline points="15 3 21 3 21 9" />
-              <line x1="10" y1="14" x2="21" y2="3" />
-            </svg>
-          </a>
+        {/* Proof log — collapsible */}
+        <div className="bg-[#efefef] border border-[#d9d9d9] overflow-hidden">
+          <button onClick={() => setShowProofs(!showProofs)}
+            className="w-full px-5 py-4 flex items-center justify-between hover:bg-[#e5e5e5] transition-colors">
+            <h2 className="text-[16px] font-bold">Proof log</h2>
+            <div className="flex items-center gap-3">
+              <a href="https://occ.wtf/explorer" target="_blank" rel="noopener noreferrer"
+                onClick={e => e.stopPropagation()}
+                className="text-[11px] text-blue-500 hover:text-blue-600 transition-colors">
+                Explorer
+              </a>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                className="text-[#999] transition-transform duration-200"
+                style={{ transform: showProofs ? "rotate(90deg)" : "rotate(0deg)" }}>
+                <path d="M6 4l4 4-4 4" />
+              </svg>
+            </div>
+          </button>
+          {showProofs && (
+            <div className="border-t border-[#d9d9d9]">
+              {proofLog.length === 0 ? (
+                <div className="px-5 py-8 text-center">
+                  <p className="text-[13px] text-[#666]">No proofs yet</p>
+                  <p className="text-[11px] text-[#999] mt-1">Proofs appear here as tools are used</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-[#d9d9d9] max-h-[400px] overflow-y-auto">
+                  {proofLog.map((p: any, i: number) => (
+                    <div key={p.id ?? i} className="flex items-center gap-3 px-5 py-3 group">
+                      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${p.allowed ? "bg-blue-400" : "bg-red-400"}`} />
+                      <div className="flex-1 min-w-0">
+                        <span className="text-[13px] font-medium">{humanizeToolName(p.tool)}</span>
+                        {p.reason && <span className="text-[11px] text-[#999] ml-2">{p.reason.slice(0, 40)}</span>}
+                      </div>
+                      <span className="text-[11px] text-[#999] flex-shrink-0">{timeLabel(p.created_at ?? p.createdAt)}</span>
+                      {p.proof_digest && (
+                        <a href={explorerUrl(p.proof_digest)} target="_blank" rel="noopener noreferrer"
+                          className="text-[11px] text-blue-500 hover:text-blue-600 transition-colors flex-shrink-0">
+                          proof
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
       </div>}
