@@ -12,6 +12,8 @@
 
 // ── Tool Definition ──
 
+export type ExecutionMode = "local" | "remote";
+
 export interface ToolDef {
   /** MCP tool name the agent calls */
   name: string;
@@ -25,6 +27,12 @@ export interface ToolDef {
   label: string;
   /** JSON Schema for tool parameters */
   inputSchema: Record<string, unknown>;
+  /**
+   * Where this tool executes:
+   * - "local": Client executes locally. Proxy authorizes + returns proof. Client does the work.
+   * - "remote": Proxy executes server-side. Proxy authorizes + executes + returns result.
+   */
+  execution: ExecutionMode;
 }
 
 // ── File Tools (proof of concept) ──
@@ -36,6 +44,7 @@ const FILE_TOOLS: ToolDef[] = [
     capability: "file.read",
     category: "files",
     label: "Read files",
+    execution: "local",
     inputSchema: {
       type: "object",
       properties: {
@@ -50,6 +59,7 @@ const FILE_TOOLS: ToolDef[] = [
     capability: "file.write",
     category: "files",
     label: "Write files",
+    execution: "local",
     inputSchema: {
       type: "object",
       properties: {
@@ -65,6 +75,7 @@ const FILE_TOOLS: ToolDef[] = [
     capability: "file.delete",
     category: "files",
     label: "Delete files",
+    execution: "local",
     inputSchema: {
       type: "object",
       properties: {
@@ -79,6 +90,7 @@ const FILE_TOOLS: ToolDef[] = [
     capability: "file.list",
     category: "files",
     label: "List directories",
+    execution: "local",
     inputSchema: {
       type: "object",
       properties: {
@@ -93,6 +105,7 @@ const FILE_TOOLS: ToolDef[] = [
     capability: "file.move",
     category: "files",
     label: "Move / rename files",
+    execution: "local",
     inputSchema: {
       type: "object",
       properties: {
@@ -113,6 +126,7 @@ const WEB_TOOLS: ToolDef[] = [
     capability: "web.search",
     category: "web",
     label: "Search the web",
+    execution: "remote",
     inputSchema: {
       type: "object",
       properties: {
@@ -127,6 +141,7 @@ const WEB_TOOLS: ToolDef[] = [
     capability: "web.fetch",
     category: "web",
     label: "Fetch URLs",
+    execution: "remote",
     inputSchema: {
       type: "object",
       properties: {
@@ -146,6 +161,7 @@ const MESSAGING_TOOLS: ToolDef[] = [
     capability: "messaging.email.send",
     category: "messaging",
     label: "Send email",
+    execution: "remote",
     inputSchema: {
       type: "object",
       properties: {
@@ -167,6 +183,7 @@ const OCC_TOOLS: ToolDef[] = [
     capability: "occ.internal",
     category: "occ",
     label: "List proofs",
+    execution: "remote",
     inputSchema: {
       type: "object",
       properties: {
@@ -180,6 +197,7 @@ const OCC_TOOLS: ToolDef[] = [
     capability: "occ.internal",
     category: "occ",
     label: "Get policy",
+    execution: "remote",
     inputSchema: { type: "object", properties: {} },
   },
   {
@@ -188,6 +206,7 @@ const OCC_TOOLS: ToolDef[] = [
     capability: "occ.internal",
     category: "occ",
     label: "Check request status",
+    execution: "remote",
     inputSchema: {
       type: "object",
       properties: {
@@ -242,4 +261,9 @@ export function getToolContext(toolName: string): { category: string; label: str
   const def = getToolDef(toolName);
   if (!def) return undefined;
   return { category: def.category, label: def.label, capability: def.capability };
+}
+
+/** Check if a tool executes locally (client-side) vs remotely (server-side) */
+export function isLocalTool(toolName: string): boolean {
+  return getToolDef(toolName)?.execution === "local";
 }

@@ -3,7 +3,7 @@ import { sha256 } from "@noble/hashes/sha256";
 import { db } from "./db.js";
 import { eventBus } from "./events.js";
 import { validateAuthorization, createExecutionProof, createAuthorizationObject } from "./authorization.js";
-import { getToolDef, getToolContext, getToolsForListing, isOccInternal } from "./capabilities.js";
+import { getToolDef, getToolContext, getToolsForListing, isOccInternal, isLocalTool } from "./capabilities.js";
 import { executeTool, hasExecutor } from "./executors.js";
 
 // ── Active connection tracking ──
@@ -397,7 +397,31 @@ export async function handleMcp(req: IncomingMessage, res: ServerResponse, pathn
           user.id, agentId, toolName, args, authDigest, execChainId, principal
         );
 
-        // Execute the tool
+        // ── LOCAL TOOLS: proxy authorizes, client executes ──
+        // The proxy never touches the filesystem. It returns the authorization
+        // proof and the original args. The client does the actual work.
+        if (isLocalTool(toolName)) {
+          return json(res, {
+            jsonrpc: "2.0", id: body.id,
+            result: {
+              content: [{
+                type: "text",
+                text: JSON.stringify({
+                  authorized: true,
+                  proof: execDigest,
+                  authorizationDigest: authDigest,
+                  tool: toolName,
+                  capability: toolContext?.capability ?? toolName,
+                  args,
+                  execution: "local",
+                  instruction: "This action has been authorized by OCC. Execute it locally using your native capabilities. The proof has been recorded.",
+                }),
+              }],
+            },
+          });
+        }
+
+        // ── REMOTE TOOLS: proxy authorizes AND executes ──
         if (hasExecutor(toolName)) {
           const result = await executeTool(toolName, args);
           if (result) {
