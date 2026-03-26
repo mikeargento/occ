@@ -144,6 +144,7 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
   const [addingAgent, setAddingAgent] = useState(false);
   const [newAgentName, setNewAgentName] = useState("");
   const [deletingAgent, setDeletingAgent] = useState<string | null>(null);
+  const [copiedAgent, setCopiedAgent] = useState<string | null>(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
   const refresh = useCallback(async () => {
@@ -323,6 +324,22 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
                             Delete
                           </span>
                         </div>
+                        {a.mcpUrl && (
+                          <div className="mt-2 pt-2 border-t border-[#d9d9d9]" onClick={e => e.stopPropagation()}>
+                            <div className="flex items-center gap-2">
+                              <code className="text-[10px] font-mono text-[#999] truncate flex-1">{a.mcpUrl}</code>
+                              <button onClick={async (e) => {
+                                e.stopPropagation();
+                                await navigator.clipboard.writeText(JSON.stringify({ mcpServers: { occ: { url: a.mcpUrl } } }, null, 2));
+                                setCopiedAgent(a.id);
+                                setTimeout(() => setCopiedAgent(null), 2000);
+                              }}
+                                className="text-[10px] font-medium text-blue-500 hover:text-blue-600 transition-colors flex-shrink-0">
+                                {copiedAgent === a.id ? "Copied!" : "Copy JSON"}
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
