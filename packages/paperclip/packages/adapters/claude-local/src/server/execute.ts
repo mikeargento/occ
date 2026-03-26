@@ -1,4 +1,5 @@
 import fs from "node:fs/promises";
+import fsSync from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -314,6 +315,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
   const chrome = asBoolean(config.chrome, false);
   const maxTurns = asNumber(config.maxTurnsPerRun, 0);
   const dangerouslySkipPermissions = asBoolean(config.dangerouslySkipPermissions, false);
+  const occMcpUrl = asString(config.occMcpUrl, "").trim();
   const instructionsFilePath = asString(config.instructionsFilePath, "").trim();
   const instructionsFileDir = instructionsFilePath ? `${path.dirname(instructionsFilePath)}/` : "";
   const commandNotes = instructionsFilePath
@@ -358,6 +360,21 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     const combinedPath = path.join(skillsDir, "agent-instructions.md");
     await fs.writeFile(combinedPath, instructionsContent + pathDirective, "utf-8");
     effectiveInstructionsFilePath = combinedPath;
+  }
+
+  // Write a temporary MCP config file when an OCC MCP URL is configured.
+  let occMcpConfigPath: string | null = null;
+  if (occMcpUrl) {
+    occMcpConfigPath = path.join(os.tmpdir(), `occ-mcp-${runId}.json`);
+    fsSync.writeFileSync(
+      occMcpConfigPath,
+      JSON.stringify({
+        mcpServers: {
+          occ: { url: occMcpUrl },
+        },
+      }),
+      "utf-8",
+    );
   }
 
   const runtimeSessionParams = parseObject(runtime.sessionParams);
@@ -413,6 +430,7 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
       args.push("--append-system-prompt-file", effectiveInstructionsFilePath);
     }
     args.push("--add-dir", skillsDir);
+    if (occMcpConfigPath) args.push("--mcp-config", occMcpConfigPath);
     if (extraArgs.length > 0) args.push(...extraArgs);
     return args;
   };
@@ -582,5 +600,8 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
     return toAdapterResult(initial, { fallbackSessionId: runtimeSessionId || runtime.sessionId });
   } finally {
     fs.rm(skillsDir, { recursive: true, force: true }).catch(() => {});
+    if (occMcpConfigPath) {
+      fs.rm(occMcpConfigPath, { force: true }).catch(() => {});
+    }
   }
 }
