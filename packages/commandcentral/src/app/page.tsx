@@ -653,7 +653,9 @@ function AgentExplorer({ agent }: { agent: Agent }) {
                     <path d="M6 4l4 4-4 4" />
                   </svg>
                   <div className={`w-2 h-2 rounded-full flex-shrink-0 ${p.allowed ? "bg-blue-400" : "bg-red-400"}`} />
-                  {digest && <code className="text-[11px] font-mono text-[#666] truncate max-w-[240px]">{digest}</code>}
+                  <span className="text-[13px] font-medium">{humanizeToolName(p.tool)}</span>
+                  {digest && <code className="text-[11px] font-mono text-[#999] truncate max-w-[180px]">{digest.slice(0, 24)}...</code>}
+                  {!digest && <span className={`text-[11px] font-medium ${p.allowed ? "text-blue-500" : "text-red-400"}`}>{p.allowed ? "allowed" : "denied"}</span>}
                   <span className={`text-[10px] font-medium px-1.5 py-0.5 border flex-shrink-0 ${enforcement.color}`}>
                     {enforcement.label}
                   </span>
@@ -661,28 +663,32 @@ function AgentExplorer({ agent }: { agent: Agent }) {
                   <span className="text-[11px] text-[#999] flex-shrink-0 ml-auto">{timeLabel(p.created_at)}</span>
                 </div>
 
-                {/* Expanded detail — full explorer view */}
+                {/* Expanded detail */}
                 {isExpanded && (
                   <div className="px-5 pb-5 pt-2 bg-white border-t border-[#d9d9d9]">
-                    <div className="space-y-4">
-
-                      {/* Proof fields — same layout as occ.wtf explorer */}
-                      <div className="grid grid-cols-1 gap-3">
-                        <ProofField label="Digest" value={digest} mono />
-                        <ProofField label="Tool" value={`${humanizeToolName(p.tool)} (${p.tool})`} />
-                        <ProofField label="Decision" value={p.allowed ? "Allowed" : "Denied"} color={p.allowed ? "text-blue-600" : "text-red-500"} />
-                        {p.reason && <ProofField label="Reason" value={p.reason} />}
-                        {counter !== null && <ProofField label="Counter" value={String(counter)} />}
-                        {getEpochId(p) && <ProofField label="Epoch ID" value={getEpochId(p)} mono />}
-                        {getVersion(p) && <ProofField label="Version" value={getVersion(p)} />}
-                        {getNonce(p) && <ProofField label="Nonce (Base64)" value={getNonce(p)} mono />}
-                        {getPublicKey(p) && <ProofField label="Public Key (Base64)" value={getPublicKey(p)} mono />}
-                        {getSignature(p) && <ProofField label="Signature (Base64)" value={getSignature(p)} mono />}
-                        {getPrevB64(p) && <ProofField label="Previous Proof Hash" value={getPrevB64(p)} mono />}
-                        {getCommitTime(p) && <ProofField label="Committed" value={getCommitTime(p)} />}
-                        <ProofField label="Enforcement" value={enforcement.label} />
-                      </div>
-
+                    <div className="grid grid-cols-1 gap-0">
+                      <ProofField label="Tool" value={`${humanizeToolName(p.tool)} (${p.tool})`} />
+                      <ProofField label="Decision" value={p.allowed ? "Allowed" : "Denied"} color={p.allowed ? "text-blue-600" : "text-red-500"} />
+                      {p.reason && <ProofField label="Reason" value={p.reason} />}
+                      <ProofField label="Time" value={p.created_at ? new Date(p.created_at).toLocaleString() : ""} />
+                      {digest && <ProofField label="Digest" value={digest} mono />}
+                      {counter !== null && <ProofField label="Counter" value={String(counter)} />}
+                      {getEpochId(p) && <ProofField label="Epoch ID" value={getEpochId(p)} mono />}
+                      {getVersion(p) && <ProofField label="Version" value={getVersion(p)} />}
+                      {getNonce(p) && <ProofField label="Nonce (Base64)" value={getNonce(p)} mono />}
+                      {getPublicKey(p) && <ProofField label="Public Key (Base64)" value={getPublicKey(p)} mono />}
+                      {getSignature(p) && <ProofField label="Signature (Base64)" value={getSignature(p)} mono />}
+                      {getPrevB64(p) && <ProofField label="Previous Proof Hash" value={getPrevB64(p)} mono />}
+                      {getCommitTime(p) && <ProofField label="Committed" value={getCommitTime(p)} />}
+                      <ProofField label="Enforcement" value={enforcement.label} />
+                      {p.args && (
+                        <div className="border-b border-[#efefef] pb-2 pt-2">
+                          <span className="text-[12px] text-[#999] block mb-1">Arguments</span>
+                          <pre className="text-[11px] font-mono bg-[#f5f5f5] p-3 overflow-x-auto max-h-[200px] overflow-y-auto text-[#333]">
+                            {typeof p.args === "string" ? p.args : JSON.stringify(p.args, null, 2)}
+                          </pre>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
