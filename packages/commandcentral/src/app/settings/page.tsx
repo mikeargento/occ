@@ -36,13 +36,13 @@ export default function SettingsPage() {
     <div className="max-w-2xl mx-auto px-6 py-8">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-semibold tracking-[-0.02em]">Settings</h1>
-        <a href="/" className="text-[13px] text-[#777370] hover:text-[#1a1a1a] transition-colors">
+        <a href="/" className="text-[13px] text-[#666] hover:text-[#000] transition-colors">
           Back to dashboard
         </a>
       </div>
 
       {/* Account */}
-      <div className="rounded-xl border border-[#e0ddd8] bg-white p-5 mb-6">
+      <div className="border border-[#d9d9d9] bg-[#efefef] p-5 mb-6">
         <h2 className="text-sm font-semibold mb-4">Account</h2>
         {user ? (
           <div className="flex items-center gap-4">
@@ -51,39 +51,39 @@ export default function SettingsPage() {
             )}
             <div className="flex-1">
               <p className="text-sm font-medium">{user.name}</p>
-              <p className="text-xs text-[#777370]">{user.email}</p>
+              <p className="text-xs text-[#666]">{user.email}</p>
             </div>
-            <a href="/auth/logout" className="text-xs text-[#777370] hover:text-red-500 transition-colors">
+            <a href="/auth/logout" className="text-xs text-[#666] hover:text-red-500 transition-colors">
               Sign out
             </a>
           </div>
         ) : (
-          <p className="text-sm text-[#777370]">Not signed in</p>
+          <p className="text-sm text-[#666]">Not signed in</p>
         )}
       </div>
 
       {/* MCP Links */}
-      <div className="rounded-xl border border-[#e0ddd8] bg-white p-5">
+      <div className="border border-[#d9d9d9] bg-[#efefef] p-5">
         <h2 className="text-sm font-semibold mb-1">MCP Links</h2>
-        <p className="text-xs text-[#777370] mb-4">Connect your AI to each agent by pasting these into your MCP settings.</p>
+        <p className="text-xs text-[#666] mb-4">Connect your AI to each agent by pasting these into your MCP settings.</p>
 
         {agents.length === 0 ? (
-          <p className="text-sm text-[#777370]">No agents yet</p>
+          <p className="text-sm text-[#666]">No agents yet</p>
         ) : (
           <div className="space-y-4">
             {agents.filter(a => a.mcpUrl).map(a => {
               const tab = connectTabs[a.id] ?? "url";
               return (
-                <div key={a.id} className="rounded-lg border border-[#e0ddd8] p-4">
+                <div key={a.id} className="border border-[#d9d9d9] bg-white p-4">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-[13px] font-semibold">{a.name}</span>
                     <div className="flex gap-1">
                       {(["url", "terminal", "json"] as const).map(t => (
                         <button key={t} onClick={() => setConnectTabs(prev => ({ ...prev, [a.id]: t }))}
-                          className={`px-2.5 py-0.5 text-[11px] font-medium rounded-md transition-colors ${
+                          className={`px-2.5 py-0.5 text-[11px] font-medium transition-colors ${
                             tab === t
-                              ? "bg-[#ece9e4] text-[#1a1a1a]"
-                              : "text-[#777370] hover:text-[#1a1a1a]"
+                              ? "bg-[#efefef] text-[#000]"
+                              : "text-[#666] hover:text-[#000]"
                           }`}>
                           {t === "url" ? "URL" : t === "terminal" ? "Terminal" : "JSON"}
                         </button>
@@ -91,15 +91,15 @@ export default function SettingsPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="flex-1 h-8 flex items-center px-3 rounded-lg bg-[#f0ede8] border border-[#e0ddd8] overflow-hidden">
-                      <code className="text-[11px] font-mono text-[#777370] truncate">
+                    <div className="flex-1 h-8 flex items-center px-3 bg-[#efefef] border border-[#d9d9d9] overflow-hidden">
+                      <code className="text-[11px] font-mono text-[#666] truncate">
                         {tab === "url" && a.mcpUrl}
                         {tab === "terminal" && `claude mcp add occ --transport http ${a.mcpUrl}`}
                         {tab === "json" && `{ "mcpServers": { "occ": { "url": "${a.mcpUrl}" } } }`}
                       </code>
                     </div>
                     <button onClick={() => copyMcp(a.id, a.mcpUrl!)}
-                      className="h-8 px-4 text-[11px] font-semibold rounded-lg bg-[#1a1a1a] text-white hover:bg-[#333] transition-all active:scale-[0.97] flex-shrink-0">
+                      className="h-8 px-4 text-[11px] font-semibold bg-[#000] text-white hover:bg-[#333] transition-all active:scale-[0.97] flex-shrink-0">
                       {copiedId === a.id ? "Copied" : "Copy"}
                     </button>
                   </div>
