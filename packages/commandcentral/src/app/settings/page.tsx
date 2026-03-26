@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { getAgents } from "@/lib/api";
 
-type Agent = { id: string; name: string; proxyUrl: string | null };
+type Agent = { id: string; name: string; mcpUrl: string | null; proxyUrl: string | null };
 
 export default function SettingsPage() {
   const [user, setUser] = useState<{ name: string; email: string; avatar: string } | null>(null);
@@ -136,7 +136,7 @@ export default function SettingsPage() {
       {/* Agent Connections */}
       <div className="border border-[#d9d9d9] bg-[#efefef] p-5">
         <h2 className="text-sm font-semibold mb-1">Agent Connections</h2>
-        <p className="text-xs text-[#666] mb-4">Set the API Proxy URL as your base_url. OCC intercepts every tool call transparently.</p>
+        <p className="text-xs text-[#666] mb-4">Two connection methods: MCP (free with Max plan) and API Proxy (pay-per-call).</p>
 
         {agents.length === 0 ? (
           <p className="text-sm text-[#666]">No agents yet</p>
@@ -145,8 +145,24 @@ export default function SettingsPage() {
             {agents.map(a => (
               <div key={a.id} className="border border-[#d9d9d9] bg-white p-4">
                 <span className="text-[13px] font-semibold">{a.name}</span>
+                {a.mcpUrl && (
+                  <div className="mt-3">
+                    <p className="text-[10px] font-semibold text-[#999] uppercase tracking-wider mb-1">MCP — free with Max plan</p>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-7 flex items-center px-2 bg-[#efefef] border border-[#d9d9d9] overflow-hidden">
+                        <code className="text-[10px] font-mono text-[#666] truncate">{a.mcpUrl}</code>
+                      </div>
+                      <button onClick={() => { navigator.clipboard.writeText(a.mcpUrl!); setCopiedId(`mcp-${a.id}`); setTimeout(() => setCopiedId(null), 2000); }}
+                        className="h-7 px-3 text-[10px] font-semibold bg-[#000] text-white hover:bg-[#333] transition-all flex-shrink-0">
+                        {copiedId === `mcp-${a.id}` ? "Copied" : "Copy"}
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-[#999] mt-1">Paste into Paperclip agent MCP URLs or Claude Code MCP config</p>
+                  </div>
+                )}
                 {a.proxyUrl && (
                   <div className="mt-3">
+                    <p className="text-[10px] font-semibold text-[#999] uppercase tracking-wider mb-1">API Proxy — pay-per-call</p>
                     <div className="flex items-center gap-2">
                       <div className="flex-1 h-7 flex items-center px-2 bg-[#efefef] border border-[#d9d9d9] overflow-hidden">
                         <code className="text-[10px] font-mono text-[#666] truncate">{a.proxyUrl}</code>
