@@ -79,9 +79,6 @@ function Login() {
           <AuthButton provider="google" label="Continue with Google" />
           <AuthButton provider="apple" label="Continue with Apple" />
         </div>
-        <p className="text-[11px] text-[var(--text-tertiary)] mt-8 leading-relaxed">
-          Every action your AI takes is governed, recorded, and provable.
-        </p>
       </div>
     </div>
   );
