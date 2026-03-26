@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { getAllPermissions, approvePermission, denyPermission, revokePermission, getConnectConfig, getPolicy, commitPolicy, getAgents, createAgent, deleteAgent, renameAgent, type Permission } from "@/lib/api";
+import { getAllPermissions, approvePermission, denyPermission, revokePermission, getConnectConfig, getAgents, createAgent, deleteAgent, renameAgent, type Permission } from "@/lib/api";
 
 /* ── Helpers ── */
 
@@ -24,58 +24,7 @@ function timeLabel(ts: number | string | null): string {
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
-/* ── Category definitions with sub-tools ── */
-
-const CATEGORIES: { key: string; label: string; desc: string; tools: { key: string; label: string }[] }[] = [
-  { key: "files", label: "Files", desc: "Read, write, delete, move", tools: [
-    { key: "read_file", label: "Read files" },
-    { key: "write_file", label: "Write files" },
-    { key: "delete_file", label: "Delete files" },
-    { key: "list_directory", label: "List directories" },
-    { key: "move_file", label: "Move / rename files" },
-  ]},
-  { key: "web", label: "Web", desc: "Search, fetch, scrape", tools: [
-    { key: "search_web", label: "Search the web" },
-    { key: "fetch_url", label: "Fetch URLs" },
-    { key: "scrape_page", label: "Scrape pages" },
-    { key: "download_file", label: "Download files" },
-  ]},
-  { key: "code", label: "Code", desc: "Run, commit, deploy", tools: [
-    { key: "run_code", label: "Run code" },
-    { key: "git_commit", label: "Git commit" },
-    { key: "git_push", label: "Git push" },
-    { key: "deploy_app", label: "Deploy" },
-    { key: "run_tests", label: "Run tests" },
-  ]},
-  { key: "data", label: "Data", desc: "Query, insert, delete", tools: [
-    { key: "query_database", label: "Query database" },
-    { key: "insert_record", label: "Insert records" },
-    { key: "delete_record", label: "Delete records" },
-    { key: "run_sql", label: "Run SQL" },
-    { key: "export_csv", label: "Export CSV" },
-  ]},
-  { key: "messaging", label: "Messaging", desc: "Email, Slack, SMS", tools: [
-    { key: "send_email", label: "Send email" },
-    { key: "read_email", label: "Read email" },
-    { key: "send_slack", label: "Send Slack message" },
-    { key: "send_sms", label: "Send SMS" },
-  ]},
-  { key: "payments", label: "Payments", desc: "Charge, refund, transfer", tools: [
-    { key: "charge_card", label: "Charge card" },
-    { key: "send_invoice", label: "Send invoice" },
-    { key: "process_refund", label: "Process refund" },
-    { key: "check_balance", label: "Check balance" },
-    { key: "transfer_funds", label: "Transfer funds" },
-  ]},
-  { key: "calendar", label: "Calendar", desc: "Events, scheduling", tools: [
-    { key: "create_calendar_event", label: "Create event" },
-    { key: "schedule_meeting", label: "Schedule meeting" },
-  ]},
-  { key: "contacts", label: "Contacts", desc: "People, profiles", tools: [
-    { key: "list_contacts", label: "List contacts" },
-    { key: "update_profile", label: "Update profile" },
-  ]},
-];
+/* Categories removed — policy builds itself through approval decisions */
 
 /* ═══════════════════════════════════════════════════════════════
    App Entry
@@ -167,7 +116,7 @@ function AuthButton({ href, icon, label }: { href: string; icon: React.ReactNode
    Dashboard — two columns: Rules (left) + Activity (right)
    ═══════════════════════════════════════════════════════════════ */
 
-type Agent = { id: string; name: string; mcpUrl: string | null; status: string; totalCalls: number; createdAt: number };
+type Agent = { id: string; name: string; mcpUrl: string | null; status: string; totalCalls: number; createdAt: number; allowedTools?: string[]; blockedTools?: string[] };
 
 function Dashboard({ userName, provider }: { userName: string; provider?: string }) {
   const [agents, setAgents] = useState<Agent[]>([]);
@@ -182,33 +131,13 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
   const [perms, setPerms] = useState<Permission[]>([]);
   const [mcpUrl, setMcpUrl] = useState("");
   const [copied, setCopied] = useState(false);
-  const [connectTab, setConnectTab] = useState<"url" | "terminal" | "json">("url");
   const [busy, setBusy] = useState<number | null>(null);
-
-  // Policy state
-  const [categories, setCategories] = useState<Record<string, boolean>>({});
-  const [customRules, setCustomRules] = useState<string[]>([]);
-  const [newRule, setNewRule] = useState("");
-  const [committedCategories, setCommittedCategories] = useState<Record<string, boolean>>({});
-  const [committedCustomRules, setCommittedCustomRules] = useState<string[]>([]);
-  const [lastCommitDigest, setLastCommitDigest] = useState<string | null>(null);
-  const [committing, setCommitting] = useState(false);
-  const [expanded, setExpanded] = useState<string | null>(null);
   const [expandedRequests, setExpandedRequests] = useState<Set<number>>(new Set());
-  // Per-tool overrides within categories
-  const [toolOverrides, setToolOverrides] = useState<Record<string, boolean>>({});
-  const [committedToolOverrides, setCommittedToolOverrides] = useState<Record<string, boolean>>({});
-
-  const isDirty = useMemo(() => {
-    return JSON.stringify({ categories, customRules, toolOverrides }) !==
-           JSON.stringify({ categories: committedCategories, customRules: committedCustomRules, toolOverrides: committedToolOverrides });
-  }, [categories, customRules, toolOverrides, committedCategories, committedCustomRules, committedToolOverrides]);
 
   const refresh = useCallback(async () => {
     try {
-      const [permData, policyData, configData, agentsData] = await Promise.all([
+      const [permData, configData, agentsData] = await Promise.all([
         getAllPermissions(),
-        getPolicy().catch(() => ({ policy: null, policyDigestB64: null, committedAt: null })),
         getConnectConfig().catch(() => ({ mcpUrl: "" })),
         getAgents().catch(() => ({ agents: [] })),
       ]);
@@ -216,23 +145,12 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
       const agentList = (agentsData.agents ?? []) as Agent[];
       setAgents(agentList);
 
-      // Auto-select first agent if none selected or selected doesn't exist
       const sel = agentList.find(a => a.id === selectedAgent);
       if (!sel && agentList.length > 0) {
         setSelectedAgent(agentList[0].id);
         setMcpUrl(agentList[0].mcpUrl ?? (configData as any).mcpUrl ?? "");
       } else {
         setMcpUrl(sel?.mcpUrl ?? (configData as any).mcpUrl ?? "");
-      }
-
-      if (policyData.policy) {
-        const c = policyData.policy.categories ?? {};
-        const cr = policyData.policy.customRules ?? [];
-        setCategories(c);
-        setCommittedCategories(c);
-        setCustomRules(cr);
-        setCommittedCustomRules(cr);
-        setLastCommitDigest(policyData.policyDigestB64);
       }
     } catch {}
   }, [selectedAgent]);
@@ -245,64 +163,19 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
     return () => { es.close(); clearInterval(iv); };
   }, [refresh]);
 
-  const copy = () => {
-    navigator.clipboard.writeText(mcpUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleCommit = async () => {
-    setCommitting(true);
-    try {
-      const result = await commitPolicy(categories, customRules, selectedAgent);
-      setCommittedCategories({ ...categories });
-      setCommittedCustomRules([...customRules]);
-      setCommittedToolOverrides({ ...toolOverrides });
-      setLastCommitDigest(result.policyDigestB64);
-      await refresh();
-    } finally { setCommitting(false); }
-  };
-
-  const toggleCategory = (key: string) => {
-    setCategories(prev => ({ ...prev, [key]: !prev[key] }));
-  };
-
-  const toggleTool = (toolKey: string, catEnabled: boolean) => {
-    setToolOverrides(prev => {
-      const current = prev[toolKey] ?? catEnabled;
-      return { ...prev, [toolKey]: !current };
-    });
-  };
-
-  const addCustomRule = () => {
-    const r = newRule.trim();
-    if (!r) return;
-    setCustomRules(prev => [...prev, r]);
-    setNewRule("");
-  };
-
-  const removeCustomRule = (idx: number) => {
-    setCustomRules(prev => prev.filter((_, i) => i !== idx));
-  };
-
   async function act(id: number, fn: () => Promise<unknown>) {
     setBusy(id);
     try { await fn(); await refresh(); }
     finally { setBusy(null); }
   }
 
+  const currentAgent = useMemo(() => agents.find(a => a.id === selectedAgent), [agents, selectedAgent]);
   const agentPerms = useMemo(() => perms.filter(p => p.agentId === selectedAgent), [perms, selectedAgent]);
-  const allowedTools = useMemo(() => new Set(agentPerms.filter(p => p.status === "approved").map(p => p.tool)), [agentPerms]);
-  // Tools that are allowed but don't belong to any category
-  const allCatTools = useMemo(() => new Set(CATEGORIES.flatMap(c => c.tools.map(t => t.key))), []);
-  const uncategorizedTools = useMemo(() => [...allowedTools].filter(t => !allCatTools.has(t)), [allowedTools, allCatTools]);
   const activity = useMemo(() =>
     agentPerms.filter(p => p.status !== "pending").sort((a, b) => (b.resolvedAt ?? b.requestedAt) - (a.resolvedAt ?? a.requestedAt)),
     [agentPerms]
   );
   const pending = useMemo(() => agentPerms.filter(p => p.status === "pending"), [agentPerms]);
-
-  const hasAnything = perms.length > 0 || Object.keys(committedCategories).length > 0;
 
   const firstName = userName?.split(" ")[0] ?? "there";
 
@@ -450,135 +323,60 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
       {/* Two column layout — only show when agents exist */}
       {agents.length > 0 && <div className="flex flex-col lg:flex-row gap-6">
 
-        {/* ── LEFT: Rules (remembered policy) ── */}
-        <div className="lg:w-[400px] flex-shrink-0">
+        {/* ── LEFT: Allowed + Blocked ── */}
+        <div className="lg:w-[400px] flex-shrink-0 space-y-4">
+
+          {/* Allowed tools */}
           <div className="bg-[#efefef] border border-[#d9d9d9] overflow-hidden">
-
-            {/* Header + commit button */}
-            <div className="px-5 py-4 flex items-center justify-between border-b border-[#d9d9d9]">
-              <h2 className="text-[16px] font-bold">Policy</h2>
-              <button onClick={handleCommit} disabled={!isDirty || committing}
-                className={`h-8 px-4 text-[12px] font-semibold transition-all active:scale-[0.97] flex items-center gap-2 ${
-                  isDirty
-                    ? "bg-blue-500 text-white hover:bg-blue-600"
-                    : "bg-[#e5e5e5] text-[#333333] cursor-default"
-                }`}>
-                {committing && <Spinner size={12} color="white" />}
-                {committing ? "Signing..." : isDirty ? "Commit to chain" : "Rules saved"}
-              </button>
+            <div className="px-5 py-4 border-b border-[#d9d9d9]">
+              <h2 className="text-[16px] font-bold">Allowed</h2>
             </div>
-
-            {/* Categories */}
-            <div className="divide-y divide-[#d9d9d9]">
-              {CATEGORIES.map(cat => {
-                const isOn = categories[cat.key] ?? false;
-                const isExpanded = expanded === cat.key;
-                const activeToolsInCat = cat.tools.filter(t => allowedTools.has(t.key)).length;
-                return (
-                  <div key={cat.key}>
-                    <div className="flex items-center gap-3 px-5 py-3 hover:bg-[#f5f5f5] transition-colors">
-                      <div className="flex-1 min-w-0 flex items-center gap-3 cursor-pointer" onClick={() => setExpanded(isExpanded ? null : cat.key)}>
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                          className="text-[#999] flex-shrink-0 transition-transform duration-200"
-                          style={{ transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)" }}>
-                          <path d="M6 4l4 4-4 4" />
-                        </svg>
-                        <div className="flex-1 min-w-0">
-                          <span className="text-[14px] font-medium">{cat.label}</span>
-                          <span className="text-[12px] text-[#666] ml-2">{cat.desc}</span>
-                          {!isOn && activeToolsInCat > 0 && (
-                            <span className="ml-2 inline-flex items-center gap-1 text-[10px] text-blue-500">
-                              <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-                              {activeToolsInCat} active
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <Toggle on={isOn} onChange={() => toggleCategory(cat.key)} />
-                    </div>
-                    {isExpanded && (
-                      <div className="bg-[#efefef] border-t border-[#d9d9d9]">
-                        {cat.tools.map(tool => {
-                          const toolOn = toolOverrides[tool.key] ?? allowedTools.has(tool.key) ?? isOn;
-                          return (
-                            <div key={tool.key} className="flex items-center gap-3 pl-12 pr-5 py-2.5">
-                              <span className="text-[13px] text-[#333333] flex-1">{tool.label}</span>
-                              {allowedTools.has(tool.key) && <span className="w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0" />}
-                              <Toggle on={toolOn} onChange={() => toggleTool(tool.key, isOn)} small />
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
+            {currentAgent?.allowedTools && currentAgent.allowedTools.length > 0 ? (
+              <div className="divide-y divide-[#d9d9d9]">
+                {currentAgent.allowedTools.map(tool => (
+                  <div key={tool} className="flex items-center gap-3 px-5 py-3 group">
+                    <div className="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0" />
+                    <span className="text-[14px] flex-1">{humanizeToolName(tool)}</span>
+                    <code className="text-[11px] font-mono text-[#999] hidden group-hover:block">{tool}</code>
+                    <button onClick={() => act(0, () => revokePermission(selectedAgent, tool))}
+                      className="text-[11px] text-red-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
+                      Revoke
+                    </button>
                   </div>
-                );
-              })}
-              {/* Uncategorized allowed tools */}
-              {uncategorizedTools.length > 0 && (
-                <div>
-                  <div className="flex items-center gap-3 px-5 py-3">
-                    <div className="w-4 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <span className="text-[14px] font-medium">Other</span>
-                      <span className="text-[12px] text-[#333333] ml-2">Tools allowed via permissions</span>
-                    </div>
-                    <span className="text-[11px] text-blue-500 font-medium">{uncategorizedTools.length} active</span>
-                  </div>
-                  <div className="bg-[#efefef] border-t border-[#d9d9d9]">
-                    {uncategorizedTools.map(tool => (
-                      <div key={tool} className="flex items-center gap-3 pl-12 pr-5 py-2.5">
-                        <span className="text-[13px] text-[#333333] flex-1">{tool}</span>
-                        <span className="w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0" />
-                        <button onClick={() => act(0, () => revokePermission(selectedAgent, tool))}
-                          className="text-[11px] text-red-400 hover:text-red-300 transition-colors">Revoke</button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Custom rules */}
-            <div className="border-t border-[#d9d9d9] px-5 py-4">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-[#333333] mb-3">Custom rules</p>
-              {customRules.map((rule, i) => (
-                <div key={i} className="flex items-start gap-2 mb-2 group">
-                  <span className="text-[13px] text-[#333333] flex-1 leading-snug">{rule}</span>
-                  <button onClick={() => removeCustomRule(i)}
-                    className="text-[11px] text-[#666666] hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0 mt-0.5">✕</button>
-                </div>
-              ))}
-              <div className="flex gap-2 mt-2">
-                <input value={newRule} onChange={e => setNewRule(e.target.value)}
-                  onKeyDown={e => e.key === "Enter" && addCustomRule()}
-                  placeholder="e.g. Never delete production files"
-                  className="flex-1 h-9 px-3 text-[13px] bg-[#f5f5f5] border border-[#d9d9d9] placeholder:text-[#666666] focus:outline-none focus:ring-1 focus:ring-blue-400/30" />
-                <button onClick={addCustomRule} disabled={!newRule.trim()}
-                  className="h-9 px-3 text-[12px] font-medium bg-[#e5e5e5] text-[#333333] hover:text-[#000000] disabled:opacity-30 transition-colors">
-                  Add
-                </button>
+                ))}
               </div>
-            </div>
-
-
-            {/* Policy proof */}
-            {lastCommitDigest && (
-              <div className="border-t border-[#d9d9d9] px-5 py-3.5">
-                <a href={explorerUrl(lastCommitDigest)}                  className="flex items-center gap-3 group">
-                  <div className="w-7 h-7 bg-blue-500/10 flex items-center justify-center flex-shrink-0">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                    </svg>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[12px] font-medium text-blue-600">Rules committed to chain</p>
-                    <p className="text-[11px] font-mono text-[#333333] group-hover:text-blue-500 transition-colors truncate">{lastCommitDigest}</p>
-                  </div>
-                  <span className="text-[11px] text-[#333333] group-hover:text-blue-500 transition-colors flex-shrink-0">View proof ↗</span>
-                </a>
+            ) : (
+              <div className="px-5 py-8 text-center">
+                <p className="text-[13px] text-[#666]">No tools allowed yet</p>
+                <p className="text-[11px] text-[#999] mt-1">Tools appear here when you approve requests</p>
               </div>
             )}
           </div>
+
+          {/* Blocked tools */}
+          {currentAgent?.blockedTools && currentAgent.blockedTools.length > 0 && (
+            <div className="bg-[#efefef] border border-[#d9d9d9] overflow-hidden">
+              <div className="px-5 py-4 border-b border-[#d9d9d9]">
+                <h2 className="text-[16px] font-bold">Blocked</h2>
+              </div>
+              <div className="divide-y divide-[#d9d9d9]">
+                {currentAgent.blockedTools.map(tool => (
+                  <div key={tool} className="flex items-center gap-3 px-5 py-3 group">
+                    <div className="w-2 h-2 rounded-full bg-red-400 flex-shrink-0" />
+                    <span className="text-[14px] flex-1 text-[#666]">{humanizeToolName(tool)}</span>
+                    <button onClick={async () => {
+                      // Unblock = remove from blocked_tools via API
+                      await fetch(`/api/agents/${encodeURIComponent(selectedAgent)}/tools/${encodeURIComponent(tool)}`, { method: "DELETE" });
+                      await refresh();
+                    }}
+                      className="text-[11px] text-blue-500 hover:text-blue-600 transition-colors opacity-0 group-hover:opacity-100">
+                      Unblock
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
         </div>
 
@@ -714,20 +512,6 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
    Components
    ═══════════════════════════════════════════════════════════════ */
 
-function Toggle({ on, onChange, small }: { on: boolean; onChange: () => void; small?: boolean }) {
-  const w = small ? "w-9" : "w-11";
-  const h = small ? "h-5" : "h-6";
-  const dot = small ? "w-3.5 h-3.5" : "w-4.5 h-4.5";
-  const translate = small ? "translate-x-[15px]" : "translate-x-[19px]";
-  return (
-    <button onClick={onChange}
-      className={`${w} ${h} rounded-full transition-colors duration-150 flex items-center px-[3px] flex-shrink-0 ${
-        on ? "bg-blue-500" : "bg-[#ccc]"
-      }`}>
-      <div className={`${dot} bg-white rounded-full shadow-sm transition-transform duration-150 ${on ? translate : "translate-x-0"}`} />
-    </button>
-  );
-}
 
 function Center({ children }: { children: React.ReactNode }) {
   return <div className="flex items-center justify-center" style={{ minHeight: "calc(100vh - 56px)" }}>{children}</div>;

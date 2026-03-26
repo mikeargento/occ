@@ -59,10 +59,13 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
     const proto = host.includes("localhost") ? "http" : "https";
     const summaries = agents.map((a: any) => {
       const tools = a.allowed_tools ?? [];
+      const blocked = a.blocked_tools ?? [];
       return {
         id: a.id,
         name: a.name,
         mcpUrl: a.mcp_token ? `${proto}://${host}/mcp/${a.mcp_token}` : null,
+        allowedTools: tools,
+        blockedTools: blocked,
         policy: tools.length > 0 ? {
           version: "occ/policy/1",
           name: a.name,
