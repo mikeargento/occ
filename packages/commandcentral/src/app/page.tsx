@@ -427,57 +427,104 @@ function AgentPanel({ agent, perms, onRefresh, onViewExplorer }: {
             {pending.map(p => {
               const isOpen = expandedRequests.has(p.id);
               const displayName = p.toolDescription || humanizeToolName(p.tool);
+              const args = p.requestArgs as Record<string, unknown> | null;
               return (
-                <div key={p.id} className="px-5 py-4">
-                  <div className="flex items-start gap-3">
-                    <div className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse flex-shrink-0 mt-1" />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[15px] font-semibold">{displayName}</span>
-                        <span className="text-[11px] text-[#666] px-1.5 py-0.5 bg-[#efefef]">{p.clientName}</span>
-                        <span className="text-[11px] text-[#999]">{timeLabel(p.requestedAt)}</span>
+                <div key={p.id}>
+                  {/* Summary row — always visible */}
+                  <div className="px-5 py-4 cursor-pointer hover:bg-amber-50/50 transition-colors"
+                    onClick={() => setExpandedRequests(prev => {
+                      const next = new Set(prev);
+                      isOpen ? next.delete(p.id) : next.add(p.id);
+                      return next;
+                    })}>
+                    <div className="flex items-start gap-3">
+                      <div className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse flex-shrink-0 mt-1.5" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[15px] font-semibold">{displayName}</span>
+                          <span className="text-[11px] text-[#666] px-1.5 py-0.5 bg-[#efefef]">{p.clientName}</span>
+                          <span className="text-[11px] text-[#999]">{timeLabel(p.requestedAt)}</span>
+                          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                            className="text-[#ccc] ml-auto flex-shrink-0 transition-transform duration-200"
+                            style={{ transform: isOpen ? "rotate(90deg)" : "rotate(0deg)" }}>
+                            <path d="M6 4l4 4-4 4" />
+                          </svg>
+                        </div>
                       </div>
-                      <code className="text-[12px] font-mono text-[#666]">{p.tool}</code>
+                    </div>
+                  </div>
 
-                      <button onClick={() => setExpandedRequests(prev => {
-                        const next = new Set(prev);
-                        isOpen ? next.delete(p.id) : next.add(p.id);
-                        return next;
-                      })}
-                        className="block mt-2 text-[11px] text-blue-500 hover:text-blue-600 transition-colors">
-                        {isOpen ? "Hide details" : "View details"}
-                      </button>
+                  {/* Expanded detail view */}
+                  {isOpen && (
+                    <div className="px-5 pb-5 bg-white border-t border-amber-200">
 
-                      {isOpen && p.requestArgs != null && (
-                        <div className="mt-3 pl-3 border-l-2 border-amber-200">
-                          <span className="text-[11px] text-[#666] font-medium">Arguments:</span>
-                          <pre className="mt-1 text-[11px] font-mono bg-[#f5f5f5] p-3 overflow-x-auto max-h-[200px] overflow-y-auto text-[#333]">
-                            {JSON.stringify(p.requestArgs, null, 2)}
-                          </pre>
+                      {/* What this tool does */}
+                      <div className="py-4 border-b border-[#efefef]">
+                        <h3 className="text-[13px] font-bold text-[#999] uppercase tracking-wider mb-2">What this tool does</h3>
+                        <p className="text-[14px] text-[#333]">{displayName}</p>
+                        <code className="text-[11px] font-mono text-[#999] mt-1 block">{p.tool}</code>
+                      </div>
+
+                      {/* What it's trying to do — human-readable argument summary */}
+                      {args && Object.keys(args).length > 0 && (
+                        <div className="py-4 border-b border-[#efefef]">
+                          <h3 className="text-[13px] font-bold text-[#999] uppercase tracking-wider mb-3">This request wants to</h3>
+                          <div className="space-y-2">
+                            {Object.entries(args).map(([key, val]) => (
+                              <div key={key} className="flex items-start gap-3">
+                                <span className="text-[12px] text-[#999] w-[100px] flex-shrink-0 pt-0.5">{humanizeToolName(key)}</span>
+                                <span className="text-[13px] text-[#000] break-all">
+                                  {typeof val === "string" && val.length > 200
+                                    ? <span>{val.slice(0, 200)}<span className="text-[#999]">... ({val.length} chars)</span></span>
+                                    : typeof val === "object" ? JSON.stringify(val) : String(val ?? "")}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       )}
 
-                      <div className="flex items-center gap-2 mt-3">
+                      {/* Who is asking */}
+                      <div className="py-4 border-b border-[#efefef]">
+                        <h3 className="text-[13px] font-bold text-[#999] uppercase tracking-wider mb-2">Requested by</h3>
+                        <div className="flex items-center gap-3">
+                          <span className="text-[13px] font-medium">{p.clientName}</span>
+                          <span className="text-[12px] text-[#999]">{p.requestedAt ? new Date(p.requestedAt).toLocaleString() : ""}</span>
+                        </div>
+                      </div>
+
+                      {/* Raw payload — collapsed */}
+                      {args && (
+                        <details className="py-3">
+                          <summary className="text-[11px] text-[#999] cursor-pointer hover:text-[#666] transition-colors">Raw payload</summary>
+                          <pre className="mt-2 text-[11px] font-mono bg-[#f5f5f5] p-3 overflow-x-auto max-h-[200px] overflow-y-auto text-[#333]">
+                            {JSON.stringify(args, null, 2)}
+                          </pre>
+                        </details>
+                      )}
+
+                      {/* Action buttons */}
+                      <div className="flex items-center gap-2 pt-4">
                         <button onClick={() => act(p.id, () => approvePermission(p.id, "always"))} disabled={busy === p.id}
-                          className="h-8 px-4 text-[12px] font-semibold bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-40 transition-all active:scale-[0.97] flex items-center gap-1.5">
+                          className="h-9 px-5 text-[13px] font-semibold bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-40 transition-all active:scale-[0.97] flex items-center gap-1.5">
                           {busy === p.id && <Spinner size={10} color="white" />}
                           Always allow
                         </button>
                         <button onClick={() => act(p.id, () => approvePermission(p.id, "once"))} disabled={busy === p.id}
-                          className="h-8 px-4 text-[12px] font-medium border border-blue-300 text-blue-600 hover:bg-blue-50 disabled:opacity-40 transition-all">
+                          className="h-9 px-5 text-[13px] font-medium border border-blue-300 text-blue-600 hover:bg-blue-50 disabled:opacity-40 transition-all">
                           Allow once
                         </button>
                         <button onClick={() => act(p.id, () => denyPermission(p.id, "once"))} disabled={busy === p.id}
-                          className="h-8 px-3 text-[12px] font-medium text-[#666] hover:text-red-500 hover:bg-red-50 disabled:opacity-40 transition-all">
+                          className="h-9 px-4 text-[13px] font-medium text-[#666] hover:text-red-500 hover:bg-red-50 disabled:opacity-40 transition-all">
                           Deny
                         </button>
                         <button onClick={() => act(p.id, () => denyPermission(p.id, "always"))} disabled={busy === p.id}
-                          className="h-8 px-3 text-[12px] font-medium text-[#999] hover:text-red-600 hover:bg-red-50 disabled:opacity-40 transition-all">
+                          className="h-9 px-4 text-[13px] font-medium text-[#999] hover:text-red-600 hover:bg-red-50 disabled:opacity-40 transition-all">
                           Always deny
                         </button>
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               );
             })}
