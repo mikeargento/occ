@@ -71,7 +71,7 @@ export default function ProofDetailPage() {
     return (
       <div className="mx-auto max-w-6xl px-6 py-16 sm:py-24">
         <div className="text-error">{error}</div>
-        <Link href="/explorer" className="text-sm text-text-secondary hover:text-text mt-2 inline-block">
+        <Link href="/" className="text-sm text-blue-600 hover:text-blue-500 mt-2 inline-block">
           &larr; Back to Explorer
         </Link>
       </div>
@@ -88,7 +88,7 @@ export default function ProofDetailPage() {
         <code className="block mt-3 text-sm font-mono text-text-tertiary break-all">
           {digestB64}
         </code>
-        <Link href="/explorer" className="text-sm text-text-secondary hover:text-text mt-4 inline-block">
+        <Link href="/" className="text-sm text-blue-600 hover:text-blue-500 mt-4 inline-block">
           &larr; Back to Explorer
         </Link>
       </div>
