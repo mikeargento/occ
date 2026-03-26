@@ -395,6 +395,96 @@ export async function handleApiV2(req: IncomingMessage, res: ServerResponse, url
   }
 
   // ═══════════════════════════════════════════════════════
+  // HOOK CHECK — the core endpoint for Claude Code hooks
+  // Agent calls this, it blocks until human approves/denies
+  // ═══════════════════════════════════════════════════════
+
+  if (path === "/hook/check" && method === "POST") {
+    const body = JSON.parse(await readBody(req));
+    const tool = body.tool;
+    const args = body.args;
+    const agentId = body.agentId ?? "claude-code";
+    if (!tool) return json(res, { error: "tool is required" }, 400);
+
+    // Auth via token in header
+    const token = (req.headers.authorization ?? "").replace("Bearer ", "");
+    if (!token) return json(res, { decision: "denied", reason: "No auth token" }, 401);
+
+    // Look up user by token (agent mcp_token or user mcp_token)
+    const agent = await db.getAgentByToken(token);
+    const user = agent ? await db.getUserById(agent.user_id) : await db.getUserByToken(token);
+    if (!user) return json(res, { decision: "denied", reason: "Invalid token" }, 401);
+
+    const hookUserId = user.id;
+    const hookAgentId = agent?.id ?? agentId;
+    const riskLane = classifyRisk(tool);
+    const summary = generateSummary(tool, args);
+
+    // Check risk lane policy first
+    const laneMode = await db.v2GetRiskLane(hookUserId, riskLane);
+    if (laneMode === "auto_approve") {
+      // Auto-approve — don't wait for human
+      const request = await db.v2CreateRequest(hookUserId, {
+        agentId: hookAgentId, tool, riskLane, summary,
+        label: toolLabel(tool), originType: "hook", originClient: "Claude Code",
+        requestArgs: args,
+      });
+      await db.v2UpdateRequestStatus(request.id, "auto_approved");
+      await db.v2CreateDecision({
+        requestId: request.id, userId: hookUserId, decidedBy: "policy_auto",
+        decision: "approved", mode: "always", reason: `Risk lane "${riskLane}" is auto-approve`,
+      });
+      return json(res, { decision: "allow", requestId: request.id });
+    }
+
+    if (laneMode === "auto_deny") {
+      const request = await db.v2CreateRequest(hookUserId, {
+        agentId: hookAgentId, tool, riskLane, summary,
+        label: toolLabel(tool), originType: "hook", originClient: "Claude Code",
+        requestArgs: args,
+      });
+      await db.v2UpdateRequestStatus(request.id, "denied");
+      await db.v2CreateDecision({
+        requestId: request.id, userId: hookUserId, decidedBy: "policy_auto",
+        decision: "denied", mode: "always", reason: `Risk lane "${riskLane}" is auto-deny`,
+      });
+      return json(res, { decision: "deny", reason: `Blocked by policy: ${riskLane}`, requestId: request.id });
+    }
+
+    // ASK mode — create request and wait for human
+    const request = await db.v2CreateRequest(hookUserId, {
+      agentId: hookAgentId, tool, riskLane, summary,
+      label: toolLabel(tool), originType: "hook", originClient: "Claude Code",
+      requestArgs: args,
+    });
+
+    eventBus.emit(hookUserId, {
+      type: "v2:request", requestId: request.id, tool, agentId: hookAgentId,
+      status: "pending", riskLane, summary, timestamp: Date.now(),
+    });
+
+    // Long-poll: wait up to 120 seconds for human decision
+    const deadline = Date.now() + 120_000;
+    while (Date.now() < deadline) {
+      const updated = await db.v2GetRequest(request.id);
+      if (updated && updated.status !== "pending") {
+        if (updated.status === "approved" || updated.status === "auto_approved") {
+          return json(res, { decision: "allow", requestId: request.id });
+        } else {
+          const reason = updated.decisions?.[0]?.reason ?? "Denied by human";
+          return json(res, { decision: "deny", reason, requestId: request.id });
+        }
+      }
+      // Wait 1 second before polling again
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+
+    // Timeout — deny by default (safe)
+    await db.v2UpdateRequestStatus(request.id, "expired");
+    return json(res, { decision: "deny", reason: "Approval timed out (120s)", requestId: request.id });
+  }
+
+  // ═══════════════════════════════════════════════════════
   // SEED (development only)
   // ═══════════════════════════════════════════════════════
 

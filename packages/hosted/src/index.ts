@@ -87,6 +87,26 @@ async function handler(req: IncomingMessage, res: ServerResponse) {
     return;
   }
 
+  // Hook files: /hooks/occ-check.sh, /install
+  if (pathname === "/install" || pathname === "/hooks/install.sh") {
+    const installPath = resolve(__dirname, "../hooks/install.sh");
+    if (existsSync(installPath)) {
+      const content = readFileSync(installPath);
+      res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8", "Content-Length": content.length });
+      res.end(content);
+      return;
+    }
+  }
+  if (pathname === "/hooks/occ-check.sh") {
+    const hookPath = resolve(__dirname, "../hooks/occ-check.sh");
+    if (existsSync(hookPath)) {
+      const content = readFileSync(hookPath);
+      res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8", "Content-Length": content.length });
+      res.end(content);
+      return;
+    }
+  }
+
   // LLM API Proxy: /v1/{proxyToken}/v1/...
   // Agent sets base_url to https://agent.occ.wtf/v1/{token}
   // SDK appends /v1/messages, so full path is /v1/{token}/v1/messages
