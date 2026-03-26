@@ -5,11 +5,6 @@ import { getAllPermissions, approvePermission, denyPermission, revokePermission,
 
 /* ── Helpers ── */
 
-function explorerUrl(digest: string): string {
-  const safe = digest.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-  return `https://occ.wtf/explorer/${safe}`;
-}
-
 function humanizeToolName(raw: string): string {
   return raw.replace(/[_-]/g, " ").replace(/\b\w/g, c => c.toUpperCase());
 }
@@ -668,18 +663,6 @@ function AgentExplorer({ agent }: { agent: Agent }) {
                         <ProofField label="Enforcement" value={enforcement.label} />
                       </div>
 
-                      {/* Link to full explorer */}
-                      {digest && (
-                        <a href={explorerUrl(digest)} target="_blank" rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-[13px] font-medium text-blue-500 hover:text-blue-600 transition-colors">
-                          View in Explorer
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                            <polyline points="15 3 21 3 21 9" />
-                            <line x1="10" y1="14" x2="21" y2="3" />
-                          </svg>
-                        </a>
-                      )}
                     </div>
                   </div>
                 )}
