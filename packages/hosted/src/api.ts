@@ -623,6 +623,13 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
     });
   }
 
+  // ── Hook Token ──
+  if (path === "/settings/token" && method === "GET") {
+    const user = await db.getUserById(userId);
+    if (!user) return json(res, { error: "User not found" }, 404);
+    return json(res, { token: user.mcp_token });
+  }
+
   // ── API Key Management ──
   if (path === "/settings/api-key" && method === "GET") {
     const key = await db.getAnthropicKey(userId);

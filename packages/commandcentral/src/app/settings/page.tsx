@@ -14,6 +14,8 @@ export default function SettingsPage() {
   const [apiKeyInput, setApiKeyInput] = useState("");
   const [apiKeyLoading, setApiKeyLoading] = useState(false);
   const [apiKeyMsg, setApiKeyMsg] = useState("");
+  const [hookToken, setHookToken] = useState<string | null>(null);
+  const [tokenCopied, setTokenCopied] = useState(false);
 
   useEffect(() => {
     fetch("/auth/me")
@@ -24,6 +26,11 @@ export default function SettingsPage() {
     fetch("/api/settings/api-key")
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => { if (d) setApiKeyStatus(d); })
+      .catch(() => {});
+
+    fetch("/api/settings/token")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (d?.token) setHookToken(d.token); })
       .catch(() => {});
   }, []);
 
@@ -95,6 +102,36 @@ export default function SettingsPage() {
                 <p className="text-sm font-medium text-black">{user.name}</p>
                 <p className="text-xs text-[#999]">{user.email}</p>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Hook Token */}
+        {hookToken && (
+          <div className="mb-8">
+            <h2 className="text-xs font-semibold text-[#999] uppercase tracking-wider mb-1">OCC Token</h2>
+            <p className="text-xs text-[#999] mb-3">Use this to connect Claude Code to OCC.</p>
+
+            <div className="flex items-center gap-2 mb-3">
+              <div className="flex-1 h-8 flex items-center px-3 bg-[#efefef] border border-[#d9d9d9] overflow-hidden">
+                <code className="text-xs font-mono text-[#666] truncate">{hookToken}</code>
+              </div>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(hookToken);
+                  setTokenCopied(true);
+                  setTimeout(() => setTokenCopied(false), 2000);
+                }}
+                className="h-8 px-4 text-xs font-semibold bg-black text-white hover:opacity-80 transition-opacity flex-shrink-0"
+              >
+                {tokenCopied ? "Copied" : "Copy"}
+              </button>
+            </div>
+
+            <div className="bg-[#efefef] border border-[#d9d9d9] p-3">
+              <p className="text-[10px] font-semibold text-[#999] uppercase tracking-wider mb-2">Quick setup</p>
+              <code className="text-xs font-mono text-black block mb-1">curl -fsSL https://agent.occ.wtf/install | bash</code>
+              <code className="text-xs font-mono text-[#666] block">export OCC_TOKEN={hookToken}</code>
             </div>
           </div>
         )}

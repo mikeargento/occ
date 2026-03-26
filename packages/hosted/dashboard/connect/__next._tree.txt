@@ -1,4 +1,4 @@
 :HL["/_next/static/chunks/04353ed4aca41fad.css","style"]
 :HL["https://use.typekit.net/svq0oqy.css","style"]
 :HL["https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap","style"]
-0:{"buildId":"YG6Kt5dIXPrxt65dNkVKZ","tree":{"name":"","paramType":null,"paramKey":"","hasRuntimePrefetch":false,"slots":{"children":{"name":"connect","paramType":null,"paramKey":"connect","hasRuntimePrefetch":false,"slots":{"children":{"name":"__PAGE__","paramType":null,"paramKey":"__PAGE__","hasRuntimePrefetch":false,"slots":null,"isRootLayout":false}},"isRootLayout":false}},"isRootLayout":true},"staleTime":300}
+0:{"buildId":"CinapxhPiUkGmma6vhqms","tree":{"name":"","paramType":null,"paramKey":"","hasRuntimePrefetch":false,"slots":{"children":{"name":"connect","paramType":null,"paramKey":"connect","hasRuntimePrefetch":false,"slots":{"children":{"name":"__PAGE__","paramType":null,"paramKey":"__PAGE__","hasRuntimePrefetch":false,"slots":null,"isRootLayout":false}},"isRootLayout":false}},"isRootLayout":true},"staleTime":300}
