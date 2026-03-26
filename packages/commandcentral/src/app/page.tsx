@@ -121,6 +121,8 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
   const [view, setView] = useState<View>({ page: "agents" });
   const [addingAgent, setAddingAgent] = useState(false);
   const [newAgentName, setNewAgentName] = useState("");
+  const [deletingAgent, setDeletingAgent] = useState<string | null>(null);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
   const refresh = useCallback(async () => {
     try {
@@ -222,34 +224,75 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                 {agents.map(a => {
                   const pending = pendingByAgent[a.id] ?? 0;
+                  const isDeleting = deletingAgent === a.id;
+
+                  if (isDeleting) {
+                    return (
+                      <div key={a.id} className="px-5 py-4 bg-white border border-red-300">
+                        <p className="text-[14px] font-medium text-red-600 mb-2">Delete &quot;{a.name}&quot;?</p>
+                        <p className="text-[12px] text-[#666] mb-3">Type <strong>{a.name}</strong> to confirm</p>
+                        <input value={deleteConfirmText} onChange={e => setDeleteConfirmText(e.target.value)} autoFocus
+                          placeholder={a.name}
+                          className="w-full px-3 py-2 text-sm border border-[#d9d9d9] bg-[#efefef] outline-none focus:border-red-400 mb-3 caret-red-500"
+                          onKeyDown={async e => {
+                            if (e.key === "Enter" && deleteConfirmText === a.name) {
+                              await deleteAgent(a.id); setDeletingAgent(null); setDeleteConfirmText(""); await refresh();
+                            }
+                            if (e.key === "Escape") { setDeletingAgent(null); setDeleteConfirmText(""); }
+                          }} />
+                        <div className="flex gap-2">
+                          <button onClick={async () => {
+                            if (deleteConfirmText === a.name) {
+                              await deleteAgent(a.id); setDeletingAgent(null); setDeleteConfirmText(""); await refresh();
+                            }
+                          }}
+                            disabled={deleteConfirmText !== a.name}
+                            className="h-8 px-4 text-[12px] font-semibold bg-red-500 text-white hover:bg-red-600 disabled:opacity-30 transition-all">
+                            Delete forever
+                          </button>
+                          <button onClick={() => { setDeletingAgent(null); setDeleteConfirmText(""); }}
+                            className="h-8 px-3 text-[12px] text-[#666] hover:text-[#000]">Cancel</button>
+                        </div>
+                      </div>
+                    );
+                  }
+
                   return (
-                    <button key={a.id} onClick={() => setView({ page: "panel", agentId: a.id })}
-                      className="text-left px-5 py-4 bg-[#efefef] border border-[#d9d9d9] hover:border-[#999] transition-colors group">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-[16px] font-bold">{a.name}</h3>
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                          className="text-[#ccc] group-hover:text-[#666] transition-colors">
-                          <path d="M6 4l4 4-4 4" />
-                        </svg>
+                    <div key={a.id} className="bg-[#efefef] border border-[#d9d9d9] hover:border-[#999] transition-colors group">
+                      <button onClick={() => setView({ page: "panel", agentId: a.id })}
+                        className="text-left w-full px-5 pt-4 pb-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="text-[16px] font-bold">{a.name}</h3>
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                            className="text-[#ccc] group-hover:text-[#666] transition-colors">
+                            <path d="M6 4l4 4-4 4" />
+                          </svg>
+                        </div>
+                        <div className="flex items-center gap-3 text-[12px] text-[#666]">
+                          {pending > 0 && (
+                            <span className="flex items-center gap-1.5 text-amber-600 font-medium">
+                              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                              {pending} pending
+                            </span>
+                          )}
+                          {(a.allowedTools?.length ?? 0) > 0 && (
+                            <span>{a.allowedTools!.length} allowed</span>
+                          )}
+                          {(a.blockedTools?.length ?? 0) > 0 && (
+                            <span>{a.blockedTools!.length} blocked</span>
+                          )}
+                          {!pending && !(a.allowedTools?.length) && !(a.blockedTools?.length) && (
+                            <span>No activity yet</span>
+                          )}
+                        </div>
+                      </button>
+                      <div className="px-5 pb-3 pt-0">
+                        <button onClick={(e) => { e.stopPropagation(); setDeletingAgent(a.id); setDeleteConfirmText(""); }}
+                          className="text-[11px] text-[#999] hover:text-red-500 transition-colors">
+                          Delete
+                        </button>
                       </div>
-                      <div className="flex items-center gap-3 text-[12px] text-[#666]">
-                        {pending > 0 && (
-                          <span className="flex items-center gap-1.5 text-amber-600 font-medium">
-                            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                            {pending} pending
-                          </span>
-                        )}
-                        {(a.allowedTools?.length ?? 0) > 0 && (
-                          <span>{a.allowedTools!.length} allowed</span>
-                        )}
-                        {(a.blockedTools?.length ?? 0) > 0 && (
-                          <span>{a.blockedTools!.length} blocked</span>
-                        )}
-                        {!pending && !(a.allowedTools?.length) && !(a.blockedTools?.length) && (
-                          <span>No activity yet</span>
-                        )}
-                      </div>
-                    </button>
+                    </div>
                   );
                 })}
 
@@ -297,11 +340,6 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
           perms={perms.filter(p => p.agentId === view.agentId)}
           onRefresh={refresh}
           onViewExplorer={() => setView({ page: "explorer", agentId: view.agentId })}
-          onDeleteAgent={async () => {
-            await deleteAgent(view.agentId);
-            await refresh();
-            setView({ page: "agents" });
-          }}
         />
       )}
 
@@ -312,12 +350,6 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
         />
       )}
 
-      {/* Footer */}
-      <div className="mt-12 pb-8 text-center">
-        <p className="text-[11px] text-[#666666]">
-          Every action is created through a Trusted Execution Environment · <a href="https://occ.wtf" className="hover:text-[#333333] transition-colors">occ.wtf</a>
-        </p>
-      </div>
     </div>
   );
 }
@@ -326,16 +358,14 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
    Agent Panel — Pending / Allowed / Blocked
    ═══════════════════════════════════════════════════════════════ */
 
-function AgentPanel({ agent, perms, onRefresh, onViewExplorer, onDeleteAgent }: {
+function AgentPanel({ agent, perms, onRefresh, onViewExplorer }: {
   agent: Agent;
   perms: Permission[];
   onRefresh: () => Promise<void>;
   onViewExplorer: () => void;
-  onDeleteAgent: () => Promise<void>;
 }) {
   const [busy, setBusy] = useState<number | null>(null);
   const [expandedRequests, setExpandedRequests] = useState<Set<number>>(new Set());
-  const [confirmDelete, setConfirmDelete] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [editName, setEditName] = useState(agent?.name ?? "");
 
@@ -382,16 +412,6 @@ function AgentPanel({ agent, perms, onRefresh, onViewExplorer, onDeleteAgent }: 
             className="h-9 px-4 text-[13px] font-semibold bg-[#3B82F6] text-white hover:bg-blue-600 transition-colors">
             View proofs
           </button>
-          {confirmDelete ? (
-            <div className="flex items-center gap-2">
-              <span className="text-[12px] text-red-500 font-medium">Delete?</span>
-              <button onClick={onDeleteAgent} className="text-[12px] text-red-500 font-bold hover:text-red-600">Yes</button>
-              <button onClick={() => setConfirmDelete(false)} className="text-[12px] text-[#666] hover:text-[#000]">No</button>
-            </div>
-          ) : (
-            <button onClick={() => setConfirmDelete(true)}
-              className="text-[12px] text-[#999] hover:text-red-500 transition-colors">Delete</button>
-          )}
         </div>
       </div>
 
@@ -476,11 +496,11 @@ function AgentPanel({ agent, perms, onRefresh, onViewExplorer, onDeleteAgent }: 
           {agent.allowedTools && agent.allowedTools.length > 0 ? (
             <div className="divide-y divide-[#d9d9d9]">
               {agent.allowedTools.map(tool => (
-                <div key={tool} className="flex items-center gap-3 px-5 py-3 group">
+                <div key={tool} className="flex items-center gap-3 px-5 py-3">
                   <div className="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0" />
                   <span className="text-[14px] flex-1">{humanizeToolName(tool)}</span>
                   <button onClick={() => act(0, () => revokePermission(agent.id, tool))}
-                    className="text-[11px] text-red-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
+                    className="h-7 px-3 text-[11px] font-medium border border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300 transition-colors">
                     Revoke
                   </button>
                 </div>
@@ -502,14 +522,14 @@ function AgentPanel({ agent, perms, onRefresh, onViewExplorer, onDeleteAgent }: 
           {agent.blockedTools && agent.blockedTools.length > 0 ? (
             <div className="divide-y divide-[#d9d9d9]">
               {agent.blockedTools.map(tool => (
-                <div key={tool} className="flex items-center gap-3 px-5 py-3 group">
+                <div key={tool} className="flex items-center gap-3 px-5 py-3">
                   <div className="w-2 h-2 rounded-full bg-red-400 flex-shrink-0" />
                   <span className="text-[14px] flex-1 text-[#666]">{humanizeToolName(tool)}</span>
                   <button onClick={async () => {
-                    await fetch(`/api/agents/${encodeURIComponent(agent.id)}/tools/${encodeURIComponent(tool)}`, { method: "DELETE" });
+                    await fetch(`/api/agents/${encodeURIComponent(agent.id)}/tools/${encodeURIComponent(tool)}/unblock`, { method: "POST" });
                     await onRefresh();
                   }}
-                    className="text-[11px] text-blue-500 hover:text-blue-600 transition-colors opacity-0 group-hover:opacity-100">
+                    className="h-7 px-3 text-[11px] font-medium border border-blue-200 text-blue-500 hover:bg-blue-50 hover:border-blue-300 transition-colors">
                     Unblock
                   </button>
                 </div>

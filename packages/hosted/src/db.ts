@@ -281,6 +281,15 @@ export const db = {
     );
   },
 
+  async unblockTool(userId: string, agentId: string, tool: string) {
+    const p = getPool();
+    await p.query(
+      `UPDATE occ_agents SET blocked_tools = array_remove(blocked_tools, $3)
+       WHERE user_id = $1 AND id = $2`,
+      [userId, agentId, tool]
+    );
+  },
+
   async setAgentPaused(userId: string, agentId: string, paused: boolean) {
     const p = getPool();
     await p.query(

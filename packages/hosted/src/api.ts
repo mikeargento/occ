@@ -222,6 +222,15 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
     }
   }
 
+  // /agents/:id/tools/:tool/unblock
+  const unblockMatch = path.match(/^\/agents\/([^/]+)\/tools\/([^/]+)\/unblock$/);
+  if (unblockMatch && method === "POST") {
+    const agentId = decodeURIComponent(unblockMatch[1]!);
+    const tool = decodeURIComponent(unblockMatch[2]!);
+    await db.unblockTool(userId, agentId, tool);
+    return json(res, { tool, unblocked: true });
+  }
+
   // ── Policy ──
   if (path === "/policy" && method === "GET") {
     if (!userId) return json(res, { policy: null });
