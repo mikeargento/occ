@@ -385,7 +385,7 @@ function LiveProofFeed() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/proofs?limit=10&page=1")
+    fetch("/api/proofs?limit=50&page=1")
       .then((r) => r.json())
       .then((data) => setProofs(data.proofs ?? []))
       .catch(() => {})
@@ -444,54 +444,34 @@ function HomeProofRow({ proof: p }: { proof: HomeProofSummary }) {
 
   return (
     <div>
-      <div className="flex items-center px-4 sm:px-5 py-3.5 hover:bg-bg-subtle/40 transition-colors">
-        <button
-          onClick={toggle}
-          className="shrink-0 mr-2 sm:mr-3 text-text-tertiary hover:text-text transition-colors p-0.5"
-          title={expanded ? "Collapse" : "Expand"}
+      <button
+        onClick={toggle}
+        className="w-full flex items-center px-4 sm:px-5 py-3.5 hover:bg-bg-subtle/40 transition-colors text-left"
+      >
+        <svg
+          width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5"
+          className={`shrink-0 mr-2 sm:mr-3 text-text-tertiary transition-transform duration-150 ${expanded ? "rotate-90" : ""}`}
         >
-          <svg
-            width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5"
-            className={`transition-transform duration-150 ${expanded ? "rotate-90" : ""}`}
-          >
-            <path d="M3 1.5L7 5L3 8.5" />
-          </svg>
-        </button>
-        <Link
-          href={`/explorer/${encodeURIComponent(toUrlSafeB64(p.digestB64))}`}
-          className="flex items-center justify-between flex-1 min-w-0"
-        >
-          <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
-            <code className="text-xs sm:text-sm font-mono text-text truncate min-w-0">
-              {p.digestB64}
-            </code>
-            <span className={`text-[10px] sm:text-xs font-medium shrink-0 ${enforcementColor(p.enforcement)}`}>
-              <span className="hidden sm:inline">{enforcementLabel(p.enforcement)}</span>
-              <span className="sm:hidden">{p.enforcement === "measured-tee" ? "TEE" : p.enforcement === "hw-key" ? "HW" : "SW"}</span>
-            </span>
-          </div>
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-2 sm:ml-4">
-            {p.hasAgency && (
-              <span className="text-blue-600" title="Device-authorized">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                </svg>
-              </span>
-            )}
-            {p.hasTsa && (
-              <span className="text-purple-600" title="RFC 3161 timestamped">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M12 6v6l4 2" />
-                </svg>
-              </span>
-            )}
-            <span className="text-[10px] sm:text-xs text-text-tertiary w-14 sm:w-16 text-right">
-              {p.commitTime ? relativeTime(p.commitTime) : "—"}
-            </span>
-          </div>
-        </Link>
-      </div>
+          <path d="M3 1.5L7 5L3 8.5" />
+        </svg>
+        <code className="text-xs sm:text-sm font-mono text-text truncate min-w-0 flex-1">
+          {p.digestB64}
+        </code>
+        <span className={`text-[10px] sm:text-xs font-medium shrink-0 ml-3 ${enforcementColor(p.enforcement)}`}>
+          <span className="hidden sm:inline">{enforcementLabel(p.enforcement)}</span>
+          <span className="sm:hidden">{p.enforcement === "measured-tee" ? "TEE" : p.enforcement === "hw-key" ? "HW" : "SW"}</span>
+        </span>
+        {p.hasAgency && (
+          <span className="text-blue-600 shrink-0 ml-2" title="Device-authorized">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+          </span>
+        )}
+        <span className="text-[10px] sm:text-xs text-text-tertiary shrink-0 ml-3 w-14 sm:w-16 text-right">
+          {p.commitTime ? relativeTime(p.commitTime) : "—"}
+        </span>
+      </button>
 
       {expanded && (
         <div className="px-4 sm:px-5 pb-4 pt-1 bg-bg-subtle/20">
@@ -527,15 +507,7 @@ function HomeProofRow({ proof: p }: { proof: HomeProofSummary }) {
                   </div>
                 )}
               </div>
-              <Link
-                href={`/explorer/${encodeURIComponent(toUrlSafeB64(p.digestB64))}`}
-                className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-500 transition-colors mt-1"
-              >
-                View full proof
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-              </Link>
+              {/* All detail shown inline — no navigation needed */}
             </div>
           ) : (
             <div className="text-xs text-text-tertiary py-2">Could not load proof details.</div>
@@ -549,178 +521,81 @@ function HomeProofRow({ proof: p }: { proof: HomeProofSummary }) {
 /* ── Page ── */
 
 export default function Home() {
-  const available: Framework[] = []; // Integration cards removed — dashboard is the product
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<HomeProofSummary[] | null>(null);
+  const [searching, setSearching] = useState(false);
+
+  async function handleSearch() {
+    if (!searchQuery.trim() || searchQuery.trim().length < 2) return;
+    setSearching(true);
+    setSearchResults(null);
+    try {
+      const res = await fetch(`/api/proofs/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      if (res.ok) {
+        const data = await res.json();
+        setSearchResults(data.proofs ?? []);
+      }
+    } catch {}
+    setSearching(false);
+  }
 
   return (
     <>
-    <div className="noise-overlay" />
-    <div className="mx-auto max-w-6xl px-4 sm:px-6 py-16 sm:py-28">
-      {/* Hero */}
-      <section className="relative mb-20 sm:mb-32">
-        <div className="hero-glow" />
-                <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-12 lg:gap-16">
-          <div className="lg:max-w-2xl">
-            <h1 className="hero-animate text-5xl sm:text-6xl lg:text-7xl font-bold tracking-[-0.02em] mb-6" style={{ animationDelay: "0ms" }}>
-              Define what your AI does.
-            </h1>
-          </div>
+    <div className="mx-auto max-w-4xl px-4 sm:px-6 py-10 sm:py-16">
 
-          {/* Right — Auth buttons */}
-          <div className="hero-animate w-full max-w-[300px] flex-shrink-0" style={{ animationDelay: "180ms" }}>
-            <div className="flex flex-col gap-2">
-              <a href="https://agent.occ.wtf/auth/login/github"
-                className="flex items-center justify-center gap-2.5 w-full h-11 text-[13px] font-medium bg-white border border-[#e5e5e5] text-black hover:border-[#999] transition-colors">
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-                Continue with GitHub
-              </a>
-              <a href="https://agent.occ.wtf/auth/login/google"
-                className="flex items-center justify-center gap-2.5 w-full h-11 text-[13px] font-medium bg-white border border-[#e5e5e5] text-black hover:border-[#999] transition-colors">
-                <svg className="w-4 h-4" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-                Continue with Google
-              </a>
-              <a href="https://agent.occ.wtf/auth/login/apple"
-                className="flex items-center justify-center gap-2.5 w-full h-11 text-[13px] font-medium bg-white border border-[#e5e5e5] text-black hover:border-[#999] transition-colors">
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
-                Continue with Apple
-              </a>
-            </div>
-            <p className="text-[11px] text-text-tertiary mt-3 text-center">Free. No credit card required.</p>
-          </div>
+      {/* Header area — headline + sign in */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 mb-10">
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-[-0.03em] text-text">
+          Define what your AI does.
+        </h1>
+        <a href="https://agent.occ.wtf"
+          className="text-[13px] font-medium text-text-secondary hover:text-text transition-colors shrink-0">
+          Sign in
+        </a>
+      </div>
+
+      {/* Search */}
+      <div className="mb-8">
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+            placeholder="Search by digest, signer, or counter..."
+            className="flex-1 h-10 border border-border-subtle bg-bg-elevated px-4 text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:border-text/30 transition-colors"
+          />
+          <button
+            onClick={handleSearch}
+            disabled={searching || searchQuery.trim().length < 2}
+            className="h-10 px-5 bg-text text-bg text-sm font-medium hover:bg-text/90 transition-colors disabled:opacity-40"
+          >
+            {searching ? "..." : "Search"}
+          </button>
         </div>
 
-      </section>
-
-      {/* Integration cards removed — agent.occ.wtf dashboard is the product */}
-
-      {/* Live Proof Explorer */}
-      <section className="mb-20 sm:mb-32">
-        <ScrollReveal>
-        <div className="border border-border bg-bg-elevated/80 backdrop-blur-sm p-6 sm:p-10 md:p-14">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-semibold tracking-[-0.02em]">
-              Live Proofs
-            </h2>
-            <Link
-              href="/explorer"
-              className="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-500 transition-colors"
-            >
-              View all in Explorer
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
-            </Link>
-          </div>
-          <p className="text-text-secondary text-base leading-relaxed max-w-2xl mb-6">
-            Every agent action that executes through OCC produces a proof.
-            The proof authorized the action and is the verifiable record that it happened. Click to expand.
-          </p>
-          <LiveProofFeed />
-        </div>
-        </ScrollReveal>
-      </section>
-
-      {/* Orchestrators section removed — agent.occ.wtf dashboard is the product */}
-      {false && (
-      <section className="mb-20 sm:mb-32">
-        <ScrollReveal>
-        <div className="flex items-center gap-3 mb-4">
-          <h2 className="text-2xl font-semibold tracking-[-0.02em]">
-            Orchestrators
-          </h2>
-          <span className="inline-flex items-center bg-bg-subtle px-2.5 py-0.5 text-xs font-medium text-text-tertiary">
-            Agent platforms
-          </span>
-        </div>
-        <p className="text-text-secondary text-base leading-relaxed max-w-xl mb-10">
-          OCC plugs into multi-agent orchestration platforms. Define a policy,
-          and every tool call must be authorized by it. Revoke a permission, and the proof record updates accordingly.
-          The proof that allowed the action and the proof that it happened are the same object.
-        </p>
-        </ScrollReveal>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          {([
-            {
-              name: "Paperclip",
-              description: "Agent control plane with policy enforcement, revocation, and TEE-attested proofs on every action",
-              status: "available" as const,
-              logo: <Logo src="/logos/paperclip.svg" alt="Paperclip" />,
-            },
-            {
-              name: "Composio",
-              description: "250+ tool integrations with cryptographic control on every call",
-              status: "coming-soon" as const,
-              logo: logos.composio,
-            },
-            {
-              name: "LangSmith",
-              description: "Controlled traces with cryptographic authorization for LangChain",
-              status: "coming-soon" as const,
-              logo: logos.langchain,
-            },
-            {
-              name: "Julep",
-              description: "Stateful agent workflows with cryptographic control at every step",
-              status: "coming-soon" as const,
-              logo: logos.julep,
-            },
-            {
-              name: "AgentOps",
-              description: "Agent observability with cryptographic control and audit",
-              status: "coming-soon" as const,
-              logo: logos.agentops,
-            },
-            {
-              name: "Relevance AI",
-              description: "No-code agent builder with cryptographic control",
-              status: "coming-soon" as const,
-              logo: logos.relevanceai,
-            },
-            {
-              name: "Letta (MemGPT)",
-              description: "Long-term memory agents with cryptographic control",
-              status: "coming-soon" as const,
-              logo: logos.letta,
-            },
-            {
-              name: "SuperAGI",
-              description: "Autonomous agent framework with OCC control layer",
-              status: "coming-soon" as const,
-              logo: logos.superagi,
-            },
-          ] as const).map((o, i) => (
-            <ScrollReveal key={o.name} delay={i * 40}>
-            <div
-              className={`border p-5 flex flex-col h-full transition-all duration-300 hover:border-border ${
-                o.status === "available"
-                  ? "border-blue-500/30 bg-blue-500/[0.03]"
-                  : "border-border-subtle bg-bg-elevated"
-              }`}
-            >
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <div className="flex items-center gap-2">
-                  {o.logo && <div className="shrink-0">{o.logo}</div>}
-                  <h3 className="text-sm font-semibold">{o.name}</h3>
-                </div>
-                <span
-                  className={`shrink-0 inline-flex items-center px-2 py-0.5 text-[11px] font-medium ${
-                    o.status === "available"
-                      ? "bg-blue-500/10 text-blue-400"
-                      : "bg-bg-subtle text-text-tertiary"
-                  }`}
-                >
-                  {o.status === "available" ? "Available" : "Coming Soon"}
-                </span>
+        {searchResults !== null && (
+          <div className="mt-4">
+            {searchResults.length === 0 ? (
+              <div className="text-sm text-text-tertiary">No results found.</div>
+            ) : (
+              <div className="border border-border-subtle bg-bg-elevated overflow-hidden divide-y divide-border-subtle">
+                {searchResults.map((p) => (
+                  <HomeProofRow key={p.id} proof={p} />
+                ))}
               </div>
-              <p className="text-[11px] sm:text-xs text-text-secondary leading-relaxed line-clamp-3 sm:line-clamp-none">
-                {o.description}
-              </p>
-            </div>
-            </ScrollReveal>
-          ))}
-        </div>
-      </section>
-      )}
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Live Proofs */}
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-[11px] font-semibold text-text-tertiary uppercase tracking-[0.08em]">
+          Live Proofs
+        </h2>
+      </div>
+      <LiveProofFeed />
 
     </div>
     </>
