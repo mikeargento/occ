@@ -138,6 +138,89 @@ export const db = {
       -- Anthropic API key storage (encrypted at rest via column-level)
       ALTER TABLE occ_users ADD COLUMN IF NOT EXISTS anthropic_api_key TEXT;
 
+      -- ═══════════════════════════════════════════════════════════
+      -- V2 TABLES — Request-first control model
+      -- ═══════════════════════════════════════════════════════════
+
+      CREATE TABLE IF NOT EXISTS occ_v2_runs (
+        id SERIAL PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        agent_id TEXT NOT NULL,
+        name TEXT,
+        summary TEXT,
+        status TEXT NOT NULL DEFAULT 'active',
+        request_count INTEGER DEFAULT 0,
+        started_at TIMESTAMPTZ DEFAULT NOW(),
+        ended_at TIMESTAMPTZ
+      );
+      CREATE INDEX IF NOT EXISTS idx_v2_runs_user ON occ_v2_runs(user_id, started_at DESC);
+
+      CREATE TABLE IF NOT EXISTS occ_v2_requests (
+        id SERIAL PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        agent_id TEXT NOT NULL,
+        run_id INTEGER REFERENCES occ_v2_runs(id),
+        tool TEXT NOT NULL,
+        capability TEXT,
+        label TEXT,
+        risk_lane TEXT NOT NULL DEFAULT 'unknown',
+        summary TEXT,
+        origin_type TEXT NOT NULL DEFAULT 'api',
+        origin_client TEXT,
+        request_args JSONB,
+        status TEXT NOT NULL DEFAULT 'pending',
+        created_at TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_v2_req_user_status ON occ_v2_requests(user_id, status);
+      CREATE INDEX IF NOT EXISTS idx_v2_req_user_time ON occ_v2_requests(user_id, created_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_v2_req_run ON occ_v2_requests(run_id);
+      CREATE INDEX IF NOT EXISTS idx_v2_req_lane ON occ_v2_requests(user_id, risk_lane, status);
+
+      CREATE TABLE IF NOT EXISTS occ_v2_decisions (
+        id SERIAL PRIMARY KEY,
+        request_id INTEGER NOT NULL REFERENCES occ_v2_requests(id),
+        user_id TEXT NOT NULL,
+        decided_by TEXT NOT NULL DEFAULT 'human',
+        decision TEXT NOT NULL,
+        mode TEXT NOT NULL DEFAULT 'once',
+        reason TEXT,
+        proof_digest TEXT,
+        proof JSONB,
+        decided_at TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_v2_dec_req ON occ_v2_decisions(request_id);
+      CREATE INDEX IF NOT EXISTS idx_v2_dec_user ON occ_v2_decisions(user_id, decided_at DESC);
+
+      CREATE TABLE IF NOT EXISTS occ_v2_executions (
+        id SERIAL PRIMARY KEY,
+        request_id INTEGER NOT NULL REFERENCES occ_v2_requests(id),
+        decision_id INTEGER NOT NULL REFERENCES occ_v2_decisions(id),
+        user_id TEXT NOT NULL,
+        agent_id TEXT NOT NULL,
+        tool TEXT NOT NULL,
+        args JSONB,
+        output JSONB,
+        duration_ms INTEGER,
+        auth_digest TEXT,
+        exec_digest TEXT,
+        proof JSONB,
+        status TEXT NOT NULL DEFAULT 'completed',
+        error TEXT,
+        executed_at TIMESTAMPTZ DEFAULT NOW()
+      );
+      CREATE INDEX IF NOT EXISTS idx_v2_exec_req ON occ_v2_executions(request_id);
+      CREATE INDEX IF NOT EXISTS idx_v2_exec_user ON occ_v2_executions(user_id, executed_at DESC);
+
+      CREATE TABLE IF NOT EXISTS occ_v2_risk_lanes (
+        id SERIAL PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        lane TEXT NOT NULL,
+        mode TEXT NOT NULL DEFAULT 'ask',
+        conditions JSONB,
+        updated_at TIMESTAMPTZ DEFAULT NOW(),
+        UNIQUE(user_id, lane)
+      );
+
       -- Create anonymous user for pre-auth testing
       INSERT INTO occ_users (id, email, name, provider, provider_id, mcp_token)
       VALUES ('anonymous', 'anon@occ.wtf', 'Anonymous', 'anonymous', 'anonymous', 'anon-token')
@@ -576,6 +659,246 @@ export const db = {
       [token]
     );
     return res.rows[0] ?? null;
+  },
+
+  // ═══════════════════════════════════════════════════════════
+  // V2 — Request-first control model
+  // ═══════════════════════════════════════════════════════════
+
+  // ── V2 Requests ──
+
+  async v2CreateRequest(userId: string, req: {
+    agentId: string; runId?: number; tool: string; capability?: string;
+    label?: string; riskLane: string; summary?: string;
+    originType: string; originClient?: string; requestArgs?: unknown;
+  }) {
+    const p = getPool();
+    const res = await p.query(
+      `INSERT INTO occ_v2_requests (user_id, agent_id, run_id, tool, capability, label, risk_lane, summary, origin_type, origin_client, request_args)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *`,
+      [userId, req.agentId, req.runId ?? null, req.tool, req.capability ?? null,
+       req.label ?? null, req.riskLane, req.summary ?? null,
+       req.originType, req.originClient ?? null, JSON.stringify(req.requestArgs ?? null)]
+    );
+    return res.rows[0];
+  },
+
+  async v2GetRequests(userId: string, filters?: {
+    status?: string; riskLane?: string; agentId?: string; runId?: number;
+    limit?: number; offset?: number;
+  }) {
+    const p = getPool();
+    const where = ["user_id = $1"];
+    const params: unknown[] = [userId];
+    let idx = 2;
+    if (filters?.status) { where.push(`status = $${idx++}`); params.push(filters.status); }
+    if (filters?.riskLane) { where.push(`risk_lane = $${idx++}`); params.push(filters.riskLane); }
+    if (filters?.agentId) { where.push(`agent_id = $${idx++}`); params.push(filters.agentId); }
+    if (filters?.runId) { where.push(`run_id = $${idx++}`); params.push(filters.runId); }
+    const limit = filters?.limit ?? 50;
+    const offset = filters?.offset ?? 0;
+    const res = await p.query(
+      `SELECT * FROM occ_v2_requests WHERE ${where.join(" AND ")} ORDER BY created_at DESC LIMIT $${idx++} OFFSET $${idx}`,
+      [...params, limit, offset]
+    );
+    const countRes = await p.query(
+      `SELECT COUNT(*) FROM occ_v2_requests WHERE ${where.join(" AND ")}`,
+      params
+    );
+    return { requests: res.rows, total: parseInt(countRes.rows[0].count, 10) };
+  },
+
+  async v2GetRequest(requestId: number) {
+    const p = getPool();
+    const req = await p.query("SELECT * FROM occ_v2_requests WHERE id = $1", [requestId]);
+    if (!req.rows[0]) return null;
+    const decisions = await p.query("SELECT * FROM occ_v2_decisions WHERE request_id = $1 ORDER BY decided_at", [requestId]);
+    const executions = await p.query("SELECT * FROM occ_v2_executions WHERE request_id = $1 ORDER BY executed_at", [requestId]);
+    return { ...req.rows[0], decisions: decisions.rows, executions: executions.rows };
+  },
+
+  async v2UpdateRequestStatus(requestId: number, status: string) {
+    const p = getPool();
+    await p.query("UPDATE occ_v2_requests SET status = $2 WHERE id = $1", [requestId, status]);
+  },
+
+  async v2GetRequestStats(userId: string) {
+    const p = getPool();
+    const res = await p.query(
+      `SELECT status, risk_lane, COUNT(*)::int as count
+       FROM occ_v2_requests WHERE user_id = $1
+       GROUP BY status, risk_lane`,
+      [userId]
+    );
+    return res.rows;
+  },
+
+  // ── V2 Decisions ──
+
+  async v2CreateDecision(req: {
+    requestId: number; userId: string; decidedBy: string;
+    decision: string; mode: string; reason?: string;
+    proofDigest?: string; proof?: unknown;
+  }) {
+    const p = getPool();
+    const res = await p.query(
+      `INSERT INTO occ_v2_decisions (request_id, user_id, decided_by, decision, mode, reason, proof_digest, proof)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+      [req.requestId, req.userId, req.decidedBy, req.decision, req.mode,
+       req.reason ?? null, req.proofDigest ?? null, JSON.stringify(req.proof ?? null)]
+    );
+    return res.rows[0];
+  },
+
+  // ── V2 Executions ──
+
+  async v2CreateExecution(req: {
+    requestId: number; decisionId: number; userId: string; agentId: string;
+    tool: string; args?: unknown; output?: unknown; durationMs?: number;
+    authDigest?: string; execDigest?: string; proof?: unknown;
+    status?: string; error?: string;
+  }) {
+    const p = getPool();
+    const res = await p.query(
+      `INSERT INTO occ_v2_executions (request_id, decision_id, user_id, agent_id, tool, args, output, duration_ms, auth_digest, exec_digest, proof, status, error)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING *`,
+      [req.requestId, req.decisionId, req.userId, req.agentId, req.tool,
+       JSON.stringify(req.args ?? null), JSON.stringify(req.output ?? null),
+       req.durationMs ?? null, req.authDigest ?? null, req.execDigest ?? null,
+       JSON.stringify(req.proof ?? null), req.status ?? "completed", req.error ?? null]
+    );
+    return res.rows[0];
+  },
+
+  // ── V2 Runs ──
+
+  async v2CreateRun(userId: string, agentId: string, name?: string) {
+    const p = getPool();
+    const res = await p.query(
+      `INSERT INTO occ_v2_runs (user_id, agent_id, name) VALUES ($1, $2, $3) RETURNING *`,
+      [userId, agentId, name ?? null]
+    );
+    return res.rows[0];
+  },
+
+  async v2GetRuns(userId: string, filters?: { status?: string; agentId?: string; limit?: number; offset?: number }) {
+    const p = getPool();
+    const where = ["user_id = $1"];
+    const params: unknown[] = [userId];
+    let idx = 2;
+    if (filters?.status) { where.push(`status = $${idx++}`); params.push(filters.status); }
+    if (filters?.agentId) { where.push(`agent_id = $${idx++}`); params.push(filters.agentId); }
+    const limit = filters?.limit ?? 50;
+    const offset = filters?.offset ?? 0;
+    const res = await p.query(
+      `SELECT * FROM occ_v2_runs WHERE ${where.join(" AND ")} ORDER BY started_at DESC LIMIT $${idx++} OFFSET $${idx}`,
+      [...params, limit, offset]
+    );
+    return res.rows;
+  },
+
+  async v2GetRun(runId: number) {
+    const p = getPool();
+    const run = await p.query("SELECT * FROM occ_v2_runs WHERE id = $1", [runId]);
+    if (!run.rows[0]) return null;
+    const requests = await p.query(
+      "SELECT * FROM occ_v2_requests WHERE run_id = $1 ORDER BY created_at", [runId]
+    );
+    return { ...run.rows[0], requests: requests.rows };
+  },
+
+  async v2IncrementRunCount(runId: number) {
+    const p = getPool();
+    await p.query("UPDATE occ_v2_runs SET request_count = request_count + 1 WHERE id = $1", [runId]);
+  },
+
+  // ── V2 Risk Lanes ──
+
+  async v2GetRiskLanes(userId: string) {
+    const p = getPool();
+    const res = await p.query("SELECT * FROM occ_v2_risk_lanes WHERE user_id = $1 ORDER BY lane", [userId]);
+    return res.rows;
+  },
+
+  async v2SetRiskLane(userId: string, lane: string, mode: string) {
+    const p = getPool();
+    await p.query(
+      `INSERT INTO occ_v2_risk_lanes (user_id, lane, mode, updated_at)
+       VALUES ($1, $2, $3, NOW())
+       ON CONFLICT (user_id, lane) DO UPDATE SET mode = $3, updated_at = NOW()`,
+      [userId, lane, mode]
+    );
+  },
+
+  async v2GetRiskLane(userId: string, lane: string): Promise<string> {
+    const p = getPool();
+    const res = await p.query(
+      "SELECT mode FROM occ_v2_risk_lanes WHERE user_id = $1 AND lane = $2",
+      [userId, lane]
+    );
+    return res.rows[0]?.mode ?? "ask"; // default: require human approval
+  },
+
+  // ── V2 Overview ──
+
+  async v2GetOverview(userId: string) {
+    const p = getPool();
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const [pending, todayStats, recentActivity, activeRuns] = await Promise.all([
+      p.query("SELECT COUNT(*)::int as count FROM occ_v2_requests WHERE user_id = $1 AND status = 'pending'", [userId]),
+      p.query(
+        `SELECT status, COUNT(*)::int as count FROM occ_v2_requests
+         WHERE user_id = $1 AND created_at >= $2 GROUP BY status`,
+        [userId, today]
+      ),
+      p.query(
+        `SELECT r.*, d.decision, d.decided_at, e.status as exec_status
+         FROM occ_v2_requests r
+         LEFT JOIN occ_v2_decisions d ON d.request_id = r.id
+         LEFT JOIN occ_v2_executions e ON e.request_id = r.id
+         WHERE r.user_id = $1
+         ORDER BY r.created_at DESC LIMIT 20`,
+        [userId]
+      ),
+      p.query("SELECT COUNT(*)::int as count FROM occ_v2_runs WHERE user_id = $1 AND status = 'active'", [userId]),
+    ]);
+
+    const stats: Record<string, number> = { pending: 0, approved: 0, denied: 0, auto_approved: 0 };
+    for (const row of todayStats.rows) stats[row.status] = row.count;
+
+    return {
+      pending: pending.rows[0].count,
+      todayApproved: stats.approved + stats.auto_approved,
+      todayDenied: stats.denied,
+      todayTotal: Object.values(stats).reduce((a, b) => a + b, 0),
+      activeRuns: activeRuns.rows[0].count,
+      recentActivity: recentActivity.rows,
+    };
+  },
+
+  // ── V2 Proofs (reads from existing occ_proofs + v2_executions) ──
+
+  async v2GetProofs(userId: string, filters?: {
+    agentId?: string; tool?: string; digest?: string;
+    limit?: number; offset?: number;
+  }) {
+    const p = getPool();
+    const where = ["user_id = $1"];
+    const params: unknown[] = [userId];
+    let idx = 2;
+    if (filters?.agentId) { where.push(`agent_id = $${idx++}`); params.push(filters.agentId); }
+    if (filters?.tool) { where.push(`tool = $${idx++}`); params.push(filters.tool); }
+    if (filters?.digest) { where.push(`proof_digest ILIKE $${idx++}`); params.push(`%${filters.digest}%`); }
+    const limit = filters?.limit ?? 50;
+    const offset = filters?.offset ?? 0;
+    const res = await p.query(
+      `SELECT * FROM occ_proofs WHERE ${where.join(" AND ")} ORDER BY created_at DESC LIMIT $${idx++} OFFSET $${idx}`,
+      [...params, limit, offset]
+    );
+    const countRes = await p.query(
+      `SELECT COUNT(*) FROM occ_proofs WHERE ${where.join(" AND ")}`, params
+    );
+    return { proofs: res.rows, total: parseInt(countRes.rows[0].count, 10) };
   },
 
   async createPolicy(userId: string, policy: { name: string; allowedTools: string[]; maxActions?: number; rateLimit?: string; policyDigest?: string; categories?: Record<string, boolean>; customRules?: string[] }) {

@@ -3,6 +3,7 @@ import { existsSync, readFileSync, statSync } from "node:fs";
 import { join, extname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { handleApi } from "./api.js";
+import { handleApiV2 } from "./api-v2.js";
 import { handleMcp } from "./mcp.js";
 import { handleAuth } from "./auth.js";
 import { handleLlmProxy } from "./llm-proxy.js";
@@ -109,7 +110,13 @@ async function handler(req: IncomingMessage, res: ServerResponse) {
     return;
   }
 
-  // API endpoints
+  // V2 API endpoints
+  if (pathname.startsWith("/api/v2/")) {
+    await handleApiV2(req, res, url);
+    return;
+  }
+
+  // API endpoints (v1 — legacy)
   if (pathname.startsWith("/api/")) {
     await handleApi(req, res, url);
     return;
