@@ -219,6 +219,25 @@ export async function getConnectConfig(): Promise<{
   return apiFetch("/connect-config");
 }
 
+// ── Notifications ──
+
+export async function getNotificationCount(): Promise<{ count: number }> {
+  return apiFetch("/notifications/count");
+}
+
+export async function markNotificationsRead(): Promise<{ ok: boolean }> {
+  return apiFetch("/notifications/mark-read", { method: "POST" });
+}
+
+// ── Bulk Approve/Deny ──
+
+export async function bulkApprove(opts: { action: "approve" | "deny"; mode?: "once" | "always"; ids?: number[]; agentId?: string }): Promise<{ processed: number }> {
+  return apiFetch("/permissions/bulk", {
+    method: "POST",
+    body: JSON.stringify(opts),
+  });
+}
+
 export interface ChainEntry {
   id: number; type: string; proofDigest: string;
   referencesDigest: string | null; createdAt: number;

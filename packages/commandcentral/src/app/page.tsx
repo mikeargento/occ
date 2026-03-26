@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { getAllPermissions, approvePermission, denyPermission, revokePermission, getConnectConfig, getAgents, createAgent, deleteAgent, renameAgent, getAgentActivity, type Permission } from "@/lib/api";
+import { getAllPermissions, approvePermission, denyPermission, revokePermission, getConnectConfig, getAgents, createAgent, deleteAgent, renameAgent, getAgentActivity, getNotificationCount, markNotificationsRead, bulkApprove, type Permission } from "@/lib/api";
 
 /* ── Helpers ── */
 
@@ -19,7 +19,7 @@ function timeLabel(ts: number | string | null): string {
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
-type Agent = { id: string; name: string; mcpUrl: string | null; status: string; totalCalls: number; createdAt: number; allowedTools?: string[]; blockedTools?: string[] };
+type Agent = { id: string; name: string; mcpUrl: string | null; status: string; totalCalls: number; createdAt: number; allowedTools?: string[]; blockedTools?: string[]; connected?: boolean; lastSeen?: string | null; clientName?: string | null };
 type View = { page: "agents" } | { page: "panel"; agentId: string } | { page: "explorer"; agentId: string };
 
 /* ═══════════════════════════════════════════════════════════════
@@ -46,6 +46,16 @@ export default function App() {
    ═══════════════════════════════════════════════════════════════ */
 
 function Shell({ user, children }: { user?: any; children: React.ReactNode }) {
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!user) return;
+    const fetchCount = () => getNotificationCount().then(d => setUnreadCount(d.count)).catch(() => {});
+    fetchCount();
+    const iv = setInterval(fetchCount, 5000);
+    return () => clearInterval(iv);
+  }, [user]);
+
   return (
     <div className="min-h-screen bg-white text-[#000000]">
       <header className="sticky top-0 z-50 bg-[#efefef] border-b border-[#d9d9d9]/50">
@@ -56,6 +66,18 @@ function Shell({ user, children }: { user?: any; children: React.ReactNode }) {
             <a href="https://occ.wtf/docs" className="hidden sm:block text-sm font-semibold px-3 py-1.5 text-[#000000] hover:opacity-70 transition-opacity">Docs</a>
             {user && (
               <div className="flex items-center gap-3 ml-2">
+                {unreadCount > 0 && (
+                  <button onClick={() => { markNotificationsRead(); setUnreadCount(0); }}
+                    className="relative text-[#000000] hover:opacity-70 transition-opacity" title={`${unreadCount} new requests`}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                    </svg>
+                    <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 flex items-center justify-center text-[10px] font-bold bg-amber-500 text-white rounded-full px-1">
+                      {unreadCount}
+                    </span>
+                  </button>
+                )}
                 <a href="/settings" className="text-[#000000] hover:opacity-70 transition-opacity" title="Settings">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="12" r="3" />
@@ -262,14 +284,24 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
                       onClick={() => setView({ page: "panel", agentId: a.id })}>
                       <div className="px-5 py-4">
                         <div className="flex items-center justify-between mb-2">
-                          <h3 className="text-[16px] font-bold">{a.name}</h3>
+                          <div className="flex items-center gap-2">
+                            <span className={`w-2 h-2 rounded-full flex-shrink-0 ${a.connected ? "bg-emerald-400" : "bg-[#ccc]"}`}
+                              title={a.connected ? `Connected via ${a.clientName ?? "unknown"}` : "Disconnected"} />
+                            <h3 className="text-[16px] font-bold">{a.name}</h3>
+                          </div>
                           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
                             className="text-[#ccc] group-hover:text-[#666] transition-colors">
                             <path d="M6 4l4 4-4 4" />
                           </svg>
                         </div>
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3 text-[12px] text-[#666]">
+                          <div className="flex items-center gap-3 text-[12px] text-[#666] flex-wrap">
+                            {a.connected && a.clientName && (
+                              <span className="text-emerald-600">{a.clientName}</span>
+                            )}
+                            {a.connected && a.lastSeen && (
+                              <span className="text-[#999]">{timeLabel(a.lastSeen)}</span>
+                            )}
                             {pending > 0 && (
                               <span className="flex items-center gap-1.5 text-amber-600 font-medium">
                                 <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
@@ -282,7 +314,7 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
                             {(a.blockedTools?.length ?? 0) > 0 && (
                               <span>{a.blockedTools!.length} blocked</span>
                             )}
-                            {!pending && !(a.allowedTools?.length) && !(a.blockedTools?.length) && (
+                            {!pending && !(a.allowedTools?.length) && !(a.blockedTools?.length) && !a.connected && (
                               <span>No activity yet</span>
                             )}
                           </div>
@@ -365,6 +397,7 @@ function AgentPanel({ agent, perms, onRefresh, onViewExplorer }: {
   onViewExplorer: () => void;
 }) {
   const [busy, setBusy] = useState<number | null>(null);
+  const [bulkBusy, setBulkBusy] = useState(false);
   const [expandedRequests, setExpandedRequests] = useState<Set<number>>(new Set());
   const [editingName, setEditingName] = useState(false);
   const [editName, setEditName] = useState(agent?.name ?? "");
@@ -373,17 +406,34 @@ function AgentPanel({ agent, perms, onRefresh, onViewExplorer }: {
 
   const pending = perms.filter(p => p.status === "pending");
 
+  // Decision provenance: map tool -> latest resolved permission
+  const toolProvenance = useMemo(() => {
+    const map: Record<string, { status: string; resolvedAt: number | null; requestedAt: number }> = {};
+    for (const p of perms) {
+      if (p.status === "pending") continue;
+      const existing = map[p.tool];
+      if (!existing || (p.resolvedAt && (!existing.resolvedAt || p.resolvedAt > existing.resolvedAt))) {
+        map[p.tool] = { status: p.status, resolvedAt: p.resolvedAt, requestedAt: p.requestedAt };
+      }
+    }
+    return map;
+  }, [perms]);
+
+  const [dismissing, setDismissing] = useState<Set<number>>(new Set());
+  const [dismissingTools, setDismissingTools] = useState<Set<string>>(new Set());
+
   async function act(id: number, fn: () => Promise<unknown>) {
     setBusy(id);
+    setDismissing(prev => new Set(prev).add(id));
     try { await fn(); await onRefresh(); }
-    finally { setBusy(null); }
+    finally { setBusy(null); setDismissing(prev => { const next = new Set(prev); next.delete(id); return next; }); }
   }
 
   return (
     <div className="space-y-6">
 
       {/* Agent header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           {editingName ? (
             <div className="flex items-center gap-2">
@@ -406,8 +456,15 @@ function AgentPanel({ agent, perms, onRefresh, onViewExplorer }: {
               <span className="opacity-0 group-hover:opacity-40 ml-2 text-[14px]">✎</span>
             </h1>
           )}
+          {agent.connected && (
+            <div className="flex items-center gap-1.5 mt-1">
+              <span className="w-2 h-2 rounded-full bg-emerald-400" />
+              <span className="text-[12px] text-emerald-600">{agent.clientName ?? "Connected"}</span>
+              {agent.lastSeen && <span className="text-[11px] text-[#999]">{timeLabel(agent.lastSeen)}</span>}
+            </div>
+          )}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <button onClick={onViewExplorer}
             className="h-9 px-4 text-[13px] font-semibold bg-[#3B82F6] text-white hover:bg-blue-600 transition-colors">
             View proofs
@@ -418,18 +475,39 @@ function AgentPanel({ agent, perms, onRefresh, onViewExplorer }: {
       {/* ── PENDING REQUESTS ── */}
       {pending.length > 0 && (
         <div className="bg-white border border-amber-300 overflow-hidden">
-          <div className="px-5 py-3 border-b border-amber-200 bg-amber-50">
+          <div className="px-5 py-3 border-b border-amber-200 bg-amber-50 flex items-center justify-between flex-wrap gap-2">
             <h2 className="text-[14px] font-bold text-amber-700">
               {pending.length} pending request{pending.length > 1 ? "s" : ""}
             </h2>
+            {pending.length > 1 && (
+              <div className="flex items-center gap-2">
+                <button onClick={async () => {
+                  setBulkBusy(true);
+                  try { await bulkApprove({ action: "approve", mode: "always", agentId: agent.id }); await onRefresh(); }
+                  finally { setBulkBusy(false); }
+                }} disabled={bulkBusy}
+                  className="h-7 px-3 text-[11px] font-semibold bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-40 transition-all">
+                  {bulkBusy ? "..." : "Approve all"}
+                </button>
+                <button onClick={async () => {
+                  setBulkBusy(true);
+                  try { await bulkApprove({ action: "deny", mode: "once", agentId: agent.id }); await onRefresh(); }
+                  finally { setBulkBusy(false); }
+                }} disabled={bulkBusy}
+                  className="h-7 px-3 text-[11px] font-medium text-[#666] hover:text-red-500 transition-colors disabled:opacity-40">
+                  Deny all
+                </button>
+              </div>
+            )}
           </div>
           <div className="divide-y divide-amber-100">
             {pending.map(p => {
               const isOpen = expandedRequests.has(p.id);
               const displayName = p.toolDescription || humanizeToolName(p.tool);
               const args = p.requestArgs as Record<string, unknown> | null;
+              const isDismissing = dismissing.has(p.id);
               return (
-                <div key={p.id}>
+                <div key={p.id} className={`transition-all duration-300 ${isDismissing ? "opacity-20 scale-[0.98] pointer-events-none" : "opacity-100"}`}>
                   {/* Summary row — always visible */}
                   <div className="px-5 py-4 cursor-pointer hover:bg-amber-50/50 transition-colors"
                     onClick={() => setExpandedRequests(prev => {
@@ -504,7 +582,7 @@ function AgentPanel({ agent, perms, onRefresh, onViewExplorer }: {
                       )}
 
                       {/* Action buttons */}
-                      <div className="flex items-center gap-2 pt-4">
+                      <div className="flex flex-wrap items-center gap-2 pt-4">
                         <button onClick={() => act(p.id, () => approvePermission(p.id, "always"))} disabled={busy === p.id}
                           className="h-9 px-5 text-[13px] font-semibold bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-40 transition-all active:scale-[0.97] flex items-center gap-1.5">
                           {busy === p.id && <Spinner size={10} color="white" />}
@@ -542,16 +620,32 @@ function AgentPanel({ agent, perms, onRefresh, onViewExplorer }: {
           </div>
           {agent.allowedTools && agent.allowedTools.length > 0 ? (
             <div className="divide-y divide-[#d9d9d9]">
-              {agent.allowedTools.map(tool => (
-                <div key={tool} className="flex items-center gap-3 px-5 py-3">
-                  <div className="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0" />
-                  <span className="text-[14px] flex-1">{humanizeToolName(tool)}</span>
-                  <button onClick={() => act(0, () => revokePermission(agent.id, tool))}
-                    className="h-7 px-3 text-[11px] font-medium border border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300 transition-colors">
-                    Revoke
-                  </button>
-                </div>
-              ))}
+              {agent.allowedTools.map(tool => {
+                const prov = toolProvenance[tool];
+                const fading = dismissingTools.has(tool);
+                return (
+                  <div key={tool} className={`flex items-center gap-3 px-5 py-3 transition-all duration-300 ${fading ? "opacity-20 scale-[0.98] pointer-events-none" : "opacity-100"}`}>
+                    <div className="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <span className="text-[14px]">{humanizeToolName(tool)}</span>
+                      {prov?.resolvedAt && (
+                        <span className="block text-[11px] text-[#999]">
+                          Approved {timeLabel(prov.resolvedAt)}
+                        </span>
+                      )}
+                    </div>
+                    <button onClick={async () => {
+                      setDismissingTools(prev => new Set(prev).add(tool));
+                      await revokePermission(agent.id, tool);
+                      await onRefresh();
+                      setDismissingTools(prev => { const next = new Set(prev); next.delete(tool); return next; });
+                    }}
+                      className="h-7 px-3 text-[11px] font-medium border border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300 transition-colors flex-shrink-0">
+                      Revoke
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <div className="px-5 py-8 text-center">
@@ -568,19 +662,29 @@ function AgentPanel({ agent, perms, onRefresh, onViewExplorer }: {
           </div>
           {agent.blockedTools && agent.blockedTools.length > 0 ? (
             <div className="divide-y divide-[#d9d9d9]">
-              {agent.blockedTools.map(tool => (
-                <div key={tool} className="flex items-center gap-3 px-5 py-3">
-                  <div className="w-2 h-2 rounded-full bg-red-400 flex-shrink-0" />
-                  <span className="text-[14px] flex-1 text-[#666]">{humanizeToolName(tool)}</span>
-                  <button onClick={async () => {
-                    await fetch(`/api/agents/${encodeURIComponent(agent.id)}/tools/${encodeURIComponent(tool)}/unblock`, { method: "POST" });
-                    await onRefresh();
-                  }}
-                    className="h-7 px-3 text-[11px] font-medium border border-blue-200 text-blue-500 hover:bg-blue-50 hover:border-blue-300 transition-colors">
-                    Unblock
-                  </button>
-                </div>
-              ))}
+              {agent.blockedTools.map(tool => {
+                const prov = toolProvenance[tool];
+                return (
+                  <div key={tool} className="flex items-center gap-3 px-5 py-3">
+                    <div className="w-2 h-2 rounded-full bg-red-400 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <span className="text-[14px] text-[#666]">{humanizeToolName(tool)}</span>
+                      {prov?.resolvedAt && (
+                        <span className="block text-[11px] text-[#999]">
+                          {prov.status === "revoked" ? "Revoked" : "Denied"} {timeLabel(prov.resolvedAt)}
+                        </span>
+                      )}
+                    </div>
+                    <button onClick={async () => {
+                      await fetch(`/api/agents/${encodeURIComponent(agent.id)}/tools/${encodeURIComponent(tool)}/unblock`, { method: "POST" });
+                      await onRefresh();
+                    }}
+                      className="h-7 px-3 text-[11px] font-medium border border-blue-200 text-blue-500 hover:bg-blue-50 hover:border-blue-300 transition-colors flex-shrink-0">
+                      Unblock
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <div className="px-5 py-8 text-center">
@@ -601,6 +705,8 @@ function AgentExplorer({ agent }: { agent: Agent }) {
   const [proofs, setProofs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedProof, setExpandedProof] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterMode, setFilterMode] = useState<"all" | "allowed" | "denied">("all");
 
   const fetchProofs = useCallback(async () => {
     if (!agent?.id) return;
@@ -668,23 +774,66 @@ function AgentExplorer({ agent }: { agent: Agent }) {
     return p.receipt?.occProof?.signer?.publicKeyB64 ?? p.receipt?.occProof?.commit?.signerB64 ?? "";
   }
 
+  const filteredProofs = useMemo(() => {
+    let result = proofs;
+    if (filterMode === "allowed") result = result.filter(p => p.allowed);
+    if (filterMode === "denied") result = result.filter(p => !p.allowed);
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(p =>
+        p.tool?.toLowerCase().includes(q) ||
+        humanizeToolName(p.tool ?? "").toLowerCase().includes(q) ||
+        p.reason?.toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [proofs, filterMode, searchQuery]);
+
   if (loading) return <Center><Spinner size={20} /></Center>;
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
         <h1 className="text-2xl font-bold tracking-[-0.02em]">{agent.name} — Proofs</h1>
-        <span className="text-[13px] text-[#666]">{proofs.length} entries</span>
+        <span className="text-[13px] text-[#666]">{filteredProofs.length} of {proofs.length} entries</span>
       </div>
 
-      {proofs.length === 0 ? (
+      {/* Search + Filter */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          placeholder="Search by tool name or reason..."
+          className="flex-1 px-3 py-2 text-[13px] border border-[#d9d9d9] bg-[#efefef] outline-none focus:border-blue-400 caret-blue-500"
+        />
+        <div className="flex gap-1">
+          {(["all", "allowed", "denied"] as const).map(mode => (
+            <button key={mode} onClick={() => setFilterMode(mode)}
+              className={`h-9 px-3 text-[12px] font-semibold transition-colors ${
+                filterMode === mode
+                  ? mode === "allowed" ? "bg-blue-500 text-white" : mode === "denied" ? "bg-red-500 text-white" : "bg-[#000] text-white"
+                  : "bg-[#efefef] border border-[#d9d9d9] text-[#666] hover:text-[#000]"
+              }`}>
+              {mode === "all" ? "All" : mode === "allowed" ? "Allowed" : "Denied"}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {filteredProofs.length === 0 && proofs.length > 0 ? (
+        <div className="text-center py-12 bg-[#efefef] border border-[#d9d9d9]">
+          <p className="text-[15px] text-[#666] font-medium">No matching proofs</p>
+          <p className="text-[13px] text-[#999] mt-1">Try adjusting your search or filter</p>
+        </div>
+      ) : proofs.length === 0 ? (
         <div className="text-center py-16 bg-[#efefef] border border-[#d9d9d9]">
           <p className="text-[15px] text-[#666] font-medium">No proofs yet</p>
           <p className="text-[13px] text-[#999] mt-1">Proofs appear here as {agent.name} makes tool calls</p>
         </div>
       ) : (
         <div className="bg-[#efefef] border border-[#d9d9d9] divide-y divide-[#d9d9d9]">
-          {proofs.map((p: any, i: number) => {
+          {filteredProofs.map((p: any, i: number) => {
             const isExpanded = expandedProof === (p.id ?? i);
             const digest = getDigest(p);
             const enforcement = enforcementLabel(p.receipt);
@@ -692,7 +841,7 @@ function AgentExplorer({ agent }: { agent: Agent }) {
             return (
               <div key={p.id ?? i}>
                 {/* Collapsed row */}
-                <div className="flex items-center gap-3 px-5 py-3 hover:bg-[#e5e5e5] transition-colors cursor-pointer"
+                <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-3 hover:bg-[#e5e5e5] transition-colors cursor-pointer"
                   onClick={() => setExpandedProof(isExpanded ? null : (p.id ?? i))}>
                   <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
                     className="text-[#999] flex-shrink-0 transition-transform duration-200"
@@ -700,13 +849,13 @@ function AgentExplorer({ agent }: { agent: Agent }) {
                     <path d="M6 4l4 4-4 4" />
                   </svg>
                   <div className={`w-2 h-2 rounded-full flex-shrink-0 ${p.allowed ? "bg-blue-400" : "bg-red-400"}`} />
-                  <span className="text-[13px] font-medium">{humanizeToolName(p.tool)}</span>
-                  {digest && <code className="text-[11px] font-mono text-[#999] truncate max-w-[180px]">{digest.slice(0, 24)}...</code>}
-                  {!digest && <span className={`text-[11px] font-medium ${p.allowed ? "text-blue-500" : "text-red-400"}`}>{p.allowed ? "allowed" : "denied"}</span>}
-                  <span className={`text-[10px] font-medium px-1.5 py-0.5 border flex-shrink-0 ${enforcement.color}`}>
+                  <span className="text-[13px] font-medium truncate">{humanizeToolName(p.tool)}</span>
+                  <span className={`text-[11px] font-medium flex-shrink-0 ${p.allowed ? "text-blue-500" : "text-red-400"}`}>{p.allowed ? "allowed" : "denied"}</span>
+                  {digest && <code className="hidden sm:inline text-[11px] font-mono text-[#999] truncate max-w-[180px]">{digest.slice(0, 24)}...</code>}
+                  <span className={`hidden sm:inline text-[10px] font-medium px-1.5 py-0.5 border flex-shrink-0 ${enforcement.color}`}>
                     {enforcement.label}
                   </span>
-                  {counter !== null && <span className="text-[10px] text-[#999] flex-shrink-0">#{counter}</span>}
+                  {counter !== null && <span className="hidden sm:inline text-[10px] text-[#999] flex-shrink-0">#{counter}</span>}
                   <span className="text-[11px] text-[#999] flex-shrink-0 ml-auto">{timeLabel(p.created_at)}</span>
                 </div>
 
@@ -755,8 +904,8 @@ function AgentExplorer({ agent }: { agent: Agent }) {
 function ProofField({ label, value, mono, color }: { label: string; value: string; mono?: boolean; color?: string }) {
   if (!value) return null;
   return (
-    <div className="flex items-start border-b border-[#efefef] pb-2">
-      <span className="text-[12px] text-[#999] w-[180px] flex-shrink-0 pt-0.5">{label}</span>
+    <div className="flex flex-col sm:flex-row sm:items-start border-b border-[#efefef] pb-2 pt-1">
+      <span className="text-[12px] text-[#999] sm:w-[180px] flex-shrink-0 pt-0.5">{label}</span>
       <span className={`text-[13px] break-all ${mono ? "font-mono text-[12px]" : ""} ${color ?? "text-[#333]"}`}>{value}</span>
     </div>
   );

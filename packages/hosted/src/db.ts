@@ -100,6 +100,7 @@ export const db = {
       );
 
       ALTER TABLE occ_permission_requests ADD COLUMN IF NOT EXISTS tool_description TEXT;
+      ALTER TABLE occ_permission_requests ADD COLUMN IF NOT EXISTS notified BOOLEAN DEFAULT FALSE;
 
       CREATE INDEX IF NOT EXISTS idx_occ_perm_user_status ON occ_permission_requests(user_id, status);
       CREATE INDEX IF NOT EXISTS idx_occ_perm_user_agent_tool ON occ_permission_requests(user_id, agent_id, tool);
@@ -501,6 +502,31 @@ export const db = {
   async getActivePolicy(userId: string) {
     const p = getPool();
     const res = await p.query("SELECT * FROM occ_policies WHERE user_id = $1 AND active = true ORDER BY created_at DESC LIMIT 1", [userId]);
+    return res.rows[0] ?? null;
+  },
+
+  // ── Notifications ──
+
+  async getUnreadNotificationCount(userId: string): Promise<number> {
+    const p = getPool();
+    const res = await p.query(
+      "SELECT COUNT(*) FROM occ_permission_requests WHERE user_id = $1 AND status = 'pending' AND notified = false",
+      [userId]
+    );
+    return parseInt(res.rows[0].count, 10);
+  },
+
+  async markNotificationsRead(userId: string) {
+    const p = getPool();
+    await p.query(
+      "UPDATE occ_permission_requests SET notified = true WHERE user_id = $1 AND status = 'pending' AND notified = false",
+      [userId]
+    );
+  },
+
+  async getPermissionRequest(requestId: number) {
+    const p = getPool();
+    const res = await p.query("SELECT * FROM occ_permission_requests WHERE id = $1", [requestId]);
     return res.rows[0] ?? null;
   },
 

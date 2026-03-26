@@ -57,15 +57,22 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
     const agents = await db.getAgents(userId);
     const host = req.headers.host ?? "agent.occ.wtf";
     const proto = host.includes("localhost") ? "http" : "https";
+    // Get active connections for connection status
+    const activeConns = getActiveConnections();
     const summaries = agents.map((a: any) => {
       const tools = a.allowed_tools ?? [];
       const blocked = a.blocked_tools ?? [];
+      // Find connection for this agent
+      const conn = activeConns.find(c => c.agentId === a.id);
       return {
         id: a.id,
         name: a.name,
         mcpUrl: a.mcp_token ? `${proto}://${host}/mcp/${a.mcp_token}` : null,
         allowedTools: tools,
         blockedTools: blocked,
+        connected: !!conn,
+        lastSeen: conn ? conn.lastSeen.toISOString() : null,
+        clientName: conn?.clientName ?? null,
         policy: tools.length > 0 ? {
           version: "occ/policy/1",
           name: a.name,
@@ -372,16 +379,21 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
 
   // ── Connections ──
   if (path === "/connections" && method === "GET") {
-    const connections = getActiveConnections().map(c => ({
-      name: c.clientName,
-      transport: "streamable-http",
-      status: "connected" as const,
-      toolCount: c.toolCalls,
-      tools: [],
-      connectedAt: c.connectedAt.toISOString(),
-      lastSeen: c.lastSeen.toISOString(),
-      agentId: c.agentId,
-    }));
+    // Filter connections to only show this user's agents
+    const agents = await db.getAgents(userId);
+    const agentIds = new Set(agents.map((a: any) => a.id));
+    const connections = getActiveConnections()
+      .filter(c => c.agentId && agentIds.has(c.agentId))
+      .map(c => ({
+        name: c.clientName,
+        transport: "streamable-http",
+        status: "connected" as const,
+        toolCount: c.toolCalls,
+        tools: [],
+        connectedAt: c.connectedAt.toISOString(),
+        lastSeen: c.lastSeen.toISOString(),
+        agentId: c.agentId,
+      }));
     return json(res, connections);
   }
 
@@ -607,6 +619,94 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
         },
       },
     });
+  }
+
+  // ── Notifications ──
+  if (path === "/notifications/count" && method === "GET") {
+    const count = await db.getUnreadNotificationCount(userId);
+    return json(res, { count });
+  }
+
+  if (path === "/notifications/mark-read" && method === "POST") {
+    await db.markNotificationsRead(userId);
+    return json(res, { ok: true });
+  }
+
+  // ── Bulk Approve/Deny ──
+  if (path === "/permissions/bulk" && method === "POST") {
+    const body = JSON.parse(await readBody(req));
+    const { action, mode, ids, agentId } = body as {
+      action: "approve" | "deny";
+      mode?: "once" | "always";
+      ids?: number[];
+      agentId?: string;
+    };
+
+    if (!action || (action !== "approve" && action !== "deny")) {
+      return json(res, { error: "action must be 'approve' or 'deny'" }, 400);
+    }
+
+    // If agentId is provided, get all pending for that agent
+    let targetIds = ids ?? [];
+    if (agentId && !ids) {
+      const pending = await db.getPendingPermissions(userId);
+      targetIds = pending
+        .filter((r: any) => r.agent_id === agentId)
+        .map((r: any) => r.id);
+    }
+
+    if (targetIds.length === 0) {
+      return json(res, { processed: 0 });
+    }
+
+    const resolveMode = mode ?? (action === "approve" ? "always" : "once");
+    let processed = 0;
+
+    for (const requestId of targetIds) {
+      const pending = await db.getPendingPermissions(userId);
+      const req_entry = pending.find((r: any) => r.id === requestId);
+      if (!req_entry) continue;
+
+      const status = action === "approve" ? "approved" : "denied";
+      let digestB64 = "";
+      let proof: any = null;
+
+      if (action === "approve") {
+        const chainId = `${userId}:${req_entry.agent_id}`;
+        const authResult = await createAuthorizationObject(userId, req_entry.agent_id, req_entry.tool, undefined, chainId, await getPrincipal());
+        digestB64 = authResult.digest;
+        proof = authResult.proof;
+
+        if (resolveMode === "always") {
+          await db.enableTool(userId, req_entry.agent_id, req_entry.tool);
+        }
+      }
+
+      if (action === "deny" && resolveMode === "always") {
+        await db.disableTool(userId, req_entry.agent_id, req_entry.tool);
+      }
+
+      await db.resolvePermission(userId, requestId, status as any, digestB64, proof);
+      await db.addProof(userId, {
+        agentId: req_entry.agent_id, tool: req_entry.tool,
+        allowed: action === "approve",
+        reason: action === "approve"
+          ? `${resolveMode === "always" ? "Always allowed" : "Allowed once"} (bulk) -- authorization: ${digestB64}`
+          : `${resolveMode === "always" ? "Always denied" : "Denied once"} (bulk)`,
+        proofDigest: digestB64 || undefined, receipt: proof,
+      });
+
+      eventBus.emit(userId, {
+        type: "permission-resolved",
+        tool: req_entry.tool, agentId: req_entry.agent_id,
+        decision: status, mode: resolveMode,
+        proofDigest: digestB64, timestamp: Date.now(),
+      });
+
+      processed++;
+    }
+
+    return json(res, { processed });
   }
 
   json(res, { error: "Not found" }, 404);

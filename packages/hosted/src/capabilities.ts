@@ -182,6 +182,20 @@ const OCC_TOOLS: ToolDef[] = [
     label: "Get policy",
     inputSchema: { type: "object", properties: {} },
   },
+  {
+    name: "occ_check_request",
+    description: "Check the status of a pending permission request. Use this to poll for approval after receiving REQUIRES_HUMAN_APPROVAL.",
+    capability: "occ.internal",
+    category: "occ",
+    label: "Check request status",
+    inputSchema: {
+      type: "object",
+      properties: {
+        requestId: { type: "number", description: "The request ID to check" },
+      },
+      required: ["requestId"],
+    },
+  },
 ];
 
 // ── Registry ──

@@ -268,6 +268,36 @@ export async function handleMcp(req: IncomingMessage, res: ServerResponse, pathn
               result: { content: [{ type: "text", text: policy ? JSON.stringify(policy, null, 2) : "No active policy" }] },
             });
           }
+          if (toolName === "occ_check_request") {
+            const requestId = args.requestId;
+            if (!requestId) {
+              return json(res, {
+                jsonrpc: "2.0", id: body.id,
+                error: { code: -32602, message: "requestId is required" },
+              });
+            }
+            const permReq = await db.getPermissionRequest(requestId);
+            if (!permReq || permReq.user_id !== user.id) {
+              return json(res, {
+                jsonrpc: "2.0", id: body.id,
+                result: { content: [{ type: "text", text: JSON.stringify({ error: "Request not found" }) }] },
+              });
+            }
+            return json(res, {
+              jsonrpc: "2.0", id: body.id,
+              result: { content: [{ type: "text", text: JSON.stringify({
+                requestId: permReq.id,
+                tool: permReq.tool,
+                status: permReq.status,
+                resolvedAt: permReq.resolved_at ? new Date(permReq.resolved_at).toISOString() : null,
+                hint: permReq.status === "pending"
+                  ? "Still waiting for human approval at agent.occ.wtf"
+                  : permReq.status === "approved"
+                    ? "Approved! You can now call the tool directly."
+                    : "Denied by the user.",
+              }, null, 2) }] },
+            });
+          }
           return json(res, {
             jsonrpc: "2.0", id: body.id,
             result: { content: [{ type: "text", text: `${toolName} executed` }] },
