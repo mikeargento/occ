@@ -3,12 +3,11 @@
 import { useEffect, useState } from "react";
 import { getAgents } from "@/lib/api";
 
-type Agent = { id: string; name: string; mcpUrl: string | null; proxyUrl: string | null };
+type Agent = { id: string; name: string; proxyUrl: string | null };
 
 export default function SettingsPage() {
   const [user, setUser] = useState<{ name: string; email: string; avatar: string } | null>(null);
   const [agents, setAgents] = useState<Agent[]>([]);
-  const [connectTabs, setConnectTabs] = useState<Record<string, "url" | "terminal" | "json">>({});
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // API Key state
@@ -67,16 +66,6 @@ export default function SettingsPage() {
       setTimeout(() => setApiKeyMsg(""), 2000);
     } catch {}
     setApiKeyLoading(false);
-  }
-
-  function copyMcp(agentId: string, mcpUrl: string) {
-    const tab = connectTabs[agentId] ?? "url";
-    const text = tab === "url" ? mcpUrl
-      : tab === "terminal" ? `claude mcp add occ --transport http ${mcpUrl}`
-      : JSON.stringify({ mcpServers: { occ: { url: mcpUrl } } }, null, 2);
-    navigator.clipboard.writeText(text);
-    setCopiedId(agentId);
-    setTimeout(() => setCopiedId(null), 2000);
   }
 
   return (
@@ -144,56 +133,34 @@ export default function SettingsPage() {
         )}
       </div>
 
-      {/* MCP Links */}
+      {/* Agent Connections */}
       <div className="border border-[#d9d9d9] bg-[#efefef] p-5">
         <h2 className="text-sm font-semibold mb-1">Agent Connections</h2>
-        <p className="text-xs text-[#666] mb-4">Each agent has two connection methods: MCP (tool-level control) and API Proxy (transparent interception).</p>
+        <p className="text-xs text-[#666] mb-4">Set the API Proxy URL as your base_url. OCC intercepts every tool call transparently.</p>
 
         {agents.length === 0 ? (
           <p className="text-sm text-[#666]">No agents yet</p>
         ) : (
           <div className="space-y-4">
-            {agents.map(a => {
-              const tab = connectTabs[a.id] ?? "url";
-              return (
-                <div key={a.id} className="border border-[#d9d9d9] bg-white p-4">
-                  <span className="text-[13px] font-semibold">{a.name}</span>
-
-                  {/* MCP Link */}
-                  {a.mcpUrl && (
-                    <div className="mt-3">
-                      <p className="text-[10px] font-semibold text-[#999] uppercase tracking-wider mb-1">MCP</p>
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 h-7 flex items-center px-2 bg-[#efefef] border border-[#d9d9d9] overflow-hidden">
-                          <code className="text-[10px] font-mono text-[#666] truncate">{a.mcpUrl}</code>
-                        </div>
-                        <button onClick={() => { navigator.clipboard.writeText(a.mcpUrl!); setCopiedId(`mcp-${a.id}`); setTimeout(() => setCopiedId(null), 2000); }}
-                          className="h-7 px-3 text-[10px] font-semibold bg-[#000] text-white hover:bg-[#333] transition-all flex-shrink-0">
-                          {copiedId === `mcp-${a.id}` ? "Copied" : "Copy"}
-                        </button>
+            {agents.map(a => (
+              <div key={a.id} className="border border-[#d9d9d9] bg-white p-4">
+                <span className="text-[13px] font-semibold">{a.name}</span>
+                {a.proxyUrl && (
+                  <div className="mt-3">
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-7 flex items-center px-2 bg-[#efefef] border border-[#d9d9d9] overflow-hidden">
+                        <code className="text-[10px] font-mono text-[#666] truncate">{a.proxyUrl}</code>
                       </div>
+                      <button onClick={() => { navigator.clipboard.writeText(a.proxyUrl!); setCopiedId(`proxy-${a.id}`); setTimeout(() => setCopiedId(null), 2000); }}
+                        className="h-7 px-3 text-[10px] font-semibold bg-[#3B82F6] text-white hover:bg-[#2563EB] transition-all flex-shrink-0">
+                        {copiedId === `proxy-${a.id}` ? "Copied" : "Copy"}
+                      </button>
                     </div>
-                  )}
-
-                  {/* API Proxy Link */}
-                  {a.proxyUrl && (
-                    <div className="mt-3">
-                      <p className="text-[10px] font-semibold text-[#999] uppercase tracking-wider mb-1">API Proxy</p>
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 h-7 flex items-center px-2 bg-[#efefef] border border-[#d9d9d9] overflow-hidden">
-                          <code className="text-[10px] font-mono text-[#666] truncate">{a.proxyUrl}</code>
-                        </div>
-                        <button onClick={() => { navigator.clipboard.writeText(a.proxyUrl!); setCopiedId(`proxy-${a.id}`); setTimeout(() => setCopiedId(null), 2000); }}
-                          className="h-7 px-3 text-[10px] font-semibold bg-[#3B82F6] text-white hover:bg-[#2563EB] transition-all flex-shrink-0">
-                          {copiedId === `proxy-${a.id}` ? "Copied" : "Copy"}
-                        </button>
-                      </div>
-                      <p className="text-[10px] text-[#999] mt-1">Set as base_url in your Anthropic SDK: <code className="font-mono">Anthropic(base_url="{a.proxyUrl}")</code></p>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+                    <p className="text-[10px] text-[#999] mt-1">Set as base_url: <code className="font-mono">Anthropic(base_url="{a.proxyUrl}")</code></p>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         )}
       </div>
