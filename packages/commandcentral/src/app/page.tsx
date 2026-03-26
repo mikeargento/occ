@@ -19,7 +19,7 @@ function timeLabel(ts: number | string | null): string {
   return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
-type Agent = { id: string; name: string; mcpUrl: string | null; status: string; totalCalls: number; createdAt: number; allowedTools?: string[]; blockedTools?: string[]; connected?: boolean; lastSeen?: string | null; clientName?: string | null };
+type Agent = { id: string; name: string; mcpUrl: string | null; proxyUrl: string | null; status: string; totalCalls: number; createdAt: number; allowedTools?: string[]; blockedTools?: string[]; connected?: boolean; lastSeen?: string | null; clientName?: string | null };
 type View = { page: "agents" } | { page: "panel"; agentId: string } | { page: "explorer"; agentId: string };
 
 /* ═══════════════════════════════════════════════════════════════
@@ -324,23 +324,41 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
                             Delete
                           </span>
                         </div>
-                        {a.mcpUrl && (
-                          <div className="mt-2 pt-2 border-t border-[#d9d9d9] flex items-center gap-2" onClick={e => e.stopPropagation()}>
-                            <span className="text-[10px] text-[#999]">Copy MCP:</span>
-                            {["URL", "JSON", "Terminal"].map(fmt => (
-                              <button key={fmt} onClick={async (e) => {
-                                e.stopPropagation();
-                                const text = fmt === "URL" ? a.mcpUrl!
-                                  : fmt === "JSON" ? JSON.stringify({ mcpServers: { occ: { url: a.mcpUrl } } }, null, 2)
-                                  : `claude mcp add ${a.name.toLowerCase().replace(/[^a-z0-9-]/g, "-")} --transport http ${a.mcpUrl}`;
-                                await navigator.clipboard.writeText(text);
-                                setCopiedAgent(`${a.id}-${fmt}`);
-                                setTimeout(() => setCopiedAgent(null), 2000);
-                              }}
-                                className={`text-[10px] font-medium transition-colors flex-shrink-0 ${copiedAgent === `${a.id}-${fmt}` ? "text-emerald-500" : "text-blue-500 hover:text-blue-600"}`}>
-                                {copiedAgent === `${a.id}-${fmt}` ? "Copied!" : fmt}
-                              </button>
-                            ))}
+                        {(a.mcpUrl || a.proxyUrl) && (
+                          <div className="mt-2 pt-2 border-t border-[#d9d9d9] space-y-1" onClick={e => e.stopPropagation()}>
+                            {a.mcpUrl && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] text-[#999] w-14">MCP:</span>
+                                {["URL", "JSON", "Terminal"].map(fmt => (
+                                  <button key={fmt} onClick={async (e) => {
+                                    e.stopPropagation();
+                                    const text = fmt === "URL" ? a.mcpUrl!
+                                      : fmt === "JSON" ? JSON.stringify({ mcpServers: { occ: { url: a.mcpUrl } } }, null, 2)
+                                      : `claude mcp add ${a.name.toLowerCase().replace(/[^a-z0-9-]/g, "-")} --transport http ${a.mcpUrl}`;
+                                    await navigator.clipboard.writeText(text);
+                                    setCopiedAgent(`${a.id}-mcp-${fmt}`);
+                                    setTimeout(() => setCopiedAgent(null), 2000);
+                                  }}
+                                    className={`text-[10px] font-medium transition-colors flex-shrink-0 ${copiedAgent === `${a.id}-mcp-${fmt}` ? "text-emerald-500" : "text-blue-500 hover:text-blue-600"}`}>
+                                    {copiedAgent === `${a.id}-mcp-${fmt}` ? "Copied!" : fmt}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                            {a.proxyUrl && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] text-[#999] w-14">API Proxy:</span>
+                                <button onClick={async (e) => {
+                                  e.stopPropagation();
+                                  await navigator.clipboard.writeText(a.proxyUrl!);
+                                  setCopiedAgent(`${a.id}-proxy`);
+                                  setTimeout(() => setCopiedAgent(null), 2000);
+                                }}
+                                  className={`text-[10px] font-medium transition-colors flex-shrink-0 ${copiedAgent === `${a.id}-proxy` ? "text-emerald-500" : "text-blue-500 hover:text-blue-600"}`}>
+                                  {copiedAgent === `${a.id}-proxy` ? "Copied!" : "Copy URL"}
+                                </button>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>

@@ -3,13 +3,19 @@
 import { useEffect, useState } from "react";
 import { getAgents } from "@/lib/api";
 
-type Agent = { id: string; name: string; mcpUrl: string | null };
+type Agent = { id: string; name: string; mcpUrl: string | null; proxyUrl: string | null };
 
 export default function SettingsPage() {
   const [user, setUser] = useState<{ name: string; email: string; avatar: string } | null>(null);
   const [agents, setAgents] = useState<Agent[]>([]);
   const [connectTabs, setConnectTabs] = useState<Record<string, "url" | "terminal" | "json">>({});
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // API Key state
+  const [apiKeyStatus, setApiKeyStatus] = useState<{ hasKey: boolean; maskedKey: string | null }>({ hasKey: false, maskedKey: null });
+  const [apiKeyInput, setApiKeyInput] = useState("");
+  const [apiKeyLoading, setApiKeyLoading] = useState(false);
+  const [apiKeyMsg, setApiKeyMsg] = useState("");
 
   useEffect(() => {
     fetch("/auth/me")
@@ -20,7 +26,48 @@ export default function SettingsPage() {
     getAgents()
       .then((d) => setAgents((d.agents ?? []) as unknown as Agent[]))
       .catch(() => {});
+
+    fetch("/api/settings/api-key")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d) setApiKeyStatus(d); })
+      .catch(() => {});
   }, []);
+
+  async function saveApiKey() {
+    if (!apiKeyInput.trim()) return;
+    setApiKeyLoading(true);
+    setApiKeyMsg("");
+    try {
+      const r = await fetch("/api/settings/api-key", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: apiKeyInput.trim() }),
+      });
+      const d = await r.json();
+      if (r.ok) {
+        setApiKeyStatus({ hasKey: true, maskedKey: d.maskedKey });
+        setApiKeyInput("");
+        setApiKeyMsg("Saved");
+        setTimeout(() => setApiKeyMsg(""), 2000);
+      } else {
+        setApiKeyMsg(d.error || "Failed to save");
+      }
+    } catch {
+      setApiKeyMsg("Network error");
+    }
+    setApiKeyLoading(false);
+  }
+
+  async function deleteApiKey() {
+    setApiKeyLoading(true);
+    try {
+      await fetch("/api/settings/api-key", { method: "DELETE" });
+      setApiKeyStatus({ hasKey: false, maskedKey: null });
+      setApiKeyMsg("Removed");
+      setTimeout(() => setApiKeyMsg(""), 2000);
+    } catch {}
+    setApiKeyLoading(false);
+  }
 
   function copyMcp(agentId: string, mcpUrl: string) {
     const tab = connectTabs[agentId] ?? "url";
@@ -62,47 +109,88 @@ export default function SettingsPage() {
         )}
       </div>
 
+      {/* Anthropic API Key */}
+      <div className="border border-[#d9d9d9] bg-[#efefef] p-5 mb-6">
+        <h2 className="text-sm font-semibold mb-1">Anthropic API Key</h2>
+        <p className="text-xs text-[#666] mb-4">Required for the LLM API proxy. Your key is stored securely and never exposed to agents.</p>
+
+        {apiKeyStatus.hasKey ? (
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-8 flex items-center px-3 bg-white border border-[#d9d9d9]">
+              <code className="text-[12px] font-mono text-[#666]">{apiKeyStatus.maskedKey}</code>
+            </div>
+            <button onClick={deleteApiKey} disabled={apiKeyLoading}
+              className="h-8 px-4 text-[11px] font-semibold border border-[#d9d9d9] text-[#666] hover:text-red-500 hover:border-red-300 transition-colors">
+              Remove
+            </button>
+            {apiKeyMsg && <span className="text-[11px] text-[#3B82F6]">{apiKeyMsg}</span>}
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <input
+              type="password"
+              placeholder="sk-ant-..."
+              value={apiKeyInput}
+              onChange={e => setApiKeyInput(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && saveApiKey()}
+              className="flex-1 h-8 px-3 text-[12px] font-mono bg-white border border-[#d9d9d9] placeholder:text-[#bbb] focus:outline-none focus:border-[#3B82F6]"
+            />
+            <button onClick={saveApiKey} disabled={apiKeyLoading || !apiKeyInput.trim()}
+              className="h-8 px-4 text-[11px] font-semibold bg-[#3B82F6] text-white hover:bg-[#2563EB] transition-colors disabled:opacity-50">
+              Save
+            </button>
+            {apiKeyMsg && <span className="text-[11px] text-red-500">{apiKeyMsg}</span>}
+          </div>
+        )}
+      </div>
+
       {/* MCP Links */}
       <div className="border border-[#d9d9d9] bg-[#efefef] p-5">
-        <h2 className="text-sm font-semibold mb-1">MCP Links</h2>
-        <p className="text-xs text-[#666] mb-4">Connect your AI to each agent by pasting these into your MCP settings.</p>
+        <h2 className="text-sm font-semibold mb-1">Agent Connections</h2>
+        <p className="text-xs text-[#666] mb-4">Each agent has two connection methods: MCP (tool-level control) and API Proxy (transparent interception).</p>
 
         {agents.length === 0 ? (
           <p className="text-sm text-[#666]">No agents yet</p>
         ) : (
           <div className="space-y-4">
-            {agents.filter(a => a.mcpUrl).map(a => {
+            {agents.map(a => {
               const tab = connectTabs[a.id] ?? "url";
               return (
                 <div key={a.id} className="border border-[#d9d9d9] bg-white p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-[13px] font-semibold">{a.name}</span>
-                    <div className="flex gap-1">
-                      {(["url", "terminal", "json"] as const).map(t => (
-                        <button key={t} onClick={() => setConnectTabs(prev => ({ ...prev, [a.id]: t }))}
-                          className={`px-2.5 py-0.5 text-[11px] font-medium transition-colors ${
-                            tab === t
-                              ? "bg-[#efefef] text-[#000]"
-                              : "text-[#666] hover:text-[#000]"
-                          }`}>
-                          {t === "url" ? "URL" : t === "terminal" ? "Terminal" : "JSON"}
+                  <span className="text-[13px] font-semibold">{a.name}</span>
+
+                  {/* MCP Link */}
+                  {a.mcpUrl && (
+                    <div className="mt-3">
+                      <p className="text-[10px] font-semibold text-[#999] uppercase tracking-wider mb-1">MCP</p>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 h-7 flex items-center px-2 bg-[#efefef] border border-[#d9d9d9] overflow-hidden">
+                          <code className="text-[10px] font-mono text-[#666] truncate">{a.mcpUrl}</code>
+                        </div>
+                        <button onClick={() => { navigator.clipboard.writeText(a.mcpUrl!); setCopiedId(`mcp-${a.id}`); setTimeout(() => setCopiedId(null), 2000); }}
+                          className="h-7 px-3 text-[10px] font-semibold bg-[#000] text-white hover:bg-[#333] transition-all flex-shrink-0">
+                          {copiedId === `mcp-${a.id}` ? "Copied" : "Copy"}
                         </button>
-                      ))}
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 h-8 flex items-center px-3 bg-[#efefef] border border-[#d9d9d9] overflow-hidden">
-                      <code className="text-[11px] font-mono text-[#666] truncate">
-                        {tab === "url" && a.mcpUrl}
-                        {tab === "terminal" && `claude mcp add occ --transport http ${a.mcpUrl}`}
-                        {tab === "json" && `{ "mcpServers": { "occ": { "url": "${a.mcpUrl}" } } }`}
-                      </code>
+                  )}
+
+                  {/* API Proxy Link */}
+                  {a.proxyUrl && (
+                    <div className="mt-3">
+                      <p className="text-[10px] font-semibold text-[#999] uppercase tracking-wider mb-1">API Proxy</p>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 h-7 flex items-center px-2 bg-[#efefef] border border-[#d9d9d9] overflow-hidden">
+                          <code className="text-[10px] font-mono text-[#666] truncate">{a.proxyUrl}</code>
+                        </div>
+                        <button onClick={() => { navigator.clipboard.writeText(a.proxyUrl!); setCopiedId(`proxy-${a.id}`); setTimeout(() => setCopiedId(null), 2000); }}
+                          className="h-7 px-3 text-[10px] font-semibold bg-[#3B82F6] text-white hover:bg-[#2563EB] transition-all flex-shrink-0">
+                          {copiedId === `proxy-${a.id}` ? "Copied" : "Copy"}
+                        </button>
+                      </div>
+                      <p className="text-[10px] text-[#999] mt-1">Set as base_url in your Anthropic SDK: <code className="font-mono">Anthropic(base_url="{a.proxyUrl}")</code></p>
                     </div>
-                    <button onClick={() => copyMcp(a.id, a.mcpUrl!)}
-                      className="h-8 px-4 text-[11px] font-semibold bg-[#000] text-white hover:bg-[#333] transition-all active:scale-[0.97] flex-shrink-0">
-                      {copiedId === a.id ? "Copied" : "Copy"}
-                    </button>
-                  </div>
+                  )}
                 </div>
               );
             })}

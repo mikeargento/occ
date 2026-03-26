@@ -68,6 +68,7 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
         id: a.id,
         name: a.name,
         mcpUrl: a.mcp_token ? `${proto}://${host}/mcp/${a.mcp_token}` : null,
+        proxyUrl: a.proxy_token ? `${proto}://${host}/v1/${a.proxy_token}` : null,
         allowedTools: tools,
         blockedTools: blocked,
         connected: !!conn,
@@ -95,7 +96,8 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
     const body = JSON.parse(await readBody(req));
     const id = body.name?.toLowerCase().replace(/[^a-z0-9-]/g, "-") ?? "agent-" + Date.now();
     const agentToken = crypto.randomBytes(24).toString("hex");
-    await db.upsertAgent(userId, { id, name: body.name ?? id, allowedTools: body.allowedTools, mcpToken: agentToken });
+    const proxyToken = crypto.randomBytes(24).toString("hex");
+    await db.upsertAgent(userId, { id, name: body.name ?? id, allowedTools: body.allowedTools, mcpToken: agentToken, proxyToken });
 
     // Birth proof — slot 0 on this agent's chain.
     // The agent cannot exist without this proof existing first.
@@ -109,7 +111,7 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
     const host = req.headers.host ?? "agent.occ.wtf";
     const proto = host.includes("localhost") ? "http" : "https";
     return json(res, {
-      agent: { id, name: body.name ?? id, status: "active", createdAt: Date.now(), mcpUrl: `${proto}://${host}/mcp/${agentToken}` },
+      agent: { id, name: body.name ?? id, status: "active", createdAt: Date.now(), mcpUrl: `${proto}://${host}/mcp/${agentToken}`, proxyUrl: `${proto}://${host}/v1/${proxyToken}` },
       birthProof: birthProof?.proof ?? null,
     }, 201);
   }
@@ -619,6 +621,26 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
         },
       },
     });
+  }
+
+  // ── API Key Management ──
+  if (path === "/settings/api-key" && method === "GET") {
+    const key = await db.getAnthropicKey(userId);
+    return json(res, { hasKey: !!key, maskedKey: key ? `sk-ant-...${key.slice(-8)}` : null });
+  }
+
+  if (path === "/settings/api-key" && method === "PUT") {
+    const body = JSON.parse(await readBody(req));
+    if (!body.key || !body.key.startsWith("sk-ant-")) {
+      return json(res, { error: "Invalid Anthropic API key" }, 400);
+    }
+    await db.setAnthropicKey(userId, body.key);
+    return json(res, { ok: true, maskedKey: `sk-ant-...${body.key.slice(-8)}` });
+  }
+
+  if (path === "/settings/api-key" && method === "DELETE") {
+    await db.deleteAnthropicKey(userId);
+    return json(res, { ok: true });
   }
 
   // ── Notifications ──

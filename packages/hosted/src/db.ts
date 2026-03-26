@@ -112,6 +112,10 @@ export const db = {
       ALTER TABLE occ_agents ADD COLUMN IF NOT EXISTS mcp_token TEXT;
       CREATE UNIQUE INDEX IF NOT EXISTS idx_occ_agents_mcp_token ON occ_agents(mcp_token) WHERE mcp_token IS NOT NULL;
 
+      -- Per-agent proxy tokens (each agent gets its own API proxy URL)
+      ALTER TABLE occ_agents ADD COLUMN IF NOT EXISTS proxy_token TEXT;
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_occ_agents_proxy_token ON occ_agents(proxy_token) WHERE proxy_token IS NOT NULL;
+
       -- Authorization objects — the core of the authorization-object model
       -- Each row IS a cryptographic authorization (or revocation).
       -- Not a permission flag. An object that must exist for execution to be reachable.
@@ -131,6 +135,9 @@ export const db = {
       CREATE INDEX IF NOT EXISTS idx_occ_auth_lookup ON occ_authorizations(user_id, agent_id, tool, type);
       CREATE INDEX IF NOT EXISTS idx_occ_auth_digest ON occ_authorizations(proof_digest);
 
+      -- Anthropic API key storage (encrypted at rest via column-level)
+      ALTER TABLE occ_users ADD COLUMN IF NOT EXISTS anthropic_api_key TEXT;
+
       -- Create anonymous user for pre-auth testing
       INSERT INTO occ_users (id, email, name, provider, provider_id, mcp_token)
       VALUES ('anonymous', 'anon@occ.wtf', 'Anonymous', 'anonymous', 'anonymous', 'anon-token')
@@ -146,6 +153,16 @@ export const db = {
     }
     if (noToken.rows.length > 0) {
       console.log(`  Database: backfilled ${noToken.rows.length} agent MCP tokens`);
+    }
+
+    // Backfill: generate proxy tokens for agents that don't have one
+    const noProxyToken = await p.query("SELECT id, user_id FROM occ_agents WHERE proxy_token IS NULL");
+    for (const row of noProxyToken.rows) {
+      const tok = randomBytes(24).toString("hex");
+      await p.query("UPDATE occ_agents SET proxy_token = $1 WHERE id = $2 AND user_id = $3", [tok, row.id, row.user_id]);
+    }
+    if (noProxyToken.rows.length > 0) {
+      console.log(`  Database: backfilled ${noProxyToken.rows.length} agent proxy tokens`);
     }
 
     console.log("  Database: connected and migrated");
@@ -233,13 +250,13 @@ export const db = {
     return res.rows[0] ?? null;
   },
 
-  async upsertAgent(userId: string, agent: { id: string; name: string; allowedTools?: string[]; mcpToken?: string }) {
+  async upsertAgent(userId: string, agent: { id: string; name: string; allowedTools?: string[]; mcpToken?: string; proxyToken?: string }) {
     const p = getPool();
     await p.query(
-      `INSERT INTO occ_agents (id, user_id, name, allowed_tools, mcp_token)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO occ_agents (id, user_id, name, allowed_tools, mcp_token, proxy_token)
+       VALUES ($1, $2, $3, $4, $5, $6)
        ON CONFLICT (id, user_id) DO UPDATE SET name = $3, allowed_tools = $4`,
-      [agent.id, userId, agent.name, agent.allowedTools ?? [], agent.mcpToken ?? null]
+      [agent.id, userId, agent.name, agent.allowedTools ?? [], agent.mcpToken ?? null, agent.proxyToken ?? null]
     );
   },
 
@@ -527,6 +544,37 @@ export const db = {
   async getPermissionRequest(requestId: number) {
     const p = getPool();
     const res = await p.query("SELECT * FROM occ_permission_requests WHERE id = $1", [requestId]);
+    return res.rows[0] ?? null;
+  },
+
+  // ── API Keys ──
+
+  async setAnthropicKey(userId: string, key: string) {
+    const p = getPool();
+    await p.query("UPDATE occ_users SET anthropic_api_key = $2 WHERE id = $1", [userId, key]);
+  },
+
+  async getAnthropicKey(userId: string): Promise<string | null> {
+    const p = getPool();
+    const res = await p.query("SELECT anthropic_api_key FROM occ_users WHERE id = $1", [userId]);
+    return res.rows[0]?.anthropic_api_key ?? null;
+  },
+
+  async deleteAnthropicKey(userId: string) {
+    const p = getPool();
+    await p.query("UPDATE occ_users SET anthropic_api_key = NULL WHERE id = $1", [userId]);
+  },
+
+  // ── Proxy Tokens ──
+
+  async getAgentByProxyToken(token: string) {
+    const p = getPool();
+    const res = await p.query(
+      `SELECT a.*, u.id as owner_id, u.email, u.provider, u.provider_id, u.anthropic_api_key
+       FROM occ_agents a JOIN occ_users u ON a.user_id = u.id
+       WHERE a.proxy_token = $1`,
+      [token]
+    );
     return res.rows[0] ?? null;
   },
 

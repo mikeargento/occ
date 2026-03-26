@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { handleApi } from "./api.js";
 import { handleMcp } from "./mcp.js";
 import { handleAuth } from "./auth.js";
+import { handleLlmProxy } from "./llm-proxy.js";
 import { db } from "./db.js";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
@@ -85,6 +86,17 @@ async function handler(req: IncomingMessage, res: ServerResponse) {
     return;
   }
 
+  // LLM API Proxy: /v1/{proxyToken}/v1/...
+  // Agent sets base_url to https://agent.occ.wtf/v1/{token}
+  // SDK appends /v1/messages, so full path is /v1/{token}/v1/messages
+  const proxyMatch = pathname.match(/^\/v1\/([a-f0-9]+)(\/.*)?$/);
+  if (proxyMatch) {
+    const proxyToken = proxyMatch[1]!;
+    const apiPath = proxyMatch[2] ?? "/v1/messages";
+    await handleLlmProxy(req, res, proxyToken, apiPath);
+    return;
+  }
+
   // MCP endpoint: /mcp/:token
   if (pathname.startsWith("/mcp/")) {
     await handleMcp(req, res, pathname);
@@ -146,6 +158,7 @@ async function main() {
     console.log(`  Dashboard:  http://localhost:${PORT}`);
     console.log(`  API:        http://localhost:${PORT}/api`);
     console.log(`  MCP:        http://localhost:${PORT}/mcp/:token`);
+    console.log(`  LLM Proxy:  http://localhost:${PORT}/v1/:token`);
     console.log("");
   });
 }
