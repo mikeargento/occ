@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, Suspense } from "react";
-// useSearchParams removed — no longer needed
+import { useState, useCallback, useEffect } from "react";
 import type { OCCProof } from "@/lib/occ";
 import {
   toUrlSafeB64,
@@ -10,7 +9,6 @@ import {
   enforcementLabel,
   enforcementColor,
 } from "@/lib/explorer";
-
 
 /* ── Types ── */
 
@@ -27,28 +25,13 @@ interface ProofSummary {
   indexedAt: string;
 }
 
-interface LookupResult {
-  proof: OCCProof;
-  indexedAt: string;
-}
-
 /* ── Page ── */
 
-export default function ExplorerPageWrapper() {
-  return (
-    <Suspense fallback={<div className="text-center py-20 text-text-tertiary">Loading...</div>}>
-      <ExplorerPage />
-    </Suspense>
-  );
-}
-
-function ExplorerPage() {
-  /* ── Search state ── */
+export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<ProofSummary[] | null>(null);
   const [searching, setSearching] = useState(false);
 
-  /* ── Recent proofs ── */
   const [recent, setRecent] = useState<ProofSummary[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -56,7 +39,6 @@ function ExplorerPage() {
   const perPage = 20;
   const totalPages = Math.ceil(total / perPage);
 
-  /* ── Load recent proofs ── */
   useEffect(() => {
     setLoading(true);
     fetch(`/api/proofs?limit=${perPage}&page=${page}`)
@@ -69,8 +51,6 @@ function ExplorerPage() {
       .finally(() => setLoading(false));
   }, [page]);
 
-
-  /* ── Search ── */
   const handleSearch = useCallback(async () => {
     if (!searchQuery.trim() || searchQuery.trim().length < 2) return;
     setSearching(true);
@@ -81,11 +61,8 @@ function ExplorerPage() {
         const data = await res.json();
         setSearchResults(data.proofs ?? []);
       }
-    } catch {
-      // ignore
-    } finally {
-      setSearching(false);
-    }
+    } catch {}
+    setSearching(false);
   }, [searchQuery]);
 
   return (
@@ -101,7 +78,7 @@ function ExplorerPage() {
         </a>
       </div>
 
-      {/* ── Search ── */}
+      {/* Search */}
       <div className="mb-10">
         <div className="flex gap-3">
           <input
@@ -132,226 +109,7 @@ function ExplorerPage() {
         )}
       </div>
 
-      {/* ── Removed: file drop, verification, hash results ── */}
-      {false && <div>
-
-        {/* Hash result */}
-        {hashing && (
-          <div className="mt-4 text-sm text-text-tertiary animate-pulse">
-            {droppedProof ? "Verifying proof..." : "Computing SHA-256..."}
-          </div>
-        )}
-
-        {/* ── Proof verification results ── */}
-        {droppedProof && verifyResult && !hashing && (
-          <div className="mt-4 space-y-4 animate-in fade-in duration-500">
-            {/* Status banner */}
-            <div className={`border p-5 ${
-              verifyResult.valid
-                ? "border-blue-600/30 bg-blue-500/10"
-                : "border-red-600/30 bg-red-500/10"
-            }`}>
-              <div className="flex items-center gap-3">
-                <div className={`flex items-center justify-center w-10 h-10 ${
-                  verifyResult.valid ? "bg-blue-500/20" : "bg-red-500/20"
-                }`}>
-                  {verifyResult.valid ? (
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-blue-600">
-                      <path d="M20 6L9 17l-5-5" />
-                    </svg>
-                  ) : (
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-red-600">
-                      <path d="M18 6L6 18M6 6l12 12" />
-                    </svg>
-                  )}
-                </div>
-                <div>
-                  <div className={`text-lg font-semibold ${
-                    verifyResult.valid ? "text-blue-600" : "text-red-600"
-                  }`}>
-                    {verifyResult.valid ? "Signature Valid" : "Signature Invalid"}
-                  </div>
-                  <div className="text-xs text-text-tertiary">
-                    {verifyResult.valid
-                      ? "This proof is cryptographically authentic"
-                      : verifyResult.reason}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Verification checks */}
-            <div className="border border-border-subtle bg-bg-elevated overflow-hidden">
-              <div className="px-5 py-3 border-b border-border-subtle">
-                <span className="text-xs text-text-tertiary font-medium">Verification checks</span>
-              </div>
-              <div className="divide-y divide-border-subtle">
-                {verifyResult.checks.map((check, i) => (
-                  <div key={i} className="flex items-start gap-3 px-5 py-3">
-                    <div className="shrink-0 mt-0.5">
-                      {check.status === "pass" ? (
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-blue-600">
-                          <path d="M20 6L9 17l-5-5" />
-                        </svg>
-                      ) : check.status === "fail" ? (
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-red-600">
-                          <path d="M18 6L6 18M6 6l12 12" />
-                        </svg>
-                      ) : (
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-text-tertiary">
-                          <circle cx="12" cy="12" r="10" />
-                          <path d="M12 8v4M12 16h.01" />
-                        </svg>
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="text-sm font-medium text-text">{check.label}</div>
-                      {check.detail && (
-                        <div className="text-xs text-text-tertiary mt-0.5">{check.detail}</div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Proof identity */}
-            <div className="border border-border-subtle bg-bg-elevated p-5 space-y-3">
-              <div>
-                <div className="text-xs text-text-tertiary mb-1">Artifact digest</div>
-                <code className="text-sm font-mono text-text break-all">{droppedProof.artifact.digestB64}</code>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <div className="text-xs text-text-tertiary mb-1">Signer</div>
-                  <code className="text-xs font-mono text-text break-all">{droppedProof.signer.publicKeyB64}</code>
-                </div>
-                {droppedProof.commit.time && (
-                  <div>
-                    <div className="text-xs text-text-tertiary mb-1">Committed</div>
-                    <span className="text-sm text-text">{new Date(droppedProof.commit.time).toLocaleString()}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Explorer index lookup */}
-            {lookupResults !== null && lookupResults.length > 0 && (
-              <div className="border border-border-subtle bg-bg-elevated p-5">
-                <div className="text-xs text-text-tertiary mb-3">
-                  Also indexed in Explorer ({lookupResults.length} record{lookupResults.length !== 1 ? "s" : ""})
-                </div>
-                <Link
-                  href={`/explorer/${encodeURIComponent(toUrlSafeB64(droppedProof.artifact.digestB64))}`}
-                  className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-500 transition-colors"
-                >
-                  View in Explorer
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M5 12h14M12 5l7 7-7 7" />
-                  </svg>
-                </Link>
-              </div>
-            )}
-            {lookupResults !== null && lookupResults.length === 0 && (
-              <div className="text-xs text-text-tertiary">
-                This proof is not in the Explorer index. It was verified locally from the file you dropped.
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ── Regular file hash results (non-proof) ── */}
-        {digestB64 && !hashing && !droppedProof && (
-          <div className="mt-4 border border-border-subtle bg-bg-elevated p-5">
-            <div className="text-xs text-text-tertiary mb-1">SHA-256 Digest</div>
-            <code className="text-sm font-mono text-text break-all">{digestB64}</code>
-
-            {lookupError && (
-              <div className="mt-3 text-sm text-error">{lookupError}</div>
-            )}
-
-            {lookupResults !== null && lookupResults.length === 0 && (
-              <div className="mt-4 py-3 px-4 bg-bg-subtle/50 text-sm text-text-secondary">
-                No proofs found for this file. It hasn&apos;t been committed through OCC yet.
-              </div>
-            )}
-
-            {lookupResults !== null && lookupResults.length > 0 && (
-              <div className="mt-5 space-y-4 animate-in fade-in duration-500">
-                {/* Verified banner */}
-                <div className="border border-blue-600/30 bg-blue-500/10 p-5">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-10 h-10 bg-blue-500/20">
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-blue-600">
-                        <path d="M20 6L9 17l-5-5" />
-                      </svg>
-                    </div>
-                    <div>
-                      <div className="text-lg font-semibold text-blue-600">Proven</div>
-                      <div className="text-xs text-text-tertiary">
-                        {lookupResults.length} proof{lookupResults.length !== 1 ? "s" : ""} on record for this file
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* List all proofs */}
-                <div className="border border-border-subtle bg-bg-elevated overflow-hidden divide-y divide-border-subtle">
-                  {lookupResults.map((r, i) => {
-                    const p = r.proof;
-                    return (
-                      <Link
-                        key={i}
-                        href={`/explorer/${encodeURIComponent(toUrlSafeB64(p.artifact.digestB64))}`}
-                        className="group flex items-center justify-between px-5 py-4 hover:bg-bg-subtle/60 transition-all duration-150 cursor-pointer"
-                      >
-                        <div className="flex items-center gap-3 min-w-0">
-                          {p.commit.counter && (
-                            <span className="text-xs font-mono text-text-tertiary shrink-0">#{p.commit.counter}</span>
-                          )}
-                          <span className={`text-xs font-medium shrink-0 ${enforcementColor(p.environment.enforcement)}`}>
-                            {enforcementLabel(p.environment.enforcement)}
-                          </span>
-                          {p.agency && (
-                            <span className="text-blue-600 shrink-0" title="Device-authorized">
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                              </svg>
-                            </span>
-                          )}
-                          {p.timestamps && (
-                            <span className="text-purple-600 shrink-0" title="RFC 3161 timestamped">
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <circle cx="12" cy="12" r="10" />
-                                <path d="M12 6v6l4 2" />
-                              </svg>
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          {p.commit.time && (
-                            <span className="text-xs text-text-tertiary">
-                              {new Date(p.commit.time).toLocaleDateString()}
-                            </span>
-                          )}
-                          <span className="inline-flex items-center gap-1 text-xs font-medium text-blue-600 group-hover:text-blue-500 transition-colors">
-                            View proof
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="group-hover:translate-x-0.5 transition-transform duration-150">
-                              <path d="M5 12h14M12 5l7 7-7 7" />
-                            </svg>
-                          </span>
-                        </div>
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>}
-
-      {/* ── Recent Proofs ── */}
+      {/* Recent Proofs */}
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-medium text-text-tertiary uppercase tracking-wider">
@@ -426,9 +184,7 @@ function ProofRow({ proof: p }: { proof: ProofSummary }) {
   const [detail, setDetail] = useState<OCCProof | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const toggle = useCallback(async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const toggle = useCallback(async () => {
     if (expanded) {
       setExpanded(false);
       return;
@@ -440,11 +196,10 @@ function ProofRow({ proof: p }: { proof: ProofSummary }) {
         const res = await fetch(`/api/proofs/${encodeURIComponent(toUrlSafeB64(p.digestB64))}`);
         if (res.ok) {
           const data = await res.json();
-          // API returns { proofs: [{ proof, indexedAt }] }
           const first = data.proofs?.[0]?.proof ?? data.proof;
           if (first) setDetail(first);
         }
-      } catch { /* ignore */ }
+      } catch {}
       setLoading(false);
     }
   }, [expanded, detail, p.digestB64]);
@@ -486,13 +241,10 @@ function ProofRow({ proof: p }: { proof: ProofSummary }) {
             <div className="text-xs text-text-tertiary animate-pulse py-2">Loading proof...</div>
           ) : detail ? (
             <div className="space-y-3">
-              {/* Digest */}
               <div>
                 <div className="text-[10px] text-text-tertiary uppercase tracking-wider mb-1">SHA-256 Digest</div>
                 <code className="text-xs font-mono text-text break-all">{detail.artifact.digestB64}</code>
               </div>
-
-              {/* Key fields grid */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2 text-xs">
                 <div>
                   <div className="text-[10px] text-text-tertiary uppercase tracking-wider">Signer</div>
@@ -529,8 +281,6 @@ function ProofRow({ proof: p }: { proof: ProofSummary }) {
                   </div>
                 )}
               </div>
-
-              {/* All detail shown inline */}
             </div>
           ) : (
             <div className="text-xs text-text-tertiary py-2">Could not load proof details.</div>
