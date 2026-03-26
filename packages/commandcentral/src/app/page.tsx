@@ -467,7 +467,7 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
         <div className="bg-[#efefef] border border-[#d9d9d9] overflow-hidden">
           <button onClick={() => setShowProofs(!showProofs)}
             className="w-full px-5 py-4 flex items-center justify-between hover:bg-[#e5e5e5] transition-colors">
-            <h2 className="text-[16px] font-bold">Proof log</h2>
+            <h2 className="text-[16px] font-bold">{currentAgent?.name ?? "Agent"} proofs</h2>
             <div className="flex items-center gap-3">
               <a href="https://occ.wtf/explorer" target="_blank" rel="noopener noreferrer"
                 onClick={e => e.stopPropagation()}
