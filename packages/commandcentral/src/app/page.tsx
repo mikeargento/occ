@@ -418,7 +418,6 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
       {/* No agents — prompt to create first one */}
       {agents.length === 0 && (
         <div className="text-center py-16">
-          <div className="text-4xl mb-4">🤖</div>
           <h2 className="text-xl font-bold mb-2">Create your first agent</h2>
           <p className="text-sm text-[#333333] mb-6 max-w-xs mx-auto text-balance">
             Each agent gets its own MCP link, its own rules, and its own proof chain.
