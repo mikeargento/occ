@@ -325,19 +325,22 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
                           </span>
                         </div>
                         {a.mcpUrl && (
-                          <div className="mt-2 pt-2 border-t border-[#d9d9d9]" onClick={e => e.stopPropagation()}>
-                            <div className="flex items-center gap-2">
-                              <code className="text-[10px] font-mono text-[#999] truncate flex-1">{a.mcpUrl}</code>
-                              <button onClick={async (e) => {
+                          <div className="mt-2 pt-2 border-t border-[#d9d9d9] flex items-center gap-2" onClick={e => e.stopPropagation()}>
+                            <span className="text-[10px] text-[#999]">Copy MCP:</span>
+                            {["URL", "JSON", "Terminal"].map(fmt => (
+                              <button key={fmt} onClick={async (e) => {
                                 e.stopPropagation();
-                                await navigator.clipboard.writeText(JSON.stringify({ mcpServers: { occ: { url: a.mcpUrl } } }, null, 2));
-                                setCopiedAgent(a.id);
+                                const text = fmt === "URL" ? a.mcpUrl!
+                                  : fmt === "JSON" ? JSON.stringify({ mcpServers: { occ: { url: a.mcpUrl } } }, null, 2)
+                                  : `claude mcp add ${a.name.toLowerCase().replace(/[^a-z0-9-]/g, "-")} --transport http ${a.mcpUrl}`;
+                                await navigator.clipboard.writeText(text);
+                                setCopiedAgent(`${a.id}-${fmt}`);
                                 setTimeout(() => setCopiedAgent(null), 2000);
                               }}
-                                className="text-[10px] font-medium text-blue-500 hover:text-blue-600 transition-colors flex-shrink-0">
-                                {copiedAgent === a.id ? "Copied!" : "Copy JSON"}
+                                className={`text-[10px] font-medium transition-colors flex-shrink-0 ${copiedAgent === `${a.id}-${fmt}` ? "text-emerald-500" : "text-blue-500 hover:text-blue-600"}`}>
+                                {copiedAgent === `${a.id}-${fmt}` ? "Copied!" : fmt}
                               </button>
-                            </div>
+                            ))}
                           </div>
                         )}
                       </div>
