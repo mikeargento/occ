@@ -441,6 +441,7 @@ function AgentPanel({ agent, perms, onRefresh, onViewExplorer }: {
 
   const [dismissing, setDismissing] = useState<Set<number>>(new Set());
   const [dismissingTools, setDismissingTools] = useState<Set<string>>(new Set());
+  const [expandedTool, setExpandedTool] = useState<string | null>(null);
 
   async function act(id: number, fn: () => Promise<unknown>) {
     setBusy(id);
@@ -643,26 +644,66 @@ function AgentPanel({ agent, perms, onRefresh, onViewExplorer }: {
               {agent.allowedTools.map(tool => {
                 const prov = toolProvenance[tool];
                 const fading = dismissingTools.has(tool);
+                const isExpanded = expandedTool === tool;
+                const toolHistory = perms.filter(p => p.tool === tool && p.status !== "pending");
                 return (
-                  <div key={tool} className={`flex items-center gap-3 px-5 py-3 transition-all duration-300 ${fading ? "opacity-20 scale-[0.98] pointer-events-none" : "opacity-100"}`}>
-                    <div className="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <span className="text-[14px]">{humanizeToolName(tool)}</span>
-                      {prov?.resolvedAt && (
-                        <span className="block text-[11px] text-[#999]">
-                          Approved {timeLabel(prov.resolvedAt)}
-                        </span>
-                      )}
+                  <div key={tool} className={`transition-all duration-300 ${fading ? "opacity-20 scale-[0.98] pointer-events-none" : "opacity-100"}`}>
+                    <div className="flex items-center gap-3 px-5 py-3 cursor-pointer hover:bg-[#e5e5e5] transition-colors"
+                      onClick={() => setExpandedTool(isExpanded ? null : tool)}>
+                      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                        className="text-[#999] flex-shrink-0 transition-transform duration-200"
+                        style={{ transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)" }}>
+                        <path d="M6 4l4 4-4 4" />
+                      </svg>
+                      <div className="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <span className="text-[14px]">{humanizeToolName(tool)}</span>
+                        {prov?.resolvedAt && (
+                          <span className="block text-[11px] text-[#999]">
+                            Approved {timeLabel(prov.resolvedAt)}
+                          </span>
+                        )}
+                      </div>
+                      <button onClick={async (e) => {
+                        e.stopPropagation();
+                        setDismissingTools(prev => new Set(prev).add(tool));
+                        await revokePermission(agent.id, tool);
+                        await onRefresh();
+                        setDismissingTools(prev => { const next = new Set(prev); next.delete(tool); return next; });
+                      }}
+                        className="h-7 px-3 text-[11px] font-medium border border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300 transition-colors flex-shrink-0">
+                        Revoke
+                      </button>
                     </div>
-                    <button onClick={async () => {
-                      setDismissingTools(prev => new Set(prev).add(tool));
-                      await revokePermission(agent.id, tool);
-                      await onRefresh();
-                      setDismissingTools(prev => { const next = new Set(prev); next.delete(tool); return next; });
-                    }}
-                      className="h-7 px-3 text-[11px] font-medium border border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300 transition-colors flex-shrink-0">
-                      Revoke
-                    </button>
+                    {isExpanded && (
+                      <div className="bg-white border-t border-[#d9d9d9] px-5 py-4">
+                        <h3 className="text-[12px] font-bold text-[#666] mb-3 uppercase tracking-wider">History</h3>
+                        {toolHistory.length > 0 ? (
+                          <div className="space-y-2">
+                            {toolHistory.map(h => (
+                              <div key={h.id} className="flex items-start gap-3 text-[12px]">
+                                <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${h.status === "approved" ? "bg-blue-400" : h.status === "denied" ? "bg-red-400" : "bg-amber-400"}`} />
+                                <div className="flex-1 min-w-0">
+                                  <span className="font-medium">{h.status === "approved" ? "Approved" : h.status === "denied" ? "Denied" : h.status === "revoked" ? "Revoked" : h.status}</span>
+                                  {h.clientName && <span className="text-[#999]"> via {h.clientName}</span>}
+                                  {h.resolvedAt && <span className="text-[#999]"> · {new Date(h.resolvedAt).toLocaleString()}</span>}
+                                  {h.requestArgs != null && (
+                                    <pre className="mt-1 text-[11px] font-mono text-[#666] bg-[#f5f5f5] p-2 overflow-x-auto max-h-[100px] overflow-y-auto">
+                                      {JSON.stringify(h.requestArgs, null, 2) as string}
+                                    </pre>
+                                  )}
+                                  {h.proofDigest && (
+                                    <code className="block mt-1 text-[10px] font-mono text-[#999] truncate">Proof: {h.proofDigest}</code>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-[12px] text-[#999]">No history available</p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 );
               })}
