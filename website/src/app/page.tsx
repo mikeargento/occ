@@ -562,7 +562,7 @@ export default function Home() {
           <div className="lg:max-w-2xl">
             <h1 className="hero-animate text-5xl sm:text-6xl lg:text-7xl font-bold tracking-[-0.02em] mb-6" style={{ animationDelay: "0ms" }}>
               Define what your<br />
-              AI agents can do.
+              AI does.
             </h1>
           </div>
 
