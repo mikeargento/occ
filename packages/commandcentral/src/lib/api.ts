@@ -1,285 +1,74 @@
-import type {
-  AgentInstance,
-  AgentPolicy,
-  AgentSummary,
-  AuditEntry,
-  Connection,
-  DiscoveredTool,
-  DownstreamServer,
-  ExecutionContextState,
-  StoredKey,
-} from "./types";
+// OCC API client — stripped to essentials
 
-function getBaseUrl(): string {
-  if (typeof window !== "undefined") {
-    const stored = localStorage.getItem("occ-proxy-url");
-    if (stored) return stored;
-    return "";
-  }
-  return "";
-}
-
-async function apiFetch<T>(path: string, opts?: RequestInit): Promise<T> {
-  const res = await fetch(`${getBaseUrl()}/api${path}`, {
+async function api<T>(path: string, opts?: RequestInit): Promise<T> {
+  const res = await fetch(`/api${path}`, {
     ...opts,
-    headers: {
-      "Content-Type": "application/json",
-      ...opts?.headers,
-    },
+    headers: { "Content-Type": "application/json", ...opts?.headers },
   });
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`API error ${res.status}: ${body}`);
-  }
+  if (!res.ok) throw new Error(`${res.status}`);
   return res.json() as Promise<T>;
 }
 
-// ── Health ──
-
-export async function getHealth(): Promise<{ ok: boolean; proxyId: string; timestamp: number }> {
-  return apiFetch("/health");
-}
-
-// ── Status ──
-
-export async function getStatus(): Promise<{
-  ok: boolean;
-  proxyId: string;
-  mode: "demo" | "live";
-  toolCount: number;
-  timestamp: number;
-}> {
-  return apiFetch("/status");
-}
-
-// Old policy endpoint removed — see new one below
-
-export async function loadPolicy(policy: AgentPolicy): Promise<{
-  policy: AgentPolicy;
-  policyDigestB64: string;
-  committedAt: number;
-}> {
-  return apiFetch("/policy", {
-    method: "PUT",
-    body: JSON.stringify(policy),
+// V2 API
+async function v2<T>(path: string, opts?: RequestInit): Promise<T> {
+  const res = await fetch(`/api/v2${path}`, {
+    ...opts,
+    headers: { "Content-Type": "application/json", ...opts?.headers },
   });
+  if (!res.ok) throw new Error(`${res.status}`);
+  return res.json() as Promise<T>;
 }
 
-// ── Tools ──
-
-export async function getTools(): Promise<{ tools: DiscoveredTool[] }> {
-  return apiFetch("/tools");
+// Auth
+export async function getMe(): Promise<{ user: { id: string; name: string; email: string; avatar: string } | null }> {
+  const res = await fetch("/auth/me");
+  if (!res.ok) return { user: null };
+  return res.json();
 }
 
-// ── Agents ──
-
-export async function getAgents(): Promise<{ agents: AgentSummary[] }> {
-  return apiFetch("/agents");
+// Feed — all requests
+export async function getFeed(): Promise<{ requests: FeedItem[] }> {
+  return v2("/requests?limit=100");
 }
 
-export async function getAgent(agentId: string): Promise<{
-  agent: AgentInstance;
-  context: ExecutionContextState;
-  auditCount: number;
-}> {
-  return apiFetch(`/agents/${encodeURIComponent(agentId)}`);
+// Approve
+export async function approve(id: number, mode: "once" | "always" = "always"): Promise<unknown> {
+  return v2(`/requests/${id}/approve`, { method: "POST", body: JSON.stringify({ mode }) });
 }
 
-export async function createAgent(name: string, allowedTools?: string[]): Promise<{ agent: AgentInstance }> {
-  return apiFetch("/agents", {
-    method: "POST",
-    body: JSON.stringify({ name, allowedTools }),
-  });
+// Deny
+export async function deny(id: number, mode: "once" | "always" = "once"): Promise<unknown> {
+  return v2(`/requests/${id}/deny`, { method: "POST", body: JSON.stringify({ mode }) });
 }
 
-export async function deleteAgent(agentId: string): Promise<{ deleted: boolean; deathProof?: any }> {
-  return apiFetch(`/agents/${encodeURIComponent(agentId)}`, { method: "DELETE" });
+// Token
+export async function getToken(): Promise<{ token: string }> {
+  return api("/settings/token");
 }
 
-export async function renameAgent(agentId: string, name: string): Promise<{ renamed: boolean }> {
-  return apiFetch(`/agents/${encodeURIComponent(agentId)}`, {
-    method: "PUT",
-    body: JSON.stringify({ name }),
-  });
+// API Key
+export async function getApiKeyStatus(): Promise<{ hasKey: boolean; maskedKey: string | null }> {
+  return api("/settings/api-key");
 }
 
-export async function getAgentActivity(agentId: string): Promise<{ entries: any[] }> {
-  return apiFetch(`/agents/${encodeURIComponent(agentId)}/activity`);
+export async function saveApiKey(key: string): Promise<{ ok: boolean; maskedKey: string }> {
+  return api("/settings/api-key", { method: "PUT", body: JSON.stringify({ key }) });
 }
 
-export async function updateAgentPolicy(agentId: string, policy: AgentPolicy): Promise<{ policy: AgentPolicy }> {
-  return apiFetch(`/agents/${encodeURIComponent(agentId)}/policy`, {
-    method: "PUT",
-    body: JSON.stringify(policy),
-  });
+export async function deleteApiKey(): Promise<{ ok: boolean }> {
+  return api("/settings/api-key", { method: "DELETE" });
 }
 
-export async function enableTool(agentId: string, toolName: string): Promise<{ tool: string; enabled: boolean }> {
-  return apiFetch(`/agents/${encodeURIComponent(agentId)}/tools/${encodeURIComponent(toolName)}`, {
-    method: "PUT",
-  });
-}
-
-export async function disableTool(agentId: string, toolName: string): Promise<{ tool: string; enabled: boolean }> {
-  return apiFetch(`/agents/${encodeURIComponent(agentId)}/tools/${encodeURIComponent(toolName)}`, {
-    method: "DELETE",
-  });
-}
-
-export async function pauseAgent(agentId: string): Promise<{ paused: boolean }> {
-  return apiFetch(`/agents/${encodeURIComponent(agentId)}/pause`, { method: "PUT" });
-}
-
-export async function resumeAgent(agentId: string): Promise<{ paused: boolean }> {
-  return apiFetch(`/agents/${encodeURIComponent(agentId)}/resume`, { method: "PUT" });
-}
-
-// ── Context ──
-
-export async function getContext(agentId = "default-agent"): Promise<ExecutionContextState> {
-  return apiFetch(`/context?agentId=${encodeURIComponent(agentId)}`);
-}
-
-// ── Audit ──
-
-export async function getAuditLog(opts?: {
-  agentId?: string;
-  page?: number;
-  limit?: number;
-}): Promise<{ entries: AuditEntry[]; total: number; page: number; limit: number }> {
-  const params = new URLSearchParams();
-  if (opts?.agentId) params.set("agentId", opts.agentId);
-  if (opts?.page !== undefined) params.set("page", String(opts.page));
-  if (opts?.limit !== undefined) params.set("limit", String(opts.limit));
-  return apiFetch(`/audit?${params.toString()}`);
-}
-
-export async function getAuditEntry(auditId: string, agentId = "default-agent"): Promise<{
-  entry: AuditEntry;
-  receipt: unknown | null;
-}> {
-  return apiFetch(`/audit/${encodeURIComponent(auditId)}?agentId=${encodeURIComponent(agentId)}`);
-}
-
-// ── Connections (downstream MCP servers) ──
-
-export async function listConnections(): Promise<DownstreamServer[]> {
-  return apiFetch("/connections");
-}
-
-// ── Permissions ──
-
-export interface Permission {
-  id: number; agentId: string; tool: string; status: "pending" | "approved" | "denied" | "revoked";
-  clientName: string; toolDescription: string | null; requestedAt: number; resolvedAt: number | null;
-  requestArgs: unknown; proofDigest: string | null; explorerUrl: string | null;
-}
-
-export async function getAllPermissions(): Promise<{ permissions: Permission[] }> {
-  return apiFetch("/permissions");
-}
-
-export async function getPendingPermissions(): Promise<{ requests: Array<{
-  id: number; agentId: string; tool: string; clientName: string; toolDescription: string | null; requestedAt: number; requestArgs?: unknown;
-}> }> {
-  return apiFetch("/permissions/pending");
-}
-
-export async function getActivePermissions(): Promise<{ permissions: Array<{
-  id: number; agentId: string; tool: string; status: string; resolvedAt: number | null;
-  proofDigest: string | null; explorerUrl: string | null;
-}> }> {
-  return apiFetch("/permissions/active");
-}
-
-export async function approvePermission(id: number, mode: "once" | "always" = "always"): Promise<unknown> {
-  return apiFetch(`/permissions/${id}/approve`, {
-    method: "POST",
-    body: JSON.stringify({ mode }),
-  });
-}
-
-export async function denyPermission(id: number, mode: "once" | "always" = "once"): Promise<unknown> {
-  return apiFetch(`/permissions/${id}/deny`, {
-    method: "POST",
-    body: JSON.stringify({ mode }),
-  });
-}
-
-export async function revokePermission(agentId: string, tool: string): Promise<unknown> {
-  return apiFetch("/permissions/revoke", {
-    method: "POST",
-    body: JSON.stringify({ agentId, tool }),
-  });
-}
-
-export async function getConnectConfig(): Promise<{
-  mcpUrl: string; claudeCode: string; claudeDesktop: string; cursor: string; generic: string;
-}> {
-  return apiFetch("/connect-config");
-}
-
-// ── Notifications ──
-
-export async function getNotificationCount(): Promise<{ count: number }> {
-  return apiFetch("/notifications/count");
-}
-
-export async function markNotificationsRead(): Promise<{ ok: boolean }> {
-  return apiFetch("/notifications/mark-read", { method: "POST" });
-}
-
-// ── Bulk Approve/Deny ──
-
-export async function bulkApprove(opts: { action: "approve" | "deny"; mode?: "once" | "always"; ids?: number[]; agentId?: string }): Promise<{ processed: number }> {
-  return apiFetch("/permissions/bulk", {
-    method: "POST",
-    body: JSON.stringify(opts),
-  });
-}
-
-export interface ChainEntry {
-  id: number; type: string; proofDigest: string;
-  referencesDigest: string | null; createdAt: number;
-  explorerUrl: string | null;
-}
-
-export async function getAuthorizationChain(agentId: string, tool: string): Promise<{ chain: ChainEntry[] }> {
-  return apiFetch(`/authorizations/${encodeURIComponent(agentId)}/${encodeURIComponent(tool)}/chain`);
-}
-
-// ── Policy ──
-
-export interface PolicyData {
-  categories: Record<string, boolean>;
-  customRules: string[];
-  allowedTools: string[];
-}
-
-export async function getPolicy(): Promise<{ policy: (PolicyData & Partial<AgentPolicy>) | null; policyDigestB64: string | null; committedAt: number | null }> {
-  return apiFetch("/policy");
-}
-
-export async function commitPolicy(categories: Record<string, boolean>, customRules: string[], agentId?: string): Promise<{ policyDigestB64: string; committedAt: number }> {
-  return apiFetch("/policy", {
-    method: "PUT",
-    body: JSON.stringify({ categories, customRules, name: "default", allowedTools: [], agentId }),
-  });
-}
-
-// ── Keys ──
-
-export async function listKeys(): Promise<StoredKey[]> {
-  return apiFetch("/keys");
-}
-
-export async function setKey(id: string, name: string, value: string): Promise<StoredKey> {
-  return apiFetch("/keys", {
-    method: "POST",
-    body: JSON.stringify({ id, name, value }),
-  });
-}
-
-export async function deleteKey(id: string): Promise<boolean> {
-  return apiFetch(`/keys/${encodeURIComponent(id)}`, { method: "DELETE" });
+// Types
+export interface FeedItem {
+  id: number;
+  agentId: string;
+  tool: string;
+  label: string;
+  summary: string;
+  riskLane: string;
+  status: "pending" | "approved" | "denied" | "auto_approved" | "expired";
+  originClient: string;
+  args: unknown;
+  createdAt: string;
 }

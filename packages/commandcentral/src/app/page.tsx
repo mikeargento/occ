@@ -1,341 +1,293 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import Link from "next/link";
-import {
-  v2GetRequests,
-  v2ApproveRequest,
-  v2DenyRequest,
-  v2GetRequest,
-  v2SeedDemo,
-} from "@/lib/api-v2";
-import type { V2Request, V2RequestDetail } from "@/lib/types-v2";
+import { getMe, getFeed, approve, deny, type FeedItem } from "@/lib/api";
 
-// ── Helpers ──
+/* ═══════════════════════════════════════════
+   Helpers
+   ═══════════════════════════════════════════ */
 
-function timeAgo(dateStr: string): string {
-  const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
-  if (seconds < 60) return "just now";
-  const m = Math.floor(seconds / 60);
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  return `${Math.floor(h / 24)}d ago`;
+function timeAgo(iso: string): string {
+  const ms = Date.now() - new Date(iso).getTime();
+  if (ms < 60_000) return "now";
+  if (ms < 3_600_000) return `${Math.floor(ms / 60_000)}m`;
+  if (ms < 86_400_000) return `${Math.floor(ms / 3_600_000)}h`;
+  return `${Math.floor(ms / 86_400_000)}d`;
+}
+
+function toolName(raw: string): string {
+  return raw.replace(/[_-]/g, " ").replace(/\b\w/g, c => c.toUpperCase());
 }
 
 function statusColor(s: string): string {
-  if (s === "pending") return "#f59e0b";
-  if (s === "approved" || s === "auto_approved") return "#22c55e";
-  if (s === "denied") return "#ef4444";
-  return "#999";
+  if (s === "pending") return "bg-amber-400";
+  if (s === "approved" || s === "auto_approved") return "bg-emerald-400";
+  if (s === "denied" || s === "expired") return "bg-red-400";
+  return "bg-gray-300";
 }
 
 function statusLabel(s: string): string {
-  if (s === "approved" || s === "auto_approved") return "Allowed";
-  if (s === "denied") return "Denied";
-  if (s === "expired") return "Expired";
-  return "";
+  if (s === "auto_approved") return "Auto";
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-// ── Login ──
+function ArgsDetails({ args }: { args: unknown }) {
+  if (!args || typeof args !== "object" || Object.keys(args as Record<string, unknown>).length === 0) return null;
+  return (
+    <details className="mt-3">
+      <summary className="text-[11px] text-[var(--text-tertiary)] cursor-pointer hover:text-[var(--text-secondary)] select-none">
+        Details
+      </summary>
+      <pre className="mt-2 text-[11px] font-mono text-[var(--text-secondary)] bg-[var(--bg)] rounded-lg p-3 overflow-auto max-h-32">
+        {JSON.stringify(args, null, 2)}
+      </pre>
+    </details>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   App
+   ═══════════════════════════════════════════ */
+
+export default function App() {
+  const [user, setUser] = useState<{ id: string; name: string; email: string; avatar: string } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getMe().then(d => setUser(d.user)).finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <Page><div className="flex items-center justify-center h-[60vh]"><Spinner /></div></Page>;
+  if (!user) return <Login />;
+  return <Feed user={user} />;
+}
+
+/* ═══════════════════════════════════════════
+   Login
+   ═══════════════════════════════════════════ */
 
 function Login() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white">
-      <div className="w-full max-w-sm px-6">
-        <h1 className="text-5xl font-black tracking-tight text-black mb-2">OCC</h1>
-        <p className="text-lg text-[#666] mb-5">Control what your AI agents do.</p>
-        <div className="flex flex-col gap-3">
-          <a
-            href="/auth/login/github"
-            className="flex items-center justify-center gap-2 h-12 bg-black text-white text-sm font-semibold hover:opacity-90 transition-opacity w-full"
-          >
-            <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
-              <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
-            </svg>
-            Continue with GitHub
-          </a>
-          <a
-            href="/auth/login/google"
-            className="flex items-center justify-center gap-2 h-12 bg-white border border-[#d9d9d9] text-black text-sm font-semibold hover:bg-[#f5f5f5] transition-colors w-full"
-          >
-            Continue with Google
-          </a>
-          <a
-            href="/auth/login/apple"
-            className="flex items-center justify-center gap-2 h-12 bg-black text-white text-sm font-semibold hover:opacity-90 transition-opacity w-full"
-          >
-            <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
-              <path d="M11.182.008C11.148-.03 9.923.023 8.857 1.18c-1.066 1.156-.902 2.482-.878 2.516.024.034 1.52.087 2.475-1.258.955-1.345.762-2.391.728-2.43zm3.314 11.733c-.048-.096-2.325-1.234-2.113-3.422.212-2.189 1.675-2.789 1.698-2.854.023-.065-.597-.79-1.254-1.157a3.692 3.692 0 0 0-1.563-.434c-.108-.003-.483-.095-1.254.116-.508.139-1.653.589-1.968.607-.316.018-1.256-.522-2.267-.665-.647-.125-1.333.131-1.824.328-.49.196-1.422.754-2.074 2.237-.652 1.482-.311 3.83-.067 4.56.244.729.625 1.924 1.273 2.796.576.984 1.34 1.667 1.659 1.899.319.232 1.219.386 1.843.067.502-.308 1.408-.485 1.766-.472.357.013 1.061.154 1.782.539.571.197 1.111.115 1.652-.105.541-.221 1.324-1.059 2.238-2.758.347-.79.505-1.217.473-1.282z" />
-            </svg>
-            Continue with Apple
-          </a>
+    <div className="min-h-screen flex items-center justify-center bg-[var(--bg)]">
+      <div className="w-full max-w-[320px] px-6">
+        <div className="mb-10">
+          <h1 className="text-[28px] font-bold tracking-[-0.03em] text-[var(--text)]">OCC</h1>
+          <p className="text-[15px] text-[var(--text-secondary)] mt-1">Control plane for your AI agents</p>
         </div>
+        <div className="space-y-3">
+          <AuthButton provider="github" label="Continue with GitHub" />
+          <AuthButton provider="google" label="Continue with Google" />
+          <AuthButton provider="apple" label="Continue with Apple" />
+        </div>
+        <p className="text-[11px] text-[var(--text-tertiary)] mt-8 leading-relaxed">
+          Every action your AI takes is governed, recorded, and provable.
+        </p>
       </div>
     </div>
   );
 }
 
-// ── Feed Item ──
-
-function FeedItem({
-  req,
-  expanded,
-  detail,
-  onToggle,
-  onApprove,
-  onDeny,
-  acting,
-}: {
-  req: V2Request;
-  expanded: boolean;
-  detail: V2RequestDetail | null;
-  onToggle: () => void;
-  onApprove: (id: number) => void;
-  onDeny: (id: number) => void;
-  acting: boolean;
-}) {
-  const isPending = req.status === "pending";
-  const color = statusColor(req.status);
+function AuthButton({ provider, label }: { provider: string; label: string }) {
+  const icons: Record<string, React.ReactNode> = {
+    github: <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>,
+    google: <svg className="w-4 h-4" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>,
+    apple: <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>,
+  };
 
   return (
-    <div className="border-b border-[#e5e5e5]">
-      <div
-        className="flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-[#fafafa] transition-colors"
-        onClick={onToggle}
-      >
-        <div
-          className="w-[2px] self-stretch shrink-0 mt-1"
-          style={{ backgroundColor: color }}
-        />
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold font-mono text-black truncate">
-              {req.tool}
-            </span>
-            <span className="text-xs text-[#666] truncate">
-              {(req.agentId ?? "").slice(0, 12)}
-            </span>
-            <span className="text-xs text-[#999] ml-auto shrink-0">
-              {timeAgo(req.createdAt)}
-            </span>
-          </div>
-          {req.summary && (
-            <p className="text-sm text-[#666] mt-0.5 truncate">{req.summary}</p>
-          )}
-          <div className="flex items-center gap-2 mt-1.5">
-            {isPending ? (
-              <div className="flex items-center gap-2 ml-auto">
-                <button
-                  onClick={(e) => { e.stopPropagation(); onApprove(req.id); }}
-                  disabled={acting}
-                  className="h-7 px-3 text-xs font-semibold border border-[#22c55e] text-[#22c55e] hover:bg-[rgba(34,197,94,0.08)] disabled:opacity-40 transition-colors"
-                >
-                  Allow
-                </button>
-                <button
-                  onClick={(e) => { e.stopPropagation(); onDeny(req.id); }}
-                  disabled={acting}
-                  className="h-7 px-3 text-xs font-semibold border border-[#ef4444] text-[#ef4444] hover:bg-[rgba(239,68,68,0.08)] disabled:opacity-40 transition-colors"
-                >
-                  Deny
-                </button>
+    <a href={`/auth/${provider}`}
+      className="flex items-center justify-center gap-2.5 w-full h-11 text-[13px] font-medium bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] rounded-lg hover:border-[var(--text-tertiary)] transition-colors">
+      {icons[provider]}
+      {label}
+    </a>
+  );
+}
+
+/* ═══════════════════════════════════════════
+   Feed — the entire product
+   ═══════════════════════════════════════════ */
+
+function Feed({ user }: { user: { id: string; name: string; email: string; avatar: string } }) {
+  const [items, setItems] = useState<FeedItem[]>([]);
+  const [acting, setActing] = useState<number | null>(null);
+  const [dismissed, setDismissed] = useState<Set<number>>(new Set());
+
+  const refresh = useCallback(async () => {
+    try {
+      const data = await getFeed();
+      setItems(data.requests ?? []);
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    refresh();
+    const interval = setInterval(refresh, 3000);
+    return () => clearInterval(interval);
+  }, [refresh]);
+
+  async function handleApprove(id: number, mode: "once" | "always") {
+    setActing(id);
+    try {
+      await approve(id, mode);
+      setDismissed(prev => new Set(prev).add(id));
+      setTimeout(() => refresh(), 300);
+    } finally { setActing(null); }
+  }
+
+  async function handleDeny(id: number) {
+    setActing(id);
+    try {
+      await deny(id, "once");
+      setDismissed(prev => new Set(prev).add(id));
+      setTimeout(() => refresh(), 300);
+    } finally { setActing(null); }
+  }
+
+  const pending = items.filter(i => i.status === "pending");
+  const resolved = items.filter(i => i.status !== "pending");
+
+  return (
+    <Page>
+      {/* Header */}
+      <header className="sticky top-0 z-20 bg-[var(--bg)]/80 backdrop-blur-xl border-b border-[var(--border-light)]">
+        <div className="max-w-2xl mx-auto flex items-center justify-between h-14 px-5">
+          <h1 className="text-[17px] font-bold tracking-[-0.02em]">OCC</h1>
+          <div className="flex items-center gap-3">
+            {pending.length > 0 && (
+              <div className="flex items-center gap-1.5 text-[12px] font-medium text-amber-600">
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                {pending.length}
               </div>
+            )}
+            <a href="/settings" className="text-[var(--text-tertiary)] hover:text-[var(--text)] transition-colors">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+              </svg>
+            </a>
+            {user.avatar ? (
+              <img src={user.avatar} alt="" className="w-7 h-7 rounded-full" />
             ) : (
-              <span className="text-xs ml-auto" style={{ color }}>
-                {statusLabel(req.status)}
-              </span>
+              <div className="w-7 h-7 rounded-full bg-[var(--border)] flex items-center justify-center text-[11px] font-semibold text-[var(--text-secondary)]">
+                {user.name?.[0]?.toUpperCase()}
+              </div>
             )}
           </div>
         </div>
-      </div>
+      </header>
 
-      {expanded && (
-        <div className="bg-[#efefef] px-4 py-3 mx-4 mb-3">
-          {detail ? (
-            <div className="space-y-3">
-              <div>
-                <p className="text-[10px] font-semibold text-[#999] uppercase tracking-wider mb-1">
-                  Arguments
-                </p>
-                <pre className="text-xs font-mono text-[#333] whitespace-pre-wrap break-all">
-                  {JSON.stringify(detail.args, null, 2)}
-                </pre>
-              </div>
-              {detail.decisions?.length > 0 && (
-                <div>
-                  <p className="text-[10px] font-semibold text-[#999] uppercase tracking-wider mb-1">
-                    Decision
-                  </p>
-                  {detail.decisions.map((d) => (
-                    <div key={d.id} className="text-xs text-[#333]">
-                      <span className="font-semibold">{d.decision}</span>
-                      {d.reason && <span> &mdash; {d.reason}</span>}
-                      <span className="text-[#999] ml-2">{d.mode}</span>
+      <main className="max-w-2xl mx-auto px-5 py-6">
+        {/* Pending */}
+        {pending.length > 0 && (
+          <section className="mb-10">
+            <h2 className="text-[12px] font-semibold text-[var(--text-tertiary)] uppercase tracking-[0.08em] mb-4">
+              Waiting
+            </h2>
+            <div className="space-y-2">
+              {pending.map((item, i) => (
+                <div
+                  key={item.id}
+                  className={`bg-[var(--surface)] border border-[var(--border)] rounded-xl p-4 animate-in ${dismissed.has(item.id) ? "animate-out" : ""}`}
+                  style={{ animationDelay: `${i * 50}ms` }}
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[14px] font-medium text-[var(--text)] leading-snug">
+                      {item.summary || toolName(item.tool)}
+                    </p>
+                    <div className="flex items-center gap-2 mt-1.5">
+                      <span className="text-[12px] font-mono text-[var(--text-tertiary)]">{item.tool}</span>
+                      <span className="text-[var(--text-tertiary)]">·</span>
+                      <span className="text-[11px] text-[var(--text-tertiary)]">{timeAgo(item.createdAt)}</span>
                     </div>
-                  ))}
+                  </div>
+
+                  <ArgsDetails args={item.args} />
+
+                  <div className="flex items-center gap-2 mt-4">
+                    <button
+                      onClick={() => handleApprove(item.id, "always")}
+                      disabled={acting === item.id}
+                      className="h-9 px-5 text-[13px] font-semibold bg-[var(--text)] text-white rounded-lg hover:opacity-90 disabled:opacity-40 transition-opacity"
+                    >
+                      Allow
+                    </button>
+                    <button
+                      onClick={() => handleApprove(item.id, "once")}
+                      disabled={acting === item.id}
+                      className="h-9 px-4 text-[13px] font-medium text-[var(--text-secondary)] bg-[var(--bg)] rounded-lg hover:bg-[var(--border-light)] disabled:opacity-40 transition-colors"
+                    >
+                      Once
+                    </button>
+                    <div className="flex-1" />
+                    <button
+                      onClick={() => handleDeny(item.id)}
+                      disabled={acting === item.id}
+                      className="h-9 px-4 text-[13px] font-medium text-[var(--red)] hover:bg-red-50 rounded-lg disabled:opacity-40 transition-colors"
+                    >
+                      Deny
+                    </button>
+                  </div>
                 </div>
-              )}
-              {detail.decisions?.some((d) => d.proofDigest) && (
-                <div>
-                  <p className="text-[10px] font-semibold text-[#999] uppercase tracking-wider mb-1">
-                    Proof Digest
-                  </p>
-                  <code className="text-[11px] font-mono text-[#333] break-all">
-                    {detail.decisions.find((d) => d.proofDigest)?.proofDigest}
-                  </code>
-                </div>
-              )}
+              ))}
             </div>
-          ) : (
-            <p className="text-xs text-[#999]">Loading...</p>
-          )}
-        </div>
-      )}
-    </div>
+          </section>
+        )}
+
+        {/* History */}
+        {resolved.length > 0 && (
+          <section>
+            <h2 className="text-[12px] font-semibold text-[var(--text-tertiary)] uppercase tracking-[0.08em] mb-4">
+              History
+            </h2>
+            <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl divide-y divide-[var(--border-light)]">
+              {resolved.map((item, i) => (
+                <div
+                  key={item.id}
+                  className="flex items-center gap-3 px-4 py-3 animate-in"
+                  style={{ animationDelay: `${i * 20}ms` }}
+                >
+                  <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${statusColor(item.status)}`} />
+                  <p className="flex-1 text-[13px] text-[var(--text)] truncate min-w-0">
+                    {item.summary || toolName(item.tool)}
+                  </p>
+                  <span className="text-[11px] text-[var(--text-tertiary)] flex-shrink-0">
+                    {statusLabel(item.status)}
+                  </span>
+                  <span className="text-[11px] text-[var(--text-tertiary)] flex-shrink-0 w-8 text-right tabular-nums">
+                    {timeAgo(item.createdAt)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Empty state */}
+        {items.length === 0 && (
+          <div className="text-center py-24">
+            <h2 className="text-[17px] font-semibold text-[var(--text)] mb-2">No activity yet</h2>
+            <p className="text-[14px] text-[var(--text-tertiary)] max-w-xs mx-auto leading-relaxed">
+              Install the hook and start using Claude Code. Every action will appear here.
+            </p>
+            <div className="mt-6 inline-block bg-[var(--surface)] border border-[var(--border)] rounded-lg px-4 py-3 text-left">
+              <code className="text-[12px] font-mono text-[var(--text-secondary)]">
+                curl -fsSL https://agent.occ.wtf/install | bash
+              </code>
+            </div>
+          </div>
+        )}
+      </main>
+    </Page>
   );
 }
 
-// ── Main Page ──
+/* ═══════════════════════════════════════════
+   Layout primitives
+   ═══════════════════════════════════════════ */
 
-export default function FeedPage() {
-  const [user, setUser] = useState<{ name: string; avatar: string } | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [requests, setRequests] = useState<V2Request[]>([]);
-  const [expandedId, setExpandedId] = useState<number | null>(null);
-  const [details, setDetails] = useState<Record<number, V2RequestDetail>>({});
-  const [acting, setActing] = useState(false);
-  const [seeding, setSeeding] = useState(false);
+function Page({ children }: { children: React.ReactNode }) {
+  return <div className="min-h-screen bg-[var(--bg)]">{children}</div>;
+}
 
-  const loadRequests = useCallback(async () => {
-    try {
-      const data = await v2GetRequests({ limit: 50 });
-      setRequests(data);
-    } catch {
-      // silent
-    }
-  }, []);
-
-  // Auth check
-  useEffect(() => {
-    fetch("/auth/me")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => setUser(d?.user ?? null))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
-
-  // Initial load + polling
-  useEffect(() => {
-    if (!user) return;
-    loadRequests();
-    const iv = setInterval(loadRequests, 5000);
-    return () => clearInterval(iv);
-  }, [user, loadRequests]);
-
-  // Load detail on expand
-  useEffect(() => {
-    if (expandedId === null) return;
-    if (details[expandedId]) return;
-    v2GetRequest(expandedId)
-      .then((d) => setDetails((prev) => ({ ...prev, [expandedId]: d })))
-      .catch(() => {});
-  }, [expandedId, details]);
-
-  const handleApprove = async (id: number) => {
-    setActing(true);
-    try {
-      await v2ApproveRequest(id, "once");
-      await loadRequests();
-    } finally {
-      setActing(false);
-    }
-  };
-
-  const handleDeny = async (id: number) => {
-    setActing(true);
-    try {
-      await v2DenyRequest(id, "once");
-      await loadRequests();
-    } finally {
-      setActing(false);
-    }
-  };
-
-  const handleSeed = async () => {
-    setSeeding(true);
-    try {
-      await v2SeedDemo();
-      await loadRequests();
-    } finally {
-      setSeeding(false);
-    }
-  };
-
-  // Loading
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="w-5 h-5 border-2 border-[#d9d9d9] border-t-black rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  // Not authed
-  if (!user) return <Login />;
-
-  // Authed — feed
-  return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="sticky top-0 z-10 h-12 bg-white border-b border-[#d9d9d9] flex items-center justify-between px-4">
-        <span className="text-lg font-black tracking-tight text-black">OCC</span>
-        <div className="flex items-center gap-3">
-          <Link href="/settings" className="text-[#999] hover:text-black transition-colors">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
-              <circle cx="12" cy="12" r="3" />
-            </svg>
-          </Link>
-          {user.avatar ? (
-            <img src={user.avatar} alt="" className="w-7 h-7 rounded-full" />
-          ) : (
-            <div className="w-7 h-7 rounded-full bg-[#d9d9d9] flex items-center justify-center text-xs font-semibold text-[#666]">
-              {user.name?.[0]?.toUpperCase() ?? "U"}
-            </div>
-          )}
-        </div>
-      </header>
-
-      {/* Feed */}
-      <main className="max-w-2xl mx-auto">
-        {requests.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-32 text-center px-4">
-            <p className="text-sm font-semibold text-black mb-1">No activity yet</p>
-            <p className="text-sm text-[#666] mb-6">Connect an agent to get started</p>
-            <button
-              onClick={handleSeed}
-              disabled={seeding}
-              className="h-9 px-5 text-sm font-semibold border border-[#d9d9d9] text-black hover:bg-[#f5f5f5] disabled:opacity-50 transition-colors"
-            >
-              {seeding ? "Seeding..." : "Seed demo data"}
-            </button>
-          </div>
-        ) : (
-          requests.map((req) => (
-            <FeedItem
-              key={req.id}
-              req={req}
-              expanded={expandedId === req.id}
-              detail={details[req.id] ?? null}
-              onToggle={() => setExpandedId(expandedId === req.id ? null : req.id)}
-              onApprove={handleApprove}
-              onDeny={handleDeny}
-              acting={acting}
-            />
-          ))
-        )}
-      </main>
-    </div>
-  );
+function Spinner() {
+  return <div className="w-5 h-5 border-2 border-[var(--border)] border-t-[var(--text)] rounded-full animate-spin" />;
 }
