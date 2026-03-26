@@ -92,7 +92,7 @@ function AuthButton({ provider, label }: { provider: string; label: string }) {
   };
 
   return (
-    <a href={`/auth/${provider}`}
+    <a href={`/auth/login/${provider}`}
       className="flex items-center justify-center gap-2.5 w-full h-11 text-[13px] font-medium bg-[var(--surface)] border border-[var(--border)] text-[var(--text)] rounded-lg hover:border-[var(--text-tertiary)] transition-colors">
       {icons[provider]}
       {label}
