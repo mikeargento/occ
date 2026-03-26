@@ -773,20 +773,22 @@ export function AgentConfigForm(props: AgentConfigFormProps) {
                 <ClaudeLocalAdvancedFields {...adapterFieldProps} />
               )}
 
-              <Field label="MCP server URLs" hint={help.mcpUrls}>
-                <McpUrlsEditor
-                  value={
-                    isCreate
-                      ? (val!.mcpUrls ?? {})
-                      : ((eff("adapterConfig", "mcpUrls", (config.mcpUrls ?? {})) ?? {}) as Record<string, string>)
-                  }
-                  onChange={(urls) =>
-                    isCreate
-                      ? set!({ mcpUrls: urls })
-                      : mark("adapterConfig", "mcpUrls", Object.keys(urls).length > 0 ? urls : undefined)
-                  }
-                />
-              </Field>
+              {adapterType === "claude_local" && (
+                <Field label="MCP server URLs" hint={help.mcpUrls}>
+                  <McpUrlsEditor
+                    value={
+                      isCreate
+                        ? (val!.mcpUrls ?? {})
+                        : ((eff("adapterConfig", "mcpUrls", (config.mcpUrls ?? {})) ?? {}) as Record<string, string>)
+                    }
+                    onChange={(urls) =>
+                      isCreate
+                        ? set!({ mcpUrls: urls })
+                        : mark("adapterConfig", "mcpUrls", Object.keys(urls).length > 0 ? urls : undefined)
+                    }
+                  />
+                </Field>
+              )}
 
               <Field label="Extra args (comma-separated)" hint={help.extraArgs}>
                 <DraftInput
@@ -1498,11 +1500,12 @@ function McpUrlsEditor({
   }
 
   const [rows, setRows] = useState<Row[]>(() => toRows(value));
-  const valueRef = useRef(value);
+  const serializedRef = useRef(JSON.stringify(value));
 
   useEffect(() => {
-    if (value !== valueRef.current) {
-      valueRef.current = value;
+    const serialized = JSON.stringify(value);
+    if (serialized !== serializedRef.current) {
+      serializedRef.current = serialized;
       setRows(toRows(value));
     }
   }, [value]);
@@ -1512,7 +1515,7 @@ function McpUrlsEditor({
     for (const r of updated) {
       if (r.name.trim() && r.url.trim()) rec[r.name.trim()] = r.url.trim();
     }
-    valueRef.current = rec;
+    serializedRef.current = JSON.stringify(rec);
     onChange(rec);
   }
 
@@ -1534,12 +1537,21 @@ function McpUrlsEditor({
     flush(next);
   }
 
+  // Check for duplicate names
+  const dupeNames = new Set<string>();
+  const seen = new Set<string>();
+  for (const r of rows) {
+    const trimmed = r.name.trim();
+    if (trimmed && seen.has(trimmed)) dupeNames.add(trimmed);
+    if (trimmed) seen.add(trimmed);
+  }
+
   return (
     <div className="space-y-2">
       {rows.map((row, i) => (
         <div key={i} className="flex gap-2 items-center">
           <input
-            className="flex-[1] min-w-0 px-2 py-1.5 text-sm rounded border bg-background"
+            className={`flex-[1] min-w-0 px-2 py-1.5 text-sm rounded border bg-background ${dupeNames.has(row.name.trim()) ? "border-destructive" : ""}`}
             placeholder="Name (e.g. jimbo)"
             value={row.name}
             onChange={(e) => updateRow(i, "name", e.target.value)}
@@ -1563,6 +1575,9 @@ function McpUrlsEditor({
           )}
         </div>
       ))}
+      {dupeNames.size > 0 && (
+        <p className="text-xs text-destructive">Duplicate name: {[...dupeNames].join(", ")}</p>
+      )}
     </div>
   );
 }

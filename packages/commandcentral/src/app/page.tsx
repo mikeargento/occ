@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { getAllPermissions, approvePermission, denyPermission, revokePermission, getConnectConfig, getAgents, createAgent, deleteAgent, renameAgent, getAgentActivity, getNotificationCount, markNotificationsRead, bulkApprove, type Permission } from "@/lib/api";
 
 /* ── Helpers ── */
@@ -29,6 +29,7 @@ type View = { page: "agents" } | { page: "panel"; agentId: string } | { page: "e
 export default function App() {
   const [user, setUser] = useState<{ id: string; name: string; email: string; avatar: string; provider?: string } | null>(null);
   const [loading, setLoading] = useState(true);
+  const bellClickRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     fetch("/auth/me").then(r => r.ok ? r.json() : null)
@@ -38,14 +39,16 @@ export default function App() {
 
   if (loading) return <Shell><Center><Spinner size={20} /></Center></Shell>;
   if (!user) return <Shell><Login /></Shell>;
-  return <Shell user={user}><Dashboard userName={user.name} provider={user.provider} /></Shell>;
+  return <Shell user={user} onBellClick={() => bellClickRef.current?.()}>
+    <Dashboard userName={user.name} provider={user.provider} onBellClickRef={bellClickRef} />
+  </Shell>;
 }
 
 /* ═══════════════════════════════════════════════════════════════
    Shell — matches occ.wtf nav
    ═══════════════════════════════════════════════════════════════ */
 
-function Shell({ user, children }: { user?: any; children: React.ReactNode }) {
+function Shell({ user, children, onBellClick }: { user?: any; children: React.ReactNode; onBellClick?: () => void }) {
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
@@ -67,7 +70,7 @@ function Shell({ user, children }: { user?: any; children: React.ReactNode }) {
             {user && (
               <div className="flex items-center gap-3 ml-2">
                 {unreadCount > 0 && (
-                  <button onClick={() => { markNotificationsRead(); setUnreadCount(0); }}
+                  <button onClick={() => { markNotificationsRead(); setUnreadCount(0); if (onBellClick) onBellClick(); }}
                     className="relative text-[#000000] hover:opacity-70 transition-opacity" title={`${unreadCount} new requests`}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
@@ -137,7 +140,7 @@ function AuthButton({ href, icon, label }: { href: string; icon: React.ReactNode
    Level 3: Agent explorer (full proof log)
    ═══════════════════════════════════════════════════════════════ */
 
-function Dashboard({ userName, provider }: { userName: string; provider?: string }) {
+function Dashboard({ userName, provider, onBellClickRef }: { userName: string; provider?: string; onBellClickRef?: React.MutableRefObject<(() => void) | null> }) {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [perms, setPerms] = useState<Permission[]>([]);
   const [view, setView] = useState<View>({ page: "agents" });
@@ -146,6 +149,17 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
   const [deletingAgent, setDeletingAgent] = useState<string | null>(null);
   const [copiedAgent, setCopiedAgent] = useState<string | null>(null);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
+
+  // Wire bell click → navigate to first agent with pending requests
+  useEffect(() => {
+    if (!onBellClickRef) return;
+    onBellClickRef.current = () => {
+      const pendingPerms = perms.filter(p => p.status === "pending");
+      if (pendingPerms.length > 0) {
+        setView({ page: "panel", agentId: pendingPerms[0].agentId });
+      }
+    };
+  }, [perms, onBellClickRef]);
 
   const refresh = useCallback(async () => {
     try {
