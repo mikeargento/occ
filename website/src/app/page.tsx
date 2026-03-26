@@ -561,8 +561,7 @@ export default function Home() {
                 <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-12 lg:gap-16">
           <div className="lg:max-w-2xl">
             <h1 className="hero-animate text-5xl sm:text-6xl lg:text-7xl font-bold tracking-[-0.02em] mb-6" style={{ animationDelay: "0ms" }}>
-              Define what your<br />
-              AI does.
+              Define what your AI does.
             </h1>
           </div>
 
