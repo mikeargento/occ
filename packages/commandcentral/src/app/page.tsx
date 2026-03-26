@@ -708,16 +708,16 @@ function Dashboard({ userName, provider }: { userName: string; provider?: string
    ═══════════════════════════════════════════════════════════════ */
 
 function Toggle({ on, onChange, small }: { on: boolean; onChange: () => void; small?: boolean }) {
-  const w = small ? "w-8" : "w-10";
-  const h = small ? "h-[18px]" : "h-[22px]";
-  const dot = small ? "w-3.5 h-3.5" : "w-[18px] h-[18px]";
-  const translate = small ? "translate-x-[14px]" : "translate-x-[20px]";
+  const w = small ? "w-9" : "w-11";
+  const h = small ? "h-5" : "h-6";
+  const dot = small ? "w-3.5 h-3.5" : "w-4.5 h-4.5";
+  const translate = small ? "translate-x-[15px]" : "translate-x-[19px]";
   return (
     <button onClick={onChange}
-      className={`${w} ${h} rounded-full transition-colors duration-150 flex items-center px-[2px] flex-shrink-0 border ${
-        on ? "bg-blue-500 border-blue-500" : "bg-[#ccc] border-[#ccc]"
+      className={`${w} ${h} rounded-full transition-colors duration-150 flex items-center px-[3px] flex-shrink-0 ${
+        on ? "bg-blue-500" : "bg-[#ccc]"
       }`}>
-      <div className={`${dot} bg-white rounded-full transition-transform duration-150 ${on ? translate : "translate-x-0"}`} />
+      <div className={`${dot} bg-white rounded-full shadow-sm transition-transform duration-150 ${on ? translate : "translate-x-0"}`} />
     </button>
   );
 }
