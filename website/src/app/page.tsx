@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import Link from "next/link";
 import type { OCCProof } from "@/lib/occ";
 import {
   toUrlSafeB64,
@@ -234,66 +233,210 @@ function ProofRow({ proof: p }: { proof: ProofSummary }) {
       </button>
 
       {expanded && (
-        <div className="px-4 sm:px-5 pb-4 pt-1 bg-bg-subtle/20">
+        <div className="px-4 sm:px-5 pb-5 pt-2 bg-bg-subtle/20">
           {loading ? (
             <div className="text-xs text-text-tertiary animate-pulse py-2">Loading proof...</div>
           ) : detail ? (
-            <div className="space-y-3">
-              <div>
-                <div className="text-[10px] text-text-tertiary uppercase tracking-wider mb-1">SHA-256 Digest</div>
-                <code className="text-xs font-mono text-text break-all">{detail.artifact.digestB64}</code>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2 text-xs">
-                <div>
-                  <div className="text-[10px] text-text-tertiary uppercase tracking-wider">Signer</div>
-                  <code className="font-mono text-text">{truncateHash(detail.signer.publicKeyB64, 12)}</code>
-                </div>
-                <div>
-                  <div className="text-[10px] text-text-tertiary uppercase tracking-wider">Enforcement</div>
-                  <span className={`font-medium ${enforcementColor(detail.environment.enforcement)}`}>
-                    {enforcementLabel(detail.environment.enforcement)}
-                  </span>
-                </div>
-                {detail.commit.time && (
-                  <div>
-                    <div className="text-[10px] text-text-tertiary uppercase tracking-wider">Committed</div>
-                    <span className="text-text">{new Date(detail.commit.time).toLocaleString()}</span>
-                  </div>
-                )}
-                {detail.attribution?.name && (
-                  <div>
-                    <div className="text-[10px] text-text-tertiary uppercase tracking-wider">Attribution</div>
-                    <span className="text-text">{detail.attribution.name}</span>
-                  </div>
-                )}
-                {!!(detail as unknown as Record<string, unknown>).agency && (
-                  <div>
-                    <div className="text-[10px] text-text-tertiary uppercase tracking-wider">Device</div>
-                    <span className="text-blue-600 font-medium">Passkey verified</span>
-                  </div>
-                )}
-                {detail.timestamps?.artifact?.authority && (
-                  <div>
-                    <div className="text-[10px] text-text-tertiary uppercase tracking-wider">Timestamp</div>
-                    <span className="text-purple-600 font-medium">{detail.timestamps.artifact.authority}</span>
-                  </div>
-                )}
-              </div>
-              <Link
-                href={`/explorer/${encodeURIComponent(toUrlSafeB64(p.digestB64))}`}
-                className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-500 transition-colors mt-1"
-              >
-                View full proof
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-              </Link>
-            </div>
+            <FullProofDetail proof={detail} />
           ) : (
             <div className="text-xs text-text-tertiary py-2">Could not load proof details.</div>
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Full Proof Detail — renders ALL fields inline (no page nav)
+   Same rendering as /explorer/[digest] detail page
+   ═══════════════════════════════════════════════════════════ */
+
+const sectionNames: Record<string, string> = {
+  version: "Version", artifact: "Artifact", commit: "Commit",
+  signer: "Signer", environment: "Environment",
+  timestamps: "Timestamps (RFC 3161)", agency: "Agency (Device Authorization)",
+  slotAllocation: "Slot Allocation (Causal Ordering)",
+  attribution: "Attribution", metadata: "Metadata (Advisory)", claims: "Claims",
+};
+
+const fieldLabels: Record<string, string> = {
+  hashAlg: "Hash Algorithm", digestB64: "Digest (Base64)", nonceB64: "Nonce (Base64)",
+  prevB64: "Previous Hash (Base64)", slotCounter: "Slot Counter", slotHashB64: "Slot Hash (Base64)",
+  epochId: "Epoch ID", publicKeyB64: "Public Key (Base64)", signatureB64: "Signature (Base64)",
+  reportB64: "Attestation Report (Base64)", tokenB64: "TSA Token (Base64)",
+  digestAlg: "Digest Algorithm", actorKeyId: "Actor Key ID", artifactHash: "Artifact Hash",
+  commitTime: "Commit Time", batchSize: "Batch Size", batchIndex: "Batch Index",
+};
+
+function humanLabel(key: string): string { return fieldLabels[key] || key; }
+
+function isEpochMs(key: string, value: unknown): boolean {
+  if (typeof value !== "number") return false;
+  if (!["time", "timestamp", "commitTime"].includes(key)) return false;
+  return value > 1_000_000_000_000 && value < 2_000_000_000_000;
+}
+
+function FullProofDetail({ proof }: { proof: OCCProof }) {
+  const [jsonOpen, setJsonOpen] = useState(false);
+  const proofAny = proof as unknown as Record<string, unknown>;
+  const orderedKeys = ["version", "artifact", "commit", "signer", "environment", "timestamps", "agency", "slotAllocation", "attribution", "metadata", "claims"];
+  const allKeys = [...orderedKeys, ...Object.keys(proofAny).filter(k => !orderedKeys.includes(k))].filter(k => proofAny[k] !== undefined);
+
+  return (
+    <div className="space-y-3 mt-2">
+      {/* Raw JSON toggle */}
+      <button onClick={() => setJsonOpen(!jsonOpen)}
+        className="flex items-center gap-2 text-xs text-text-tertiary hover:text-text transition-colors">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5"
+          className={`transition-transform duration-150 ${jsonOpen ? "rotate-90" : ""}`}>
+          <path d="M3 1.5L7 5L3 8.5" />
+        </svg>
+        Raw Proof JSON
+        <span className="text-text-tertiary">({(JSON.stringify(proof).length / 1024).toFixed(1)} KB)</span>
+      </button>
+      {jsonOpen && (
+        <pre className="text-[11px] font-mono text-text-secondary bg-bg-elevated border border-border-subtle p-4 overflow-auto max-h-64">
+{JSON.stringify(proof, null, 2)}</pre>
+      )}
+
+      {/* Section cards */}
+      {allKeys.map(key => {
+        const value = proofAny[key];
+        const title = sectionNames[key] || key;
+        if (value === undefined || value === null) return null;
+
+        if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+          return (
+            <div key={key} className="border border-border-subtle bg-bg-elevated overflow-hidden">
+              <div className="px-4 py-2.5 border-b border-border-subtle">
+                <span className="text-[10px] font-medium text-text-tertiary uppercase tracking-wider">{title}</span>
+              </div>
+              <div className="px-4 py-2.5">
+                <ValueRow label={key} value={value} rawKey={key} />
+              </div>
+            </div>
+          );
+        }
+
+        if (typeof value === "object") {
+          return (
+            <div key={key} className="border border-border-subtle bg-bg-elevated overflow-hidden">
+              <div className="px-4 py-2.5 border-b border-border-subtle">
+                <span className="text-[10px] font-medium text-text-tertiary uppercase tracking-wider">{title}</span>
+              </div>
+              <div className="px-4 py-2.5">
+                <ObjectRenderer data={value} />
+              </div>
+            </div>
+          );
+        }
+
+        return null;
+      })}
+    </div>
+  );
+}
+
+/* ── Recursive Object Renderer ── */
+
+function ObjectRenderer({ data, depth = 0 }: { data: unknown; depth?: number }) {
+  if (data === null || data === undefined) return null;
+
+  if (Array.isArray(data)) {
+    if (data.length <= 5 && data.every(v => typeof v === "string" || typeof v === "number")) {
+      return <div className="space-y-1">{data.map((item, i) => <ValueRow key={i} label={`[${i}]`} value={item} />)}</div>;
+    }
+    return <CollapsibleArray items={data} />;
+  }
+
+  if (typeof data === "object") {
+    return (
+      <div className={depth > 0 ? "pl-4 border-l border-border-subtle ml-1" : ""}>
+        {Object.entries(data as Record<string, unknown>).map(([key, value]) => {
+          if (typeof value === "object" && value !== null && !Array.isArray(value)) {
+            return (
+              <div key={key} className="py-2">
+                <div className="text-xs text-text-tertiary font-medium mb-1">{humanLabel(key)}</div>
+                <ObjectRenderer data={value} depth={depth + 1} />
+              </div>
+            );
+          }
+          if (Array.isArray(value)) {
+            return (
+              <div key={key} className="py-2">
+                <div className="text-xs text-text-tertiary font-medium mb-1">{humanLabel(key)} ({value.length} items)</div>
+                <ObjectRenderer data={value} depth={depth + 1} />
+              </div>
+            );
+          }
+          return <ValueRow key={key} label={humanLabel(key)} value={value} rawKey={key} />;
+        })}
+      </div>
+    );
+  }
+
+  return <span className="text-xs font-mono text-text break-all">{String(data)}</span>;
+}
+
+/* ── Collapsible Array ── */
+
+function CollapsibleArray({ items }: { items: unknown[] }) {
+  const [exp, setExp] = useState(false);
+  const preview = items.slice(0, 3);
+  return (
+    <div className="space-y-1">
+      {(exp ? items : preview).map((item, i) => (
+        <div key={i} className="flex items-start gap-3 py-1">
+          <span className="text-xs text-text-tertiary shrink-0 w-8 text-right">[{i}]</span>
+          <span className="text-xs font-mono text-text break-all">{typeof item === "object" ? JSON.stringify(item) : String(item)}</span>
+        </div>
+      ))}
+      {items.length > 3 && (
+        <button onClick={() => setExp(!exp)} className="text-[11px] text-blue-600 hover:text-blue-500 transition-colors mt-1">
+          {exp ? "Show less" : `Show all ${items.length} items`}
+        </button>
+      )}
+    </div>
+  );
+}
+
+/* ── Value Row ── */
+
+function ValueRow({ label, value, rawKey }: { label: string; value: unknown; rawKey?: string }) {
+  const [copied, setCopied] = useState(false);
+  const [blobExp, setBlobExp] = useState(false);
+  const str = typeof value === "object" ? JSON.stringify(value) : String(value);
+  const isLong = str.length > 20;
+  const isBlob = str.length > 200;
+  const isMono = isLong || typeof value === "number";
+  const showTs = rawKey ? isEpochMs(rawKey, value) : false;
+  const display = isBlob && !blobExp ? str.slice(0, 80) + "..." : str;
+
+  return (
+    <div className="flex items-start justify-between gap-4 py-2 group">
+      <span className="text-xs text-text-tertiary shrink-0 pt-0.5">{label}</span>
+      <div className="flex items-start gap-2 min-w-0">
+        <div className="text-right">
+          <span className={`text-xs break-all ${isMono ? "font-mono text-text" : "text-text-secondary"}`}>{display}</span>
+          {isBlob && (
+            <button onClick={() => setBlobExp(!blobExp)} className="block text-[11px] text-blue-600 hover:text-blue-500 mt-1 ml-auto">
+              {blobExp ? "Collapse" : `Expand (${str.length.toLocaleString()} chars)`}
+            </button>
+          )}
+          {showTs && <div className="text-[10px] text-text-tertiary mt-0.5">{new Date(value as number).toLocaleString()}</div>}
+        </div>
+        {isLong && (
+          <button onClick={() => { navigator.clipboard.writeText(str); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
+            className="text-text-tertiary hover:text-text transition-colors opacity-0 group-hover:opacity-100 shrink-0 pt-0.5" title="Copy">
+            {copied ? (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 6L9 17l-5-5" /></svg>
+            ) : (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" /></svg>
+            )}
+          </button>
+        )}
+      </div>
     </div>
   );
 }
