@@ -1,16 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 
 export default function SettingsPage() {
   const [user, setUser] = useState<{ name: string; email: string; avatar: string } | null>(null);
-
-  // API Key state
-  const [apiKeyStatus, setApiKeyStatus] = useState<{ hasKey: boolean; maskedKey: string | null }>({
-    hasKey: false,
-    maskedKey: null,
-  });
+  const [apiKeyStatus, setApiKeyStatus] = useState<{ hasKey: boolean; maskedKey: string | null }>({ hasKey: false, maskedKey: null });
   const [apiKeyInput, setApiKeyInput] = useState("");
   const [apiKeyLoading, setApiKeyLoading] = useState(false);
   const [apiKeyMsg, setApiKeyMsg] = useState("");
@@ -18,175 +12,124 @@ export default function SettingsPage() {
   const [tokenCopied, setTokenCopied] = useState(false);
 
   useEffect(() => {
-    fetch("/auth/me")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => setUser(d?.user ?? null))
-      .catch(() => {});
-
-    fetch("/api/settings/api-key")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => { if (d) setApiKeyStatus(d); })
-      .catch(() => {});
-
-    fetch("/api/settings/token")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => { if (d?.token) setHookToken(d.token); })
-      .catch(() => {});
+    fetch("/auth/me").then(r => r.ok ? r.json() : null).then(d => setUser(d?.user ?? null)).catch(() => {});
+    fetch("/api/settings/api-key").then(r => r.ok ? r.json() : null).then(d => { if (d) setApiKeyStatus(d); }).catch(() => {});
+    fetch("/api/settings/token").then(r => r.ok ? r.json() : null).then(d => { if (d?.token) setHookToken(d.token); }).catch(() => {});
   }, []);
 
   async function saveApiKey() {
     if (!apiKeyInput.trim()) return;
-    setApiKeyLoading(true);
-    setApiKeyMsg("");
+    setApiKeyLoading(true); setApiKeyMsg("");
     try {
-      const r = await fetch("/api/settings/api-key", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: apiKeyInput.trim() }),
-      });
+      const r = await fetch("/api/settings/api-key", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key: apiKeyInput.trim() }) });
       const d = await r.json();
-      if (r.ok) {
-        setApiKeyStatus({ hasKey: true, maskedKey: d.maskedKey });
-        setApiKeyInput("");
-        setApiKeyMsg("Saved");
-        setTimeout(() => setApiKeyMsg(""), 2000);
-      } else {
-        setApiKeyMsg(d.error || "Failed to save");
-      }
-    } catch {
-      setApiKeyMsg("Network error");
-    }
+      if (r.ok) { setApiKeyStatus({ hasKey: true, maskedKey: d.maskedKey }); setApiKeyInput(""); setApiKeyMsg("Saved"); setTimeout(() => setApiKeyMsg(""), 2000); }
+      else setApiKeyMsg(d.error || "Failed");
+    } catch { setApiKeyMsg("Network error"); }
     setApiKeyLoading(false);
   }
 
   async function deleteApiKey() {
     setApiKeyLoading(true);
-    try {
-      await fetch("/api/settings/api-key", { method: "DELETE" });
-      setApiKeyStatus({ hasKey: false, maskedKey: null });
-      setApiKeyMsg("Removed");
-      setTimeout(() => setApiKeyMsg(""), 2000);
-    } catch {
-      // ignore
-    }
+    try { await fetch("/api/settings/api-key", { method: "DELETE" }); setApiKeyStatus({ hasKey: false, maskedKey: null }); setApiKeyMsg("Removed"); setTimeout(() => setApiKeyMsg(""), 2000); } catch {}
     setApiKeyLoading(false);
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div style={{ minHeight: "100vh", background: "#fff", fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif" }}>
       {/* Header */}
-      <header className="sticky top-0 z-10 h-12 bg-white border-b border-[#d9d9d9] flex items-center gap-3 px-4">
-        <Link href="/" className="text-[#999] hover:text-black transition-colors">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M19 12H5" />
-            <path d="m12 19-7-7 7-7" />
-          </svg>
-        </Link>
-        <span className="text-sm font-semibold text-black">Settings</span>
-      </header>
+      <div style={{ position: "sticky", top: 0, zIndex: 10, height: 52, borderBottom: "1px solid #e5e5ea", background: "rgba(255,255,255,0.92)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", display: "flex", alignItems: "center", padding: "0 16px", gap: 12 }}>
+        <a href="/" style={{ color: "#8e8e93", display: "flex", alignItems: "center", textDecoration: "none" }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+        </a>
+        <span style={{ fontSize: 17, fontWeight: 600, color: "#000" }}>Settings</span>
+      </div>
 
-      <main className="max-w-lg mx-auto px-4 py-8">
+      <div style={{ maxWidth: 400, margin: "0 auto", padding: "32px 16px" }}>
+
         {/* Account */}
         {user && (
-          <div className="mb-8">
-            <h2 className="text-xs font-semibold text-[#999] uppercase tracking-wider mb-3">Account</h2>
-            <div className="flex items-center gap-3">
+          <div style={{ marginBottom: 32 }}>
+            <div style={S.label}>Account</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               {user.avatar ? (
-                <img src={user.avatar} alt="" className="w-8 h-8 rounded-full" />
+                <img src={user.avatar} alt="" style={{ width: 44, height: 44, borderRadius: "50%" }} />
               ) : (
-                <div className="w-8 h-8 rounded-full bg-[#d9d9d9] flex items-center justify-center text-xs font-semibold text-[#666]">
-                  {user.name?.[0]?.toUpperCase() ?? "U"}
+                <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#e9e9eb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 600, color: "#636366" }}>
+                  {user.name?.[0]?.toUpperCase()}
                 </div>
               )}
-              <div className="flex-1">
-                <p className="text-sm font-medium text-black">{user.name}</p>
-                <p className="text-xs text-[#999]">{user.email}</p>
+              <div>
+                <div style={{ fontSize: 15, fontWeight: 500, color: "#000" }}>{user.name}</div>
+                <div style={{ fontSize: 13, color: "#8e8e93" }}>{user.email}</div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Hook Token */}
+        {/* Token */}
         {hookToken && (
-          <div className="mb-8">
-            <h2 className="text-xs font-semibold text-[#999] uppercase tracking-wider mb-1">OCC Token</h2>
-            <p className="text-xs text-[#999] mb-3">Use this to connect Claude Code to OCC.</p>
-
-            <div className="flex items-center gap-2 mb-3">
-              <div className="flex-1 h-8 flex items-center px-3 bg-[#efefef] border border-[#d9d9d9] overflow-hidden">
-                <code className="text-xs font-mono text-[#666] truncate">{hookToken}</code>
+          <div style={{ marginBottom: 32 }}>
+            <div style={S.label}>Your Token</div>
+            <p style={{ fontSize: 13, color: "#8e8e93", margin: "0 0 12px" }}>Connect Claude Code to AiMessage.</p>
+            <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+              <div style={{ flex: 1, height: 40, display: "flex", alignItems: "center", padding: "0 12px", background: "#f2f2f7", borderRadius: 10, overflow: "hidden" }}>
+                <code style={{ fontSize: 12, fontFamily: "SF Mono, monospace", color: "#636366", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{hookToken}</code>
               </div>
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(hookToken);
-                  setTokenCopied(true);
-                  setTimeout(() => setTokenCopied(false), 2000);
-                }}
-                className="h-8 px-4 text-xs font-semibold bg-black text-white hover:opacity-80 transition-opacity flex-shrink-0"
-              >
+              <button onClick={() => { navigator.clipboard.writeText(hookToken); setTokenCopied(true); setTimeout(() => setTokenCopied(false), 2000); }}
+                style={{ height: 40, padding: "0 16px", borderRadius: 10, border: "none", background: "#000", color: "#fff", fontSize: 14, fontWeight: 500, cursor: "pointer", fontFamily: "inherit" }}>
                 {tokenCopied ? "Copied" : "Copy"}
               </button>
             </div>
-
-            <div className="bg-[#efefef] border border-[#d9d9d9] p-3">
-              <p className="text-[10px] font-semibold text-[#999] uppercase tracking-wider mb-2">Quick setup</p>
-              <code className="text-xs font-mono text-black block mb-1">curl -fsSL https://agent.occ.wtf/install | bash</code>
-              <code className="text-xs font-mono text-[#666] block">export OCC_TOKEN={hookToken}</code>
+            <div style={{ background: "#f2f2f7", borderRadius: 10, padding: 14 }}>
+              <div style={{ fontSize: 10, fontWeight: 600, color: "#8e8e93", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>Quick setup</div>
+              <code style={{ fontSize: 12, fontFamily: "SF Mono, monospace", color: "#000", display: "block", lineHeight: 1.8 }}>
+                curl -fsSL https://agent.occ.wtf/install | bash
+              </code>
+              <code style={{ fontSize: 12, fontFamily: "SF Mono, monospace", color: "#636366", display: "block" }}>
+                export OCC_TOKEN={hookToken}
+              </code>
             </div>
           </div>
         )}
 
         {/* API Key */}
-        <div className="mb-8">
-          <h2 className="text-xs font-semibold text-[#999] uppercase tracking-wider mb-1">Anthropic API Key</h2>
-          <p className="text-xs text-[#999] mb-3">Required for the LLM API proxy. Stored securely.</p>
-
+        <div style={{ marginBottom: 32 }}>
+          <div style={S.label}>Anthropic API Key</div>
+          <p style={{ fontSize: 13, color: "#8e8e93", margin: "0 0 12px" }}>Optional. For the LLM API proxy.</p>
           {apiKeyStatus.hasKey ? (
-            <div className="flex items-center gap-2">
-              <div className="flex-1 h-8 flex items-center px-3 bg-[#efefef] border border-[#d9d9d9]">
-                <code className="text-xs font-mono text-[#666]">{apiKeyStatus.maskedKey}</code>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <div style={{ flex: 1, height: 40, display: "flex", alignItems: "center", padding: "0 12px", background: "#f2f2f7", borderRadius: 10 }}>
+                <code style={{ fontSize: 12, fontFamily: "SF Mono, monospace", color: "#636366" }}>{apiKeyStatus.maskedKey}</code>
               </div>
-              <button
-                onClick={deleteApiKey}
-                disabled={apiKeyLoading}
-                className="h-8 px-4 text-xs font-semibold border border-[#d9d9d9] text-[#666] hover:text-[#ef4444] hover:border-[#ef4444] transition-colors"
-              >
+              <button onClick={deleteApiKey} disabled={apiKeyLoading}
+                style={{ height: 40, padding: "0 16px", borderRadius: 10, border: "none", background: "#ff3b30", color: "#fff", fontSize: 14, fontWeight: 500, cursor: "pointer", fontFamily: "inherit", opacity: apiKeyLoading ? 0.4 : 1 }}>
                 Remove
               </button>
-              {apiKeyMsg && <span className="text-xs text-[#22c55e]">{apiKeyMsg}</span>}
+              {apiKeyMsg && <span style={{ fontSize: 12, color: "#34c759" }}>{apiKeyMsg}</span>}
             </div>
           ) : (
-            <div className="flex items-center gap-2">
-              <input
-                type="password"
-                placeholder="sk-ant-..."
-                value={apiKeyInput}
-                onChange={(e) => setApiKeyInput(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && saveApiKey()}
-                className="flex-1 h-8 px-3 text-xs font-mono bg-white border border-[#d9d9d9] placeholder:text-[#999] text-black focus:outline-none focus:border-black"
-              />
-              <button
-                onClick={saveApiKey}
-                disabled={apiKeyLoading || !apiKeyInput.trim()}
-                className="h-8 px-4 text-xs font-semibold bg-black text-white hover:opacity-80 disabled:opacity-40 transition-opacity"
-              >
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <input type="password" placeholder="sk-ant-..." value={apiKeyInput} onChange={e => setApiKeyInput(e.target.value)} onKeyDown={e => e.key === "Enter" && saveApiKey()}
+                style={{ flex: 1, height: 40, padding: "0 12px", fontSize: 13, fontFamily: "SF Mono, monospace", background: "#fff", border: "1px solid #e5e5ea", borderRadius: 10, color: "#000", outline: "none" }} />
+              <button onClick={saveApiKey} disabled={apiKeyLoading || !apiKeyInput.trim()}
+                style={{ height: 40, padding: "0 16px", borderRadius: 10, border: "none", background: "#000", color: "#fff", fontSize: 14, fontWeight: 500, cursor: "pointer", fontFamily: "inherit", opacity: apiKeyLoading || !apiKeyInput.trim() ? 0.4 : 1 }}>
                 Save
               </button>
-              {apiKeyMsg && <span className="text-xs text-[#ef4444]">{apiKeyMsg}</span>}
+              {apiKeyMsg && <span style={{ fontSize: 12, color: "#ff3b30" }}>{apiKeyMsg}</span>}
             </div>
           )}
         </div>
 
         {/* Sign out */}
-        <div className="border-t border-[#e5e5e5] pt-6">
-          <a
-            href="/auth/logout"
-            className="text-sm text-[#999] hover:text-[#ef4444] transition-colors"
-          >
-            Sign out
-          </a>
+        <div style={{ borderTop: "1px solid #e5e5ea", paddingTop: 24 }}>
+          <a href="/auth/logout" style={{ fontSize: 15, color: "#ff3b30", textDecoration: "none" }}>Sign out</a>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
+
+const S = {
+  label: { fontSize: 11, fontWeight: 600, color: "#8e8e93", textTransform: "uppercase" as const, letterSpacing: "0.05em", marginBottom: 12 },
+};
