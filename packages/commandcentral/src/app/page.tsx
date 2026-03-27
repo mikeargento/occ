@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import Link from "next/link";
 import { getMe, getFeed, getProofs, approve, deny, type FeedItem, type ProofEntry } from "@/lib/api";
 
 /* ── Helpers ── */
@@ -18,9 +17,14 @@ function toolName(raw: string): string {
   return raw.replace(/[_-]/g, " ").replace(/\b\w/g, c => c.toUpperCase());
 }
 
-function truncHash(h: string | null, len = 12): string {
-  if (!h) return "—";
-  return h.length > len ? h.slice(0, len) + "..." : h;
+/* ── Icons ── */
+
+function ChevronRight({ className }: { className?: string }) {
+  return (
+    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" className={className}>
+      <path d="M3 1.5L7 5L3 8.5" />
+    </svg>
+  );
 }
 
 /* ── Page ── */
@@ -34,49 +38,72 @@ export default function App() {
   }, []);
 
   if (loading) return (
-    <div className="min-h-screen bg-bg flex items-center justify-center">
-      <div className="w-4 h-4 border-2 border-border-subtle border-t-text rounded-full animate-spin" />
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ width: 16, height: 16, border: "2px solid var(--c-border)", borderTop: "2px solid var(--c-text)", borderRadius: "50%", animation: "spin 0.6s linear infinite" }} />
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-16 sm:py-24">
-      {/* Header */}
-      {user ? (
-        <div className="flex items-center justify-between mb-0">
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-text">
-            Hello, {user.name?.split(" ")[0] ?? "there"}.
-          </h1>
-          <div className="flex items-center gap-3">
-            <Link href="/settings" className="text-sm text-text-tertiary hover:text-text transition-colors">
-              Settings
-            </Link>
-            {user.avatar ? (
-              <img src={user.avatar} alt="" className="w-7 h-7 rounded-full" />
+    <>
+      {/* Sticky Header */}
+      <header style={{
+        position: "sticky", top: 0, zIndex: 50, height: "56px",
+        display: "flex", alignItems: "center",
+        borderBottom: "1px solid var(--c-border-subtle)",
+        backgroundColor: "rgba(255,255,255,0.9)",
+        backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
+      }}>
+        <div style={{
+          maxWidth: "64rem", margin: "0 auto", width: "100%", padding: "0 1.5rem",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+        }}>
+          <span style={{ fontSize: "13px", fontWeight: 700, letterSpacing: "0.02em", color: "var(--c-text)" }}>
+            OCC
+          </span>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            {user ? (
+              <>
+                <a href="/settings" style={{ fontSize: "13px", color: "var(--c-text-tertiary)", textDecoration: "none" }}>Settings</a>
+                {user.avatar ? (
+                  <img src={user.avatar} alt="" style={{ width: 24, height: 24, borderRadius: "50%" }} />
+                ) : (
+                  <div style={{ width: 24, height: 24, borderRadius: "50%", background: "var(--bg-elevated)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: "var(--c-text-tertiary)" }}>
+                    {user.name?.[0]?.toUpperCase()}
+                  </div>
+                )}
+              </>
             ) : (
-              <div className="w-7 h-7 rounded-full bg-bg-elevated flex items-center justify-center text-xs font-bold text-text-tertiary">
-                {user.name?.[0]?.toUpperCase()}
-              </div>
+              <a href="/auth/login/github" style={{ fontSize: "13px", color: "var(--c-text-tertiary)", textDecoration: "none" }}>Sign in</a>
             )}
           </div>
         </div>
-      ) : (
-        <div className="flex items-center justify-between mb-0">
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-text">
-            Define what your AI does.
+      </header>
+
+      <div style={{ maxWidth: "64rem", margin: "0 auto", padding: "0 1.5rem" }}>
+        {/* Hero */}
+        <section style={{ paddingTop: "80px", paddingBottom: user ? "48px" : "64px" }}>
+          <h1 style={{
+            fontSize: "clamp(2rem, 5vw, 2.75rem)", fontWeight: 800,
+            letterSpacing: "-0.04em", lineHeight: 1.1, color: "var(--c-text)",
+            margin: 0, marginBottom: "12px",
+          }}>
+            {user ? `Hello, ${user.name?.split(" ")[0] ?? "there"}.` : "Define what your AI does."}
           </h1>
-          <div className="flex items-center gap-2">
-            <a href="/auth/login/github" className="text-sm text-text-tertiary hover:text-text transition-colors">Sign in</a>
-          </div>
-        </div>
-      )}
+          {!user && (
+            <p style={{ fontSize: "15px", color: "var(--c-text-tertiary)", margin: 0, lineHeight: 1.6 }}>
+              Cryptographic proof that every AI action was authorized by policy.
+            </p>
+          )}
+        </section>
 
-      {/* Pending approvals */}
-      {user && <PendingSection />}
+        {/* Pending approvals */}
+        {user && <PendingSection />}
 
-      {/* Proofs */}
-      {user ? <UserProofs /> : <PublicProofs />}
-    </div>
+        {/* Proofs */}
+        {user ? <UserProofs /> : <PublicMessage />}
+      </div>
+    </>
   );
 }
 
@@ -122,55 +149,74 @@ function PendingSection() {
   if (pending.length === 0) return null;
 
   return (
-    <div className="mt-12">
-      <h2 className="text-sm font-medium text-text-tertiary uppercase tracking-wider mb-4">
-        Waiting for you
-      </h2>
-      <div className="border border-border-subtle bg-bg-elevated overflow-hidden divide-y divide-border-subtle">
-        {pending.map(item => (
-          <div key={item.id} className="px-5 py-4">
-            <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-text">{item.summary || toolName(item.tool)}</p>
-                <code className="text-xs font-mono text-text-tertiary mt-1 block">{item.tool}</code>
+    <section style={{ paddingBottom: "48px" }}>
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px",
+      }}>
+        <span style={{ fontSize: "11px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--c-text-tertiary)" }}>
+          Waiting for you
+        </span>
+        <span style={{ fontSize: "11px", fontWeight: 500, color: "#f59e0b", display: "flex", alignItems: "center", gap: "4px" }}>
+          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#f59e0b", animation: "pulse 2s infinite" }} />
+          {pending.length}
+        </span>
+        <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }`}</style>
+      </div>
+
+      <div style={{ border: "1px solid var(--c-border-subtle)" }}>
+        {pending.map((item, i) => (
+          <div key={item.id} style={{
+            padding: "16px",
+            borderBottom: i < pending.length - 1 ? "1px solid var(--c-border-subtle)" : "none",
+          }}>
+            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "16px" }}>
+              <div style={{ minWidth: 0 }}>
+                <p style={{ fontSize: "14px", fontWeight: 500, color: "var(--c-text)", margin: 0 }}>
+                  {item.summary || toolName(item.tool)}
+                </p>
+                <code style={{ fontSize: "12px", fontFamily: "var(--font-mono, monospace)", color: "var(--c-text-tertiary)", display: "block", marginTop: "4px" }}>
+                  {item.tool}
+                </code>
               </div>
-              <span className="text-[10px] text-text-tertiary shrink-0">{timeAgo(item.createdAt)}</span>
+              <span style={{ fontSize: "11px", color: "var(--c-text-tertiary)", flexShrink: 0 }}>{timeAgo(item.createdAt)}</span>
             </div>
 
             {typeof item.args === "object" && item.args !== null && Object.keys(item.args as Record<string, unknown>).length > 0 && (
-              <div className="mt-3 bg-bg border border-border-subtle p-3">
+              <div style={{ marginTop: "12px", background: "var(--bg-elevated)", border: "1px solid var(--c-border-subtle)", padding: "12px" }}>
                 {Object.entries(item.args as Record<string, unknown>).slice(0, 4).map(([k, v]) => (
-                  <div key={k} className="flex gap-2 text-xs leading-relaxed">
-                    <span className="text-text-tertiary shrink-0">{k}:</span>
-                    <span className="text-text-secondary truncate">{typeof v === "string" ? v : JSON.stringify(v)}</span>
+                  <div key={k} style={{ display: "flex", gap: "8px", fontSize: "12px", lineHeight: 1.6 }}>
+                    <span style={{ color: "var(--c-text-tertiary)", flexShrink: 0 }}>{k}:</span>
+                    <span style={{ color: "var(--c-text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {typeof v === "string" ? v : JSON.stringify(v)}
+                    </span>
                   </div>
                 ))}
               </div>
             )}
 
-            <div className="flex items-center gap-2 mt-4">
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "16px" }}>
               <button onClick={() => handleApprove(item.id, "always")} disabled={acting === item.id}
-                className="h-9 px-5 text-xs font-medium bg-text text-bg hover:bg-text/90 disabled:opacity-40 transition-colors">
+                style={{ height: 36, padding: "0 16px", fontSize: "12px", fontWeight: 500, background: "var(--c-text)", color: "var(--bg)", border: "none", cursor: "pointer", opacity: acting === item.id ? 0.4 : 1 }}>
                 Allow
               </button>
               <button onClick={() => handleApprove(item.id, "once")} disabled={acting === item.id}
-                className="h-9 px-4 text-xs font-medium text-text-secondary bg-bg-subtle hover:bg-border transition-colors disabled:opacity-40">
+                style={{ height: 36, padding: "0 14px", fontSize: "12px", fontWeight: 500, background: "var(--bg-subtle)", color: "var(--c-text-secondary)", border: "none", cursor: "pointer", opacity: acting === item.id ? 0.4 : 1 }}>
                 Once
               </button>
-              <div className="flex-1" />
+              <div style={{ flex: 1 }} />
               <button onClick={() => handleDeny(item.id)} disabled={acting === item.id}
-                className="h-9 px-4 text-xs font-medium text-red-500 hover:bg-red-50 disabled:opacity-40 transition-colors">
+                style={{ height: 36, padding: "0 14px", fontSize: "12px", fontWeight: 500, background: "none", color: "#ef4444", border: "none", cursor: "pointer", opacity: acting === item.id ? 0.4 : 1 }}>
                 Deny
               </button>
             </div>
           </div>
         ))}
       </div>
-    </div>
+    </section>
   );
 }
 
-/* ── User Proofs — identical to homepage explorer layout ── */
+/* ── User Proofs ── */
 
 function UserProofs() {
   const [proofs, setProofs] = useState<ProofEntry[]>([]);
@@ -178,104 +224,96 @@ function UserProofs() {
   const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
-    getProofs()
-      .then(d => setProofs(d.entries ?? []))
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    getProofs().then(d => setProofs(d.entries ?? [])).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   return (
-    <div className="mt-12">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-sm font-medium text-text-tertiary uppercase tracking-wider">
+    <section style={{ paddingBottom: "80px" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
+        <span style={{ fontSize: "11px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--c-text-tertiary)" }}>
           Your Proofs
-        </h2>
+        </span>
         {proofs.length > 0 && (
-          <span className="text-xs text-text-tertiary">{proofs.length} total</span>
+          <span style={{ fontSize: "11px", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--c-text-tertiary)" }}>
+            {proofs.length} total
+          </span>
         )}
       </div>
 
       {loading ? (
-        <div className="text-sm text-text-tertiary animate-pulse">Loading...</div>
+        <div style={{ border: "1px solid var(--c-border-subtle)", padding: "32px 20px", color: "var(--c-text-tertiary)", fontSize: "13px" }}>
+          Loading…
+        </div>
       ) : proofs.length === 0 ? (
-        <div className="border border-border-subtle bg-bg-elevated p-8 text-center">
-          <div className="text-text-secondary">No proofs yet.</div>
-          <div className="text-sm text-text-tertiary mt-1">
+        <div style={{ border: "1px solid var(--c-border-subtle)", background: "var(--bg-elevated)", padding: "48px 24px", textAlign: "center" }}>
+          <div style={{ color: "var(--c-text-secondary)", fontSize: "14px" }}>No proofs yet.</div>
+          <div style={{ color: "var(--c-text-tertiary)", fontSize: "13px", marginTop: "6px" }}>
             Install OCC and start using Claude Code to see proofs here.
           </div>
-          <code className="block mt-4 text-xs font-mono text-text-tertiary">
+          <code style={{ display: "block", marginTop: "16px", fontSize: "12px", fontFamily: "var(--font-mono, monospace)", color: "var(--c-text-tertiary)" }}>
             curl -fsSL https://agent.occ.wtf/install | bash
           </code>
         </div>
       ) : (
-        <div className="border border-border-subtle bg-bg-elevated overflow-hidden divide-y divide-border-subtle">
-          {proofs.map(p => {
+        <div style={{ border: "1px solid var(--c-border-subtle)" }}>
+          {proofs.map((p, i) => {
             const key = p.id;
             const isOpen = expanded === key;
             const allowed = p.decision.allowed;
+            const isLast = i === proofs.length - 1;
+
             return (
-              <div key={key}>
-                <button
-                  onClick={() => setExpanded(isOpen ? null : key)}
-                  className="w-full flex items-center px-4 sm:px-5 py-3.5 hover:bg-bg-subtle/40 transition-colors text-left"
-                >
-                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5"
-                    className={`shrink-0 mr-2 sm:mr-3 text-text-tertiary transition-transform duration-150 ${isOpen ? "rotate-90" : ""}`}>
-                    <path d="M3 1.5L7 5L3 8.5" />
-                  </svg>
-                  <code className="text-xs sm:text-sm font-mono text-text truncate min-w-0 flex-1">
+              <div key={key} style={{ borderBottom: isLast ? "none" : "1px solid var(--c-border-subtle)" }}>
+                <ProofRowBtn onClick={() => setExpanded(isOpen ? null : key)} expanded={isOpen}>
+                  <code style={{ fontSize: "12px", fontFamily: "var(--font-mono, monospace)", color: "var(--c-text)", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {p.proofDigestB64 || `#${p.id}`}
                   </code>
-                  <span className={`text-[10px] sm:text-xs font-medium shrink-0 ml-3 ${allowed ? "text-blue-600" : "text-red-500"}`}>
+                  <span style={{ fontSize: "11px", fontWeight: 500, flexShrink: 0, marginLeft: "12px", color: allowed ? "#2563eb" : "#ef4444" }}>
                     {allowed ? "Allowed" : "Denied"}
                   </span>
-                  <span className="text-[10px] sm:text-xs text-text-tertiary shrink-0 ml-3 w-14 sm:w-16 text-right">
+                  <span className="hidden-mobile" style={{ fontSize: "11px", color: "var(--c-text-tertiary)", flexShrink: 0, marginLeft: "12px" }}>
+                    {toolName(p.tool)}
+                  </span>
+                  <span style={{ fontSize: "12px", color: "var(--c-text-tertiary)", flexShrink: 0, marginLeft: "12px", width: "56px", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>
                     {timeAgo(p.timestamp)}
                   </span>
-                </button>
+                </ProofRowBtn>
 
                 {isOpen && (
-                  <div className="px-4 sm:px-5 pb-4 pt-1 bg-bg-subtle/20">
-                    <div className="space-y-3">
+                  <div style={{ padding: "16px", background: "var(--bg-elevated)", borderTop: "1px solid var(--c-border-subtle)" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                      {/* Digest */}
                       {p.proofDigestB64 && (
-                        <div>
-                          <div className="text-[10px] text-text-tertiary uppercase tracking-wider mb-1">SHA-256 Digest</div>
-                          <code className="text-xs font-mono text-text break-all">{p.proofDigestB64}</code>
+                        <div style={{ border: "1px solid var(--c-border-subtle)", background: "var(--bg)", overflow: "hidden" }}>
+                          <div style={{ padding: "8px 14px", borderBottom: "1px solid var(--c-border-subtle)" }}>
+                            <span style={{ fontSize: "10px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--c-text-tertiary)" }}>SHA-256 Digest</span>
+                          </div>
+                          <div style={{ padding: "10px 14px" }}>
+                            <code style={{ fontSize: "11px", fontFamily: "var(--font-mono, monospace)", color: "var(--c-text)", wordBreak: "break-all" }}>{p.proofDigestB64}</code>
+                          </div>
                         </div>
                       )}
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2 text-xs">
-                        <div>
-                          <div className="text-[10px] text-text-tertiary uppercase tracking-wider">Tool</div>
-                          <code className="font-mono text-text">{p.tool}</code>
+
+                      {/* Fields */}
+                      <div style={{ border: "1px solid var(--c-border-subtle)", background: "var(--bg)", overflow: "hidden" }}>
+                        <div style={{ padding: "8px 14px", borderBottom: "1px solid var(--c-border-subtle)" }}>
+                          <span style={{ fontSize: "10px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--c-text-tertiary)" }}>Details</span>
                         </div>
-                        <div>
-                          <div className="text-[10px] text-text-tertiary uppercase tracking-wider">Decision</div>
-                          <span className={`font-medium ${allowed ? "text-blue-600" : "text-red-500"}`}>
-                            {allowed ? "Allowed" : "Denied"}
-                          </span>
+                        <div style={{ padding: "4px 14px" }}>
+                          <DetailRow label="Tool" value={p.tool} mono />
+                          <DetailRow label="Decision" value={allowed ? "Allowed" : "Denied"} color={allowed ? "#2563eb" : "#ef4444"} />
+                          <DetailRow label="Time" value={new Date(p.timestamp).toLocaleString()} />
+                          {p.agentId && <DetailRow label="Agent" value={p.agentId} />}
+                          {p.decision.reason && <DetailRow label="Reason" value={p.decision.reason} />}
                         </div>
-                        <div>
-                          <div className="text-[10px] text-text-tertiary uppercase tracking-wider">Time</div>
-                          <span className="text-text">{new Date(p.timestamp).toLocaleString()}</span>
-                        </div>
-                        {p.agentId && (
-                          <div>
-                            <div className="text-[10px] text-text-tertiary uppercase tracking-wider">Agent</div>
-                            <span className="text-text">{p.agentId}</span>
-                          </div>
-                        )}
-                        {p.decision.reason && (
-                          <div className="col-span-2">
-                            <div className="text-[10px] text-text-tertiary uppercase tracking-wider">Reason</div>
-                            <span className="text-text">{p.decision.reason}</span>
-                          </div>
-                        )}
                       </div>
+
+                      {/* Link to global explorer */}
                       {p.proofDigestB64 && (
                         <a href={`https://occ.wtf/explorer/${encodeURIComponent(p.proofDigestB64)}`}
                           target="_blank" rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-500 transition-colors mt-1">
-                          View full proof
+                          style={{ fontSize: "11px", color: "#2563eb", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "4px", marginTop: "4px" }}>
+                          View in Explorer
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
                         </a>
                       )}
@@ -287,21 +325,60 @@ function UserProofs() {
           })}
         </div>
       )}
-    </div>
+    </section>
   );
 }
 
-/* ── Public Proofs (not logged in) ── */
+/* ── Public Message (not logged in) ── */
 
-function PublicProofs() {
+function PublicMessage() {
   return (
-    <div className="mt-12">
-      <div className="border border-border-subtle bg-bg-elevated p-8 text-center">
-        <div className="text-text-secondary">Sign in to see your proofs.</div>
-        <div className="text-sm text-text-tertiary mt-1">
-          Every action your AI takes through OCC produces a proof. Sign in to view yours.
+    <section style={{ paddingBottom: "80px" }}>
+      <div style={{ border: "1px solid var(--c-border-subtle)", background: "var(--bg-elevated)", padding: "48px 24px", textAlign: "center" }}>
+        <div style={{ color: "var(--c-text-secondary)", fontSize: "14px" }}>Sign in to see your proofs.</div>
+        <div style={{ color: "var(--c-text-tertiary)", fontSize: "13px", marginTop: "6px" }}>
+          Every action your AI takes through OCC produces a cryptographic proof.
         </div>
       </div>
+    </section>
+  );
+}
+
+/* ── Shared components ── */
+
+function ProofRowBtn({ onClick, expanded, children }: { onClick: () => void; expanded: boolean; children: React.ReactNode }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        width: "100%", display: "flex", alignItems: "center", height: "48px", padding: "0 16px",
+        background: hovered ? "var(--bg-elevated)" : "transparent",
+        border: "none", cursor: "pointer", textAlign: "left", gap: "10px",
+        transition: "background 150ms ease",
+      }}
+    >
+      <span style={{ color: "var(--c-text-tertiary)", display: "flex", alignItems: "center", flexShrink: 0, transform: expanded ? "rotate(90deg)" : "none", transition: "transform 200ms ease" }}>
+        <ChevronRight />
+      </span>
+      {children}
+    </button>
+  );
+}
+
+function DetailRow({ label, value, mono, color }: { label: string; value: string; mono?: boolean; color?: string }) {
+  return (
+    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "16px", padding: "7px 0", borderBottom: "1px solid var(--c-border-subtle)" }}>
+      <span style={{ fontSize: "11px", color: "var(--c-text-tertiary)", flexShrink: 0, paddingTop: "1px" }}>{label}</span>
+      <span style={{
+        fontSize: mono ? "11px" : "12px",
+        fontFamily: mono ? "var(--font-mono, monospace)" : "inherit",
+        color: color ?? "var(--c-text)",
+        wordBreak: "break-all", textAlign: "right",
+        fontWeight: color ? 500 : 400,
+      }}>{value}</span>
     </div>
   );
 }
