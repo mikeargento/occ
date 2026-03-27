@@ -3,43 +3,40 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { getMe, getFeed, approve, deny, type FeedItem } from "@/lib/api";
 
-/* ── Helpers ── */
-
-function toolDisplay(raw: string): string {
-  return raw.replace(/[_-]/g, " ");
-}
-
 function timeLabel(iso: string): string {
   const d = new Date(iso);
   const now = new Date();
   const diff = now.getTime() - d.getTime();
   if (diff < 60_000) return "now";
-  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}m ago`;
-  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}h ago`;
-  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)} min ago`;
+  if (diff < 86_400_000) {
+    return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  }
+  return d.toLocaleDateString([], { weekday: "short", hour: "numeric", minute: "2-digit" });
 }
 
-function argsToHuman(tool: string, args: unknown): string {
-  if (!args || typeof args !== "object") return "";
+function toolLabel(raw: string): string {
+  return raw.replace(/[_-]/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function argsSummary(tool: string, args: unknown): string | null {
+  if (!args || typeof args !== "object") return null;
   const a = args as Record<string, unknown>;
-  if (a.file_path || a.path) return `${a.file_path ?? a.path}`;
-  if (a.command) return `$ ${String(a.command).slice(0, 80)}`;
-  if (a.url) return `${a.url}`;
-  if (a.query) return `"${String(a.query).slice(0, 60)}"`;
-  const entries = Object.entries(a).slice(0, 2);
-  if (entries.length === 0) return "";
-  return entries.map(([k, v]) => `${k}: ${String(v).slice(0, 40)}`).join(", ");
+  if (a.file_path || a.path) return String(a.file_path ?? a.path);
+  if (a.command) return "$ " + String(a.command).slice(0, 100);
+  if (a.url) return String(a.url);
+  if (a.query) return '"' + String(a.query).slice(0, 80) + '"';
+  if (a.content && typeof a.content === "string") return a.content.slice(0, 80) + (a.content.length > 80 ? "…" : "");
+  return null;
 }
 
-/* ── Page ── */
-
-export default function AiMessage() {
+export default function App() {
   const [user, setUser] = useState<{ id: string; name: string; email: string; avatar: string } | null>(null);
   const [messages, setMessages] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState<number | null>(null);
   const [dismissed, setDismissed] = useState<Set<number>>(new Set());
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     getMe().then(d => setUser(d.user)).catch(() => {}).finally(() => setLoading(false));
@@ -56,56 +53,47 @@ export default function AiMessage() {
   useEffect(() => {
     if (!user) return;
     refresh();
-    const interval = setInterval(refresh, 2000);
-    return () => clearInterval(interval);
+    const iv = setInterval(refresh, 2000);
+    return () => clearInterval(iv);
   }, [user, refresh]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  async function handleAllow(id: number) {
+  async function act(id: number, type: "allow" | "once" | "deny") {
     setActing(id);
     try {
-      await approve(id, "always");
+      if (type === "deny") await deny(id, "once");
+      else await approve(id, type === "once" ? "once" : "always");
       setDismissed(prev => new Set(prev).add(id));
       setTimeout(refresh, 300);
     } finally { setActing(null); }
   }
 
-  async function handleOnce(id: number) {
-    setActing(id);
-    try {
-      await approve(id, "once");
-      setDismissed(prev => new Set(prev).add(id));
-      setTimeout(refresh, 300);
-    } finally { setActing(null); }
-  }
-
-  async function handleDeny(id: number) {
-    setActing(id);
-    try {
-      await deny(id, "once");
-      setDismissed(prev => new Set(prev).add(id));
-      setTimeout(refresh, 300);
-    } finally { setActing(null); }
-  }
-
+  /* ── Loading ── */
   if (loading) return (
-    <div style={S.loadingScreen}>
-      <span style={S.loadingText}>AiMessage</span>
+    <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#fff" }}>
+      <div style={{ width: 20, height: 20, border: "2px solid #e5e5ea", borderTopColor: "#8e8e93", borderRadius: "50%", animation: "spin .6s linear infinite" }} />
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   );
 
+  /* ── Login ── */
   if (!user) return (
-    <div style={S.loginScreen}>
-      <div style={S.loginCard}>
-        <h1 style={S.loginTitle}>AiMessage</h1>
-        <p style={S.loginSub}>Your AI asks before it acts.</p>
-        <div style={S.loginButtons}>
-          <a href="/auth/login/github" style={S.loginBtn}>Continue with GitHub</a>
-          <a href="/auth/login/google" style={S.loginBtnLight}>Continue with Google</a>
-          <a href="/auth/login/apple" style={S.loginBtn}>Continue with Apple</a>
+    <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#fff", padding: 20 }}>
+      <div style={{ width: "100%", maxWidth: 300, textAlign: "center" }}>
+        <div style={{ width: 60, height: 60, borderRadius: "50%", background: "#007aff", margin: "0 auto 16px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+        </div>
+        <h1 style={{ fontSize: 28, fontWeight: 700, color: "#000", margin: "0 0 4px", letterSpacing: "-0.02em" }}>AiMessage</h1>
+        <p style={{ fontSize: 15, color: "#8e8e93", margin: "0 0 32px" }}>Your AI asks before it acts.</p>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <a href="/auth/login/github" style={loginBtn("#000")}>Continue with GitHub</a>
+          <a href="/auth/login/google" style={loginBtn("#fff", true)}>Continue with Google</a>
+          <a href="/auth/login/apple" style={loginBtn("#000")}>Continue with Apple</a>
         </div>
       </div>
     </div>
@@ -113,128 +101,139 @@ export default function AiMessage() {
 
   const visible = messages.filter(m => !dismissed.has(m.id));
 
+  /* ── Chat ── */
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "#fff" }}>
-      {/* Header — full width */}
-      <div style={{ flexShrink: 0, borderBottom: "1px solid #e5e5ea", background: "#f8f8f8" }}>
-        <div style={{ maxWidth: 600, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: 56, padding: "0 16px" }}>
-          <span style={{ fontSize: 20, fontWeight: 700, color: "#000", letterSpacing: "-0.01em" }}>AiMessage</span>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <a href="/settings" style={{ color: "#8e8e93", textDecoration: "none", fontSize: 13 }}>Settings</a>
-            {user.avatar ? (
-              <img src={user.avatar} alt="" style={{ width: 28, height: 28, borderRadius: "50%" }} />
-            ) : (
-              <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#e9e9eb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 600, color: "#636366" }}>
-                {user.name?.[0]?.toUpperCase()}
-              </div>
-            )}
+      {/* Nav bar */}
+      <div style={{ flexShrink: 0, background: "#f6f6f6", borderBottom: "0.5px solid #c6c6c8" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: 44, padding: "0 16px", maxWidth: 600, margin: "0 auto" }}>
+          <a href="/settings" style={{ color: "#007aff", textDecoration: "none", fontSize: 17 }}>
+            <svg width="10" height="17" viewBox="0 0 10 17" fill="none"><path d="M9 1L2 8.5L9 16" stroke="#007aff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </a>
+          <div style={{ textAlign: "center" }}>
+            <div style={{ fontSize: 16, fontWeight: 600, color: "#000" }}>AI</div>
           </div>
+          <div style={{ width: 10 }} />
         </div>
       </div>
 
       {/* Messages */}
-      <div style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch" as const }}>
-      <div style={{ maxWidth: 600, margin: "0 auto", padding: 16, display: "flex", flexDirection: "column" as const, gap: 16, minHeight: "100%" }}>
-        {visible.length === 0 && (
-          <div style={S.emptyState}>
-            <p style={S.emptyTitle}>No messages yet</p>
-            <p style={S.emptySub}>When your AI needs permission, it'll appear here.</p>
-            <code style={S.emptyCode}>curl -fsSL https://agent.occ.wtf/install | bash</code>
-          </div>
-        )}
+      <div style={{ flex: 1, overflowY: "auto", background: "#fff", WebkitOverflowScrolling: "touch" as const }}>
+        <div style={{ maxWidth: 600, margin: "0 auto", padding: "8px 12px", display: "flex", flexDirection: "column", gap: 2, minHeight: "100%" }}>
 
-        {visible.map(msg => {
-          const isPending = msg.status === "pending";
-          const detail = argsToHuman(msg.tool, msg.args);
+          {visible.length === 0 && (
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 20px", textAlign: "center" }}>
+              <div style={{ fontSize: 15, color: "#8e8e93", marginBottom: 8 }}>No messages yet</div>
+              <div style={{ fontSize: 13, color: "#aeaeb2" }}>When your AI needs permission,<br/>it'll message you here.</div>
+            </div>
+          )}
 
-          return (
-            <div key={msg.id} style={S.messageGroup}>
-              {/* AI bubble (left) */}
-              <div style={S.aiBubbleRow}>
-                <div style={S.aiBubble}>
-                  <p style={S.bubbleTool}>{msg.summary || toolDisplay(msg.tool)}</p>
-                  {detail && <p style={S.bubbleDetail}>{detail}</p>}
-                  <span style={S.bubbleTime}>{timeLabel(msg.createdAt)}</span>
-                </div>
-              </div>
+          {visible.map((msg, i) => {
+            const isPending = msg.status === "pending";
+            const isAllowed = msg.status === "approved" || msg.status === "auto_approved";
+            const isDenied = msg.status === "denied";
+            const detail = argsSummary(msg.tool, msg.args);
+            const showTime = i === 0 || (new Date(msg.createdAt).getTime() - new Date(visible[i - 1].createdAt).getTime() > 300_000);
 
-              {/* Actions or response */}
-              {isPending ? (
-                <div style={S.actionRow}>
-                  <button onClick={() => handleAllow(msg.id)} disabled={acting === msg.id} style={S.allowBtn}>Allow</button>
-                  <button onClick={() => handleOnce(msg.id)} disabled={acting === msg.id} style={S.onceBtn}>Once</button>
-                  <button onClick={() => handleDeny(msg.id)} disabled={acting === msg.id} style={S.denyBtn}>Deny</button>
-                </div>
-              ) : (
-                <div style={S.responseBubbleRow}>
+            return (
+              <div key={msg.id}>
+                {/* Timestamp separator */}
+                {showTime && (
+                  <div style={{ textAlign: "center", padding: "8px 0 4px", fontSize: 11, color: "#8e8e93", fontWeight: 400 }}>
+                    {timeLabel(msg.createdAt)}
+                  </div>
+                )}
+
+                {/* AI message — gray bubble, left */}
+                <div style={{ display: "flex", justifyContent: "flex-start", padding: "1px 0" }}>
                   <div style={{
-                    ...S.responseBubble,
-                    backgroundColor: msg.status === "approved" || msg.status === "auto_approved" ? "#34c759" : msg.status === "denied" ? "#ff3b30" : "#8e8e93",
+                    maxWidth: "75%",
+                    padding: "8px 12px",
+                    background: "#e9e9eb",
+                    borderRadius: "18px",
+                    borderBottomLeftRadius: 4,
+                    fontSize: 16,
+                    lineHeight: 1.35,
+                    color: "#000",
+                    wordBreak: "break-word",
                   }}>
-                    <span style={S.responseText}>
-                      {msg.status === "approved" ? "Allowed" : msg.status === "auto_approved" ? "Auto-allowed" : msg.status === "denied" ? "Denied" : msg.status}
-                    </span>
+                    <span style={{ fontWeight: 400 }}>{msg.summary || toolLabel(msg.tool)}</span>
+                    {detail && (
+                      <div style={{ fontSize: 14, color: "#636366", marginTop: 2 }}>{detail}</div>
+                    )}
                   </div>
                 </div>
-              )}
-            </div>
-          );
-        })}
-        <div ref={bottomRef} />
-      </div>
+
+                {/* Response — blue/red bubble, right */}
+                {!isPending && (
+                  <div style={{ display: "flex", justifyContent: "flex-end", padding: "1px 0" }}>
+                    <div style={{
+                      padding: "8px 12px",
+                      background: isAllowed ? "#007aff" : isDenied ? "#ff3b30" : "#8e8e93",
+                      borderRadius: "18px",
+                      borderBottomRightRadius: 4,
+                      fontSize: 16,
+                      color: "#fff",
+                    }}>
+                      {isAllowed ? "Allowed" : isDenied ? "Denied" : msg.status}
+                    </div>
+                  </div>
+                )}
+
+                {/* Pending — action buttons */}
+                {isPending && (
+                  <div style={{ display: "flex", gap: 8, padding: "6px 0 2px" }}>
+                    <button onClick={() => act(msg.id, "allow")} disabled={acting === msg.id}
+                      style={pillBtn("#34c759", acting === msg.id)}>Allow</button>
+                    <button onClick={() => act(msg.id, "once")} disabled={acting === msg.id}
+                      style={pillBtn("#007aff", acting === msg.id)}>Once</button>
+                    <button onClick={() => act(msg.id, "deny")} disabled={acting === msg.id}
+                      style={pillBtn("#ff3b30", acting === msg.id)}>Deny</button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          <div ref={endRef} />
+        </div>
       </div>
 
-      {/* Bottom */}
-      <div style={{ flexShrink: 0, borderTop: "1px solid #e5e5ea", padding: "12px 16px", textAlign: "center" as const }}>
-        <span style={{ fontSize: 12, color: "#8e8e93" }}>Your AI asks. You decide.</span>
+      {/* Input bar (decorative) */}
+      <div style={{ flexShrink: 0, background: "#f6f6f6", borderTop: "0.5px solid #c6c6c8", padding: "8px 12px", paddingBottom: "calc(8px + env(safe-area-inset-bottom))" }}>
+        <div style={{ maxWidth: 600, margin: "0 auto", display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{
+            flex: 1, height: 36, borderRadius: 18, border: "1px solid #c6c6c8", background: "#fff",
+            display: "flex", alignItems: "center", padding: "0 12px",
+            fontSize: 16, color: "#c7c7cc",
+          }}>
+            AiMessage
+          </div>
+        </div>
       </div>
     </div>
   );
 }
 
-/* ── Styles ── */
+/* ── Helpers ── */
 
-const S: Record<string, React.CSSProperties> = {
-  container: { display: "flex", flexDirection: "column", height: "100vh", maxWidth: "600px", margin: "0 auto", background: "#fff" },
+function loginBtn(bg: string, outline?: boolean): React.CSSProperties {
+  return {
+    display: "flex", alignItems: "center", justifyContent: "center",
+    height: 50, borderRadius: 12,
+    border: outline ? "1px solid #c6c6c8" : "none",
+    background: bg, color: outline ? "#000" : "#fff",
+    fontSize: 17, fontWeight: 400,
+    textDecoration: "none", cursor: "pointer",
+    fontFamily: "inherit",
+  };
+}
 
-  header: { flexShrink: 0, borderBottom: "1px solid #e5e5ea", background: "rgba(255,255,255,0.92)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)" },
-  headerInner: { display: "flex", alignItems: "center", justifyContent: "space-between", height: "56px", padding: "0 16px" },
-  headerTitle: { fontSize: "20px", fontWeight: 700, color: "#000", letterSpacing: "-0.01em" },
-
-  messageArea: { flex: 1, overflowY: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: "16px", WebkitOverflowScrolling: "touch" },
-  messageGroup: { display: "flex", flexDirection: "column", gap: "6px" },
-
-  aiBubbleRow: { display: "flex", justifyContent: "flex-start" },
-  aiBubble: { maxWidth: "85%", backgroundColor: "#e9e9eb", borderRadius: "18px", borderBottomLeftRadius: "4px", padding: "10px 14px" },
-  bubbleTool: { fontSize: "15px", fontWeight: 500, color: "#000", lineHeight: "1.35", margin: 0 },
-  bubbleDetail: { fontSize: "13px", color: "#636366", margin: "4px 0 0", lineHeight: "1.4", wordBreak: "break-word" as const },
-  bubbleTime: { fontSize: "11px", color: "#8e8e93", marginTop: "4px", display: "block" },
-
-  responseBubbleRow: { display: "flex", justifyContent: "flex-end" },
-  responseBubble: { borderRadius: "18px", borderBottomRightRadius: "4px", padding: "8px 16px" },
-  responseText: { fontSize: "15px", fontWeight: 500, color: "#fff" },
-
-  actionRow: { display: "flex", gap: "8px", paddingLeft: "4px" },
-  allowBtn: { height: "36px", padding: "0 20px", borderRadius: "18px", border: "none", background: "#34c759", color: "#fff", fontSize: "14px", fontWeight: 600, cursor: "pointer", fontFamily: "inherit" },
-  onceBtn: { height: "36px", padding: "0 16px", borderRadius: "18px", border: "1px solid #c6c6c8", background: "#fff", color: "#000", fontSize: "14px", fontWeight: 500, cursor: "pointer", fontFamily: "inherit" },
-  denyBtn: { height: "36px", padding: "0 20px", borderRadius: "18px", border: "none", background: "#ff3b30", color: "#fff", fontSize: "14px", fontWeight: 600, cursor: "pointer", fontFamily: "inherit" },
-
-  bottomBar: { flexShrink: 0, borderTop: "1px solid #e5e5ea", padding: "12px 16px", textAlign: "center" },
-  bottomText: { fontSize: "12px", color: "#8e8e93" },
-
-  emptyState: { flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "40px 20px" },
-  emptyTitle: { fontSize: "17px", fontWeight: 600, color: "#000", margin: "0 0 6px" },
-  emptySub: { fontSize: "14px", color: "#8e8e93", margin: "0 0 20px" },
-  emptyCode: { fontSize: "12px", fontFamily: "SF Mono, monospace", color: "#8e8e93", background: "#f2f2f7", padding: "8px 14px", borderRadius: "8px" },
-
-  loginScreen: { minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" },
-  loginCard: { width: "100%", maxWidth: "320px", textAlign: "center" },
-  loginTitle: { fontSize: "32px", fontWeight: 700, color: "#000", margin: "0 0 8px", letterSpacing: "-0.02em" },
-  loginSub: { fontSize: "15px", color: "#8e8e93", margin: "0 0 32px" },
-  loginButtons: { display: "flex", flexDirection: "column", gap: "10px" },
-  loginBtn: { display: "flex", alignItems: "center", justifyContent: "center", height: "48px", borderRadius: "12px", border: "none", background: "#000", color: "#fff", fontSize: "15px", fontWeight: 500, textDecoration: "none", cursor: "pointer" },
-  loginBtnLight: { display: "flex", alignItems: "center", justifyContent: "center", height: "48px", borderRadius: "12px", border: "1px solid #c6c6c8", background: "#fff", color: "#000", fontSize: "15px", fontWeight: 500, textDecoration: "none", cursor: "pointer" },
-
-  loadingScreen: { minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" },
-  loadingText: { fontSize: "20px", fontWeight: 600, color: "#8e8e93" },
-};
+function pillBtn(bg: string, disabled: boolean): React.CSSProperties {
+  return {
+    height: 32, padding: "0 16px", borderRadius: 16,
+    border: "none", background: bg, color: "#fff",
+    fontSize: 14, fontWeight: 500, cursor: "pointer",
+    fontFamily: "inherit", opacity: disabled ? 0.4 : 1,
+  };
+}
