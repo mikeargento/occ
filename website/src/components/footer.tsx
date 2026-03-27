@@ -8,9 +8,9 @@ export function Footer() {
       <div className="mx-auto max-w-6xl px-6 pt-16">
         <div className="flex flex-col md:flex-row md:justify-between gap-12">
           <div className="max-w-md">
-            <p className="text-sm text-text-tertiary leading-relaxed">
-              OCC
-            </p>
+            <a href="https://aimessage.foo" className="text-sm font-semibold text-black hover:opacity-70 transition-opacity">
+              ← AiMessage
+            </a>
           </div>
 
           <div className="grid grid-cols-2 gap-10 sm:grid-cols-3 sm:gap-16">
