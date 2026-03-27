@@ -55,12 +55,24 @@ export default function Home() {
       </button>
 
       {/* Docs */}
-      <a href="/docs" style={{
+      <a href="/documentation" style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "#000",
+        color: "#fff",
+        border: "none",
+        padding: "16px 32px",
         fontSize: 18,
-        color: "#8e8e93",
+        fontFamily: "inherit",
+        cursor: "pointer",
+        borderRadius: 0,
         textDecoration: "none",
+        width: "100%",
+        maxWidth: 480,
+        textAlign: "center",
       }}>
-        Docs
+        Documentation
       </a>
     </div>
   );
