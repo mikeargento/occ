@@ -188,7 +188,7 @@ export default function App() {
         backdropFilter: "blur(20px)",
         WebkitBackdropFilter: "blur(20px)",
       }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: 48, padding: "0 16px" }}>
+        <div className="chat-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: 48, padding: "0 16px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#007aff", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -344,6 +344,7 @@ export default function App() {
         * { box-sizing: border-box; margin: 0; }
         body { -webkit-font-smoothing: antialiased; }
         button:active { transform: scale(0.95) !important; }
+        @media (min-width: 501px) { .chat-header { margin-top: 34px; } }
       `}</style>
     </div>
   );
