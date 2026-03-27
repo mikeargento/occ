@@ -36,7 +36,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "#fff", fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif" }}>
+    <div style={{ minHeight: "100%", background: "#fff", fontFamily: "inherit" }}>
       {/* Header */}
       <div style={{ position: "sticky", top: 0, zIndex: 10, height: 52, borderBottom: "1px solid #e5e5ea", background: "rgba(255,255,255,0.92)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", display: "flex", alignItems: "center", padding: "0 16px", gap: 12 }}>
         <a href="/" style={{ color: "#8e8e93", display: "flex", alignItems: "center", textDecoration: "none" }}>

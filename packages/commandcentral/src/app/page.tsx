@@ -133,7 +133,7 @@ export default function App() {
   const history = items.filter(m => m.status !== "pending");
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100dvh", background: "#fff" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", background: "#fff" }}>
       {/* Header */}
       <div style={{
         flexShrink: 0,
@@ -255,7 +255,7 @@ export default function App() {
 /* ── Style objects ── */
 
 const center: React.CSSProperties = {
-  height: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", background: "#fff", padding: 20,
+  height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: "#fff", padding: 20,
 };
 
 const spinner: React.CSSProperties = {

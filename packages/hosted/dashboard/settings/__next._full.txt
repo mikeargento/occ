@@ -1,17 +1,78 @@
 1:"$Sreact.fragment"
 2:I[1639,["/_next/static/chunks/2c156cec91b838ea.js"],"default"]
 3:I[5554,["/_next/static/chunks/2c156cec91b838ea.js"],"default"]
-4:I[16527,["/_next/static/chunks/2c156cec91b838ea.js"],"ClientPageRoot"]
-5:I[247,["/_next/static/chunks/31c5b371d115596a.js"],"default"]
-8:I[29213,["/_next/static/chunks/2c156cec91b838ea.js"],"OutletBoundary"]
-9:"$Sreact.suspense"
-b:I[29213,["/_next/static/chunks/2c156cec91b838ea.js"],"ViewportBoundary"]
-d:I[29213,["/_next/static/chunks/2c156cec91b838ea.js"],"MetadataBoundary"]
-f:I[25609,["/_next/static/chunks/2c156cec91b838ea.js"],"default"]
+8:I[25609,["/_next/static/chunks/2c156cec91b838ea.js"],"default"]
 :HL["/_next/static/chunks/b112e9297ba964f6.css","style"]
-0:{"P":null,"b":"s7NVQPuVWlZ7rQNm0x0aM","c":["","settings"],"q":"","i":false,"f":[[["",{"children":["settings",{"children":["__PAGE__",{}]}]},"$undefined","$undefined",true],[["$","$1","c",{"children":[[["$","link","0",{"rel":"stylesheet","href":"/_next/static/chunks/b112e9297ba964f6.css","precedence":"next","crossOrigin":"$undefined","nonce":"$undefined"}]],["$","html",null,{"lang":"en","children":[["$","head",null,{"children":[["$","link",null,{"rel":"icon","href":"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='black'/></svg>"}],["$","meta",null,{"name":"viewport","content":"width=device-width, initial-scale=1, viewport-fit=cover"}],["$","meta",null,{"name":"apple-mobile-web-app-capable","content":"yes"}],["$","meta",null,{"name":"apple-mobile-web-app-status-bar-style","content":"default"}]]}],["$","body",null,{"style":{"margin":0},"children":["$","$L2",null,{"parallelRouterKey":"children","error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L3",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":[[["$","title",null,{"children":"404: This page could not be found."}],["$","div",null,{"style":{"fontFamily":"system-ui,\"Segoe UI\",Roboto,Helvetica,Arial,sans-serif,\"Apple Color Emoji\",\"Segoe UI Emoji\"","height":"100vh","textAlign":"center","display":"flex","flexDirection":"column","alignItems":"center","justifyContent":"center"},"children":["$","div",null,{"children":[["$","style",null,{"dangerouslySetInnerHTML":{"__html":"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}"}}],["$","h1",null,{"className":"next-error-h1","style":{"display":"inline-block","margin":"0 20px 0 0","padding":"0 23px 0 0","fontSize":24,"fontWeight":500,"verticalAlign":"top","lineHeight":"49px"},"children":404}],["$","div",null,{"style":{"display":"inline-block"},"children":["$","h2",null,{"style":{"fontSize":14,"fontWeight":400,"lineHeight":"49px","margin":0},"children":"This page could not be found."}]}]]}]}]],[]],"forbidden":"$undefined","unauthorized":"$undefined"}]}]]}]]}],{"children":[["$","$1","c",{"children":[null,["$","$L2",null,{"parallelRouterKey":"children","error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L3",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":"$undefined","forbidden":"$undefined","unauthorized":"$undefined"}]]}],{"children":[["$","$1","c",{"children":[["$","$L4",null,{"Component":"$5","serverProvidedParams":{"searchParams":{},"params":{},"promises":["$@6","$@7"]}}],[["$","script","script-0",{"src":"/_next/static/chunks/31c5b371d115596a.js","async":true,"nonce":"$undefined"}]],["$","$L8",null,{"children":["$","$9",null,{"name":"Next.MetadataOutlet","children":"$@a"}]}]]}],{},null,false,false]},null,false,false]},null,false,false],["$","$1","h",{"children":[null,["$","$Lb",null,{"children":"$Lc"}],["$","div",null,{"hidden":true,"children":["$","$Ld",null,{"children":["$","$9",null,{"name":"Next.Metadata","children":"$Le"}]}]}],null]}],false]],"m":"$undefined","G":["$f",[]],"S":true}
-6:{}
-7:"$0:f:0:1:1:children:1:children:0:props:children:0:props:serverProvidedParams:params"
-c:[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]
-a:null
-e:[["$","title","0",{"children":"AiMessage"}],["$","meta","1",{"name":"description","content":"Your AI asks before it acts."}]]
+4:T7aa,
+          /* Mobile: fullscreen, no frame */
+          @media (max-width: 500px) {
+            body { background: #fff !important; }
+            .phone-wrapper { height: 100dvh; }
+            .phone-frame { height: 100%; border: none !important; border-radius: 0 !important; box-shadow: none !important; }
+            .phone-notch { display: none !important; }
+            .phone-home { display: none !important; }
+            .phone-screen { border-radius: 0 !important; height: 100%; }
+          }
+
+          /* Desktop: centered iPhone frame */
+          @media (min-width: 501px) {
+            .phone-wrapper {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              min-height: 100vh;
+              padding: 40px 20px;
+            }
+            .phone-frame {
+              width: 390px;
+              height: 844px;
+              border: 8px solid #1d1d1f;
+              border-radius: 50px;
+              overflow: hidden;
+              position: relative;
+              background: #fff;
+              box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05);
+            }
+            .phone-notch {
+              position: absolute;
+              top: 0;
+              left: 50%;
+              transform: translateX(-50%);
+              width: 126px;
+              height: 34px;
+              background: #1d1d1f;
+              border-radius: 0 0 20px 20px;
+              z-index: 100;
+            }
+            .phone-screen {
+              height: 100%;
+              overflow: hidden;
+              border-radius: 42px;
+            }
+            .phone-home {
+              position: absolute;
+              bottom: 8px;
+              left: 50%;
+              transform: translateX(-50%);
+              width: 134px;
+              height: 5px;
+              background: #1d1d1f;
+              border-radius: 3px;
+              z-index: 100;
+            }
+          }
+        0:{"P":null,"b":"DlgX1UVuRfX7EiGnqCYct","c":["","settings"],"q":"","i":false,"f":[[["",{"children":["settings",{"children":["__PAGE__",{}]}]},"$undefined","$undefined",true],[["$","$1","c",{"children":[[["$","link","0",{"rel":"stylesheet","href":"/_next/static/chunks/b112e9297ba964f6.css","precedence":"next","crossOrigin":"$undefined","nonce":"$undefined"}]],["$","html",null,{"lang":"en","children":[["$","head",null,{"children":[["$","link",null,{"rel":"icon","href":"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='black'/></svg>"}],["$","meta",null,{"name":"viewport","content":"width=device-width, initial-scale=1, viewport-fit=cover"}],["$","meta",null,{"name":"apple-mobile-web-app-capable","content":"yes"}],["$","meta",null,{"name":"apple-mobile-web-app-status-bar-style","content":"default"}]]}],["$","body",null,{"style":{"margin":0,"background":"#f5f5f7","fontFamily":"-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif"},"children":[["$","div",null,{"className":"phone-wrapper","children":["$","div",null,{"className":"phone-frame","children":[["$","div",null,{"className":"phone-notch"}],["$","div",null,{"className":"phone-screen","children":["$","$L2",null,{"parallelRouterKey":"children","error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L3",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":[[["$","title",null,{"children":"404: This page could not be found."}],["$","div",null,{"style":{"fontFamily":"system-ui,\"Segoe UI\",Roboto,Helvetica,Arial,sans-serif,\"Apple Color Emoji\",\"Segoe UI Emoji\"","height":"100vh","textAlign":"center","display":"flex","flexDirection":"column","alignItems":"center","justifyContent":"center"},"children":["$","div",null,{"children":[["$","style",null,{"dangerouslySetInnerHTML":{"__html":"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}"}}],["$","h1",null,{"className":"next-error-h1","style":{"display":"inline-block","margin":"0 20px 0 0","padding":"0 23px 0 0","fontSize":24,"fontWeight":500,"verticalAlign":"top","lineHeight":"49px"},"children":404}],["$","div",null,{"style":{"display":"inline-block"},"children":["$","h2",null,{"style":{"fontSize":14,"fontWeight":400,"lineHeight":"49px","margin":0},"children":"This page could not be found."}]}]]}]}]],[]],"forbidden":"$undefined","unauthorized":"$undefined"}]}],["$","div",null,{"className":"phone-home"}]]}]}],["$","style",null,{"children":"$4"}]]}]]}]]}],{"children":["$L5",{"children":["$L6",{},null,false,false]},null,false,false]},null,false,false],"$L7",false]],"m":"$undefined","G":["$8",[]],"S":true}
+9:I[16527,["/_next/static/chunks/2c156cec91b838ea.js"],"ClientPageRoot"]
+a:I[247,["/_next/static/chunks/577b7d4eb09d5a54.js"],"default"]
+d:I[29213,["/_next/static/chunks/2c156cec91b838ea.js"],"OutletBoundary"]
+e:"$Sreact.suspense"
+10:I[29213,["/_next/static/chunks/2c156cec91b838ea.js"],"ViewportBoundary"]
+12:I[29213,["/_next/static/chunks/2c156cec91b838ea.js"],"MetadataBoundary"]
+5:["$","$1","c",{"children":[null,["$","$L2",null,{"parallelRouterKey":"children","error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L3",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":"$undefined","forbidden":"$undefined","unauthorized":"$undefined"}]]}]
+6:["$","$1","c",{"children":[["$","$L9",null,{"Component":"$a","serverProvidedParams":{"searchParams":{},"params":{},"promises":["$@b","$@c"]}}],[["$","script","script-0",{"src":"/_next/static/chunks/577b7d4eb09d5a54.js","async":true,"nonce":"$undefined"}]],["$","$Ld",null,{"children":["$","$e",null,{"name":"Next.MetadataOutlet","children":"$@f"}]}]]}]
+7:["$","$1","h",{"children":[null,["$","$L10",null,{"children":"$L11"}],["$","div",null,{"hidden":true,"children":["$","$L12",null,{"children":["$","$e",null,{"name":"Next.Metadata","children":"$L13"}]}]}],null]}]
+b:{}
+c:"$6:props:children:0:props:serverProvidedParams:params"
+11:[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]
+f:null
+13:[["$","title","0",{"children":"AiMessage"}],["$","meta","1",{"name":"description","content":"Your AI asks before it acts."}]]
