@@ -110,51 +110,6 @@ export default function Home() {
 
   return (
     <>
-      {/* Sticky Header */}
-      <header style={{
-        position: "sticky",
-        top: 0,
-        zIndex: 50,
-        height: "56px",
-        display: "flex",
-        alignItems: "center",
-        borderBottom: "1px solid var(--c-border-subtle)",
-        backgroundColor: "rgba(255,255,255,0.9)",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
-      }}>
-        <div style={{
-          maxWidth: "64rem",
-          margin: "0 auto",
-          width: "100%",
-          padding: "0 1.5rem",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}>
-          <span style={{
-            fontSize: "13px",
-            fontWeight: 700,
-            letterSpacing: "0.02em",
-            color: "var(--c-text)",
-            fontFamily: "var(--font-inter, -apple-system, BlinkMacSystemFont, sans-serif)",
-          }}>
-            OCC
-          </span>
-          <a href="https://agent.occ.wtf" style={{
-            fontSize: "13px",
-            color: "var(--c-text-tertiary)",
-            textDecoration: "none",
-            transition: "color 150ms ease",
-          }}
-            onMouseEnter={e => (e.currentTarget.style.color = "var(--c-text)")}
-            onMouseLeave={e => (e.currentTarget.style.color = "var(--c-text-tertiary)")}
-          >
-            Sign in
-          </a>
-        </div>
-      </header>
-
       <div style={{ maxWidth: "64rem", margin: "0 auto", padding: "0 1.5rem" }}>
 
         {/* Hero */}
