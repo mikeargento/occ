@@ -12,6 +12,7 @@ import { classifyRisk, RISK_LANES, type RiskLane } from "./risk.js";
 import { generateSummary, toolLabel } from "./summaries.js";
 import { createAuthorizationObject, createExecutionProof } from "./authorization.js";
 import { eventBus } from "./events.js";
+import { sendApprovalSMS } from "./sms.js";
 
 function json(res: ServerResponse, data: unknown, status = 200) {
   const body = JSON.stringify(data);
@@ -461,6 +462,11 @@ export async function handleApiV2(req: IncomingMessage, res: ServerResponse, url
     eventBus.emit(hookUserId, {
       type: "v2:request", requestId: request.id, tool, agentId: hookAgentId,
       status: "pending", riskLane, summary, timestamp: Date.now(),
+    });
+
+    // Send SMS notification
+    sendApprovalSMS(hookUserId, hookAgentId, tool, args, request.id, summary).catch(err => {
+      console.log("  [hook] SMS send failed:", (err as Error).message);
     });
 
     // Long-poll: wait up to 120 seconds for human decision

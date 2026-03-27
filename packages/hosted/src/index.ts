@@ -7,6 +7,7 @@ import { handleApiV2 } from "./api-v2.js";
 import { handleMcp } from "./mcp.js";
 import { handleAuth } from "./auth.js";
 import { handleLlmProxy } from "./llm-proxy.js";
+import { handleSmsWebhook } from "./sms.js";
 import { db } from "./db.js";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
@@ -84,6 +85,12 @@ async function handler(req: IncomingMessage, res: ServerResponse) {
   if (req.method === "OPTIONS") {
     res.writeHead(204);
     res.end();
+    return;
+  }
+
+  // SMS webhook from Twilio
+  if (pathname === "/sms/webhook" && req.method === "POST") {
+    await handleSmsWebhook(req, res);
     return;
   }
 

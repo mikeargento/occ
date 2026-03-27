@@ -650,6 +650,21 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
     return json(res, { ok: true });
   }
 
+  // ── Phone Number ──
+  if (path === "/settings/phone" && method === "GET") {
+    const user = await db.getUserById(userId);
+    return json(res, { phone: user?.phone ?? null });
+  }
+
+  if (path === "/settings/phone" && method === "PUT") {
+    const body = JSON.parse(await readBody(req));
+    if (!body.phone) return json(res, { error: "Phone number required" }, 400);
+    // Normalize: ensure + prefix
+    const phone = body.phone.startsWith("+") ? body.phone : `+1${body.phone.replace(/\D/g, "")}`;
+    await db.setPhone(userId, phone);
+    return json(res, { ok: true, phone });
+  }
+
   // ── Notifications ──
   if (path === "/notifications/count" && method === "GET") {
     const count = await db.getUnreadNotificationCount(userId);

@@ -138,6 +138,9 @@ export const db = {
       -- Anthropic API key storage (encrypted at rest via column-level)
       ALTER TABLE occ_users ADD COLUMN IF NOT EXISTS anthropic_api_key TEXT;
 
+      -- Phone number for SMS approvals
+      ALTER TABLE occ_users ADD COLUMN IF NOT EXISTS phone TEXT;
+
       -- ═══════════════════════════════════════════════════════════
       -- V2 TABLES — Request-first control model
       -- ═══════════════════════════════════════════════════════════
@@ -641,6 +644,17 @@ export const db = {
     const p = getPool();
     const res = await p.query("SELECT anthropic_api_key FROM occ_users WHERE id = $1", [userId]);
     return res.rows[0]?.anthropic_api_key ?? null;
+  },
+
+  async setPhone(userId: string, phone: string) {
+    const p = getPool();
+    await p.query("UPDATE occ_users SET phone = $2 WHERE id = $1", [userId, phone]);
+  },
+
+  async getUserByPhone(phone: string) {
+    const p = getPool();
+    const res = await p.query("SELECT * FROM occ_users WHERE phone = $1", [phone]);
+    return res.rows[0] ?? null;
   },
 
   async deleteAnthropicKey(userId: string) {
