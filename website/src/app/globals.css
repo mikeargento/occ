@@ -21,55 +21,42 @@
   --color-warning: #eab308;
   --color-error: #ef4444;
   --color-info: #3b82f6;
-  --font-sans: "acumin-pro", "Helvetica Neue", Helvetica, sans-serif;
-  --font-serif: "acumin-pro", "Helvetica Neue", Helvetica, sans-serif;
-
+  --font-sans: var(--font-inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif);
+  --font-serif: var(--font-inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif);
   --font-mono: var(--font-mono, "JetBrains Mono", "SF Mono", ui-monospace, monospace);
 }
 
-/* ── Clean Light ── */
+/* ── Design Tokens ── */
 :root {
   --bg: #ffffff;
-  --bg-elevated: #efefef;
-  --bg-subtle: #e5e5e5;
-  --c-border: #d9d9d9;
-  --c-border-subtle: #e0e0e0;
-  --c-text: #000000;
-  --c-text-secondary: #333333;
-  --c-text-tertiary: #666666;
-  --c-accent: #3B82F6;
-  --c-accent-dim: #93C5FD;
+  --bg-elevated: #f7f7f8;
+  --bg-subtle: #ebebed;
+  --c-border: #e2e2e5;
+  --c-border-subtle: #ececee;
+  --c-text: #0c0c0d;
+  --c-text-secondary: #3c3c43;
+  --c-text-tertiary: #86868b;
+  --c-accent: #2563eb;
+  --c-accent-dim: #93c5fd;
   --c-syntax-key: #1d4ed8;
   --c-syntax-string: #047857;
   --c-syntax-number: #b45309;
-  --globe-highlight: rgba(0, 0, 0, 0.12);
-  --globe-mid: rgba(0, 0, 0, 0.05);
-  --globe-shadow: rgba(0, 0, 0, 0.15);
-  --globe-atmo: rgba(59, 130, 246, 0.15);
-  --globe-ocean: #dbeafe;
-  --glow-green: transparent;
-  --glow-green-strong: transparent;
-  --glow-green-text: transparent;
   color-scheme: light;
 }
+
+/* ── Base ── */
 
 html {
   /* overflow-x moved to body — overflow on html breaks position:sticky */
 }
 
 body {
-  background: #ffffff;
+  background: var(--bg);
   color: var(--c-text);
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-wrap: pretty;
-}
-
-
-nav, button, [class*="uppercase"],
-[class*="inline-flex"], [class*="px-6"], [class*="px-8"] {
-  font-family: var(--font-sans);
 }
 
 h1 {
@@ -77,278 +64,67 @@ h1 {
 }
 
 ::selection {
-  background: rgba(128, 128, 128, 0.25);
+  background: rgba(128, 128, 128, 0.2);
 }
+
+/* ── Scrollbar ── */
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--c-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: var(--c-border); }
 ::-webkit-scrollbar-thumb:hover { background: var(--c-text-tertiary); }
 
 pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+/* ── Focus ── */
 
 *:focus-visible {
   outline: 1px solid var(--c-text-tertiary);
   outline-offset: 2px;
 }
 
-/* ── Studio animations ── */
-@keyframes slideUpFadeIn {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.animate-slide-up {
-  animation: slideUpFadeIn 0.4s ease-out;
+/* ── Proof expand animation ── */
+
+@keyframes expandIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-@keyframes successPulse {
-  0%, 100% { box-shadow: none; }
-  50% { box-shadow: none; }
-}
-.animate-success-pulse {
-  animation: successPulse 1.5s ease-in-out 1;
+.proof-expand-enter {
+  animation: expandIn 200ms ease;
 }
 
-@keyframes progressFill {
-  0% { width: 0%; }
-  15% { width: 25%; }
-  40% { width: 50%; }
-  70% { width: 70%; }
-  100% { width: 90%; }
+/* ── Responsive helpers ── */
+
+.hidden-mobile {
+  display: inline;
 }
-.animate-progress-fill {
-  animation: progressFill 30s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+.visible-mobile {
+  display: none;
 }
 
-/* ── Commit Flow animation ── */
-@keyframes commitFlow {
-  0%   { transform: translateX(-15%); opacity: 0; }
-  4%   { opacity: 1; }
-  42%  { transform: translateX(42%); }
-  47%  { transform: translateX(46%); }
-  53%  { transform: translateX(46%); }
-  58%  { transform: translateX(52%); }
-  90%  { transform: translateX(105%); opacity: 1; }
-  96%  { transform: translateX(112%); opacity: 0; }
-  100% { transform: translateX(-15%); opacity: 0; }
+@media (max-width: 480px) {
+  .hidden-mobile {
+    display: none;
+  }
+  .visible-mobile {
+    display: inline;
+  }
 }
 
-@keyframes artifactGlow {
-  0%, 38%, 58%, 100% { box-shadow: none; }
-  46% { box-shadow: none; }
-  52% { box-shadow: none; }
-}
+/* ── Reduced motion ── */
 
-@keyframes boundaryPulse {
-  0%, 100% { opacity: 0.25; }
-  50% { opacity: 0.5; }
-}
-
-@keyframes proofBadgeFade {
-  0%, 50% { opacity: 0; transform: scale(0.8); }
-  58% { opacity: 1; transform: scale(1); }
-  100% { opacity: 1; transform: scale(1); }
-}
-
-@keyframes proofCardAppear {
-  0%, 48%  { opacity: 0; transform: translateY(4px) scale(0.95); }
-  55%      { opacity: 1; transform: translateY(0) scale(1); }
-  68%      { opacity: 1; transform: translateY(0) scale(1); }
-  75%, 100% { opacity: 0; transform: translateY(-4px) scale(0.95); }
-}
-
-.animate-boundary-pulse {
-  animation: boundaryPulse 4s ease-in-out infinite;
-}
-
-/* Commit flow per-lane animations (7 lanes, 2s stagger) */
-.cf-lane-0 { animation: commitFlow 14s ease-in-out 0s infinite; }
-.cf-lane-1 { animation: commitFlow 14s ease-in-out 2s infinite; }
-.cf-lane-2 { animation: commitFlow 14s ease-in-out 4s infinite; }
-.cf-lane-3 { animation: commitFlow 14s ease-in-out 6s infinite; }
-.cf-lane-4 { animation: commitFlow 14s ease-in-out 8s infinite; }
-.cf-lane-5 { animation: commitFlow 14s ease-in-out 10s infinite; }
-.cf-lane-6 { animation: commitFlow 14s ease-in-out 12s infinite; }
-
-.cf-glow-0 { animation: artifactGlow 14s ease-in-out 0s infinite; }
-.cf-glow-1 { animation: artifactGlow 14s ease-in-out 2s infinite; }
-.cf-glow-2 { animation: artifactGlow 14s ease-in-out 4s infinite; }
-.cf-glow-3 { animation: artifactGlow 14s ease-in-out 6s infinite; }
-.cf-glow-4 { animation: artifactGlow 14s ease-in-out 8s infinite; }
-.cf-glow-5 { animation: artifactGlow 14s ease-in-out 10s infinite; }
-.cf-glow-6 { animation: artifactGlow 14s ease-in-out 12s infinite; }
-
-.cf-badge-0 { animation: proofBadgeFade 14s linear 0s infinite; }
-.cf-badge-1 { animation: proofBadgeFade 14s linear 2s infinite; }
-.cf-badge-2 { animation: proofBadgeFade 14s linear 4s infinite; }
-.cf-badge-3 { animation: proofBadgeFade 14s linear 6s infinite; }
-.cf-badge-4 { animation: proofBadgeFade 14s linear 8s infinite; }
-.cf-badge-5 { animation: proofBadgeFade 14s linear 10s infinite; }
-.cf-badge-6 { animation: proofBadgeFade 14s linear 12s infinite; }
-
-.cf-card-0 { animation: proofCardAppear 14s linear 0s infinite; }
-.cf-card-1 { animation: proofCardAppear 14s linear 2s infinite; }
-.cf-card-2 { animation: proofCardAppear 14s linear 4s infinite; }
-.cf-card-3 { animation: proofCardAppear 14s linear 6s infinite; }
-.cf-card-4 { animation: proofCardAppear 14s linear 8s infinite; }
-.cf-card-5 { animation: proofCardAppear 14s linear 10s infinite; }
-.cf-card-6 { animation: proofCardAppear 14s linear 12s infinite; }
-
-/* ── ProofGlobe animations ── */
-@keyframes globeRotate {
-  from { transform: rotateY(0deg); }
-  to { transform: rotateY(360deg); }
-}
-.animate-globe-rotate {
-  animation: globeRotate 60s linear infinite;
-  transform-style: preserve-3d;
-  will-change: transform;
-}
-
-@keyframes atmospherePulse {
-  0%, 100% { opacity: 0.6; }
-  50%      { opacity: 1; }
-}
-.animate-atmosphere-pulse {
-  animation: atmospherePulse 8s ease-in-out infinite;
-}
-
-/* ── Homepage animations ── */
-
-/* Scroll reveal */
-.sr-hidden {
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.7s ease-out, transform 0.7s ease-out;
-}
-.sr-visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* Hero entrance */
-@keyframes heroFadeIn {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.hero-animate {
-  animation: heroFadeIn 0.8s ease-out both;
-}
-
-/* Section divider */
-.section-divider {
-  height: 1px;
-  background: linear-gradient(
-    to right,
-    transparent,
-    var(--c-border-subtle) 20%,
-    var(--c-border-subtle) 80%,
-    transparent
-  );
-  max-width: 72rem;
-  margin: 0 auto;
-}
-
-.terminal-glow {
-  transform: translateZ(0);
-}
-
-/* Hero subtle grid background */
-.hero-grid {
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(0, 0, 0, 0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 0, 0, 0.02) 1px, transparent 1px);
-  background-size: 60px 60px;
-  mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, black 20%, transparent 70%);
-  -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, black 20%, transparent 70%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* Hero glow */
-.hero-glow {
-  position: absolute;
-  top: -20%;
-  left: -10%;
-  width: 60%;
-  height: 140%;
-  background: radial-gradient(ellipse at center, rgba(59, 130, 246, 0.03) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* Section glow */
-.section-glow {
-  position: relative;
-}
-.section-glow::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 80%;
-  height: 60%;
-  background: radial-gradient(ellipse at center, rgba(59, 130, 246, 0.03) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* Gradient text */
-.text-gradient {
-  background: linear-gradient(135deg, #111111 0%, #3B82F6 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* Proof terminal */
-.proof-terminal {
-  border-radius: 0;
-  border: 1px solid var(--c-border);
-  background: var(--bg-elevated);
-  transform: translateZ(0);
-}
-
-/* Section fade divider */
-.section-fade-divider {
-  height: 80px;
-  background: linear-gradient(to bottom, transparent, var(--bg));
-}
-
-/* Use case cards */
-.use-case-card {
-  transition: background 0.3s ease-out;
-}
-.use-case-card:hover {
-  background: var(--bg-elevated);
-}
-
-/* Card hover */
-.card-hover {
-  transition: transform 0.15s ease-out, border-color 0.15s ease-out;
-  transform: translateZ(0);
-}
-.card-hover:hover {
-  transform: translateY(-2px) translateZ(0);
-  border-color: var(--c-border) !important;
-}
-
-/* Noise texture overlay */
-.noise-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 9999;
-  opacity: 0.015;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-repeat: repeat;
-  background-size: 256px 256px;
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }
 
 /* ── Site-wide utilities ── */
@@ -387,7 +163,6 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   font-family: var(--font-mono);
   background: var(--bg-subtle);
   padding: 0.125rem 0.375rem;
-  border-radius: 0;
 }
 .prose-doc table {
   width: 100%;
@@ -411,7 +186,6 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
 /* Code block container */
 .code-block {
-  border-radius: 0;
   border: 1px solid var(--c-border-subtle);
   overflow: hidden;
   margin-bottom: 1.5rem;
@@ -450,7 +224,6 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   top: 0.25rem;
   bottom: 0.25rem;
   width: 2px;
-  border-radius: 0;
   background: var(--c-text);
 }
 
@@ -468,7 +241,6 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   display: inline-flex;
   align-items: center;
   padding: 0.125rem 0.5rem;
-  border-radius: 0;
   font-size: 0.6875rem;
   font-weight: 700;
   font-family: var(--font-mono);
@@ -476,35 +248,44 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   letter-spacing: 0.04em;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  [data-commit-flow] *,
-  .animate-globe-rotate,
-  .animate-atmosphere-pulse {
-    animation-play-state: paused !important;
-  }
-  .sr-hidden {
-    opacity: 1;
-    transform: none;
-    transition: none;
-  }
-  .hero-animate {
-    animation: none;
-    opacity: 1;
-    transform: none;
-  }
-  .mobile-menu-enter {
-    animation: none;
-  }
-  .animate-slide-up {
-    animation: none;
-    opacity: 1;
-    transform: none;
-  }
-  .animate-success-pulse {
-    animation: none;
-  }
-  .animate-progress-fill {
-    animation: none;
-    width: 100%;
-  }
+/* Section divider */
+.section-divider {
+  height: 1px;
+  background: var(--c-border-subtle);
+  max-width: 72rem;
+  margin: 0 auto;
+}
+
+/* Use case cards */
+.use-case-card {
+  transition: background 0.15s ease;
+}
+.use-case-card:hover {
+  background: var(--bg-elevated);
+}
+
+/* Scroll reveal */
+.sr-hidden {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+}
+.sr-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Proof terminal */
+.proof-terminal {
+  border: 1px solid var(--c-border);
+  background: var(--bg-elevated);
+  transform: translateZ(0);
+}
+
+/* Gradient text */
+.text-gradient {
+  background: linear-gradient(135deg, #111111 0%, #3B82F6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
