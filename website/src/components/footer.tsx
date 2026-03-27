@@ -9,9 +9,7 @@ export function Footer() {
         <div className="flex flex-col md:flex-row md:justify-between gap-12">
           <div className="max-w-md">
             <p className="text-sm text-text-tertiary leading-relaxed">
-              Origin Controlled Computing<br />
-              Define what your AI agents can do.<br />
-              Patent Pending
+              OCC
             </p>
           </div>
 
