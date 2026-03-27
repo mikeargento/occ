@@ -282,41 +282,30 @@ function UserProofs() {
                 {isOpen && (
                   <div style={{ padding: "16px", background: "var(--bg-elevated)", borderTop: "1px solid var(--c-border-subtle)" }}>
                     <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                      {/* Digest */}
+
+                      {/* Artifact */}
                       {p.proofDigestB64 && (
-                        <div style={{ border: "1px solid var(--c-border-subtle)", background: "var(--bg)", overflow: "hidden" }}>
-                          <div style={{ padding: "8px 14px", borderBottom: "1px solid var(--c-border-subtle)" }}>
-                            <span style={{ fontSize: "10px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--c-text-tertiary)" }}>SHA-256 Digest</span>
-                          </div>
-                          <div style={{ padding: "10px 14px" }}>
-                            <code style={{ fontSize: "11px", fontFamily: "var(--font-mono, monospace)", color: "var(--c-text)", wordBreak: "break-all" }}>{p.proofDigestB64}</code>
-                          </div>
-                        </div>
+                        <SectionCard title="Artifact">
+                          <DetailRow label="Digest (Base64)" value={p.proofDigestB64} mono />
+                        </SectionCard>
                       )}
 
-                      {/* Fields */}
-                      <div style={{ border: "1px solid var(--c-border-subtle)", background: "var(--bg)", overflow: "hidden" }}>
-                        <div style={{ padding: "8px 14px", borderBottom: "1px solid var(--c-border-subtle)" }}>
-                          <span style={{ fontSize: "10px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--c-text-tertiary)" }}>Details</span>
+                      {/* Commit */}
+                      <SectionCard title="Commit">
+                        <DetailRow label="time" value={String(p.timestamp)} />
+                        <div style={{ fontSize: "10px", color: "var(--c-text-tertiary)", padding: "0 0 7px", textAlign: "right" }}>
+                          {new Date(p.timestamp).toLocaleString()}
                         </div>
-                        <div style={{ padding: "4px 14px" }}>
-                          <DetailRow label="Tool" value={p.tool} mono />
-                          <DetailRow label="Decision" value={allowed ? "Allowed" : "Denied"} color={allowed ? "#2563eb" : "#ef4444"} />
-                          <DetailRow label="Time" value={new Date(p.timestamp).toLocaleString()} />
-                          {p.agentId && <DetailRow label="Agent" value={p.agentId} />}
-                          {p.decision.reason && <DetailRow label="Reason" value={p.decision.reason} />}
-                        </div>
-                      </div>
+                      </SectionCard>
 
-                      {/* Link to global explorer */}
-                      {p.proofDigestB64 && (
-                        <a href={`https://occ.wtf/explorer/${encodeURIComponent(p.proofDigestB64)}`}
-                          target="_blank" rel="noopener noreferrer"
-                          style={{ fontSize: "11px", color: "#2563eb", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "4px", marginTop: "4px" }}>
-                          View in Explorer
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
-                        </a>
-                      )}
+                      {/* Action */}
+                      <SectionCard title="Action">
+                        <DetailRow label="Tool" value={p.tool} mono />
+                        <DetailRow label="Decision" value={allowed ? "Allowed" : "Denied"} color={allowed ? "#2563eb" : "#ef4444"} />
+                        {p.agentId && <DetailRow label="Agent" value={p.agentId} />}
+                        {p.decision.reason && <DetailRow label="Reason" value={p.decision.reason} />}
+                      </SectionCard>
+
                     </div>
                   </div>
                 )}
@@ -365,6 +354,17 @@ function ProofRowBtn({ onClick, expanded, children }: { onClick: () => void; exp
       </span>
       {children}
     </button>
+  );
+}
+
+function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div style={{ border: "1px solid var(--c-border-subtle)", background: "var(--bg)", overflow: "hidden" }}>
+      <div style={{ padding: "8px 14px", borderBottom: "1px solid var(--c-border-subtle)" }}>
+        <span style={{ fontSize: "10px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--c-text-tertiary)" }}>{title}</span>
+      </div>
+      <div style={{ padding: "4px 14px" }}>{children}</div>
+    </div>
   );
 }
 
