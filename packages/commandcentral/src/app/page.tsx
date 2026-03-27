@@ -82,7 +82,7 @@ export default function App() {
     <div className="page-center">
       <div className="login-card">
         <h1 className="login-title">OCC</h1>
-        <p className="login-sub">Control what your AI can do.</p>
+        <p className="login-sub">Define what your AI does.</p>
         <div className="login-buttons">
           <a href="/auth/login/github" className="auth-btn auth-github"><GithubIcon /> Continue with GitHub</a>
           <a href="/auth/login/google" className="auth-btn auth-google"><GoogleIcon /> Continue with Google</a>
