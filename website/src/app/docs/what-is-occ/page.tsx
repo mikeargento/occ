@@ -2,14 +2,14 @@ import type { Metadata } from "next";
 import { CommitPathDiagram } from "@/components/commit-path-diagram";
 
 export const metadata: Metadata = {
-  title: "WTF is OCC",
+  title: "What is OCC",
   description: "OCC is a protocol for portable cryptographic proof caused by system structure.",
 };
 
 export default function WhatIsOCCPage() {
   return (
     <article className="prose-doc">
-      <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-6">WTF is OCC</h1>
+      <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-6">What is OCC</h1>
 
       <p className="text-text-secondary leading-relaxed mb-10">
         OCC (Origin Controlled Computing) is a protocol that produces portable
