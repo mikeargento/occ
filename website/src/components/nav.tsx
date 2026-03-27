@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 const links: { href: string; label: string; external?: boolean }[] = [
+  { href: "https://aimessage.foo", label: "AiMessage", external: true },
   { href: "/explorer", label: "Explorer" },
   { href: "/docs", label: "Docs" },
   { href: "https://github.com/mikeargento/occ", label: "GitHub", external: true },

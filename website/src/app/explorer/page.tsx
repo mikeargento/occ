@@ -194,11 +194,8 @@ function ExplorerPage() {
     <div className="mx-auto max-w-6xl px-6 py-16 sm:py-24">
       {/* Header */}
       <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-text">
-        Proof Explorer
+        Explorer
       </h1>
-      <p className="mt-3 text-text-secondary text-lg">
-        Every proof committed through OCC lives here. Drop a file to find its proof.
-      </p>
 
       {/* ── Drop Zone ── */}
       <div className="mt-10">
