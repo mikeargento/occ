@@ -54,8 +54,8 @@ export default function Home() {
         {copied ? "Copied" : "npm install -g aimessage-app"}
       </button>
 
-      {/* Docs */}
-      <a href="/documentation" style={{
+      {/* Messenger */}
+      <a href="https://agent.occ.wtf" style={{
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -63,6 +63,27 @@ export default function Home() {
         color: "#fff",
         border: "none",
         padding: "16px 32px",
+        fontSize: 18,
+        fontFamily: "inherit",
+        cursor: "pointer",
+        borderRadius: 0,
+        textDecoration: "none",
+        width: "100%",
+        maxWidth: 480,
+        textAlign: "center",
+      }}>
+        Messenger
+      </a>
+
+      {/* Docs */}
+      <a href="/documentation" style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "#fff",
+        color: "#000",
+        border: "2px solid #000",
+        padding: "14px 32px",
         fontSize: 18,
         fontFamily: "inherit",
         cursor: "pointer",
