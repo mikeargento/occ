@@ -25,7 +25,7 @@ export default function Home() {
     }}>
       {/* Title */}
       <h1 style={{
-        fontSize: "clamp(40px, 10vw, 80px)",
+        fontSize: "clamp(56px, 14vw, 80px)",
         fontWeight: 700,
         color: "#000",
         letterSpacing: "-0.03em",
