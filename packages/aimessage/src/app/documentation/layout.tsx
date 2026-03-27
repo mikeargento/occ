@@ -15,9 +15,10 @@ function Nav() {
       <a href="/" style={{ fontSize: 18, fontWeight: 700, color: "#000", textDecoration: "none", letterSpacing: "-0.02em" }}>
         AiMessage
       </a>
-      <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
-        <a href="/documentation" style={{ fontSize: 14, fontWeight: 500, color: "#000", textDecoration: "none" }}>Documentation</a>
-        <a href="https://occ.wtf" style={{ fontSize: 14, fontWeight: 500, color: "#000", textDecoration: "none" }}>OCC</a>
+      <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
+        <a href="https://occ.wtf/explorer" style={{ fontSize: 14, fontWeight: 600, color: "#000", textDecoration: "none" }}>Explorer</a>
+        <a href="https://occ.wtf/docs" style={{ fontSize: 14, fontWeight: 600, color: "#000", textDecoration: "none" }}>Docs</a>
+        <a href="https://github.com/mikeargento/occ" style={{ fontSize: 14, fontWeight: 600, color: "#000", textDecoration: "none" }}>GitHub</a>
       </div>
     </nav>
   );
