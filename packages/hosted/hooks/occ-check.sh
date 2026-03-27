@@ -19,7 +19,8 @@ INPUT=$(cat)
 
 # Extract tool name and args
 TOOL=$(echo "$INPUT" | grep -o '"tool_name":"[^"]*"' | head -1 | cut -d'"' -f4)
-TOOL_INPUT=$(echo "$INPUT" | grep -o '"tool_input":{[^}]*}' | head -1 | sed 's/^"tool_input"://')
+# Extract tool_input as JSON — use node for reliable parsing
+TOOL_INPUT=$(echo "$INPUT" | node -e "let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const j=JSON.parse(d);console.log(JSON.stringify(j.tool_input||{}))}catch{console.log('{}')}})" 2>/dev/null || echo '{}')
 
 if [ -z "$TOOL" ]; then
   exit 0 # Can't parse, allow
@@ -33,7 +34,7 @@ case "$TOOL" in
 esac
 
 # Call OCC
-RESPONSE=$(curl -s -m 125 -X POST "${OCC_URL}/api/v2/hook/check" \
+RESPONSE=$(curl -s -m 60 -X POST "${OCC_URL}/api/v2/hook/check" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer ${TOKEN}" \
   -d "{\"tool\":\"$TOOL\",\"args\":$TOOL_INPUT}")

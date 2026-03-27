@@ -469,8 +469,8 @@ export async function handleApiV2(req: IncomingMessage, res: ServerResponse, url
       console.log("  [hook] SMS send failed:", (err as Error).message);
     });
 
-    // Long-poll: wait up to 120 seconds for human decision
-    const deadline = Date.now() + 120_000;
+    // Long-poll: wait up to 55 seconds for human decision (Railway timeout is 120s)
+    const deadline = Date.now() + 55_000;
     while (Date.now() < deadline) {
       const updated = await db.v2GetRequest(request.id);
       if (updated && updated.status !== "pending") {
@@ -487,7 +487,7 @@ export async function handleApiV2(req: IncomingMessage, res: ServerResponse, url
 
     // Timeout — deny by default (safe)
     await db.v2UpdateRequestStatus(request.id, "expired");
-    return json(res, { decision: "deny", reason: "Approval timed out (120s)", requestId: request.id });
+    return json(res, { decision: "deny", reason: "Approval timed out (55s)", requestId: request.id });
   }
 
   // ═══════════════════════════════════════════════════════
