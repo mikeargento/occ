@@ -21,6 +21,13 @@ export default function App() {
   const pollingRef = useRef<ReturnType<typeof setInterval>>(undefined);
   const seenRef = useRef<Set<number>>(new Set());
 
+  function toggleTheme() {
+    const html = document.documentElement;
+    const isDark = html.getAttribute("data-theme") === "dark";
+    html.setAttribute("data-theme", isDark ? "light" : "dark");
+    localStorage.setItem("theme", isDark ? "light" : "dark");
+  }
+
   useEffect(() => {
     getMe().then(d => setUser(d.user)).catch(() => {}).finally(() => setLoading(false));
   }, []);
@@ -133,6 +140,24 @@ export default function App() {
   // ── Chat ──
   return (
     <div className="chat-layout">
+      {/* Top bar */}
+      <div className="topbar">
+        <div className="topbar-left">
+          <span className="topbar-title">AiMessage</span>
+        </div>
+        <div className="topbar-right">
+          <button className="topbar-btn" onClick={toggleTheme} title="Toggle dark mode">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          </button>
+          <a href="https://occ.wtf/explorer" className="topbar-link" target="_blank" title="Proof Explorer">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </a>
+          <a href="/settings" className="topbar-link" title="Settings">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </a>
+        </div>
+      </div>
+
       {/* Messages */}
       <div className="messages-scroll">
         <div className="messages-container">
@@ -187,11 +212,7 @@ export default function App() {
           </button>
         </div>
         <div className="input-footer">
-          <a href="/settings" className="footer-link">Settings</a>
-          <span className="footer-dot">·</span>
-          <a href="https://occ.wtf/explorer" className="footer-link">Proof Explorer</a>
-          <span className="footer-dot">·</span>
-          <a href="https://occ.wtf/docs" className="footer-link">Docs</a>
+          <span className="footer-link">Press Enter to send · Shift+Enter for new line</span>
         </div>
       </div>
     </div>

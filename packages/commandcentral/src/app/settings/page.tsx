@@ -10,12 +10,23 @@ export default function SettingsPage() {
   const [apiKeyMsg, setApiKeyMsg] = useState("");
   const [hookToken, setHookToken] = useState<string | null>(null);
   const [tokenCopied, setTokenCopied] = useState(false);
+  const [cmdCopied, setCmdCopied] = useState(false);
+  const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
+    setIsDark(document.documentElement.getAttribute("data-theme") === "dark");
     fetch("/auth/me").then(r => r.ok ? r.json() : null).then(d => setUser(d?.user ?? null)).catch(() => {});
     fetch("/api/settings/api-key").then(r => r.ok ? r.json() : null).then(d => { if (d) setApiKeyStatus(d); }).catch(() => {});
     fetch("/api/settings/token").then(r => r.ok ? r.json() : null).then(d => { if (d?.token) setHookToken(d.token); }).catch(() => {});
   }, []);
+
+  function toggleTheme() {
+    const html = document.documentElement;
+    const next = html.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    html.setAttribute("data-theme", next);
+    localStorage.setItem("theme", next);
+    setIsDark(next === "dark");
+  }
 
   async function saveApiKey() {
     if (!apiKeyInput.trim()) return;
@@ -35,101 +46,155 @@ export default function SettingsPage() {
     setApiKeyLoading(false);
   }
 
+  function copyText(text: string, setter: (v: boolean) => void) {
+    navigator.clipboard.writeText(text);
+    setter(true);
+    setTimeout(() => setter(false), 2000);
+  }
+
   return (
-    <div style={{ minHeight: "100%", background: "#fff", fontFamily: "inherit" }}>
-      {/* Header */}
-      <div style={{ position: "sticky", top: 0, zIndex: 10, height: 52, borderBottom: "1px solid #e5e5ea", background: "rgba(255,255,255,0.92)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", display: "flex", alignItems: "center", padding: "0 16px", gap: 12 }}>
-        <a href="/" style={{ color: "#8e8e93", display: "flex", alignItems: "center", textDecoration: "none" }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
-        </a>
-        <span style={{ fontSize: 17, fontWeight: 600, color: "#000" }}>Settings</span>
+    <div className="settings-layout">
+      {/* Top bar — same as chat */}
+      <div className="topbar">
+        <div className="topbar-left">
+          <a href="/" className="topbar-link" title="Back to chat">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </a>
+          <span className="topbar-title">Settings</span>
+        </div>
+        <div className="topbar-right">
+          <button className="topbar-btn" onClick={toggleTheme} title="Toggle dark mode">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          </button>
+          <a href="https://occ.wtf/explorer" className="topbar-link" target="_blank" title="Proof Explorer">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </a>
+        </div>
       </div>
 
-      <div style={{ maxWidth: 400, margin: "0 auto", padding: "32px 16px" }}>
+      <div className="settings-container">
 
         {/* Account */}
         {user && (
-          <div style={{ marginBottom: 32 }}>
-            <div style={S.label}>Account</div>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              {user.avatar ? (
-                <img src={user.avatar} alt="" style={{ width: 44, height: 44, borderRadius: "50%" }} />
-              ) : (
-                <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#e9e9eb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 600, color: "#636366" }}>
-                  {user.name?.[0]?.toUpperCase()}
+          <div className="settings-section">
+            <div className="settings-label">Account</div>
+            <div className="settings-card">
+              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                {user.avatar ? (
+                  <img src={user.avatar} alt="" style={{ width: 48, height: 48, borderRadius: "50%" }} />
+                ) : (
+                  <div style={{ width: 48, height: 48, borderRadius: "50%", background: "var(--accent-light)", color: "var(--accent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 600 }}>
+                    {user.name?.[0]?.toUpperCase()}
+                  </div>
+                )}
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 600 }}>{user.name}</div>
+                  <div style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 2 }}>{user.email}</div>
                 </div>
-              )}
-              <div>
-                <div style={{ fontSize: 15, fontWeight: 500, color: "#000" }}>{user.name}</div>
-                <div style={{ fontSize: 13, color: "#8e8e93" }}>{user.email}</div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Token */}
-        {hookToken && (
-          <div style={{ marginBottom: 32 }}>
-            <div style={S.label}>Your Token</div>
-            <p style={{ fontSize: 13, color: "#8e8e93", margin: "0 0 12px" }}>Connect Claude Code to AiMessage.</p>
-            <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-              <div style={{ flex: 1, height: 40, display: "flex", alignItems: "center", padding: "0 12px", background: "#f2f2f7", borderRadius: 10, overflow: "hidden" }}>
-                <code style={{ fontSize: 12, fontFamily: "SF Mono, monospace", color: "#636366", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{hookToken}</code>
+        {/* Appearance */}
+        <div className="settings-section">
+          <div className="settings-label">Appearance</div>
+          <div className="settings-card">
+            <div className="settings-row">
+              <div>
+                <div className="settings-row-label">Dark mode</div>
+                <div className="settings-row-desc">Switch between light and dark themes</div>
               </div>
-              <button onClick={() => { navigator.clipboard.writeText(hookToken); setTokenCopied(true); setTimeout(() => setTokenCopied(false), 2000); }}
-                style={{ height: 40, padding: "0 16px", borderRadius: 10, border: "none", background: "#000", color: "#fff", fontSize: 14, fontWeight: 500, cursor: "pointer", fontFamily: "inherit" }}>
-                {tokenCopied ? "Copied" : "Copy"}
-              </button>
+              <label className="toggle">
+                <input type="checkbox" checked={isDark} onChange={toggleTheme} />
+                <div className="toggle-track" />
+                <div className="toggle-thumb" />
+              </label>
             </div>
-            <div style={{ background: "#f2f2f7", borderRadius: 10, padding: 14 }}>
-              <div style={{ fontSize: 10, fontWeight: 600, color: "#8e8e93", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>Quick setup</div>
-              <code style={{ fontSize: 12, fontFamily: "SF Mono, monospace", color: "#000", display: "block", lineHeight: 1.8 }}>
-                curl -fsSL https://agent.occ.wtf/install | bash
-              </code>
-              <code style={{ fontSize: 12, fontFamily: "SF Mono, monospace", color: "#636366", display: "block" }}>
-                export OCC_TOKEN={hookToken}
-              </code>
+          </div>
+        </div>
+
+        {/* Connection */}
+        {hookToken && (
+          <div className="settings-section">
+            <div className="settings-label">Connection</div>
+            <div className="settings-card">
+              <div style={{ marginBottom: 12 }}>
+                <div className="settings-row-label">Your Token</div>
+                <div className="settings-row-desc">Use this to connect Claude Code to AiMessage</div>
+              </div>
+              <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+                <div style={{ flex: 1, height: 40, display: "flex", alignItems: "center", padding: "0 12px", background: "var(--input-bg)", borderRadius: 8, overflow: "hidden" }}>
+                  <code style={{ fontSize: 12, fontFamily: "'SF Mono', monospace", color: "var(--text-secondary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{hookToken}</code>
+                </div>
+                <button onClick={() => copyText(hookToken, setTokenCopied)} className="settings-btn settings-btn-primary">
+                  {tokenCopied ? "Copied!" : "Copy"}
+                </button>
+              </div>
+              <div className="settings-code">
+                <div style={{ color: "var(--text-tertiary)", fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Quick setup</div>
+                <div>curl -fsSL https://agent.occ.wtf/install | bash</div>
+                <div style={{ color: "var(--text-secondary)" }}>export OCC_TOKEN={hookToken}</div>
+              </div>
+              <button onClick={() => copyText(`curl -fsSL https://agent.occ.wtf/install | bash\nexport OCC_TOKEN=${hookToken}`, setCmdCopied)} className="settings-btn settings-btn-primary" style={{ marginTop: 8, width: "100%" }}>
+                {cmdCopied ? "Copied!" : "Copy setup commands"}
+              </button>
             </div>
           </div>
         )}
 
         {/* API Key */}
-        <div style={{ marginBottom: 32 }}>
-          <div style={S.label}>Anthropic API Key</div>
-          <p style={{ fontSize: 13, color: "#8e8e93", margin: "0 0 12px" }}>Optional. For the LLM API proxy.</p>
-          {apiKeyStatus.hasKey ? (
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <div style={{ flex: 1, height: 40, display: "flex", alignItems: "center", padding: "0 12px", background: "#f2f2f7", borderRadius: 10 }}>
-                <code style={{ fontSize: 12, fontFamily: "SF Mono, monospace", color: "#636366" }}>{apiKeyStatus.maskedKey}</code>
+        <div className="settings-section">
+          <div className="settings-label">API Key</div>
+          <div className="settings-card">
+            <div style={{ marginBottom: 12 }}>
+              <div className="settings-row-label">Anthropic API Key</div>
+              <div className="settings-row-desc">Powers the AiMessage chat assistant (uses Haiku — very cheap)</div>
+            </div>
+            {apiKeyStatus.hasKey ? (
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <div style={{ flex: 1, height: 40, display: "flex", alignItems: "center", padding: "0 12px", background: "var(--input-bg)", borderRadius: 8 }}>
+                  <code style={{ fontSize: 13, fontFamily: "'SF Mono', monospace", color: "var(--text-secondary)" }}>{apiKeyStatus.maskedKey}</code>
+                </div>
+                <button onClick={deleteApiKey} disabled={apiKeyLoading} className="settings-btn settings-btn-danger">Remove</button>
+                {apiKeyMsg && <span style={{ fontSize: 12, color: "var(--green)", fontWeight: 500 }}>{apiKeyMsg}</span>}
               </div>
-              <button onClick={deleteApiKey} disabled={apiKeyLoading}
-                style={{ height: 40, padding: "0 16px", borderRadius: 10, border: "none", background: "#ff3b30", color: "#fff", fontSize: 14, fontWeight: 500, cursor: "pointer", fontFamily: "inherit", opacity: apiKeyLoading ? 0.4 : 1 }}>
-                Remove
-              </button>
-              {apiKeyMsg && <span style={{ fontSize: 12, color: "#34c759" }}>{apiKeyMsg}</span>}
-            </div>
-          ) : (
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <input type="password" placeholder="sk-ant-..." value={apiKeyInput} onChange={e => setApiKeyInput(e.target.value)} onKeyDown={e => e.key === "Enter" && saveApiKey()}
-                style={{ flex: 1, height: 40, padding: "0 12px", fontSize: 13, fontFamily: "SF Mono, monospace", background: "#fff", border: "1px solid #e5e5ea", borderRadius: 10, color: "#000", outline: "none" }} />
-              <button onClick={saveApiKey} disabled={apiKeyLoading || !apiKeyInput.trim()}
-                style={{ height: 40, padding: "0 16px", borderRadius: 10, border: "none", background: "#000", color: "#fff", fontSize: 14, fontWeight: 500, cursor: "pointer", fontFamily: "inherit", opacity: apiKeyLoading || !apiKeyInput.trim() ? 0.4 : 1 }}>
-                Save
-              </button>
-              {apiKeyMsg && <span style={{ fontSize: 12, color: "#ff3b30" }}>{apiKeyMsg}</span>}
-            </div>
-          )}
+            ) : (
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <input type="password" placeholder="sk-ant-..." value={apiKeyInput} onChange={e => setApiKeyInput(e.target.value)} onKeyDown={e => e.key === "Enter" && saveApiKey()} className="settings-input" />
+                <button onClick={saveApiKey} disabled={apiKeyLoading || !apiKeyInput.trim()} className="settings-btn settings-btn-primary">Save</button>
+                {apiKeyMsg && <span style={{ fontSize: 12, color: "var(--red)", fontWeight: 500 }}>{apiKeyMsg}</span>}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Links */}
+        <div className="settings-section">
+          <div className="settings-label">Resources</div>
+          <div className="settings-card">
+            <a href="https://occ.wtf/explorer" className="settings-row" target="_blank" style={{ textDecoration: "none", color: "inherit" }}>
+              <div className="settings-row-label">Proof Explorer</div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" strokeWidth="2" strokeLinecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            </a>
+            <a href="https://occ.wtf/docs" className="settings-row" target="_blank" style={{ textDecoration: "none", color: "inherit" }}>
+              <div className="settings-row-label">Documentation</div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" strokeWidth="2" strokeLinecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            </a>
+            <a href="https://github.com/mikeargento/occ" className="settings-row" target="_blank" style={{ textDecoration: "none", color: "inherit" }}>
+              <div className="settings-row-label">GitHub</div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" strokeWidth="2" strokeLinecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            </a>
+          </div>
         </div>
 
         {/* Sign out */}
-        <div style={{ borderTop: "1px solid #e5e5ea", paddingTop: 24 }}>
-          <a href="/auth/logout" style={{ fontSize: 15, color: "#ff3b30", textDecoration: "none" }}>Sign out</a>
+        <div className="settings-section">
+          <a href="/auth/logout" className="settings-btn settings-btn-danger" style={{ display: "block", textAlign: "center", textDecoration: "none", lineHeight: "36px", width: "100%" }}>
+            Sign out
+          </a>
         </div>
       </div>
     </div>
   );
 }
-
-const S = {
-  label: { fontSize: 11, fontWeight: 600, color: "#8e8e93", textTransform: "uppercase" as const, letterSpacing: "0.05em", marginBottom: 12 },
-};
