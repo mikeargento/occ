@@ -6,7 +6,7 @@ export default function Home() {
   const [copied, setCopied] = useState(false);
 
   function copy() {
-    navigator.clipboard.writeText("npm install -g aimessage && aimessage setup");
+    navigator.clipboard.writeText("npm install -g aimessage-app && aimessage setup");
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
@@ -51,7 +51,7 @@ export default function Home() {
         maxWidth: 480,
         textAlign: "center",
       }}>
-        {copied ? "Copied" : "npm install -g aimessage"}
+        {copied ? "Copied" : "npm install -g aimessage-app"}
       </button>
 
       {/* Docs */}
