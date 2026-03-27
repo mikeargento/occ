@@ -37,7 +37,7 @@ export default function Home() {
 
       {/* Install */}
       <button onClick={copy} style={{
-        background: "#000",
+        background: "#007aff",
         color: "#fff",
         border: "none",
         padding: "16px 32px",
