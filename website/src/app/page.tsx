@@ -620,22 +620,23 @@ function FullProofDetail({ proof, indexedAt }: { proof: OCCProof; indexedAt: str
       {/* Raw JSON toggle */}
       <button
         onClick={() => setJsonOpen(!jsonOpen)}
-        onMouseEnter={() => setJsonHovered(true)}
-        onMouseLeave={() => setJsonHovered(false)}
         style={{
-          display: "flex",
+          display: "inline-flex",
           alignItems: "center",
-          gap: "6px",
+          gap: "8px",
+          height: "36px",
+          padding: "0 14px",
           fontSize: "12px",
-          color: jsonHovered ? "var(--c-text)" : "var(--c-text-tertiary)",
-          background: "none",
-          border: "none",
-          padding: 0,
+          fontWeight: 500,
+          color: "var(--c-text-secondary)",
+          background: jsonOpen ? "var(--bg-subtle)" : "var(--bg)",
+          border: "1px solid var(--c-border)",
           cursor: "pointer",
           fontFamily: "inherit",
-          transition: "color 150ms ease",
-          textAlign: "left",
+          transition: "background 150ms ease, border-color 150ms ease",
         }}
+        onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--c-text-tertiary)"; }}
+        onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--c-border)"; }}
       >
         <span style={{
           display: "inline-flex",
@@ -644,11 +645,9 @@ function FullProofDetail({ proof, indexedAt }: { proof: OCCProof; indexedAt: str
         }}>
           <ChevronRight />
         </span>
-        <span style={{ fontFamily: "var(--font-mono, monospace)", fontSize: "11px" }}>
-          Raw Proof JSON
-        </span>
-        <span style={{ color: "var(--c-text-tertiary)", fontSize: "11px" }}>
-          ({jsonKb} KB)
+        Raw JSON
+        <span style={{ color: "var(--c-text-tertiary)", fontSize: "11px", fontWeight: 400 }}>
+          {jsonKb} KB
         </span>
       </button>
 
