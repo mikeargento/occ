@@ -76,12 +76,12 @@ export default function App() {
     }
   }, [user]);
 
-  async function send() {
-    const text = input.trim();
+  async function send(override?: string) {
+    const text = (override ?? input).trim();
     if (!text || sending) return;
     const userMsg: ChatMsg = { id: `u-${Date.now()}`, role: "user", text, ts: Date.now() };
     setMessages(prev => [...prev, userMsg]);
-    setInput("");
+    if (!override) setInput("");
     setSending(true);
     if (inputRef.current) { inputRef.current.style.height = "auto"; }
 
@@ -105,6 +105,12 @@ export default function App() {
     }
     setSending(false);
     inputRef.current?.focus();
+  }
+
+  function sendProofToChat(proof: any) {
+    setView("chat");
+    const payload = JSON.stringify(proof, null, 2);
+    send(`Analyze this proof:\n\`\`\`json\n${payload}\n\`\`\``);
   }
 
   function handleKey(e: React.KeyboardEvent) {
@@ -266,7 +272,7 @@ export default function App() {
             rows={1}
             className="input-field"
           />
-          <button onClick={send} disabled={!input.trim() || sending} className="send-btn">
+          <button onClick={() => send()} disabled={!input.trim() || sending} className="send-btn">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
             </svg>
@@ -277,7 +283,7 @@ export default function App() {
         </div>
       </div>
       </>) : (
-        <ExplorerView />
+        <ExplorerView onSendToChat={sendProofToChat} />
       )}
       </main>
     </div>
@@ -298,7 +304,7 @@ function describeRequest(item: FeedItem): string {
 function basename(v: unknown): string { const s = String(v || "unknown"); return s.split("/").pop() || s; }
 
 /* ── Explorer View ── */
-function ExplorerView() {
+function ExplorerView({ onSendToChat }: { onSendToChat: (proof: any) => void }) {
   const [proofs, setProofs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
@@ -369,6 +375,16 @@ function ExplorerView() {
                         <span style={{ marginLeft: 8, color: "var(--text-secondary)" }}>{p.decision.reason}</span>
                       </div>
                     )}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onSendToChat(p); }}
+                      style={{
+                        marginTop: 16, padding: "8px 16px", background: "var(--green, #34d399)", color: "#000",
+                        border: "none", borderRadius: 6, cursor: "pointer", fontWeight: 600, fontSize: 13,
+                        fontFamily: "inherit",
+                      }}
+                    >
+                      Send to AI
+                    </button>
                   </div>
                 )}
               </div>
