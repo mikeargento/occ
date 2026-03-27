@@ -7,7 +7,6 @@ import { useState } from "react";
 const links: { href: string; label: string; external?: boolean; indicator?: boolean }[] = [
   { href: "/explorer", label: "Explorer" },
   { href: "/docs", label: "Docs" },
-  { href: "https://agent.occ.wtf", label: "Dashboard", external: true },
 ];
 
 export function Nav() {
@@ -15,50 +14,31 @@ export function Nav() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 bg-[#efefef] border-b border-border-subtle/50">
+    <header className="sticky top-0 z-50 bg-white border-b border-[#e5e5ea]">
       <div className="mx-auto max-w-6xl px-6">
         <nav className="flex h-16 items-center justify-between">
           <Link
             href="/"
-            className="text-[28px] tracking-[-0.03em] font-black text-text"
+            className="text-[28px] tracking-[-0.03em] font-black text-black"
           >
             OCC
           </Link>
 
           {/* Desktop */}
-          <div className="hidden flex-1 items-center justify-end gap-1 md:flex">
-            {links.map((l) => {
-              if (l.external) {
-                return (
-                  <a
-                    key={l.href}
-                    href={l.href}
-                    className="text-sm font-semibold px-6 py-2.5 ml-2 bg-[#2563EB] text-white hover:bg-[#1D4ED8] transition-colors"
-                  >
-                    {l.label}
-                  </a>
-                );
-              }
-              return (
-                <Link
-                  key={l.href}
-                  href={l.href}
-                  className={`text-sm font-semibold px-3 py-1.5 transition-colors inline-flex items-center gap-1.5 ${
-                    pathname.startsWith(l.href)
-                      ? "text-text"
-                      : "text-text hover:opacity-70"
-                  }`}
-                >
-                  {l.indicator && (
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
-                    </span>
-                  )}
-                  {l.label}
-                </Link>
-              );
-            })}
+          <div className="hidden flex-1 items-center justify-end gap-4 md:flex">
+            {links.map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                className={`text-sm font-semibold px-3 py-1.5 transition-colors ${
+                  pathname.startsWith(l.href)
+                    ? "text-black"
+                    : "text-black hover:opacity-70"
+                }`}
+              >
+                {l.label}
+              </Link>
+            ))}
           </div>
 
           {/* Mobile controls */}
