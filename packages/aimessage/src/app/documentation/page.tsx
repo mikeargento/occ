@@ -10,8 +10,6 @@ export default function Docs() {
       margin: "0 auto",
       lineHeight: 1.6,
     }}>
-      <a href="/" style={{ fontSize: 14, color: "#007aff", textDecoration: "none" }}>← Back</a>
-
       <h1 style={{ fontSize: 36, fontWeight: 700, letterSpacing: "-0.02em", margin: "32px 0 16px" }}>AiMessage</h1>
       <p style={{ fontSize: 18, color: "#636366", margin: "0 0 48px" }}>Your AI asks before it acts.</p>
 
