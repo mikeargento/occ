@@ -8,42 +8,18 @@ export function Footer() {
       <div className="mx-auto max-w-6xl px-6 pt-16">
         <div className="flex flex-col md:flex-row md:justify-between gap-12">
           <div className="max-w-md">
-            <a href="https://aimessage.foo" className="text-sm font-semibold text-black hover:opacity-70 transition-opacity">
-              ← AiMessage
+            <p className="text-sm text-text-tertiary leading-relaxed">Origin Controlled Computing</p>
+            <a href="https://aimessage.foo" className="text-sm text-[#007aff] hover:opacity-70 transition-opacity mt-2 inline-block">
+              AiMessage →
             </a>
           </div>
 
-          <div className="grid grid-cols-2 gap-10 sm:grid-cols-3 sm:gap-16">
-            <div>
-              <h4 className="text-[11px] font-medium uppercase tracking-[0.15em] text-text-tertiary mb-5">
-                Product
-              </h4>
-              <ul className="space-y-3">
-                <li><a href="https://agent.occ.wtf" className="text-sm text-text-secondary hover:text-text transition-colors">Dashboard</a></li>
-                <li><Link href="/api-reference" className="text-sm text-text-secondary hover:text-text transition-colors">API Reference</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="text-[11px] font-medium uppercase tracking-[0.15em] text-text-tertiary mb-5">
-                Protocol
-              </h4>
-              <ul className="space-y-3">
-                <li><Link href="/docs" className="text-sm text-text-secondary hover:text-text transition-colors">Documentation</Link></li>
-                <li><Link href="/docs/proof-format" className="text-sm text-text-secondary hover:text-text transition-colors">Proof Format</Link></li>
-                <li><Link href="/docs/trust-model" className="text-sm text-text-secondary hover:text-text transition-colors">Trust Model</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="text-[11px] font-medium uppercase tracking-[0.15em] text-text-tertiary mb-5">
-                Resources
-              </h4>
-              <ul className="space-y-3">
-                <li><a href="https://github.com/mikeargento/occ" target="_blank" rel="noopener" className="text-sm text-text-secondary hover:text-text transition-colors">GitHub</a></li>
-                <li><a href="https://npmjs.com/package/occproof" target="_blank" rel="noopener" className="text-sm text-text-secondary hover:text-text transition-colors">npm</a></li>
-              </ul>
-            </div>
+          <div>
+            <ul className="space-y-3">
+              <li><Link href="/explorer" className="text-sm text-text-secondary hover:text-text transition-colors">Explorer</Link></li>
+              <li><Link href="/docs" className="text-sm text-text-secondary hover:text-text transition-colors">Docs</Link></li>
+              <li><a href="https://github.com/mikeargento/occ" target="_blank" rel="noopener" className="text-sm text-text-secondary hover:text-text transition-colors">GitHub</a></li>
+            </ul>
           </div>
         </div>
       </div>
