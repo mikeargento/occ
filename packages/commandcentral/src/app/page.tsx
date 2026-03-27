@@ -1,32 +1,22 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { getMe, getFeed, type FeedItem } from "@/lib/api";
-
-interface ChatMsg {
-  id: string;
-  role: "assistant" | "user";
-  text: string;
-  ts: number;
-}
+import { getMe, getFeed, approve, deny, type FeedItem } from "@/lib/api";
 
 export default function App() {
   const [user, setUser] = useState<{ id: string; name: string; email: string; avatar: string } | null>(null);
   const [loading, setLoading] = useState(true);
-  const [messages, setMessages] = useState<ChatMsg[]>([]);
-  const [input, setInput] = useState("");
-  const [sending, setSending] = useState(false);
+  const [feed, setFeed] = useState<FeedItem[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
-  const [view, setView] = useState<"chat" | "explorer">("chat");
+  const [view, setView] = useState<"feed" | "explorer">("feed");
+  const [expanded, setExpanded] = useState<Set<number>>(new Set());
+  const endRef = useRef<HTMLDivElement>(null);
+  const pollingRef = useRef<ReturnType<typeof setInterval>>(undefined);
 
   useEffect(() => {
     setIsDark(document.documentElement.getAttribute("data-theme") === "dark");
   }, []);
-  const endRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
-  const pollingRef = useRef<ReturnType<typeof setInterval>>(undefined);
-  const seenRef = useRef<Set<number>>(new Set());
 
   function toggleTheme() {
     const html = document.documentElement;
@@ -40,87 +30,35 @@ export default function App() {
     getMe().then(d => setUser(d.user)).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
-  const checkPending = useCallback(async () => {
+  const refreshFeed = useCallback(async () => {
     if (!user) return;
     try {
       const data = await getFeed();
-      const pending = (data.requests ?? []).filter((r: FeedItem) => r.status === "pending");
-      for (const req of pending) {
-        if (!seenRef.current.has(req.id)) {
-          seenRef.current.add(req.id);
-          setMessages(prev => [...prev, {
-            id: `req-${req.id}`, role: "assistant",
-            text: describeRequest(req), ts: Date.now(),
-          }]);
-        }
-      }
+      setFeed(data.requests ?? []);
     } catch {}
   }, [user]);
 
   useEffect(() => {
     if (!user) return;
-    checkPending();
-    pollingRef.current = setInterval(checkPending, 3000);
+    refreshFeed();
+    pollingRef.current = setInterval(refreshFeed, 3000);
     return () => clearInterval(pollingRef.current);
-  }, [user, checkPending]);
+  }, [user, refreshFeed]);
 
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [feed]);
 
-  useEffect(() => {
-    if (user && messages.length === 0) {
-      setMessages([{
-        id: "greeting", role: "assistant",
-        text: `Hey ${user.name?.split(" ")[0] || "there"}! I'm your AiMessage assistant.\n\nWhen your AI needs permission to do something, I'll let you know here. You can say "yes" to approve, "no" to deny, or ask me anything about what's happening.`,
-        ts: Date.now(),
-      }]);
-    }
-  }, [user]);
-
-  async function send(override?: string) {
-    const text = (override ?? input).trim();
-    if (!text || sending) return;
-    const userMsg: ChatMsg = { id: `u-${Date.now()}`, role: "user", text, ts: Date.now() };
-    setMessages(prev => [...prev, userMsg]);
-    if (!override) setInput("");
-    setSending(true);
-    if (inputRef.current) { inputRef.current.style.height = "auto"; }
-
-    try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: [...messages, userMsg].slice(-30).map(m => ({ role: m.role, content: m.text })),
-        }),
-      });
-      const data = await res.json();
-      setMessages(prev => [...prev, {
-        id: `a-${Date.now()}`, role: "assistant",
-        text: data.error || data.response || "Something went wrong.",
-        ts: Date.now(),
-      }]);
-      if (data.action) { seenRef.current.clear(); checkPending(); }
-    } catch {
-      setMessages(prev => [...prev, { id: `e-${Date.now()}`, role: "assistant", text: "Failed to connect. Try again.", ts: Date.now() }]);
-    }
-    setSending(false);
-    inputRef.current?.focus();
+  async function handleApprove(id: number) {
+    await approve(id);
+    refreshFeed();
   }
 
-  function sendProofToChat(proof: any) {
-    setView("chat");
-    const payload = JSON.stringify(proof, null, 2);
-    send(`Analyze this proof:\n\`\`\`json\n${payload}\n\`\`\``);
+  async function handleDeny(id: number) {
+    await deny(id);
+    refreshFeed();
   }
 
-  function handleKey(e: React.KeyboardEvent) {
-    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
-  }
-
-  function autoResize(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    setInput(e.target.value);
-    e.target.style.height = "auto";
-    e.target.style.height = Math.min(e.target.scrollHeight, 200) + "px";
+  function toggleCard(id: number) {
+    setExpanded(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   }
 
   // ── Loading ──
@@ -134,8 +72,8 @@ export default function App() {
   if (!user) return (
     <div className="page-center">
       <div className="login-card">
-        <h1 className="login-title">AiMessage</h1>
-        <p className="login-sub">Your AI asks before it acts.</p>
+        <h1 className="login-title">OCC</h1>
+        <p className="login-sub">Control what your AI can do.</p>
         <div className="login-buttons">
           <a href="/auth/login/github" className="auth-btn auth-github">
             <GithubIcon /> Continue with GitHub
@@ -151,22 +89,25 @@ export default function App() {
     </div>
   );
 
-  // ── Chat ──
+  const pending = feed.filter(r => r.status === "pending");
+  const resolved = feed.filter(r => r.status !== "pending");
+
+  // ── Main ──
   return (
     <div className="app-layout">
       {/* Sidebar */}
       <aside className={`sidebar ${sidebarOpen ? "sidebar-open" : ""}`}>
         <div className="sidebar-header">
-          <span className="sidebar-logo">AiMessage</span>
+          <span className="sidebar-logo">OCC</span>
           <button className="sidebar-close" onClick={() => setSidebarOpen(false)}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
 
         <nav className="sidebar-nav">
-          <button className={`sidebar-item ${view === "chat" ? "sidebar-item-active" : ""}`} onClick={() => { setView("chat"); setSidebarOpen(false); }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="8" width="18" height="12" rx="3"/><circle cx="9" cy="14" r="1.5" fill="currentColor" stroke="none"/><circle cx="15" cy="14" r="1.5" fill="currentColor" stroke="none"/><path d="M12 2v4"/><circle cx="12" cy="2" r="1" fill="currentColor" stroke="none"/></svg>
-            Chat
+          <button className={`sidebar-item ${view === "feed" ? "sidebar-item-active" : ""}`} onClick={() => { setView("feed"); setSidebarOpen(false); }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/></svg>
+            Activity
           </button>
           <button className={`sidebar-item ${view === "explorer" ? "sidebar-item-active" : ""}`} onClick={() => { setView("explorer"); setSidebarOpen(false); }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -220,91 +161,171 @@ export default function App() {
           <button className="topbar-btn" onClick={() => setSidebarOpen(true)}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
           </button>
-          <span className="topbar-title">AiMessage</span>
+          <span className="topbar-title">OCC</span>
           <div style={{ width: 36 }} />
         </div>
 
-        {view === "chat" ? (<>
-        {/* Messages */}
-      <div className="messages-scroll">
-        <div className="messages-container">
-          {messages.map(msg => (
-            <div key={msg.id} className={`message ${msg.role === "user" ? "message-user" : "message-assistant"}`}>
-              {msg.role === "assistant" && (
-                <div className="message-avatar">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="8" width="18" height="12" rx="3"/><circle cx="9" cy="14" r="1.5" fill="currentColor" stroke="none"/><circle cx="15" cy="14" r="1.5" fill="currentColor" stroke="none"/><path d="M12 2v4"/><circle cx="12" cy="2" r="1" fill="currentColor" stroke="none"/></svg>
+        {view === "feed" ? (
+          <div className="messages-scroll">
+            <div style={{ maxWidth: 640, margin: "0 auto", padding: "24px 16px" }}>
+              {/* Pending — needs action */}
+              {pending.length > 0 && (
+                <div style={{ marginBottom: 32 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 12 }}>
+                    Waiting for approval
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    {pending.map(item => (
+                      <InteractionCard key={item.id} item={item} expanded={expanded.has(item.id)} onToggle={() => toggleCard(item.id)} onApprove={() => handleApprove(item.id)} onDeny={() => handleDeny(item.id)} />
+                    ))}
+                  </div>
                 </div>
               )}
-              <div className="message-content">
-                {msg.role === "assistant" && <div className="message-name">AiMessage</div>}
-                <div className="message-text">{msg.text}</div>
-              </div>
-            </div>
-          ))}
 
-          {sending && (
-            <div className="message message-assistant">
-              <div className="message-avatar">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="8" width="18" height="12" rx="3"/><circle cx="9" cy="14" r="1.5" fill="currentColor" stroke="none"/><circle cx="15" cy="14" r="1.5" fill="currentColor" stroke="none"/><path d="M12 2v4"/><circle cx="12" cy="2" r="1" fill="currentColor" stroke="none"/></svg>
-              </div>
-              <div className="message-content">
-                <div className="message-name">AiMessage</div>
-                <div className="typing-indicator">
-                  <span /><span /><span />
+              {/* Resolved */}
+              {resolved.length > 0 && (
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: "var(--text-tertiary)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 12 }}>
+                    History
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {resolved.map(item => (
+                      <InteractionCard key={item.id} item={item} expanded={expanded.has(item.id)} onToggle={() => toggleCard(item.id)} />
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {feed.length === 0 && (
+                <div style={{ textAlign: "center", padding: 64, color: "var(--text-tertiary)" }}>
+                  <div style={{ fontSize: 14 }}>No activity yet</div>
+                  <div style={{ fontSize: 13, marginTop: 8 }}>When your AI tries to act, it shows up here.</div>
+                </div>
+              )}
+
+              <div ref={endRef} />
             </div>
-          )}
-
-          <div ref={endRef} />
-        </div>
-      </div>
-
-      {/* Input */}
-      <div className="input-area">
-        <div className="input-wrapper">
-          <textarea
-            ref={inputRef}
-            value={input}
-            onChange={autoResize}
-            onKeyDown={handleKey}
-            placeholder="Message AiMessage..."
-            rows={1}
-            className="input-field"
-          />
-          <button onClick={() => send()} disabled={!input.trim() || sending} className="send-btn">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-            </svg>
-          </button>
-        </div>
-        <div className="input-footer">
-          <span className="footer-link">Press Enter to send · Shift+Enter for new line</span>
-        </div>
-      </div>
-      </>) : (
-        <ExplorerView onSendToChat={sendProofToChat} />
-      )}
+          </div>
+        ) : (
+          <ExplorerView />
+        )}
       </main>
     </div>
   );
 }
 
-/* ── Helpers ── */
+/* ── Interaction Card ── */
+function InteractionCard({ item, expanded, onToggle, onApprove, onDeny }: {
+  item: FeedItem;
+  expanded: boolean;
+  onToggle: () => void;
+  onApprove?: () => void;
+  onDeny?: () => void;
+}) {
+  const isPending = item.status === "pending";
+  const statusColor = item.status === "approved" || item.status === "auto_approved"
+    ? "var(--green, #34d399)"
+    : item.status === "denied" ? "var(--red, #f87171)"
+    : item.status === "expired" ? "var(--text-tertiary)"
+    : "var(--yellow, #fbbf24)";
 
-function describeRequest(item: FeedItem): string {
-  const a = (item.args && typeof item.args === "object" ? item.args : {}) as Record<string, unknown>;
-  switch (item.tool) {
-    case "Write": return `Your AI wants to write a file called **${basename(a.file_path || a.path)}**.\n\nSay "yes" to allow, "once" for one time, or "no" to deny.`;
-    case "Edit": return `Your AI wants to edit **${basename(a.file_path || a.path)}**. Allow?`;
-    case "Bash": { const cmd = String(a.command || "").split("\n")[0].slice(0, 120); return `Your AI wants to run:\n\n\`${cmd}\`\n\nAllow?`; }
-    default: { const name = item.tool.startsWith("mcp__") ? (item.tool.split("__").pop() || item.tool) : item.tool; return `Your AI wants to use **${name.replace(/[_-]/g, " ")}**. Allow?`; }
-  }
+  const statusLabel = item.status === "auto_approved" ? "Auto-approved" : item.status.charAt(0).toUpperCase() + item.status.slice(1);
+  const toolName = item.tool.startsWith("mcp__") ? (item.tool.split("__").pop() || item.tool).replace(/[_-]/g, " ") : item.tool;
+  const args = (item.args && typeof item.args === "object" ? item.args : {}) as Record<string, unknown>;
+
+  return (
+    <div style={{
+      background: "var(--surface)",
+      border: isPending ? "1px solid var(--yellow, #fbbf24)" : "1px solid var(--border-light)",
+      borderRadius: 10,
+      overflow: "hidden",
+    }}>
+      {/* Card header — always visible */}
+      <button onClick={onToggle} style={{
+        width: "100%", display: "flex", alignItems: "center", gap: 12,
+        padding: "14px 16px", background: "none", border: "none", cursor: "pointer",
+        color: "var(--text)", fontFamily: "inherit", fontSize: 14, textAlign: "left",
+      }}>
+        <span style={{ width: 8, height: 8, borderRadius: "50%", background: statusColor, flexShrink: 0 }} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontWeight: 600, fontSize: 14 }}>{toolName}</div>
+          <div style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            {item.summary || item.label}
+          </div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2, flexShrink: 0 }}>
+          <span style={{ fontSize: 11, color: statusColor, fontWeight: 600 }}>{statusLabel}</span>
+          <span style={{ fontSize: 11, color: "var(--text-tertiary)" }}>
+            {new Date(item.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          </span>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" strokeWidth="2" style={{ transform: expanded ? "rotate(90deg)" : "rotate(0)", transition: "transform 0.15s", flexShrink: 0 }}>
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </button>
+
+      {/* Expanded detail */}
+      {expanded && (
+        <div style={{ padding: "0 16px 16px", borderTop: "1px solid var(--border-light)" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "6px 12px", fontSize: 13, marginTop: 12 }}>
+            <span style={{ color: "var(--text-tertiary)", fontWeight: 500 }}>Agent</span>
+            <span style={{ color: "var(--text-secondary)" }}>{item.agentId}</span>
+
+            <span style={{ color: "var(--text-tertiary)", fontWeight: 500 }}>Tool</span>
+            <span style={{ color: "var(--text-secondary)", fontFamily: "monospace", fontSize: 12 }}>{item.tool}</span>
+
+            {item.riskLane && <>
+              <span style={{ color: "var(--text-tertiary)", fontWeight: 500 }}>Risk</span>
+              <span style={{ color: "var(--text-secondary)" }}>{item.riskLane}</span>
+            </>}
+
+            {item.originClient && <>
+              <span style={{ color: "var(--text-tertiary)", fontWeight: 500 }}>Origin</span>
+              <span style={{ color: "var(--text-secondary)" }}>{item.originClient}</span>
+            </>}
+          </div>
+
+          {/* Args */}
+          {Object.keys(args).length > 0 && (
+            <div style={{ marginTop: 12 }}>
+              <div style={{ fontSize: 12, fontWeight: 500, color: "var(--text-tertiary)", marginBottom: 4 }}>Arguments</div>
+              <pre style={{
+                fontSize: 12, fontFamily: "monospace", color: "var(--text-secondary)",
+                background: "var(--bg)", padding: 12, borderRadius: 6, overflow: "auto",
+                maxHeight: 200, margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-all",
+              }}>
+                {JSON.stringify(args, null, 2)}
+              </pre>
+            </div>
+          )}
+
+          {/* Approve / Deny for pending */}
+          {isPending && onApprove && onDeny && (
+            <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+              <button onClick={(e) => { e.stopPropagation(); onApprove(); }} style={{
+                flex: 1, padding: "10px 0", background: "var(--green, #34d399)", color: "#000",
+                border: "none", borderRadius: 6, cursor: "pointer", fontWeight: 700, fontSize: 14,
+                fontFamily: "inherit",
+              }}>
+                Approve
+              </button>
+              <button onClick={(e) => { e.stopPropagation(); onDeny(); }} style={{
+                flex: 1, padding: "10px 0", background: "var(--red, #f87171)", color: "#000",
+                border: "none", borderRadius: 6, cursor: "pointer", fontWeight: 700, fontSize: 14,
+                fontFamily: "inherit",
+              }}>
+                Deny
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
-function basename(v: unknown): string { const s = String(v || "unknown"); return s.split("/").pop() || s; }
 
 /* ── Explorer View ── */
-function ExplorerView({ onSendToChat }: { onSendToChat: (proof: any) => void }) {
+function ExplorerView() {
   const [proofs, setProofs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
@@ -321,35 +342,28 @@ function ExplorerView({ onSendToChat }: { onSendToChat: (proof: any) => void }) 
 
   return (
     <div style={{ flex: 1, overflowY: "auto" }}>
-      <div style={{ maxWidth: 768, margin: "0 auto", padding: 24 }}>
-        <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>Proof Explorer</h2>
-        <p style={{ fontSize: 14, color: "var(--text-secondary)", marginBottom: 24 }}>Your cryptographic proof chain</p>
+      <div style={{ maxWidth: 640, margin: "0 auto", padding: "24px 16px" }}>
+        <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>Proof Explorer</h2>
+        <p style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 24 }}>Cryptographic proof chain</p>
 
         {proofs.length === 0 ? (
           <div style={{ textAlign: "center", padding: 48, color: "var(--text-tertiary)" }}>No proofs yet</div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {proofs.map((p, i) => (
-              <div key={p.id || i} style={{ background: "var(--surface)", border: "1px solid var(--border-light)", borderRadius: 8, overflow: "hidden" }}>
+              <div key={p.id || i} style={{ background: "var(--surface)", border: "1px solid var(--border-light)", borderRadius: 10, overflow: "hidden" }}>
                 <button onClick={() => toggle(i)} style={{
                   width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
                   padding: "14px 16px", background: "none", border: "none", cursor: "pointer",
                   color: "var(--text)", fontFamily: "inherit", fontSize: 14, textAlign: "left",
                 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{
-                      width: 8, height: 8, borderRadius: "50%",
-                      background: p.decision?.allowed ? "var(--green)" : "var(--red)",
-                    }} />
+                    <span style={{ width: 8, height: 8, borderRadius: "50%", background: p.decision?.allowed ? "var(--green)" : "var(--red)" }} />
                     <span style={{ fontWeight: 500 }}>{p.tool || "Unknown"}</span>
-                    <span style={{ color: "var(--text-tertiary)", fontSize: 12 }}>
-                      {p.decision?.allowed ? "Allowed" : "Denied"}
-                    </span>
+                    <span style={{ color: "var(--text-tertiary)", fontSize: 12 }}>{p.decision?.allowed ? "Allowed" : "Denied"}</span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>
-                      {p.timestamp ? new Date(p.timestamp).toLocaleString() : ""}
-                    </span>
+                    <span style={{ fontSize: 12, color: "var(--text-tertiary)" }}>{p.timestamp ? new Date(p.timestamp).toLocaleString() : ""}</span>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" strokeWidth="2" style={{ transform: expanded.has(i) ? "rotate(90deg)" : "rotate(0)", transition: "transform 0.15s" }}>
                       <polyline points="9 18 15 12 9 6"/>
                     </svg>
@@ -375,16 +389,6 @@ function ExplorerView({ onSendToChat }: { onSendToChat: (proof: any) => void }) 
                         <span style={{ marginLeft: 8, color: "var(--text-secondary)" }}>{p.decision.reason}</span>
                       </div>
                     )}
-                    <button
-                      onClick={(e) => { e.stopPropagation(); onSendToChat(p); }}
-                      style={{
-                        marginTop: 16, padding: "8px 16px", background: "var(--green, #34d399)", color: "#000",
-                        border: "none", borderRadius: 6, cursor: "pointer", fontWeight: 600, fontSize: 13,
-                        fontFamily: "inherit",
-                      }}
-                    >
-                      Send to AI
-                    </button>
                   </div>
                 )}
               </div>
