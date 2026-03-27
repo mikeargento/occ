@@ -140,7 +140,7 @@ export default function App() {
         <div className="imessage-scroll">
           <div className="imessage-thread">
             {feed.length === 0 && (
-              <div style={{ textAlign: "center", padding: "64px 0", color: "var(--text-tertiary)", fontSize: 15 }}>
+              <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-tertiary)", fontSize: 15 }}>
                 No messages yet
               </div>
             )}

@@ -133,8 +133,8 @@ body {
 }
 
 /* ── iMessage thread ── */
-.imessage-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-.imessage-thread { max-width: 680px; margin: 0 auto; padding: 8px 16px 16px; display: flex; flex-direction: column; }
+.imessage-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; }
+.imessage-thread { max-width: 680px; width: 100%; margin: 0 auto; padding: 8px 16px 16px; display: flex; flex-direction: column; justify-content: flex-end; flex: 1; min-height: 100%; }
 
 /* Bubbles */
 .bubble-row { display: flex; margin-bottom: 2px; animation: fadeIn 0.15s ease-out; }
