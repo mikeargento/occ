@@ -475,7 +475,20 @@ export async function handleApiV2(req: IncomingMessage, res: ServerResponse, url
       const updated = await db.v2GetRequest(request.id);
       if (updated && updated.status !== "pending") {
         if (updated.status === "approved" || updated.status === "auto_approved") {
-          return json(res, { decision: "allow", requestId: request.id });
+          // Create TEE-signed proof — this IS the authorization message back
+          try {
+            const { proof, digest } = await createAuthorizationObject(
+              userId, "hook", tool, { args: body.args }, undefined, undefined
+            );
+            return json(res, {
+              decision: "allow",
+              requestId: request.id,
+              proof: { digest, receipt: proof }
+            });
+          } catch {
+            // TEE unavailable — still allow but without proof
+            return json(res, { decision: "allow", requestId: request.id });
+          }
         } else {
           const reason = updated.decisions?.[0]?.reason ?? "Denied by human";
           return json(res, { decision: "deny", reason, requestId: request.id });
