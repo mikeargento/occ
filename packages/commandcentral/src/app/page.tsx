@@ -9,7 +9,10 @@ export default function App() {
   const [feed, setFeed] = useState<FeedItem[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
+  const [input, setInput] = useState("");
+  const [sending, setSending] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval>>(undefined);
 
   useEffect(() => {
@@ -53,6 +56,24 @@ export default function App() {
   async function handleDeny(id: number) {
     await deny(id);
     refreshFeed();
+  }
+
+  async function handleSend() {
+    const text = input.trim();
+    if (!text || sending) return;
+    setInput("");
+    setSending(true);
+    if (inputRef.current) inputRef.current.style.height = "auto";
+    try {
+      await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: [{ role: "user", content: text }] }),
+      });
+      refreshFeed();
+    } catch {}
+    setSending(false);
+    inputRef.current?.focus();
   }
 
   if (loading) return <div className="page-center"><div className="loader" /></div>;
@@ -135,14 +156,16 @@ export default function App() {
         <div className="imessage-scroll">
           <div className="imessage-thread">
             {feed.length === 0 && (
-              <div style={{ textAlign: "center", padding: "64px 0", color: "var(--text-tertiary)", fontSize: 14 }}>
+              <div style={{ textAlign: "center", padding: "64px 0", color: "var(--text-tertiary)", fontSize: 15 }}>
                 No messages yet
               </div>
             )}
 
             {feed.map((item, i) => {
+              const next = feed[i + 1];
               const prev = feed[i - 1];
               const showTime = !prev || (new Date(item.createdAt).getTime() - new Date(prev.createdAt).getTime() > 300000);
+              const isLastReceived = !next || next.status !== item.status;
               const isPending = item.status === "pending";
               const isResolved = item.status === "approved" || item.status === "auto_approved" || item.status === "denied";
               const toolName = item.tool.startsWith("mcp__") ? (item.tool.split("__").pop() || item.tool).replace(/[_-]/g, " ") : item.tool;
@@ -156,48 +179,67 @@ export default function App() {
                     </div>
                   )}
 
-                  {/* OCC's message — gray bubble, left side */}
-                  <div className="bubble-row bubble-row-received">
-                    <div>
-                      <div className="bubble bubble-received">
-                        <div className="bubble-tool">{toolName}</div>
-                        {(item.summary || item.label) && (
-                          <div className="bubble-summary">{item.summary || item.label}</div>
-                        )}
-                        {Object.keys(args).length > 0 && (
-                          <div className="bubble-args">{JSON.stringify(args, null, 2)}</div>
-                        )}
-                        {isPending && (
-                          <div className="quick-reply">
-                            <button className="quick-reply-approve" onClick={() => handleApprove(item.id)}>Allow</button>
-                            <button className="quick-reply-deny" onClick={() => handleDeny(item.id)}>Deny</button>
-                          </div>
-                        )}
-                        {isResolved && (
-                          <div className={`bubble-status bubble-status-${item.status === "auto_approved" ? "approved" : item.status}`}>
-                            {item.status === "auto_approved" ? "Auto-allowed" : item.status === "approved" ? "Allowed" : "Denied"}
-                          </div>
-                        )}
-                        {item.status === "expired" && (
-                          <div className="bubble-status bubble-status-expired">Expired</div>
-                        )}
-                      </div>
+                  {/* OCC's message — gray bubble, left */}
+                  <div className={`bubble-row bubble-row-received${showTime ? " bubble-row-spaced" : ""}`}>
+                    <div className={`bubble bubble-received${isLastReceived ? " bubble-tail" : ""}`}>
+                      <div className="bubble-tool">{toolName}</div>
+                      {(item.summary || item.label) && (
+                        <div className="bubble-summary">{item.summary || item.label}</div>
+                      )}
+                      {Object.keys(args).length > 0 && (
+                        <div className="bubble-args">{JSON.stringify(args, null, 2)}</div>
+                      )}
+                      {isPending && (
+                        <div className="quick-reply">
+                          <button className="quick-reply-approve" onClick={() => handleApprove(item.id)}>Allow</button>
+                          <button className="quick-reply-deny" onClick={() => handleDeny(item.id)}>Deny</button>
+                        </div>
+                      )}
+                      {isResolved && (
+                        <div className={`bubble-status bubble-status-${item.status === "auto_approved" ? "approved" : item.status}`}>
+                          {item.status === "auto_approved" ? "Auto-allowed" : item.status === "approved" ? "Allowed" : "Denied"}
+                        </div>
+                      )}
+                      {item.status === "expired" && (
+                        <div className="bubble-status bubble-status-expired">Expired</div>
+                      )}
                     </div>
                   </div>
 
-                  {/* User's response — blue bubble, right side (only if resolved by user) */}
+                  {/* User response — blue bubble, right */}
                   {(item.status === "approved" || item.status === "denied") && (
-                    <div className="bubble-row bubble-row-sent">
-                      <div className="bubble bubble-sent">
-                        {item.status === "approved" ? "Yes" : "No"}
+                    <>
+                      <div className="bubble-row bubble-row-sent">
+                        <div className="bubble bubble-sent bubble-tail">
+                          {item.status === "approved" ? "Yes" : "No"}
+                        </div>
                       </div>
-                    </div>
+                      <div className="delivered-text">Delivered</div>
+                    </>
                   )}
                 </div>
               );
             })}
 
             <div ref={endRef} />
+          </div>
+        </div>
+
+        {/* iMessage input bar */}
+        <div className="imessage-input-bar">
+          <div className="imessage-input-wrapper">
+            <textarea
+              ref={inputRef}
+              value={input}
+              onChange={(e) => { setInput(e.target.value); e.target.style.height = "auto"; e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px"; }}
+              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+              placeholder="iMessage"
+              rows={1}
+              className="imessage-input"
+            />
+            <button onClick={handleSend} disabled={!input.trim() || sending} className="imessage-send">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+            </button>
           </div>
         </div>
       </main>
