@@ -114,15 +114,13 @@ export default function AiMessage() {
   const visible = messages.filter(m => !dismissed.has(m.id));
 
   return (
-    <div style={S.container}>
-      {/* Header */}
-      <div style={S.header}>
-        <div style={S.headerInner}>
-          <span style={S.headerTitle}>AiMessage</span>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <a href="/settings" style={{ color: "#8e8e93", display: "flex", alignItems: "center", textDecoration: "none", fontSize: "13px" }}>
-              Settings
-            </a>
+    <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "#fff" }}>
+      {/* Header — full width */}
+      <div style={{ flexShrink: 0, borderBottom: "1px solid #e5e5ea", background: "#f8f8f8" }}>
+        <div style={{ maxWidth: 600, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: 56, padding: "0 16px" }}>
+          <span style={{ fontSize: 20, fontWeight: 700, color: "#000", letterSpacing: "-0.01em" }}>AiMessage</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <a href="/settings" style={{ color: "#8e8e93", textDecoration: "none", fontSize: 13 }}>Settings</a>
             {user.avatar ? (
               <img src={user.avatar} alt="" style={{ width: 28, height: 28, borderRadius: "50%" }} />
             ) : (
@@ -135,7 +133,8 @@ export default function AiMessage() {
       </div>
 
       {/* Messages */}
-      <div style={S.messageArea}>
+      <div style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch" as const }}>
+      <div style={{ maxWidth: 600, margin: "0 auto", padding: 16, display: "flex", flexDirection: "column" as const, gap: 16, minHeight: "100%" }}>
         {visible.length === 0 && (
           <div style={S.emptyState}>
             <p style={S.emptyTitle}>No messages yet</p>
@@ -183,10 +182,11 @@ export default function AiMessage() {
         })}
         <div ref={bottomRef} />
       </div>
+      </div>
 
       {/* Bottom */}
-      <div style={S.bottomBar}>
-        <span style={S.bottomText}>Your AI asks. You decide.</span>
+      <div style={{ flexShrink: 0, borderTop: "1px solid #e5e5ea", padding: "12px 16px", textAlign: "center" as const }}>
+        <span style={{ fontSize: 12, color: "#8e8e93" }}>Your AI asks. You decide.</span>
       </div>
     </div>
   );
