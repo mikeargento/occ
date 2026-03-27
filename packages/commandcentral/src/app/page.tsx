@@ -233,7 +233,7 @@ export default function App() {
               value={input}
               onChange={(e) => { setInput(e.target.value); e.target.style.height = "auto"; e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px"; }}
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-              placeholder="iMessage"
+              placeholder="AiMessage"
               rows={1}
               className="imessage-input"
             />
