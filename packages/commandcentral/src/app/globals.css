@@ -82,7 +82,49 @@ body {
 [data-theme="dark"] .auth-google { background: var(--surface); }
 [data-theme="dark"] .auth-apple { background: #fff; color: #000; }
 
-/* ── Chat layout ── */
+/* ── App layout ── */
+.app-layout { display: flex; height: 100%; background: var(--bg); }
+
+/* ── Sidebar ── */
+.sidebar {
+  width: 260px; flex-shrink: 0;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  height: 100%;
+}
+.sidebar-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 16px 12px; height: 52px;
+}
+.sidebar-logo { font-size: 16px; font-weight: 700; letter-spacing: -0.02em; }
+.sidebar-close { display: none; background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 4px; }
+.sidebar-section { padding: 8px 8px 0; flex: 1; }
+.sidebar-section-label { font-size: 11px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; padding: 8px 12px 4px; }
+.sidebar-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px; border-radius: 8px;
+  font-size: 14px; font-weight: 500; color: var(--text-secondary);
+  background: transparent; border: none; width: 100%;
+  text-align: left; text-decoration: none;
+  cursor: pointer; transition: all 0.15s;
+}
+.sidebar-item:hover { background: var(--surface-hover); color: var(--text); }
+.sidebar-item-active { background: var(--surface); color: var(--text); font-weight: 600; }
+.sidebar-footer { padding: 8px; border-top: 1px solid var(--border-light); margin-top: auto; }
+.sidebar-user { display: flex; align-items: center; gap: 10px; padding: 8px 12px; }
+.sidebar-user-avatar { width: 28px; height: 28px; border-radius: 50%; }
+.sidebar-user-avatar-placeholder { width: 28px; height: 28px; border-radius: 50%; background: var(--accent-light); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; }
+.sidebar-user-info { min-width: 0; }
+.sidebar-user-name { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sidebar-user-email { font-size: 11px; color: var(--text-tertiary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sidebar-overlay { display: none; }
+
+/* ── Chat main ── */
+.chat-main { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100%; }
+.mobile-header { display: none; }
+
+/* ── Chat layout (legacy compat) ── */
 .chat-layout { display: flex; flex-direction: column; height: 100%; background: var(--bg); }
 
 /* ── Top bar ── */
@@ -186,10 +228,29 @@ body {
 @keyframes pulse { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
 
 /* ── Mobile ── */
-@media (max-width: 640px) {
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed; top: 0; left: 0; bottom: 0; z-index: 50;
+    transform: translateX(-100%);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .sidebar-open { transform: translateX(0); }
+  .sidebar-close { display: flex; }
+  .sidebar-overlay { display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 40; }
+  .mobile-header {
+    display: flex; align-items: center; justify-content: space-between;
+    height: 52px; padding: 0 12px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
   .messages-container { padding: 16px; }
   .input-area { padding: 12px 16px 16px; }
   .message { gap: 12px; padding: 16px 0; }
   .login-card { margin: 16px; padding: 32px 24px; }
   .settings-container { padding: 24px 16px 48px; }
+}
+
+/* Desktop: hide mobile header */
+@media (min-width: 769px) {
+  .mobile-header { display: none; }
 }
