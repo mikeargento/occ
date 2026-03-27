@@ -10,7 +10,7 @@ export function Footer() {
           <div className="max-w-md">
             <p className="text-sm text-text-tertiary leading-relaxed">Origin Controlled Computing</p>
             <a href="https://aimessage.foo" className="text-sm text-[#007aff] hover:opacity-70 transition-opacity mt-2 inline-block">
-              AiMessage →
+              Back to AiMessage
             </a>
           </div>
 
