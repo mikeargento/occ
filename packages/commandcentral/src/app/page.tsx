@@ -182,7 +182,7 @@ export default function App() {
                   {/* OCC's message — gray bubble, left */}
                   <div className={`bubble-row bubble-row-received${showTime ? " bubble-row-spaced" : ""}`}>
                     <div className={`bubble bubble-received${isLastReceived ? " bubble-tail" : ""}`}>
-                      <div className="bubble-tool">{toolName}</div>
+                      <div className="bubble-tool">🤖 {toolName}</div>
                       {(item.summary || item.label) && (
                         <div className="bubble-summary">{item.summary || item.label}</div>
                       )}
