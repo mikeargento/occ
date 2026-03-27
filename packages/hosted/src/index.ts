@@ -8,6 +8,7 @@ import { handleMcp } from "./mcp.js";
 import { handleAuth } from "./auth.js";
 import { handleLlmProxy } from "./llm-proxy.js";
 import { handleSmsWebhook } from "./sms.js";
+import { handleChat } from "./chat.js";
 import { db } from "./db.js";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
@@ -134,6 +135,12 @@ async function handler(req: IncomingMessage, res: ServerResponse) {
   // Auth endpoints
   if (pathname.startsWith("/auth/")) {
     await handleAuth(req, res, pathname);
+    return;
+  }
+
+  // Chat endpoint
+  if (pathname === "/api/chat" && req.method === "POST") {
+    await handleChat(req, res);
     return;
   }
 
