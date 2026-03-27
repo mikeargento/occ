@@ -82,9 +82,7 @@ body {
   text-decoration: none; transition: opacity 0.15s;
 }
 .auth-btn:hover { opacity: 0.85; }
-.auth-github { background: var(--text); color: var(--bg); }
-.auth-google { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
-.auth-apple { background: var(--text); color: var(--bg); }
+.auth-btn { background: var(--text); color: var(--bg); }
 
 /* ── App layout ── */
 .app-layout { display: flex; height: 100%; background: var(--bg); }
