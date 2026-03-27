@@ -55,17 +55,8 @@ export default function Docs() {
         <P>Everything runs locally on your Mac. No servers. No accounts. No data leaves your machine. Your phone number is stored in ~/.aimessage/config.json and is only used to send yourself iMessages.</P>
       </Section>
 
-      <div style={{ borderTop: "1px solid #e5e5ea", marginTop: 48, paddingTop: 24, display: "flex", flexDirection: "column", gap: 12 }}>
-        <p style={{ fontSize: 15, fontWeight: 600, color: "#000" }}>Built on OCC (Origin Controlled Computing)</p>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <a href="https://occ.wtf/explorer" style={{ fontSize: 14, color: "#007aff", textDecoration: "none" }}>Proof Explorer →</a>
-          <a href="https://occ.wtf/docs/what-is-occ" style={{ fontSize: 14, color: "#007aff", textDecoration: "none" }}>What is OCC →</a>
-          <a href="https://occ.wtf/docs/whitepaper" style={{ fontSize: 14, color: "#007aff", textDecoration: "none" }}>Whitepaper →</a>
-          <a href="https://occ.wtf/docs/trust-model" style={{ fontSize: 14, color: "#007aff", textDecoration: "none" }}>Trust Model →</a>
-          <a href="https://occ.wtf/docs/proof-format" style={{ fontSize: 14, color: "#007aff", textDecoration: "none" }}>Proof Format →</a>
-          <a href="https://occ.wtf/docs/integration" style={{ fontSize: 14, color: "#007aff", textDecoration: "none" }}>Integration Guide →</a>
-          <a href="https://github.com/mikeargento/occ" style={{ fontSize: 14, color: "#007aff", textDecoration: "none" }}>GitHub →</a>
-        </div>
+      <div style={{ borderTop: "1px solid #e5e5ea", marginTop: 48, paddingTop: 24 }}>
+        <p style={{ fontSize: 13, color: "#636366" }}>Built on <a href="https://occ.wtf" style={{ color: "#007aff", textDecoration: "none" }}>OCC</a> (Origin Controlled Computing)</p>
       </div>
     </div>
   );
