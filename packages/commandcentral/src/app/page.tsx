@@ -195,11 +195,11 @@ export default function AiMessage() {
 /* ── Styles ── */
 
 const S: Record<string, React.CSSProperties> = {
-  container: { display: "flex", flexDirection: "column", height: "100vh", maxWidth: "480px", margin: "0 auto", background: "#fff" },
+  container: { display: "flex", flexDirection: "column", height: "100vh", maxWidth: "600px", margin: "0 auto", background: "#fff" },
 
   header: { flexShrink: 0, borderBottom: "1px solid #e5e5ea", background: "rgba(255,255,255,0.92)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)" },
-  headerInner: { display: "flex", alignItems: "center", justifyContent: "space-between", height: "52px", padding: "0 16px" },
-  headerTitle: { fontSize: "17px", fontWeight: 600, color: "#000" },
+  headerInner: { display: "flex", alignItems: "center", justifyContent: "space-between", height: "56px", padding: "0 16px" },
+  headerTitle: { fontSize: "20px", fontWeight: 700, color: "#000", letterSpacing: "-0.01em" },
 
   messageArea: { flex: 1, overflowY: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: "16px", WebkitOverflowScrolling: "touch" },
   messageGroup: { display: "flex", flexDirection: "column", gap: "6px" },
