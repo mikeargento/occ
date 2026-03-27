@@ -60,12 +60,12 @@ export default function Docs() {
       <div style={{ borderTop: "1px solid #e5e5ea", marginTop: 48, paddingTop: 24, display: "flex", flexDirection: "column", gap: 12 }}>
         <p style={{ fontSize: 15, fontWeight: 600, color: "#000" }}>Built on OCC (Origin Controlled Computing)</p>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <a href="/documentation/explorer" style={{ fontSize: 14, color: "#007aff", textDecoration: "none" }}>Proof Explorer →</a>
-          <a href="/documentation/what-is-occ" style={{ fontSize: 14, color: "#007aff", textDecoration: "none" }}>What is OCC →</a>
-          <a href="/documentation/whitepaper" style={{ fontSize: 14, color: "#007aff", textDecoration: "none" }}>Whitepaper →</a>
-          <a href="/documentation/trust-model" style={{ fontSize: 14, color: "#007aff", textDecoration: "none" }}>Trust Model →</a>
-          <a href="/documentation/proof-format" style={{ fontSize: 14, color: "#007aff", textDecoration: "none" }}>Proof Format →</a>
-          <a href="/documentation/integration" style={{ fontSize: 14, color: "#007aff", textDecoration: "none" }}>Integration Guide →</a>
+          <a href="https://occ.wtf/explorer" style={{ fontSize: 14, color: "#007aff", textDecoration: "none" }}>Proof Explorer →</a>
+          <a href="https://occ.wtf/docs/what-is-occ" style={{ fontSize: 14, color: "#007aff", textDecoration: "none" }}>What is OCC →</a>
+          <a href="https://occ.wtf/docs/whitepaper" style={{ fontSize: 14, color: "#007aff", textDecoration: "none" }}>Whitepaper →</a>
+          <a href="https://occ.wtf/docs/trust-model" style={{ fontSize: 14, color: "#007aff", textDecoration: "none" }}>Trust Model →</a>
+          <a href="https://occ.wtf/docs/proof-format" style={{ fontSize: 14, color: "#007aff", textDecoration: "none" }}>Proof Format →</a>
+          <a href="https://occ.wtf/docs/integration" style={{ fontSize: 14, color: "#007aff", textDecoration: "none" }}>Integration Guide →</a>
           <a href="https://github.com/mikeargento/occ" style={{ fontSize: 14, color: "#007aff", textDecoration: "none" }}>GitHub →</a>
         </div>
       </div>
