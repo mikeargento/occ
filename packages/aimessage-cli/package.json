@@ -1,17 +1,28 @@
 {
-  "name": "aimessage",
-  "version": "1.0.0",
+  "name": "aimessage-app",
+  "version": "1.0.1",
   "description": "Your AI asks before it acts. Approve or deny AI actions via iMessage.",
   "bin": {
-    "aimessage": "./bin/aimessage.js"
+    "aimessage": "bin/aimessage.js"
   },
-  "files": ["bin/", "lib/", "README.md"],
-  "keywords": ["ai", "imessage", "claude", "occ", "approval", "governance"],
+  "files": [
+    "bin/",
+    "lib/",
+    "README.md"
+  ],
+  "keywords": [
+    "ai",
+    "imessage",
+    "claude",
+    "occ",
+    "approval",
+    "governance"
+  ],
   "license": "MIT",
   "author": "Mike Argento",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mikeargento/occ"
+    "url": "git+https://github.com/mikeargento/occ.git"
   },
   "engines": {
     "node": ">=18"

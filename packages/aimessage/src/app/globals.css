@@ -17,7 +17,7 @@ html, body {
   background: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
-  overflow: hidden;
+  overflow: auto;
 }
 
 /* PWA safe area */
