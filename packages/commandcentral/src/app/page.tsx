@@ -9,10 +9,7 @@ export default function App() {
   const [feed, setFeed] = useState<FeedItem[]>([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
-  const [input, setInput] = useState("");
-  const [sending, setSending] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval>>(undefined);
 
   useEffect(() => {
@@ -58,22 +55,9 @@ export default function App() {
     refreshFeed();
   }
 
-  async function handleSend() {
-    const text = input.trim();
-    if (!text || sending) return;
-    setInput("");
-    setSending(true);
-    if (inputRef.current) inputRef.current.style.height = "auto";
-    try {
-      await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: [{ role: "user", content: text }] }),
-      });
-      refreshFeed();
-    } catch {}
-    setSending(false);
-    inputRef.current?.focus();
+  async function handleApproveAlways(id: number) {
+    await approve(id, "always");
+    refreshFeed();
   }
 
   if (loading) return <div className="page-center"><div className="loader" /></div>;
@@ -191,8 +175,9 @@ export default function App() {
                       )}
                       {isPending && (
                         <div className="quick-reply">
-                          <button className="quick-reply-approve" onClick={() => handleApprove(item.id)}>Allow</button>
-                          <button className="quick-reply-deny" onClick={() => handleDeny(item.id)}>Deny</button>
+                          <button className="quick-reply-deny" onClick={() => handleDeny(item.id)}>No</button>
+                          <button className="quick-reply-approve" onClick={() => handleApprove(item.id)}>Yes</button>
+                          <button className="quick-reply-always" onClick={() => handleApproveAlways(item.id)}>Always</button>
                         </div>
                       )}
                       {isResolved && (
@@ -206,17 +191,6 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* User response — blue bubble, right */}
-                  {(item.status === "approved" || item.status === "denied") && (
-                    <>
-                      <div className="bubble-row bubble-row-sent">
-                        <div className="bubble bubble-sent bubble-tail">
-                          {item.status === "approved" ? "Yes" : "No"}
-                        </div>
-                      </div>
-                      <div className="delivered-text">Delivered</div>
-                    </>
-                  )}
                 </div>
               );
             })}
@@ -225,23 +199,6 @@ export default function App() {
           </div>
         </div>
 
-        {/* iMessage input bar */}
-        <div className="imessage-input-bar">
-          <div className="imessage-input-wrapper">
-            <textarea
-              ref={inputRef}
-              value={input}
-              onChange={(e) => { setInput(e.target.value); e.target.style.height = "auto"; e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px"; }}
-              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-              placeholder="AiMessage"
-              rows={1}
-              className="imessage-input"
-            />
-            <button onClick={handleSend} disabled={!input.trim() || sending} className="imessage-send">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-            </button>
-          </div>
-        </div>
       </main>
     </div>
   );

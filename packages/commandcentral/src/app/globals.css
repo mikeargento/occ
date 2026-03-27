@@ -210,8 +210,9 @@ body {
   cursor: pointer; transition: opacity 0.15s;
 }
 .quick-reply button:hover { opacity: 0.85; }
-.quick-reply-approve { background: var(--green); color: #fff; }
 .quick-reply-deny { background: var(--red); color: #fff; }
+.quick-reply-approve { background: var(--green); color: #fff; }
+.quick-reply-always { background: var(--accent); color: #fff; }
 
 /* Timestamp */
 .time-separator {
