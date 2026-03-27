@@ -3,16 +3,16 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { getMe, getFeed, approve, deny, type FeedItem } from "@/lib/api";
 
+/* ── Helpers ── */
+
 function timeLabel(iso: string): string {
   const d = new Date(iso);
   const now = new Date();
   const diff = now.getTime() - d.getTime();
   if (diff < 60_000) return "now";
-  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)} min ago`;
-  if (diff < 86_400_000) {
-    return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-  }
-  return d.toLocaleDateString([], { weekday: "short", hour: "numeric", minute: "2-digit" });
+  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}m ago`;
+  if (diff < 86_400_000) return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  return d.toLocaleDateString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 }
 
 function toolLabel(raw: string): string {
@@ -22,74 +22,103 @@ function toolLabel(raw: string): string {
 function argsSummary(tool: string, args: unknown): string | null {
   if (!args || typeof args !== "object") return null;
   const a = args as Record<string, unknown>;
-  if (a.file_path || a.path) return String(a.file_path ?? a.path);
-  if (a.command) return "$ " + String(a.command).slice(0, 100);
+  if (a.file_path || a.path) return String(a.file_path ?? a.path).split("/").pop() || null;
+  if (a.command) return "$ " + String(a.command).split("\n")[0].slice(0, 60);
   if (a.url) return String(a.url);
-  if (a.query) return '"' + String(a.query).slice(0, 80) + '"';
-  if (a.content && typeof a.content === "string") return a.content.slice(0, 80) + (a.content.length > 80 ? "…" : "");
+  if (a.query) return '"' + String(a.query).slice(0, 60) + '"';
   return null;
 }
 
+/* ── App ── */
+
 export default function App() {
   const [user, setUser] = useState<{ id: string; name: string; email: string; avatar: string } | null>(null);
-  const [messages, setMessages] = useState<FeedItem[]>([]);
+  const [items, setItems] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [acting, setActing] = useState<number | null>(null);
-  const [dismissed, setDismissed] = useState<Set<number>>(new Set());
+  const [acting, setActing] = useState<Set<number>>(new Set());
   const endRef = useRef<HTMLDivElement>(null);
+  const prevCount = useRef(0);
 
+  // Auth
   useEffect(() => {
     getMe().then(d => setUser(d.user)).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
+  // Fetch + SSE for real-time
   const refresh = useCallback(async () => {
     if (!user) return;
     try {
       const data = await getFeed();
-      setMessages((data.requests ?? []).slice().reverse());
+      setItems((data.requests ?? []).slice().reverse());
     } catch {}
   }, [user]);
 
   useEffect(() => {
     if (!user) return;
     refresh();
-    const iv = setInterval(refresh, 2000);
-    return () => clearInterval(iv);
+
+    // SSE for instant updates
+    let es: EventSource | null = null;
+    try {
+      es = new EventSource("/api/v2/activity");
+      es.onmessage = () => refresh(); // Any event = refresh
+      es.onerror = () => {
+        es?.close();
+        // Fallback to polling if SSE fails
+        const iv = setInterval(refresh, 3000);
+        return () => clearInterval(iv);
+      };
+    } catch {
+      // No SSE support — poll
+      const iv = setInterval(refresh, 3000);
+      return () => clearInterval(iv);
+    }
+
+    return () => es?.close();
   }, [user, refresh]);
 
+  // Auto-scroll only on NEW messages
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    if (items.length > prevCount.current) {
+      endRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+    prevCount.current = items.length;
+  }, [items]);
 
+  // Optimistic action
   async function act(id: number, type: "allow" | "once" | "deny") {
-    setActing(id);
+    // Optimistic — instantly update UI
+    setActing(prev => new Set(prev).add(id));
+    setItems(prev => prev.map(m =>
+      m.id === id ? { ...m, status: type === "deny" ? "denied" as const : "approved" as const } : m
+    ));
+
     try {
       if (type === "deny") await deny(id, "once");
       else await approve(id, type === "once" ? "once" : "always");
-      setDismissed(prev => new Set(prev).add(id));
-      setTimeout(refresh, 300);
-    } finally { setActing(null); }
+    } catch {
+      // Revert on error
+      refresh();
+    }
+    setActing(prev => { const n = new Set(prev); n.delete(id); return n; });
   }
 
   /* ── Loading ── */
   if (loading) return (
-    <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#fff" }}>
-      <div style={{ width: 20, height: 20, border: "2px solid #e5e5ea", borderTopColor: "#8e8e93", borderRadius: "50%", animation: "spin .6s linear infinite" }} />
+    <div style={center}>
+      <div style={spinner} />
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   );
 
   /* ── Login ── */
   if (!user) return (
-    <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#fff", padding: 20 }}>
-      <div style={{ width: "100%", maxWidth: 300, textAlign: "center" }}>
-        <div style={{ width: 60, height: 60, borderRadius: "50%", background: "#007aff", margin: "0 auto 16px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-          </svg>
+    <div style={center}>
+      <div style={{ width: "100%", maxWidth: 280, textAlign: "center" }}>
+        <div style={{ fontSize: 32, fontWeight: 700, color: "#000", letterSpacing: "-0.03em", marginBottom: 4 }}>
+          AiMessage
         </div>
-        <h1 style={{ fontSize: 28, fontWeight: 700, color: "#000", margin: "0 0 4px", letterSpacing: "-0.02em" }}>AiMessage</h1>
-        <p style={{ fontSize: 15, color: "#8e8e93", margin: "0 0 32px" }}>Your AI asks before it acts.</p>
+        <p style={{ fontSize: 15, color: "#86868b", margin: "0 0 32px" }}>Your AI asks before it acts.</p>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <a href="/auth/login/github" style={loginBtn("#000")}>Continue with GitHub</a>
           <a href="/auth/login/google" style={loginBtn("#fff", true)}>Continue with Google</a>
@@ -99,96 +128,98 @@ export default function App() {
     </div>
   );
 
-  const visible = messages.filter(m => !dismissed.has(m.id));
-
   /* ── Chat ── */
+  const pending = items.filter(m => m.status === "pending");
+  const history = items.filter(m => m.status !== "pending");
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "#fff" }}>
-      {/* Nav bar */}
-      <div style={{ flexShrink: 0, background: "#f6f6f6", borderBottom: "0.5px solid #c6c6c8" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: 44, padding: "0 16px", maxWidth: 600, margin: "0 auto" }}>
-          <a href="/settings" style={{ color: "#007aff", textDecoration: "none", fontSize: 17 }}>
-            <svg width="10" height="17" viewBox="0 0 10 17" fill="none"><path d="M9 1L2 8.5L9 16" stroke="#007aff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          </a>
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 16, fontWeight: 600, color: "#000" }}>AI</div>
-          </div>
-          <div style={{ width: 10 }} />
+    <div style={{ display: "flex", flexDirection: "column", height: "100dvh", background: "#fff" }}>
+      {/* Header */}
+      <div style={{
+        flexShrink: 0,
+        borderBottom: "0.5px solid #d1d1d6",
+        background: "rgba(255,255,255,0.92)",
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: 48, padding: "0 16px", maxWidth: 600, margin: "0 auto" }}>
+          <div style={{ fontSize: 18, fontWeight: 700, color: "#000", letterSpacing: "-0.02em" }}>AiMessage</div>
+          <a href="/settings" style={{ color: "#007aff", textDecoration: "none", fontSize: 14, fontWeight: 500 }}>Settings</a>
         </div>
       </div>
 
-      {/* Messages */}
-      <div style={{ flex: 1, overflowY: "auto", background: "#fff", WebkitOverflowScrolling: "touch" as const }}>
-        <div style={{ maxWidth: 600, margin: "0 auto", padding: "8px 12px", display: "flex", flexDirection: "column", gap: 2, minHeight: "100%" }}>
+      {/* Feed */}
+      <div style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
+        <div style={{ maxWidth: 600, margin: "0 auto", padding: "12px 16px", display: "flex", flexDirection: "column", gap: 4, minHeight: "100%" }}>
 
-          {visible.length === 0 && (
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 20px", textAlign: "center" }}>
-              <div style={{ fontSize: 15, color: "#8e8e93", marginBottom: 8 }}>No messages yet</div>
-              <div style={{ fontSize: 13, color: "#aeaeb2" }}>When your AI needs permission,<br/>it'll message you here.</div>
+          {items.length === 0 && (
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 40, textAlign: "center" }}>
+              <div style={{ fontSize: 15, color: "#86868b" }}>No messages yet</div>
+              <div style={{ fontSize: 13, color: "#aeaeb2", marginTop: 4 }}>When your AI needs permission, it shows up here.</div>
             </div>
           )}
 
-          {visible.map((msg, i) => {
+          {items.map((msg, i) => {
             const isPending = msg.status === "pending";
             const isAllowed = msg.status === "approved" || msg.status === "auto_approved";
-            const isDenied = msg.status === "denied";
             const detail = argsSummary(msg.tool, msg.args);
-            const showTime = i === 0 || (new Date(msg.createdAt).getTime() - new Date(visible[i - 1].createdAt).getTime() > 300_000);
+            const showTime = i === 0 || (new Date(msg.createdAt).getTime() - new Date(items[i - 1].createdAt).getTime() > 300_000);
 
             return (
-              <div key={msg.id}>
-                {/* Timestamp separator */}
+              <div key={msg.id} style={{ animation: "fadeIn .15s ease" }}>
                 {showTime && (
-                  <div style={{ textAlign: "center", padding: "8px 0 4px", fontSize: 11, color: "#8e8e93", fontWeight: 400 }}>
+                  <div style={{ textAlign: "center", padding: "12px 0 6px", fontSize: 12, color: "#86868b", fontWeight: 500 }}>
                     {timeLabel(msg.createdAt)}
                   </div>
                 )}
 
-                {/* AI message — gray bubble, left */}
-                <div style={{ display: "flex", justifyContent: "flex-start", padding: "1px 0" }}>
+                {/* Request bubble — left */}
+                <div style={{ display: "flex", justifyContent: "flex-start", padding: "2px 0" }}>
                   <div style={{
-                    maxWidth: "75%",
-                    padding: "8px 12px",
-                    background: "#e9e9eb",
-                    borderRadius: "18px",
-                    borderBottomLeftRadius: 4,
-                    fontSize: 16,
-                    lineHeight: 1.35,
-                    color: "#000",
-                    wordBreak: "break-word",
+                    maxWidth: "80%",
+                    padding: "10px 14px",
+                    background: "#f0f0f0",
+                    borderRadius: 20,
+                    borderBottomLeftRadius: 6,
                   }}>
-                    <span style={{ fontWeight: 400 }}>{msg.summary || toolLabel(msg.tool)}</span>
+                    <div style={{ fontSize: 16, fontWeight: 500, color: "#000", lineHeight: 1.3 }}>
+                      {msg.summary || toolLabel(msg.tool)}
+                    </div>
                     {detail && (
-                      <div style={{ fontSize: 14, color: "#636366", marginTop: 2 }}>{detail}</div>
+                      <div style={{ fontSize: 13, color: "#636366", marginTop: 3, wordBreak: "break-all" }}>{detail}</div>
                     )}
                   </div>
                 </div>
 
-                {/* Response — blue/red bubble, right */}
+                {/* Decision bubble — right */}
                 {!isPending && (
-                  <div style={{ display: "flex", justifyContent: "flex-end", padding: "1px 0" }}>
+                  <div style={{ display: "flex", justifyContent: "flex-end", padding: "2px 0" }}>
                     <div style={{
-                      padding: "8px 12px",
-                      background: isAllowed ? "#007aff" : isDenied ? "#ff3b30" : "#8e8e93",
-                      borderRadius: "18px",
-                      borderBottomRightRadius: 4,
+                      padding: "10px 14px",
+                      background: isAllowed ? "#007aff" : "#ff3b30",
+                      borderRadius: 20,
+                      borderBottomRightRadius: 6,
                       fontSize: 16,
+                      fontWeight: 500,
                       color: "#fff",
                     }}>
-                      {isAllowed ? "Allowed" : isDenied ? "Denied" : msg.status}
+                      {isAllowed ? "Allowed" : "Denied"}
                     </div>
                   </div>
                 )}
 
                 {/* Pending — action buttons */}
                 {isPending && (
-                  <div style={{ display: "flex", gap: 8, padding: "6px 0 2px" }}>
-                    <button onClick={() => act(msg.id, "allow")} disabled={acting === msg.id}
-                      style={pillBtn("#34c759", acting === msg.id)}>Allow</button>
-                    <button onClick={() => act(msg.id, "once")} disabled={acting === msg.id}
-                      style={pillBtn("#007aff", acting === msg.id)}>Once</button>
-                    <button onClick={() => act(msg.id, "deny")} disabled={acting === msg.id}
-                      style={pillBtn("#ff3b30", acting === msg.id)}>Deny</button>
+                  <div style={{ display: "flex", gap: 8, padding: "8px 0 4px" }}>
+                    <button onClick={() => act(msg.id, "allow")} disabled={acting.has(msg.id)} style={actionBtn("#34c759")}>
+                      Always
+                    </button>
+                    <button onClick={() => act(msg.id, "once")} disabled={acting.has(msg.id)} style={actionBtn("#007aff")}>
+                      Once
+                    </button>
+                    <button onClick={() => act(msg.id, "deny")} disabled={acting.has(msg.id)} style={actionBtn("#ff3b30")}>
+                      Deny
+                    </button>
                   </div>
                 )}
               </div>
@@ -199,41 +230,54 @@ export default function App() {
         </div>
       </div>
 
-      {/* Input bar (decorative) */}
-      <div style={{ flexShrink: 0, background: "#f6f6f6", borderTop: "0.5px solid #c6c6c8", padding: "8px 12px", paddingBottom: "calc(8px + env(safe-area-inset-bottom))" }}>
-        <div style={{ maxWidth: 600, margin: "0 auto", display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{
-            flex: 1, height: 36, borderRadius: 18, border: "1px solid #c6c6c8", background: "#fff",
-            display: "flex", alignItems: "center", padding: "0 12px",
-            fontSize: 16, color: "#c7c7cc",
-          }}>
-            AiMessage
-          </div>
-        </div>
+      {/* Bottom — branding */}
+      <div style={{
+        flexShrink: 0,
+        borderTop: "0.5px solid #d1d1d6",
+        padding: "10px 16px",
+        paddingBottom: "calc(10px + env(safe-area-inset-bottom))",
+        textAlign: "center",
+      }}>
+        <span style={{ fontSize: 12, color: "#aeaeb2" }}>Built on OCC</span>
       </div>
+
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg) } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px) } to { opacity: 1; transform: translateY(0) } }
+        * { box-sizing: border-box; margin: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif; -webkit-font-smoothing: antialiased; }
+        button:active { transform: scale(0.96); }
+      `}</style>
     </div>
   );
 }
 
-/* ── Helpers ── */
+/* ── Style objects ── */
+
+const center: React.CSSProperties = {
+  height: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", background: "#fff", padding: 20,
+};
+
+const spinner: React.CSSProperties = {
+  width: 20, height: 20, border: "2px solid #e5e5ea", borderTopColor: "#86868b",
+  borderRadius: "50%", animation: "spin .6s linear infinite",
+};
 
 function loginBtn(bg: string, outline?: boolean): React.CSSProperties {
   return {
     display: "flex", alignItems: "center", justifyContent: "center",
-    height: 50, borderRadius: 12,
-    border: outline ? "1px solid #c6c6c8" : "none",
+    height: 48, borderRadius: 12,
+    border: outline ? "1px solid #d1d1d6" : "none",
     background: bg, color: outline ? "#000" : "#fff",
-    fontSize: 17, fontWeight: 400,
-    textDecoration: "none", cursor: "pointer",
-    fontFamily: "inherit",
+    fontSize: 16, fontWeight: 500, textDecoration: "none",
   };
 }
 
-function pillBtn(bg: string, disabled: boolean): React.CSSProperties {
+function actionBtn(bg: string): React.CSSProperties {
   return {
-    height: 32, padding: "0 16px", borderRadius: 16,
+    height: 36, padding: "0 20px", borderRadius: 18,
     border: "none", background: bg, color: "#fff",
-    fontSize: 14, fontWeight: 500, cursor: "pointer",
-    fontFamily: "inherit", opacity: disabled ? 0.4 : 1,
+    fontSize: 15, fontWeight: 600, cursor: "pointer",
+    fontFamily: "inherit", transition: "transform .1s",
   };
 }
