@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
+import Markdown from "react-markdown";
 import { getMe, getFeed, getProofs, approve, deny, type FeedItem, type V2Proof } from "@/lib/api";
 
 export default function App() {
@@ -134,52 +135,29 @@ export default function App() {
 }
 
 /* ── Proposal ── */
-/* ── Markdown-lite renderer ── */
-function FormattedText({ text }: { text: string }) {
-  const lines = text.split("\n");
-  const elements: React.ReactNode[] = [];
-  const state = { codeBlock: null as string[] | null };
-
-  lines.forEach((line, i) => {
-    if (line.startsWith("```")) {
-      if (state.codeBlock !== null) {
-        elements.push(<pre key={`code-${i}`} className="chat-code">{state.codeBlock.join("\n")}</pre>);
-        state.codeBlock = null;
-      } else {
-        state.codeBlock = [];
-      }
-      return;
-    }
-    if (state.codeBlock !== null) { state.codeBlock.push(line); return; }
-    if (line.startsWith("### ")) { elements.push(<div key={i} className="chat-h3">{line.slice(4)}</div>); return; }
-    if (line.startsWith("## ")) { elements.push(<div key={i} className="chat-h2">{line.slice(3)}</div>); return; }
-    if (line.startsWith("# ")) { elements.push(<div key={i} className="chat-h1">{line.slice(2)}</div>); return; }
-    if (line.startsWith("- ") || line.startsWith("* ")) { elements.push(<div key={i} className="chat-li">{inlineFormat(line.slice(2))}</div>); return; }
-    if (/^\d+\.\s/.test(line)) { elements.push(<div key={i} className="chat-li">{inlineFormat(line.replace(/^\d+\.\s/, ""))}</div>); return; }
-    if (line.trim() === "") { elements.push(<div key={i} style={{ height: 8 }} />); return; }
-    elements.push(<div key={i}>{inlineFormat(line)}</div>);
-  });
-  if (state.codeBlock !== null) { elements.push(<pre key="code-end" className="chat-code">{state.codeBlock.join("\n")}</pre>); }
-  return <>{elements}</>;
-}
-
-function inlineFormat(text: string): React.ReactNode {
-  const parts: React.ReactNode[] = [];
-  const regex = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|https?:\/\/[^\s)]+)/g;
-  let last = 0;
-  let match;
-  while ((match = regex.exec(text)) !== null) {
-    if (match.index > last) parts.push(text.slice(last, match.index));
-    const m = match[0];
-    if (m.startsWith("`")) parts.push(<code key={match.index} className="chat-inline-code">{m.slice(1, -1)}</code>);
-    else if (m.startsWith("**")) parts.push(<strong key={match.index}>{m.slice(2, -2)}</strong>);
-    else if (m.startsWith("http")) parts.push(<a key={match.index} href={m} target="_blank" rel="noopener" className="chat-link">{m}</a>);
-    else parts.push(<em key={match.index}>{m.slice(1, -1)}</em>);
-    last = match.index + m.length;
-  }
-  if (last < text.length) parts.push(text.slice(last));
-  return parts.length > 0 ? <>{parts}</> : text;
-}
+/* ── Markdown renderer for chat ── */
+const mdComponents = {
+  h1: (p: any) => <div className="chat-h1" {...p} />,
+  h2: (p: any) => <div className="chat-h2" {...p} />,
+  h3: (p: any) => <div className="chat-h3" {...p} />,
+  p: (p: any) => <div style={{ marginBottom: 8 }} {...p} />,
+  ul: (p: any) => <div style={{ paddingLeft: 16, marginBottom: 8 }} {...p} />,
+  ol: (p: any) => <div style={{ paddingLeft: 16, marginBottom: 8 }} {...p} />,
+  li: (p: any) => <div className="chat-li" {...p} />,
+  code: ({ className, children, ...rest }: any) => {
+    const isBlock = className?.includes("language-");
+    return isBlock
+      ? <pre className="chat-code"><code {...rest}>{children}</code></pre>
+      : <code className="chat-inline-code" {...rest}>{children}</code>;
+  },
+  pre: ({ children }: any) => <>{children}</>,
+  a: (p: any) => <a className="chat-link" target="_blank" rel="noopener" {...p} />,
+  blockquote: (p: any) => <div className="chat-blockquote" {...p} />,
+  table: (p: any) => <div style={{ overflowX: "auto", marginBottom: 8 }}><table className="chat-table" {...p} /></div>,
+  th: (p: any) => <th className="chat-th" {...p} />,
+  td: (p: any) => <td className="chat-td" {...p} />,
+  hr: () => <div style={{ borderTop: "1px solid var(--border-light)", margin: "12px 0" }} />,
+};
 
 /* ── Chat Panel ── */
 function ChatPanel({ onClose }: { onClose: () => void }) {
@@ -244,7 +222,7 @@ function ChatPanel({ onClose }: { onClose: () => void }) {
           )}
           {messages.map((m, i) => (
             <div key={i} className={`chat-msg ${m.role === "user" ? "chat-msg-user" : "chat-msg-assistant"}`}>
-              {m.role === "user" ? m.content : <FormattedText text={m.content} />}
+              {m.role === "user" ? m.content : <Markdown components={mdComponents}>{m.content}</Markdown>}
             </div>
           ))}
           {sending && <div className="chat-msg chat-msg-assistant" style={{ opacity: 0.5 }}>Thinking...</div>}
