@@ -142,6 +142,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro
 .proof-field-label { font-size: 12px; color: var(--text-tertiary); flex-shrink: 0; }
 .proof-field-value { font-size: 13px; color: var(--text); text-align: right; word-break: break-all; min-width: 0; }
 .proof-field-mono { font-family: "SF Mono", "Menlo", monospace; font-size: 12px; color: var(--text-secondary); }
+.proof-field-expandable { cursor: pointer; }
+.proof-field-expandable:hover { color: var(--accent) !important; }
 .proof-field-copy { background: none; border: none; color: var(--text-tertiary); cursor: pointer; padding: 2px; flex-shrink: 0; opacity: 0; transition: all 0.2s; }
 .proof-field:hover .proof-field-copy { opacity: 0.6; }
 .proof-field-copy:hover { opacity: 1 !important; color: var(--accent); }
@@ -225,8 +227,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro
   /* Explorer rows */
   .explorer-row { padding: 12px 14px; gap: 8px; }
   .explorer-row-info { flex-wrap: wrap; gap: 4px; overflow: hidden; }
-  .explorer-row-tool { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px; }
-  .explorer-row-agent { font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100px; }
+  .explorer-row-tool { font-size: 14px; }
+  .explorer-row-agent { font-size: 11px; }
   .explorer-badge { font-size: 10px; padding: 1px 6px; }
   .explorer-row-time { font-size: 11px; min-width: 48px; }
   .explorer-row-icons { gap: 4px; }
