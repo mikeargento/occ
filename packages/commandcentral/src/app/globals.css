@@ -199,7 +199,8 @@ body {
   font-size: 15px; font-weight: 600; font-family: inherit;
   cursor: pointer; transition: opacity 0.15s;
 }
-.proof-actions button:hover { opacity: 0.85; }
+.proof-actions button:hover { opacity: 0.85; transform: translateY(-1px); }
+.proof-actions button:active { transform: scale(0.97); }
 .proof-action-deny { background: var(--red); color: #fff; }
 .proof-action-approve { background: var(--green); color: #000; }
 .proof-action-always { background: var(--accent); color: #fff; }
@@ -217,8 +218,9 @@ body {
   border-bottom: 1px solid var(--border-light);
 }
 .explorer-table td { padding: 10px 12px; border-bottom: 1px solid var(--border-light); }
-.explorer-table tbody tr { transition: background 0.1s; }
+.explorer-table tbody tr { transition: background 0.1s; cursor: pointer; }
 .explorer-table tbody tr:hover { background: var(--surface-hover); }
+.explorer-table tbody tr:active { transform: scale(0.995); }
 
 .explorer-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; }
 .explorer-dot-allowed { background: var(--green); }
@@ -243,11 +245,17 @@ body {
 .explorer-detail-value { color: var(--text-secondary); word-break: break-all; }
 .explorer-detail-digest { color: var(--green); font-family: "SF Mono", "Menlo", monospace; font-size: 12px; }
 .explorer-detail-mono { font-family: "SF Mono", "Menlo", monospace; font-size: 12px; }
-.explorer-detail-link {
-  font-size: 13px; color: var(--accent); text-decoration: none;
-  margin-top: 4px;
+.explorer-detail-json {
+  font-size: 12px; font-family: "SF Mono", "Menlo", monospace;
+  color: var(--green); line-height: 1.7;
+  white-space: pre-wrap; word-break: break-all;
+  margin: 0; border: none; background: #0a0a0a;
+  border-radius: 8px; padding: 16px;
+  max-height: 500px; overflow-y: auto;
+  animation: proofReveal 0.3s ease-out;
 }
-.explorer-detail-link:hover { text-decoration: underline; }
+[data-theme="dark"] .explorer-detail-json { background: #0a0a0a; }
+:root .explorer-detail-json { background: #1a1a2e; color: #34d399; }
 
 /* ── Settings ── */
 .settings-layout { min-height: 100%; background: var(--bg-secondary); }
@@ -279,6 +287,7 @@ body {
 /* ── Animations ── */
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes proofReveal { from { opacity: 0; max-height: 0; } to { opacity: 1; max-height: 500px; } }
 
 /* ── Mobile ── */
 @media (max-width: 768px) {

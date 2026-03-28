@@ -232,56 +232,10 @@ function ProofTableRow({ proof: p, expanded, onToggle }: { proof: V2Proof; expan
         <tr className="explorer-detail-row">
           <td colSpan={6}>
             <div className="explorer-detail">
-              {p.proofDigest && (
-                <div className="explorer-detail-field">
-                  <span className="explorer-detail-label">Digest</span>
-                  <span className="explorer-detail-value explorer-detail-digest">{p.proofDigest}</span>
-                </div>
-              )}
-              {receipt && (
-                <>
-                  {(receipt.commit as any)?.counter && (
-                    <div className="explorer-detail-field">
-                      <span className="explorer-detail-label">Counter</span>
-                      <span className="explorer-detail-value">#{(receipt.commit as any).counter}</span>
-                    </div>
-                  )}
-                  {(receipt.environment as any)?.enforcement && (
-                    <div className="explorer-detail-field">
-                      <span className="explorer-detail-label">Enforcement</span>
-                      <span className="explorer-detail-value">{enforcementLabel((receipt.environment as any).enforcement)}</span>
-                    </div>
-                  )}
-                  {(receipt.signer as any)?.publicKeyB64 && (
-                    <div className="explorer-detail-field">
-                      <span className="explorer-detail-label">Signer</span>
-                      <span className="explorer-detail-value explorer-detail-mono">{truncateDigest((receipt.signer as any).publicKeyB64)}</span>
-                    </div>
-                  )}
-                  {(receipt.commit as any)?.prevB64 && (
-                    <div className="explorer-detail-field">
-                      <span className="explorer-detail-label">Prev Proof</span>
-                      <span className="explorer-detail-value explorer-detail-mono">{truncateDigest((receipt.commit as any).prevB64)}</span>
-                    </div>
-                  )}
-                  {(receipt.policy as any)?.digestB64 && (
-                    <div className="explorer-detail-field">
-                      <span className="explorer-detail-label">Policy</span>
-                      <span className="explorer-detail-value explorer-detail-mono">{truncateDigest((receipt.policy as any).digestB64)}</span>
-                    </div>
-                  )}
-                </>
-              )}
-              {!p.allowed && p.reason && (
-                <div className="explorer-detail-field">
-                  <span className="explorer-detail-label">Reason</span>
-                  <span className="explorer-detail-value" style={{ color: "var(--red)" }}>{p.reason}</span>
-                </div>
-              )}
-              {p.proofDigest && (
-                <a href={`https://occ.wtf/explorer/${encodeURIComponent(toUrlSafe(p.proofDigest))}`} target="_blank" rel="noopener" className="explorer-detail-link">
-                  View full proof on occ.wtf
-                </a>
+              {receipt ? (
+                <pre className="explorer-detail-json">{JSON.stringify(receipt, null, 2)}</pre>
+              ) : (
+                <div style={{ color: "var(--text-tertiary)", fontSize: 13 }}>No receipt available</div>
               )}
             </div>
           </td>
