@@ -224,9 +224,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro
 
   /* Explorer rows */
   .explorer-row { padding: 12px 14px; gap: 8px; }
-  .explorer-row-info { flex-wrap: wrap; gap: 4px; }
-  .explorer-row-tool { font-size: 14px; }
-  .explorer-row-agent { font-size: 11px; }
+  .explorer-row-info { flex-wrap: wrap; gap: 4px; overflow: hidden; }
+  .explorer-row-tool { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px; }
+  .explorer-row-agent { font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100px; }
   .explorer-badge { font-size: 10px; padding: 1px 6px; }
   .explorer-row-time { font-size: 11px; min-width: 48px; }
   .explorer-row-icons { gap: 4px; }
@@ -246,7 +246,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro
 
   /* Proposals */
   .proposal { padding: 18px; margin-bottom: 10px; }
-  .proposal-action { font-size: 18px; gap: 8px; }
+  .proposal-action { font-size: 18px; gap: 8px; overflow: hidden; }
+  .proposal-target { font-size: 12px; }
   .proposal-icon { font-size: 20px; }
   .proposal-buttons { flex-wrap: wrap; }
   .proposal-btn { font-size: 14px; padding: 10px 0; }
