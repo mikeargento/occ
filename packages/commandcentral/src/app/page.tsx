@@ -171,7 +171,7 @@ function Proposal({ item, onApprove, onDeny }: { item: FeedItem; onApprove: (id:
       {acting ? (
         <div className="proposal-progress">
           <div className="proposal-progress-bar" />
-          <span className="proposal-progress-text">{acting === "deny" ? "Denying..." : "Forging proof..."}</span>
+          <span className="proposal-progress-text">{acting === "deny" ? "Denying..." : "Authorizing..."}</span>
         </div>
       ) : (
         <div className="proposal-buttons">
