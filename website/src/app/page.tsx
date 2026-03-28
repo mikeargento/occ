@@ -1,6 +1,16 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
 
 export default function Home() {
+  const [copied, setCopied] = useState(false);
+  const installCmd = "curl -fsSL https://agent.occ.wtf/install | bash";
+  function copy() {
+    navigator.clipboard.writeText(installCmd);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
   return (
     <div style={{ maxWidth: 960, margin: "0 auto", padding: "80px 24px 64px" }}>
       {/* Hero */}
@@ -67,12 +77,27 @@ export default function Home() {
         background: "var(--bg-elevated)", borderRadius: 12,
         border: "1px solid var(--c-border-subtle)", padding: 32, marginBottom: 48,
       }}>
-        <h2 style={{ fontSize: 20, fontWeight: 600, marginBottom: 16 }}>Quick setup</h2>
-        <pre style={{
-          fontSize: 14, fontFamily: "var(--font-mono)",
-          color: "var(--c-text-secondary)", lineHeight: 2,
-          overflow: "auto",
-        }}>{`curl -fsSL https://agent.occ.wtf/install | bash`}</pre>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <h2 style={{ fontSize: 20, fontWeight: 600 }}>Quick setup</h2>
+        </div>
+        <div style={{ position: "relative" }}>
+          <pre onClick={copy} style={{
+            fontSize: 14, fontFamily: "var(--font-mono)",
+            color: "var(--c-text-secondary)", lineHeight: 2,
+            overflow: "auto", cursor: "pointer",
+          }}>{installCmd}</pre>
+          <button onClick={copy} style={{
+            position: "absolute", top: 0, right: 0,
+            padding: "6px 14px", borderRadius: 6,
+            fontSize: 12, fontWeight: 500,
+            background: copied ? "var(--c-accent)" : "var(--c-text)",
+            color: copied ? "#fff" : "var(--bg)",
+            border: "none", cursor: "pointer",
+            transition: "all 0.15s",
+          }}>
+            {copied ? "Copied!" : "Copy"}
+          </button>
+        </div>
         <p style={{ fontSize: 14, color: "var(--c-text-tertiary)", marginTop: 12 }}>
           Installs the OCC hook for Claude Code. Every action goes through OCC.
         </p>
