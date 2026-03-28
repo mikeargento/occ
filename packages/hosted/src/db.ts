@@ -927,7 +927,7 @@ export const db = {
   },
 
   async v2WipeAll(userId: string) {
-    const p = await pool();
+    const p = getPool();
     await p.query("DELETE FROM occ_v2_executions WHERE user_id = $1", [userId]);
     await p.query("DELETE FROM occ_v2_decisions WHERE user_id = $1", [userId]);
     await p.query("DELETE FROM occ_v2_requests WHERE user_id = $1", [userId]);
