@@ -12,6 +12,7 @@ export default function App() {
   const [proofTotal, setProofTotal] = useState(0);
   const [proofSearch, setProofSearch] = useState("");
   const [proofSearchInput, setProofSearchInput] = useState("");
+  const [showFullChain, setShowFullChain] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [view, setView] = useState<"main" | "settings">("main");
@@ -25,24 +26,24 @@ export default function App() {
   const refresh = useCallback(async () => {
     if (!user) return;
     try {
-      const [feedData, proofData] = await Promise.all([getFeed(), getProofs(PAGE_SIZE, 0, proofSearch)]);
+      const [feedData, proofData] = await Promise.all([getFeed(), getProofs(PAGE_SIZE, 0, proofSearch, showFullChain)]);
       setFeed(feedData.requests ?? []);
       setProofs(proofData.proofs ?? []);
       setProofTotal(proofData.total ?? 0);
       setHasMore((proofData.proofs?.length ?? 0) < (proofData.total ?? 0));
     } catch {}
-  }, [user, proofSearch]);
+  }, [user, proofSearch, showFullChain]);
 
   const loadMore = useCallback(async () => {
     if (!user || loadingMore || !hasMore) return;
     setLoadingMore(true);
     try {
-      const data = await getProofs(PAGE_SIZE, proofs.length, proofSearch);
+      const data = await getProofs(PAGE_SIZE, proofs.length, proofSearch, showFullChain);
       setProofs(prev => [...prev, ...(data.proofs ?? [])]);
       setHasMore(proofs.length + (data.proofs?.length ?? 0) < (data.total ?? 0));
     } catch {}
     setLoadingMore(false);
-  }, [user, proofs.length, loadingMore, hasMore, proofSearch]);
+  }, [user, proofs.length, loadingMore, hasMore, proofSearch, showFullChain]);
 
   // Infinite scroll observer
   useEffect(() => {
@@ -140,7 +141,12 @@ export default function App() {
           {/* Proof chain */}
           <div className="section-header" style={pending.length === 0 ? { marginTop: 0 } : undefined}>
             <span className="section-label">Explorer</span>
-            {proofTotal > 0 && <span className="section-count">{proofTotal.toLocaleString()} total</span>}
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <button className="explorer-view-toggle" onClick={() => { setShowFullChain(!showFullChain); setProofs([]); }} style={{ color: showFullChain ? "var(--accent)" : "var(--text-tertiary)" }}>
+                {showFullChain ? "Full chain" : "Actions only"}
+              </button>
+              {proofTotal > 0 && <span className="section-count">{proofTotal.toLocaleString()} total</span>}
+            </div>
           </div>
 
           {/* Search */}

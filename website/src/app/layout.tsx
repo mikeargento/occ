@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     template: "%s | OCC",
   },
   description:
-    "Artificial Intelligence, Human Authority.",
+    "Artificial Intelligence. Human Authority.",
   keywords: [
     "OCC", "Origin Controlled Computing", "AI agent control", "AI safety",
     "cryptographic policy", "AI governance", "default deny",
