@@ -165,7 +165,7 @@ function FormattedText({ text }: { text: string }) {
 
 function inlineFormat(text: string): React.ReactNode {
   const parts: React.ReactNode[] = [];
-  const regex = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*)/g;
+  const regex = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|https?:\/\/[^\s)]+)/g;
   let last = 0;
   let match;
   while ((match = regex.exec(text)) !== null) {
@@ -173,6 +173,7 @@ function inlineFormat(text: string): React.ReactNode {
     const m = match[0];
     if (m.startsWith("`")) parts.push(<code key={match.index} className="chat-inline-code">{m.slice(1, -1)}</code>);
     else if (m.startsWith("**")) parts.push(<strong key={match.index}>{m.slice(2, -2)}</strong>);
+    else if (m.startsWith("http")) parts.push(<a key={match.index} href={m} target="_blank" rel="noopener" className="chat-link">{m}</a>);
     else parts.push(<em key={match.index}>{m.slice(1, -1)}</em>);
     last = match.index + m.length;
   }
