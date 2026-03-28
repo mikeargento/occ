@@ -171,6 +171,13 @@ body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro
 .chat-send { width: 36px; height: 36px; border-radius: 10px; border: none; background: var(--accent); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s; flex-shrink: 0; }
 .chat-send:hover { transform: scale(1.05); }
 .chat-send:disabled { opacity: 0.3; cursor: default; transform: none; }
+.chat-h1 { font-size: 16px; font-weight: 700; margin: 8px 0 4px; }
+.chat-h2 { font-size: 15px; font-weight: 600; margin: 6px 0 4px; }
+.chat-h3 { font-size: 14px; font-weight: 600; margin: 4px 0 2px; color: var(--text-secondary); }
+.chat-li { padding-left: 16px; position: relative; }
+.chat-li::before { content: "•"; position: absolute; left: 4px; color: var(--text-tertiary); }
+.chat-code { font-size: 12px; font-family: "SF Mono", "Menlo", monospace; background: var(--bg); border: 1px solid var(--border-light); border-radius: 8px; padding: 10px 12px; margin: 6px 0; overflow-x: auto; line-height: 1.6; color: var(--green); }
+.chat-inline-code { font-size: 12px; font-family: "SF Mono", "Menlo", monospace; background: var(--bg); padding: 1px 5px; border-radius: 4px; color: var(--accent); }
 @keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
 
 /* ── Animations ── */
