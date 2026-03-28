@@ -449,19 +449,10 @@ export async function handleApiV2(req: IncomingMessage, res: ServerResponse, url
             singleUse: true,
           }
         };
-      } catch {
-        // TEE unavailable — token without cryptographic proof
-        return {
-          token: {
-            requestId,
-            tool,
-            args,
-            agentId: hookAgentId,
-            authorizedBy: hookUserId,
-            authorizedAt: new Date().toISOString(),
-            singleUse: true,
-          }
-        };
+      } catch (err) {
+        // TEE unavailable — fail closed. No proof = no action.
+        console.error("[forgeToken] TEE unavailable, denying:", (err as Error).message);
+        return { denied: true, reason: "TEE unavailable — cannot forge proof" };
       }
     }
 
