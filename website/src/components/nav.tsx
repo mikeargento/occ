@@ -56,9 +56,9 @@ export function Nav() {
             cursor: "pointer", transition: "all 0.15s", fontFamily: "inherit",
           };
           return l.external ? (
-            <a key={l.href} href={l.href} target="_blank" rel="noopener" style={style}>{l.label}</a>
+            <a key={l.href} href={l.href} target="_blank" rel="noopener" className="nav-link" style={style}>{l.label}</a>
           ) : (
-            <Link key={l.href} href={l.href} style={style}>{l.label}</Link>
+            <Link key={l.href} href={l.href} className="nav-link" style={style}>{l.label}</Link>
           );
         })}
         <div style={{ width: 1, height: 20, background: "var(--c-border-subtle)", margin: "0 4px" }} />

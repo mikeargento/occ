@@ -312,6 +312,9 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   background-clip: text;
 }
 
+/* ── Nav link hover ── */
+.nav-link:hover { background: var(--bg-elevated); color: var(--c-text) !important; }
+
 /* ── Nav responsive ── */
 @media (max-width: 768px) {
   .nav-desktop { display: none !important; }

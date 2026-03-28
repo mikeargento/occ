@@ -41,7 +41,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui,
 .topnav-logo { font-size: 17px; font-weight: 700; letter-spacing: -0.02em; color: var(--text); text-decoration: none; }
 .topnav-links { display: flex; align-items: center; gap: 4px; }
 .topnav-link { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 8px; font-size: 14px; font-weight: 400; color: var(--text-secondary); text-decoration: none; background: none; border: none; cursor: pointer; transition: all 0.15s; font-family: inherit; }
-.topnav-link:hover { background: var(--surface-hover); color: var(--text); }
+.topnav-link:hover { background: var(--bg-secondary); color: var(--text); }
 .topnav-link-active { color: var(--text); font-weight: 500; }
 .topnav-sep { width: 1px; height: 20px; background: var(--border-light); margin: 0 4px; }
 .topnav-user { display: flex; align-items: center; gap: 8px; }
