@@ -25,7 +25,7 @@ export default function Home() {
           fontSize: 18, lineHeight: 1.6, color: "var(--c-text-secondary)",
           maxWidth: 560, marginBottom: 32,
         }}>
-          Artificial Intelligence, Human Authority.
+          Artificial Intelligence. Human Authority.
         </p>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
           <a href="https://agent.occ.wtf" style={{
@@ -53,21 +53,21 @@ export default function Home() {
         gap: 24, marginBottom: 80,
       }}>
         <div style={{ padding: "24px 0" }}>
-          <h3 style={{ fontSize: 17, fontWeight: 600, marginBottom: 8 }}>Default deny</h3>
+          <h3 style={{ fontSize: 17, fontWeight: 600, marginBottom: 8 }}>No action without you</h3>
           <p style={{ fontSize: 15, lineHeight: 1.6, color: "var(--c-text-secondary)" }}>
-            Nothing executes unless explicitly authorized. No permission object means no execution path.
+            AI can think freely. But nothing executes unless you authorize it. No approval, no execution path.
           </p>
         </div>
         <div style={{ padding: "24px 0" }}>
-          <h3 style={{ fontSize: 17, fontWeight: 600, marginBottom: 8 }}>Proof = authorization</h3>
+          <h3 style={{ fontSize: 17, fontWeight: 600, marginBottom: 8 }}>Approval becomes execution</h3>
           <p style={{ fontSize: 15, lineHeight: 1.6, color: "var(--c-text-secondary)" }}>
-            The proof that authorized the action and the record that it happened are the same cryptographic object.
+            Your authorization creates the cryptographic object that makes the action possible. The proof is the command.
           </p>
         </div>
         <div style={{ padding: "24px 0" }}>
-          <h3 style={{ fontSize: 17, fontWeight: 600, marginBottom: 8 }}>Causal chain</h3>
+          <h3 style={{ fontSize: 17, fontWeight: 600, marginBottom: 8 }}>Every action must follow the last</h3>
           <p style={{ fontSize: 15, lineHeight: 1.6, color: "var(--c-text-secondary)" }}>
-            Every proof links to the previous one. No gaps, no rewrites, no forks. Each action must fit the last.
+            Each proof links to the previous one. No gaps, no rewrites, no forks. A causal chain of human decisions.
           </p>
         </div>
       </div>
@@ -102,7 +102,7 @@ export default function Home() {
           </button>
         </div>
         <p style={{ fontSize: 14, color: "var(--c-text-tertiary)", marginTop: 12 }}>
-          Installs the OCC hook for Claude Code. Every action goes through OCC.
+          Installs OCC for Claude Code. AI can think freely. Actions require your authority.
         </p>
       </div>
     </div>

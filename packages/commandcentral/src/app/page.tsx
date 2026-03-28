@@ -220,81 +220,130 @@ function ExplorerRow({ proof: p }: { proof: V2Proof }) {
 
       {expanded && (
         <div className="explorer-expanded">
-          <div className="explorer-summary">
-            <span className={p.allowed ? "explorer-summary-allowed" : "explorer-summary-denied"}>
-              {p.allowed ? "Allowed" : "Denied"}
-            </span>
-            {" "}<strong>{String(p.tool)}</strong>{" by "}<strong>{String(p.agentId)}</strong>
-            {commitTime ? ` at ${new Date(commitTime).toLocaleString()}` : ""}
+          {/* Close button */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+            <div className="explorer-summary">
+              <span className={p.allowed ? "explorer-summary-allowed" : "explorer-summary-denied"}>
+                {p.allowed ? "Allowed" : "Denied"}
+              </span>
+              {" "}<strong>{String(p.tool)}</strong>{" by "}<strong>{String(p.agentId)}</strong>
+              {commitTime ? ` at ${new Date(commitTime).toLocaleString()}` : ""}
+            </div>
+            <button onClick={(e) => { e.stopPropagation(); setExpanded(false); }} className="explorer-close-btn" title="Close">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
           </div>
 
-          {(p.args && typeof p.args === "object" && Object.keys(p.args as Record<string, unknown>).length > 0) ? (
-            <div className="explorer-detail-field">
-              <div className="explorer-detail-label">What was requested</div>
-              <pre className="explorer-detail-args">{JSON.stringify(p.args, null, 2)}</pre>
-            </div>
-          ) : null}
+          {/* Section cards — matching occ.wtf explorer detail */}
+          <div className="explorer-sections">
 
-          {p.proofDigest && (
-            <div className="explorer-detail-field">
-              <div className="explorer-detail-label">Proof digest (SHA-256)</div>
-              <code className="explorer-detail-code">{p.proofDigest}</code>
-            </div>
-          )}
-
-          {receipt && (
-            <div className="explorer-detail-grid">
-              {commit?.counter != null && (
-                <div>
-                  <div className="explorer-detail-label">Position in chain</div>
-                  <span>#{String(commit.counter)}</span>
+            {/* Action */}
+            {(p.args && typeof p.args === "object" && Object.keys(p.args as Record<string, unknown>).length > 0) ? (
+              <div className="explorer-section">
+                <div className="explorer-section-title">Action</div>
+                <div className="explorer-section-body">
+                  <ProofField label="Tool" value={String(p.tool)} mono />
+                  <ProofField label="Decision" value={p.allowed ? "Allowed" : "Denied"} color={p.allowed ? "var(--green)" : "var(--red)"} />
+                  <ProofField label="Agent" value={String(p.agentId)} />
+                  {p.reason && <ProofField label="Reason" value={p.reason} />}
                 </div>
-              )}
-              <div>
-                <div className="explorer-detail-label">Signed by</div>
-                <span className={enforcement === "measured-tee" ? "explorer-badge-tee" : ""}>
-                  {enforcement === "measured-tee" ? "AWS Nitro Enclave" : enforcement === "hw-key" ? "Hardware Key" : "Software Key"}
-                </span>
+                <pre className="explorer-detail-args">{JSON.stringify(p.args, null, 2)}</pre>
               </div>
-              {commitTime != null && (
-                <div>
-                  <div className="explorer-detail-label">When</div>
-                  <span>{new Date(commitTime).toLocaleString()}</span>
+            ) : (
+              <div className="explorer-section">
+                <div className="explorer-section-title">Action</div>
+                <div className="explorer-section-body">
+                  <ProofField label="Tool" value={String(p.tool)} mono />
+                  <ProofField label="Decision" value={p.allowed ? "Allowed" : "Denied"} color={p.allowed ? "var(--green)" : "var(--red)"} />
+                  <ProofField label="Agent" value={String(p.agentId)} />
+                  {p.reason && <ProofField label="Reason" value={p.reason} />}
                 </div>
-              )}
-              {principal != null && (
-                <div>
-                  <div className="explorer-detail-label">Authorized by</div>
-                  <span>{String((principal as any).provider || "unknown")}:{truncate(String((principal as any).id || ""), 16)}</span>
-                </div>
-              )}
-              {signer != null && (
-                <div>
-                  <div className="explorer-detail-label">Signer public key</div>
-                  <code className="explorer-detail-code-sm">{truncate(String((signer as any).publicKeyB64 || ""), 20)}</code>
-                </div>
-              )}
-              {commit?.prevB64 != null && (
-                <div>
-                  <div className="explorer-detail-label">Previous proof</div>
-                  <code className="explorer-detail-code-sm">{truncate(String(commit.prevB64), 20)}</code>
-                </div>
-              )}
-              {policy?.digestB64 != null && (
-                <div>
-                  <div className="explorer-detail-label">Policy binding</div>
-                  <code className="explorer-detail-code-sm">{truncate(String(policy.digestB64), 20)}</code>
-                </div>
-              )}
-              {(timestamps as any)?.artifact?.authority && (
-                <div>
-                  <div className="explorer-detail-label">Timestamp authority</div>
-                  <span className="explorer-icon-tsa">{String((timestamps as any).artifact.authority)}</span>
-                </div>
-              )}
-            </div>
-          )}
+              </div>
+            )}
 
+            {/* Artifact */}
+            {p.proofDigest && (
+              <div className="explorer-section">
+                <div className="explorer-section-title">Artifact</div>
+                <div className="explorer-section-body">
+                  <ProofField label="Digest (SHA-256)" value={p.proofDigest} mono />
+                  {receipt?.version ? <ProofField label="Version" value={String(receipt.version)} /> : null}
+                </div>
+              </div>
+            )}
+
+            {/* Commit */}
+            {commit && (
+              <div className="explorer-section">
+                <div className="explorer-section-title">Commit</div>
+                <div className="explorer-section-body">
+                  {commitTime != null && <ProofField label="Time" value={new Date(commitTime).toLocaleString()} />}
+                  {commit.counter != null && <ProofField label="Counter" value={`#${String(commit.counter)}`} />}
+                  {commit.chainId ? <ProofField label="Chain ID" value={String(commit.chainId)} mono /> : null}
+                  {commit.epochId ? <ProofField label="Epoch ID" value={String(commit.epochId)} mono /> : null}
+                  {commit.prevB64 ? <ProofField label="Previous Hash" value={String(commit.prevB64)} mono /> : null}
+                  {commit.nonceB64 ? <ProofField label="Nonce" value={String(commit.nonceB64)} mono /> : null}
+                </div>
+              </div>
+            )}
+
+            {/* Signer */}
+            {signer && (
+              <div className="explorer-section">
+                <div className="explorer-section-title">Signer</div>
+                <div className="explorer-section-body">
+                  {(signer as any).publicKeyB64 && <ProofField label="Public Key" value={String((signer as any).publicKeyB64)} mono />}
+                  {(signer as any).signatureB64 && <ProofField label="Signature" value={String((signer as any).signatureB64)} mono />}
+                </div>
+              </div>
+            )}
+
+            {/* Environment */}
+            {env && (
+              <div className="explorer-section">
+                <div className="explorer-section-title">Environment</div>
+                <div className="explorer-section-body">
+                  <ProofField label="Enforcement" value={enforcement === "measured-tee" ? "Hardware Enclave (AWS Nitro)" : enforcement === "hw-key" ? "Hardware Key" : "Software"} color={enforcement === "measured-tee" ? "#3b82f6" : undefined} />
+                  {(env as any).measurement && <ProofField label="Measurement" value={String((env as any).measurement)} mono />}
+                </div>
+              </div>
+            )}
+
+            {/* Principal */}
+            {principal && (
+              <div className="explorer-section">
+                <div className="explorer-section-title">Principal</div>
+                <div className="explorer-section-body">
+                  <ProofField label="Provider" value={String((principal as any).provider || "unknown")} />
+                  <ProofField label="ID" value={String((principal as any).id || "—")} mono />
+                </div>
+              </div>
+            )}
+
+            {/* Policy */}
+            {policy && (
+              <div className="explorer-section">
+                <div className="explorer-section-title">Policy</div>
+                <div className="explorer-section-body">
+                  {(policy as any).name && <ProofField label="Name" value={String((policy as any).name)} />}
+                  {(policy as any).digestB64 && <ProofField label="Digest" value={String((policy as any).digestB64)} mono />}
+                </div>
+              </div>
+            )}
+
+            {/* Timestamps */}
+            {timestamps && (
+              <div className="explorer-section">
+                <div className="explorer-section-title">Timestamps</div>
+                <div className="explorer-section-body">
+                  {(timestamps as any)?.artifact?.authority && <ProofField label="Authority" value={String((timestamps as any).artifact.authority)} />}
+                  {(timestamps as any)?.artifact?.time && <ProofField label="Time" value={String((timestamps as any).artifact.time)} />}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Full JSON */}
           {receipt && <CopyableJson data={receipt} />}
 
           {!receipt && p.reason && (
@@ -439,6 +488,29 @@ function SettingsView({ user }: { user: { id: string; name: string; email: strin
           Sign out
         </a>
       </div>
+    </div>
+  );
+}
+
+/* ── Proof Field ── */
+function ProofField({ label, value, mono, color }: { label: string; value: string; mono?: boolean; color?: string }) {
+  const [copied, setCopied] = useState(false);
+  const isLong = value.length > 30;
+  return (
+    <div className="proof-field">
+      <span className="proof-field-label">{label}</span>
+      <span className={`proof-field-value ${mono ? "proof-field-mono" : ""}`} style={color ? { color } : undefined}>
+        {isLong ? truncate(value, 48) : value}
+      </span>
+      {isLong && (
+        <button className="proof-field-copy" onClick={() => { navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 1500); }} title="Copy full value">
+          {copied ? (
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 6L9 17l-5-5"/></svg>
+          ) : (
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          )}
+        </button>
+      )}
     </div>
   );
 }
