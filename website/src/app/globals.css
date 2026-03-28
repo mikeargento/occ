@@ -313,7 +313,7 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 }
 
 /* ── Nav link hover ── */
-.nav-link:hover { background: var(--bg-elevated); color: var(--c-text) !important; }
+.nav-link:hover { background: var(--bg-elevated) !important; color: var(--c-text) !important; border-radius: 8px; }
 
 /* ── Nav responsive ── */
 @media (max-width: 768px) {
