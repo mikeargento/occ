@@ -120,7 +120,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui,
 .copy-badge-show { opacity: 1 !important; background: #34d399; color: #000; }
 
 /* ── Settings ── */
-.settings-container { max-width: 560px; margin: 0 auto; padding: 32px 24px 64px; }
+.settings-container { max-width: 720px; margin: 0 auto; padding: 32px 24px 64px; }
 .settings-section { margin-bottom: 36px; }
 .settings-label { font-size: 13px; font-weight: 400; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.02em; margin-bottom: 8px; padding-left: 16px; }
 .settings-card { background: var(--surface); border: 1px solid var(--border-light); border-radius: 12px; overflow: hidden; }
