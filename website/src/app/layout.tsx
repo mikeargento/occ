@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     template: "%s | OCC",
   },
   description:
-    "Origin Controlled Computing. AI actions are only executable if authorized by a previously committed, cryptographically bound policy.",
+    "Artificial Intelligence, Human Authority.",
   keywords: [
     "OCC", "Origin Controlled Computing", "AI agent control", "AI safety",
     "cryptographic policy", "AI governance", "default deny",

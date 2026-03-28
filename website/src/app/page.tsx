@@ -25,7 +25,7 @@ export default function Home() {
           fontSize: 18, lineHeight: 1.6, color: "var(--c-text-secondary)",
           maxWidth: 560, marginBottom: 32,
         }}>
-          Origin Controlled Computing. AI actions are only executable if authorized by a previously committed, cryptographically bound policy.
+          Artificial Intelligence, Human Authority.
         </p>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
           <a href="https://agent.occ.wtf" style={{
