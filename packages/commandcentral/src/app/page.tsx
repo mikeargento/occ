@@ -10,6 +10,7 @@ export default function App() {
   const [proofs, setProofs] = useState<V2Proof[]>([]);
   const [proofTotal, setProofTotal] = useState(0);
   const [view, setView] = useState<"main" | "settings">("main");
+  const [chatOpen, setChatOpen] = useState(false);
   const pollingRef = useRef<ReturnType<typeof setInterval>>(undefined);
 
   useEffect(() => { getMe().then(d => setUser(d.user)).catch(() => {}).finally(() => setLoading(false)); }, []);
@@ -80,6 +81,9 @@ export default function App() {
             <span>GitHub</span>
           </a>
           <div className="topnav-sep" />
+          <button className="topnav-link" onClick={() => setChatOpen(!chatOpen)} style={{ color: chatOpen ? "var(--accent)" : undefined }} title="Ask OCC">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </button>
           <button className="topnav-link" onClick={() => setView(view === "settings" ? "main" : "settings")} style={{ color: view === "settings" ? "var(--text)" : undefined }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           </button>
@@ -124,6 +128,86 @@ export default function App() {
       ) : (
         <SettingsView user={user} />
       )}
+      {chatOpen && <ChatPanel onClose={() => setChatOpen(false)} />}
+    </div>
+  );
+}
+
+/* ── Proposal ── */
+/* ── Chat Panel ── */
+function ChatPanel({ onClose }: { onClose: () => void }) {
+  const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
+  const [input, setInput] = useState("");
+  const [sending, setSending] = useState(false);
+  const endRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+  useEffect(() => { inputRef.current?.focus(); }, []);
+
+  async function send() {
+    if (!input.trim() || sending) return;
+    const userMsg = { role: "user" as const, content: input.trim() };
+    const newMessages = [...messages, userMsg];
+    setMessages(newMessages);
+    setInput("");
+    setSending(true);
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: newMessages }),
+      });
+      const data = await res.json();
+      if (data.response) {
+        setMessages(prev => [...prev, { role: "assistant", content: data.response }]);
+      } else if (data.error) {
+        setMessages(prev => [...prev, { role: "assistant", content: `Error: ${data.error}` }]);
+      }
+    } catch {
+      setMessages(prev => [...prev, { role: "assistant", content: "Failed to reach the server." }]);
+    }
+    setSending(false);
+  }
+
+  return (
+    <div className="chat-overlay" onClick={onClose}>
+      <div className="chat-panel" onClick={e => e.stopPropagation()}>
+        <div className="chat-header">
+          <span style={{ fontSize: 14, fontWeight: 600 }}>Ask OCC</span>
+          <button className="explorer-close-btn" onClick={onClose} style={{ width: 26, height: 26 }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div className="chat-messages">
+          {messages.length === 0 && (
+            <div style={{ padding: 24, textAlign: "center", color: "var(--text-tertiary)", fontSize: 13 }}>
+              Ask about proofs, the chain, how OCC works, or anything about your activity.
+            </div>
+          )}
+          {messages.map((m, i) => (
+            <div key={i} className={`chat-msg ${m.role === "user" ? "chat-msg-user" : "chat-msg-assistant"}`}>
+              {m.content}
+            </div>
+          ))}
+          {sending && <div className="chat-msg chat-msg-assistant" style={{ opacity: 0.5 }}>Thinking...</div>}
+          <div ref={endRef} />
+        </div>
+        <div className="chat-input-area">
+          <textarea
+            ref={inputRef}
+            className="chat-input"
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
+            placeholder="Ask anything about OCC..."
+            rows={1}
+          />
+          <button className="chat-send" onClick={send} disabled={sending || !input.trim()}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
