@@ -82,6 +82,7 @@ export interface V2Proof {
   reason?: string;
   proofDigest: string | null;
   args?: unknown;
+  receipt?: Record<string, unknown>;
   createdAt: string;
 }
 

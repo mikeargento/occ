@@ -9,6 +9,7 @@ export default function App() {
   const [feed, setFeed] = useState<FeedItem[]>([]);
   const [proofs, setProofs] = useState<V2Proof[]>([]);
   const [proofTotal, setProofTotal] = useState(0);
+  const [expandedProof, setExpandedProof] = useState<number | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
   const pollingRef = useRef<ReturnType<typeof setInterval>>(undefined);
@@ -192,23 +193,12 @@ export default function App() {
                     <th>Tool</th>
                     <th>Agent</th>
                     <th>Time</th>
+                    <th></th>
                   </tr>
                 </thead>
                 <tbody>
                   {proofs.map(p => (
-                    <tr key={p.id} className={p.allowed ? "explorer-row-allowed" : "explorer-row-denied"}>
-                      <td>
-                        <span className={`explorer-dot ${p.allowed ? "explorer-dot-allowed" : "explorer-dot-denied"}`} />
-                      </td>
-                      <td className="explorer-digest">
-                        {p.proofDigest ? (
-                          <a href={`https://occ.wtf/explorer/${encodeURIComponent(toUrlSafe(p.proofDigest))}`} target="_blank" rel="noopener">{truncateDigest(p.proofDigest)}</a>
-                        ) : "—"}
-                      </td>
-                      <td className="explorer-tool">{p.tool}</td>
-                      <td className="explorer-agent">{p.agentId}</td>
-                      <td className="explorer-time">{relativeTime(p.createdAt)}</td>
-                    </tr>
+                    <ProofTableRow key={p.id} proof={p} expanded={expandedProof === p.id} onToggle={() => setExpandedProof(expandedProof === p.id ? null : p.id)} />
                   ))}
                 </tbody>
               </table>
@@ -218,6 +208,96 @@ export default function App() {
       </main>
     </div>
   );
+}
+
+/* ── Proof Table Row (expandable) ── */
+function ProofTableRow({ proof: p, expanded, onToggle }: { proof: V2Proof; expanded: boolean; onToggle: () => void }) {
+  const receipt = p.receipt as Record<string, unknown> | undefined;
+
+  return (
+    <>
+      <tr onClick={onToggle} style={{ cursor: "pointer" }} className={p.allowed ? "explorer-row-allowed" : "explorer-row-denied"}>
+        <td><span className={`explorer-dot ${p.allowed ? "explorer-dot-allowed" : "explorer-dot-denied"}`} /></td>
+        <td className="explorer-digest">{p.proofDigest ? truncateDigest(p.proofDigest) : "—"}</td>
+        <td className="explorer-tool">{p.tool}</td>
+        <td className="explorer-agent">{p.agentId}</td>
+        <td className="explorer-time">{relativeTime(p.createdAt)}</td>
+        <td>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" strokeWidth="2" style={{ transform: expanded ? "rotate(90deg)" : "rotate(0)", transition: "transform 0.15s" }}>
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </td>
+      </tr>
+      {expanded && (
+        <tr className="explorer-detail-row">
+          <td colSpan={6}>
+            <div className="explorer-detail">
+              {p.proofDigest && (
+                <div className="explorer-detail-field">
+                  <span className="explorer-detail-label">Digest</span>
+                  <span className="explorer-detail-value explorer-detail-digest">{p.proofDigest}</span>
+                </div>
+              )}
+              {receipt && (
+                <>
+                  {(receipt.commit as any)?.counter && (
+                    <div className="explorer-detail-field">
+                      <span className="explorer-detail-label">Counter</span>
+                      <span className="explorer-detail-value">#{(receipt.commit as any).counter}</span>
+                    </div>
+                  )}
+                  {(receipt.environment as any)?.enforcement && (
+                    <div className="explorer-detail-field">
+                      <span className="explorer-detail-label">Enforcement</span>
+                      <span className="explorer-detail-value">{enforcementLabel((receipt.environment as any).enforcement)}</span>
+                    </div>
+                  )}
+                  {(receipt.signer as any)?.publicKeyB64 && (
+                    <div className="explorer-detail-field">
+                      <span className="explorer-detail-label">Signer</span>
+                      <span className="explorer-detail-value explorer-detail-mono">{truncateDigest((receipt.signer as any).publicKeyB64)}</span>
+                    </div>
+                  )}
+                  {(receipt.commit as any)?.prevB64 && (
+                    <div className="explorer-detail-field">
+                      <span className="explorer-detail-label">Prev Proof</span>
+                      <span className="explorer-detail-value explorer-detail-mono">{truncateDigest((receipt.commit as any).prevB64)}</span>
+                    </div>
+                  )}
+                  {(receipt.policy as any)?.digestB64 && (
+                    <div className="explorer-detail-field">
+                      <span className="explorer-detail-label">Policy</span>
+                      <span className="explorer-detail-value explorer-detail-mono">{truncateDigest((receipt.policy as any).digestB64)}</span>
+                    </div>
+                  )}
+                </>
+              )}
+              {!p.allowed && p.reason && (
+                <div className="explorer-detail-field">
+                  <span className="explorer-detail-label">Reason</span>
+                  <span className="explorer-detail-value" style={{ color: "var(--red)" }}>{p.reason}</span>
+                </div>
+              )}
+              {p.proofDigest && (
+                <a href={`https://occ.wtf/explorer/${encodeURIComponent(toUrlSafe(p.proofDigest))}`} target="_blank" rel="noopener" className="explorer-detail-link">
+                  View full proof on occ.wtf
+                </a>
+              )}
+            </div>
+          </td>
+        </tr>
+      )}
+    </>
+  );
+}
+
+function enforcementLabel(e: string): string {
+  switch (e) {
+    case "measured-tee": return "Hardware Enclave";
+    case "hw-key": return "Hardware Key";
+    case "stub": return "Software";
+    default: return e;
+  }
 }
 
 function toUrlSafe(b64: string): string {
