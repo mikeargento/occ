@@ -138,21 +138,19 @@ export default function App() {
 function FormattedText({ text }: { text: string }) {
   const lines = text.split("\n");
   const elements: React.ReactNode[] = [];
-  let codeBlock: string[] | null = null;
-  let codeLang = "";
+  const state = { codeBlock: null as string[] | null };
 
   lines.forEach((line, i) => {
     if (line.startsWith("```")) {
-      if (codeBlock !== null) {
-        elements.push(<pre key={`code-${i}`} className="chat-code">{codeBlock.join("\n")}</pre>);
-        codeBlock = null;
+      if (state.codeBlock !== null) {
+        elements.push(<pre key={`code-${i}`} className="chat-code">{state.codeBlock.join("\n")}</pre>);
+        state.codeBlock = null;
       } else {
-        codeLang = line.slice(3).trim();
-        codeBlock = [];
+        state.codeBlock = [];
       }
       return;
     }
-    if (codeBlock !== null) { codeBlock.push(line); return; }
+    if (state.codeBlock !== null) { state.codeBlock.push(line); return; }
     if (line.startsWith("### ")) { elements.push(<div key={i} className="chat-h3">{line.slice(4)}</div>); return; }
     if (line.startsWith("## ")) { elements.push(<div key={i} className="chat-h2">{line.slice(3)}</div>); return; }
     if (line.startsWith("# ")) { elements.push(<div key={i} className="chat-h1">{line.slice(2)}</div>); return; }
@@ -161,7 +159,7 @@ function FormattedText({ text }: { text: string }) {
     if (line.trim() === "") { elements.push(<div key={i} style={{ height: 8 }} />); return; }
     elements.push(<div key={i}>{inlineFormat(line)}</div>);
   });
-  if (codeBlock !== null) { elements.push(<pre key="code-end" className="chat-code">{codeBlock.join("\n")}</pre>); }
+  if (state.codeBlock !== null) { elements.push(<pre key="code-end" className="chat-code">{state.codeBlock.join("\n")}</pre>); }
   return <>{elements}</>;
 }
 
