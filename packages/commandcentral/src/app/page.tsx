@@ -28,7 +28,13 @@ export default function App() {
     try {
       const [feedData, proofData] = await Promise.all([getFeed(), getProofs(PAGE_SIZE, 0, proofSearch, showFullChain)]);
       setFeed(feedData.requests ?? []);
-      setProofs(proofData.proofs ?? []);
+      // Only update proofs if data changed (prevents resetting expanded state)
+      const newProofs = proofData.proofs ?? [];
+      setProofs(prev => {
+        if (prev.length !== newProofs.length) return newProofs;
+        const changed = newProofs.some((p, i) => p.id !== prev[i]?.id);
+        return changed ? newProofs : prev;
+      });
       setProofTotal(proofData.total ?? 0);
       setHasMore((proofData.proofs?.length ?? 0) < (proofData.total ?? 0));
     } catch {}
