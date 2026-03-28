@@ -88,14 +88,17 @@ export default function Home() {
           }}>{installCmd}</pre>
           <button onClick={copy} style={{
             position: "absolute", top: 0, right: 0,
-            padding: "6px 14px", borderRadius: 6,
-            fontSize: 12, fontWeight: 500,
-            background: copied ? "var(--c-accent)" : "var(--c-text)",
-            color: copied ? "#fff" : "var(--bg)",
-            border: "none", cursor: "pointer",
-            transition: "all 0.15s",
-          }}>
-            {copied ? "Copied!" : "Copy"}
+            width: 32, height: 32, borderRadius: 6,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            background: "none", border: "none",
+            color: copied ? "var(--c-accent)" : "var(--c-text-tertiary)",
+            cursor: "pointer", transition: "all 0.15s",
+          }} title="Copy to clipboard">
+            {copied ? (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+            ) : (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            )}
           </button>
         </div>
         <p style={{ fontSize: 14, color: "var(--c-text-tertiary)", marginTop: 12 }}>
