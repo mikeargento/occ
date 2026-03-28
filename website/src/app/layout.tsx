@@ -1,18 +1,9 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import "katex/dist/katex.min.css";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
-import { ThemeProvider } from "@/components/theme-provider";
-
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  weight: ["900"],
-  display: "swap",
-});
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
@@ -22,54 +13,46 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "OCC - Define what your AI agents can do",
+    default: "OCC — Define what your AI does",
     template: "%s | OCC",
   },
   description:
     "Origin Controlled Computing. AI actions are only executable if authorized by a previously committed, cryptographically bound policy.",
   keywords: [
-    "OCC",
-    "Origin Controlled Computing",
-    "AI agent control",
-    "AI safety",
-    "cryptographic policy",
-    "AI governance",
-    "agent permissions",
-    "MCP proxy",
-    "tool access control",
-    "AI guardrails",
-    "default deny",
+    "OCC", "Origin Controlled Computing", "AI agent control", "AI safety",
+    "cryptographic policy", "AI governance", "default deny",
   ],
   openGraph: {
-    title: "OCC - Define what your AI agents can do",
-    description: "Origin Controlled Computing. Define what your AI agents can do. Prove what they did.",
+    title: "OCC — Define what your AI does",
+    description: "Origin Controlled Computing. Define what your AI does. Prove what they did.",
     type: "website",
     siteName: "OCC",
   },
   twitter: {
     card: "summary_large_image",
-    title: "OCC - Define what your AI agents can do",
-    description: "Origin Controlled Computing. Define what your AI agents can do. Prove what they did.",
+    title: "OCC — Define what your AI does",
+    description: "Origin Controlled Computing. Define what your AI does.",
   },
   robots: { index: true, follow: true },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`}>
+    <html lang="en" className={jetbrainsMono.variable} suppressHydrationWarning>
       <head>
-        <link rel="stylesheet" href="https://use.typekit.net/svq0oqy.css" />
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function() {
+            var t = localStorage.getItem('theme');
+            if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+              document.documentElement.setAttribute('data-theme', 'dark');
+            }
+          })();
+        `}} />
       </head>
-      <body className="font-serif antialiased">
-        <ThemeProvider>
-          <Nav />
-          <main className="min-h-screen">{children}</main>
-          <Footer />
-        </ThemeProvider>
+      <body style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif" }}>
+        <Nav />
+        <main style={{ minHeight: "100vh" }}>{children}</main>
+        <Footer />
       </body>
     </html>
   );

@@ -1,26 +1,24 @@
 "use client";
 
-import Link from "next/link";
-
 export function Footer() {
   return (
-    <footer className="pb-16">
-      <div className="mx-auto max-w-6xl px-6 pt-16">
-        <div className="flex flex-col md:flex-row md:justify-between gap-12">
-          <div className="max-w-md">
-            <p className="text-sm text-text-tertiary leading-relaxed">Origin Controlled Computing</p>
-            <a href="https://aimessage.foo" className="text-sm text-[#007aff] hover:opacity-70 transition-opacity mt-2 inline-block">
-              Back to AiMessage
-            </a>
-          </div>
-
-          <div>
-            <ul className="space-y-3">
-              <li><Link href="/explorer" className="text-sm text-text-secondary hover:text-text transition-colors">Explorer</Link></li>
-              <li><Link href="/docs" className="text-sm text-text-secondary hover:text-text transition-colors">Docs</Link></li>
-              <li><a href="https://github.com/mikeargento/occ" target="_blank" rel="noopener" className="text-sm text-text-secondary hover:text-text transition-colors">GitHub</a></li>
-            </ul>
-          </div>
+    <footer style={{
+      padding: "48px 24px 32px",
+      borderTop: "1px solid var(--c-border-subtle)",
+      marginTop: 64,
+    }}>
+      <div style={{
+        maxWidth: 960, margin: "0 auto",
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+        flexWrap: "wrap", gap: 16,
+      }}>
+        <span style={{ fontSize: 13, color: "var(--c-text-tertiary)" }}>
+          Origin Controlled Computing
+        </span>
+        <div style={{ display: "flex", gap: 24 }}>
+          <a href="/explorer" style={{ fontSize: 13, color: "var(--c-text-secondary)", textDecoration: "none" }}>Explorer</a>
+          <a href="/docs" style={{ fontSize: 13, color: "var(--c-text-secondary)", textDecoration: "none" }}>Docs</a>
+          <a href="https://github.com/mikeargento/occ" target="_blank" rel="noopener" style={{ fontSize: 13, color: "var(--c-text-secondary)", textDecoration: "none" }}>GitHub</a>
         </div>
       </div>
     </footer>

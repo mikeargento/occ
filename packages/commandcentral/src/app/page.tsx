@@ -321,43 +321,118 @@ function CopyableJson({ data }: { data: Record<string, unknown> }) {
 
 /* ── Settings View ── */
 function SettingsView({ user }: { user: { id: string; name: string; email: string; avatar: string } }) {
+  const [token, setToken] = useState<string | null>(null);
+  const [apiKey, setApiKey] = useState<{ hasKey: boolean; maskedKey: string | null }>({ hasKey: false, maskedKey: null });
+  const [apiInput, setApiInput] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/settings/token").then(r => r.ok ? r.json() : null).then(d => { if (d?.token) setToken(d.token); }).catch(() => {});
+    fetch("/api/settings/api-key").then(r => r.ok ? r.json() : null).then(d => { if (d) setApiKey(d); }).catch(() => {});
+  }, []);
+
+  function copy(text: string, label: string) {
+    navigator.clipboard.writeText(text);
+    setCopied(label);
+    setTimeout(() => setCopied(null), 2000);
+  }
+
+  async function saveKey() {
+    if (!apiInput.trim()) return;
+    setSaving(true);
+    try {
+      const r = await fetch("/api/settings/api-key", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key: apiInput.trim() }) });
+      const d = await r.json();
+      if (r.ok) { setApiKey({ hasKey: true, maskedKey: d.maskedKey }); setApiInput(""); }
+    } catch {}
+    setSaving(false);
+  }
+
+  async function removeKey() {
+    setSaving(true);
+    try { await fetch("/api/settings/api-key", { method: "DELETE" }); setApiKey({ hasKey: false, maskedKey: null }); } catch {}
+    setSaving(false);
+  }
+
   return (
     <div className="settings-container">
       <h1 className="page-title">Settings</h1>
       <p className="page-subtitle">Account and configuration</p>
 
+      {/* Account */}
       <div className="settings-section">
         <div className="settings-label">Account</div>
         <div className="settings-card">
           <div className="settings-row">
-            <div>
-              <div className="settings-row-label">{user.name || "—"}</div>
-              <div className="settings-row-desc">{user.email || "—"}</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              {user.avatar ? <img src={user.avatar} alt="" style={{ width: 40, height: 40, borderRadius: "50%" }} /> : null}
+              <div>
+                <div className="settings-row-label">{user.name || "—"}</div>
+                <div className="settings-row-desc">{user.email || "—"}</div>
+              </div>
             </div>
-            {user.avatar && <img src={user.avatar} alt="" style={{ width: 40, height: 40, borderRadius: "50%" }} />}
-          </div>
-          <div className="settings-row">
-            <a href="/auth/logout" className="settings-btn settings-btn-danger" style={{ textDecoration: "none" }}>Sign out</a>
           </div>
         </div>
       </div>
 
-      <div className="settings-section">
-        <div className="settings-label">Resources</div>
-        <div className="settings-card">
-          <a href="https://occ.wtf/explorer" className="settings-row" style={{ textDecoration: "none", color: "var(--text)" }}>
-            <span className="settings-row-label">Proof Explorer</span>
-            <span style={{ color: "var(--text-tertiary)" }}>→</span>
-          </a>
-          <a href="https://occ.wtf/docs" className="settings-row" style={{ textDecoration: "none", color: "var(--text)" }}>
-            <span className="settings-row-label">Documentation</span>
-            <span style={{ color: "var(--text-tertiary)" }}>→</span>
-          </a>
-          <a href="https://github.com/mikeargento/occ" className="settings-row" style={{ textDecoration: "none", color: "var(--text)" }}>
-            <span className="settings-row-label">GitHub</span>
-            <span style={{ color: "var(--text-tertiary)" }}>→</span>
-          </a>
+      {/* Setup */}
+      {token && (
+        <div className="settings-section">
+          <div className="settings-label">Setup</div>
+          <div className="settings-card">
+            <div className="settings-row" style={{ flexDirection: "column", alignItems: "stretch", gap: 12 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div className="settings-row-label">OCC Token</div>
+                <button onClick={() => copy(token, "token")} className="settings-btn settings-btn-primary" style={{ height: 32, fontSize: 13 }}>
+                  {copied === "token" ? "Copied!" : "Copy"}
+                </button>
+              </div>
+              <code style={{ fontSize: 12, fontFamily: "'SF Mono', monospace", color: "var(--text-secondary)", wordBreak: "break-all", lineHeight: 1.5 }}>{token}</code>
+            </div>
+            <div className="settings-row" style={{ flexDirection: "column", alignItems: "stretch", gap: 8 }}>
+              <div className="settings-row-label">Quick setup</div>
+              <div className="settings-code">
+                curl -fsSL https://agent.occ.wtf/install | bash{"\n"}
+                export OCC_TOKEN={token}
+              </div>
+              <button onClick={() => copy(`curl -fsSL https://agent.occ.wtf/install | bash\nexport OCC_TOKEN=${token}`, "cmd")} className="settings-btn settings-btn-primary" style={{ width: "100%", marginTop: 4 }}>
+                {copied === "cmd" ? "Copied!" : "Copy setup commands"}
+              </button>
+            </div>
+          </div>
         </div>
+      )}
+
+      {/* API Key */}
+      <div className="settings-section">
+        <div className="settings-label">API Key</div>
+        <div className="settings-card">
+          <div className="settings-row" style={{ flexDirection: "column", alignItems: "stretch", gap: 8 }}>
+            <div>
+              <div className="settings-row-label">Anthropic API Key</div>
+              <div className="settings-row-desc">Optional. Powers AI chat features.</div>
+            </div>
+            {apiKey.hasKey ? (
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <code style={{ flex: 1, fontSize: 13, fontFamily: "'SF Mono', monospace", color: "var(--text-secondary)" }}>{apiKey.maskedKey}</code>
+                <button onClick={removeKey} disabled={saving} className="settings-btn settings-btn-danger" style={{ height: 32, fontSize: 13 }}>Remove</button>
+              </div>
+            ) : (
+              <div style={{ display: "flex", gap: 8 }}>
+                <input type="password" placeholder="sk-ant-..." value={apiInput} onChange={e => setApiInput(e.target.value)} onKeyDown={e => e.key === "Enter" && saveKey()} className="settings-input" style={{ borderRadius: 8, border: "1px solid var(--border-light)" }} />
+                <button onClick={saveKey} disabled={saving || !apiInput.trim()} className="settings-btn settings-btn-primary" style={{ height: 44, fontSize: 14 }}>Save</button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Sign out */}
+      <div className="settings-section">
+        <a href="/auth/logout" className="settings-btn settings-btn-danger" style={{ display: "block", textAlign: "center", textDecoration: "none", lineHeight: "44px", width: "100%", borderRadius: 10 }}>
+          Sign out
+        </a>
       </div>
     </div>
   );

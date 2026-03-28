@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Disable dark mode — single muted light theme */
+/* Dark mode via data-theme attribute */
 @custom-variant dark (&:where(.force-dark));
 
 @theme {
@@ -42,6 +42,23 @@
   --c-syntax-string: #047857;
   --c-syntax-number: #b45309;
   color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --bg: #000000;
+  --bg-elevated: #1c1c1e;
+  --bg-subtle: #2c2c2e;
+  --c-border: #38383a;
+  --c-border-subtle: #2c2c2e;
+  --c-text: #f5f5f7;
+  --c-text-secondary: #a1a1a6;
+  --c-text-tertiary: #636366;
+  --c-accent: #3b82f6;
+  --c-accent-dim: #1e40af;
+  --c-syntax-key: #60a5fa;
+  --c-syntax-string: #34d399;
+  --c-syntax-number: #fbbf24;
+  color-scheme: dark;
 }
 
 /* ── Base ── */
@@ -288,4 +305,19 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+[data-theme="dark"] .text-gradient {
+  background: linear-gradient(135deg, #f5f5f7 0%, #60a5fa 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+/* ── Nav responsive ── */
+@media (max-width: 768px) {
+  .nav-desktop { display: none !important; }
+  .nav-mobile { display: flex !important; }
+}
+@media (min-width: 769px) {
+  .nav-desktop { display: flex !important; }
+  .nav-mobile { display: none !important; }
 }
