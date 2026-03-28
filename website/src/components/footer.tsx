@@ -16,7 +16,6 @@ export function Footer() {
           Origin Controlled Computing
         </span>
         <div style={{ display: "flex", gap: 24 }}>
-          <a href="/explorer" style={{ fontSize: 13, color: "var(--c-text-secondary)", textDecoration: "none" }}>Explorer</a>
           <a href="/docs" style={{ fontSize: 13, color: "var(--c-text-secondary)", textDecoration: "none" }}>Docs</a>
           <a href="https://github.com/mikeargento/occ" target="_blank" rel="noopener" style={{ fontSize: 13, color: "var(--c-text-secondary)", textDecoration: "none" }}>GitHub</a>
         </div>
