@@ -12,7 +12,7 @@ export default function Home() {
     setTimeout(() => setCopied(false), 2000);
   }
   return (
-    <div style={{ maxWidth: 960, margin: "0 auto", padding: "80px 24px 64px" }}>
+    <div style={{ maxWidth: 1120, margin: "0 auto", padding: "80px 24px 64px" }}>
       {/* Hero */}
       <div style={{ marginBottom: 80 }}>
         <h1 style={{

@@ -8,7 +8,7 @@ export function Footer() {
       marginTop: 64,
     }}>
       <div style={{
-        maxWidth: 960, margin: "0 auto",
+        maxWidth: 1120, margin: "0 auto",
         display: "flex", justifyContent: "space-between", alignItems: "center",
         flexWrap: "wrap", gap: 16,
       }}>

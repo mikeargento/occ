@@ -191,7 +191,7 @@ function ExplorerPage() {
   }, [searchQuery]);
 
   return (
-    <div style={{ maxWidth: 960, margin: "0 auto", padding: "32px 24px 64px" }}>
+    <div style={{ maxWidth: 1120, margin: "0 auto", padding: "32px 24px 64px" }}>
       {/* Header */}
       <h1 style={{ fontSize: 28, fontWeight: 700, letterSpacing: "-0.02em", marginBottom: 4 }}>
         Explorer

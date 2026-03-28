@@ -49,7 +49,7 @@ function CodeBlock({ title, code }: { title?: string; code: string }) {
 
 export default function APIReferencePage() {
   return (
-    <div style={{ maxWidth: 960, margin: "0 auto", padding: "32px 24px 64px" }}>
+    <div style={{ maxWidth: 1120, margin: "0 auto", padding: "32px 24px 64px" }}>
       <div className="mb-16">
         <span className="inline-block text-[11px] font-medium uppercase tracking-[0.15em] text-text-tertiary mb-4">
           API Reference

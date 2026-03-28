@@ -31,14 +31,17 @@ export function Nav() {
 
   return (
     <header style={{
-      position: "sticky", top: 0, zIndex: 50, height: 52,
-      display: "flex", alignItems: "center", justifyContent: "space-between",
-      padding: "0 24px",
+      position: "sticky", top: 0, zIndex: 50,
       background: "var(--bg)",
       borderBottom: "1px solid var(--c-border-subtle)",
       backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
     }}>
-      <Link href="/" style={{ fontSize: 17, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--c-text)", textDecoration: "none" }}>
+     <div style={{
+      maxWidth: 1120, margin: "0 auto", height: 56,
+      display: "flex", alignItems: "center", justifyContent: "space-between",
+      padding: "0 36px",
+     }}>
+      <Link href="/" style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.03em", color: "var(--c-text)", textDecoration: "none" }}>
         OCC
       </Link>
 
@@ -112,6 +115,7 @@ export function Nav() {
         </button>
       </div>
 
+     </div>
       {/* Mobile dropdown */}
       {open && (
         <div style={{

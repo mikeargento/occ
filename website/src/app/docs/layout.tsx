@@ -25,7 +25,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
   const pathname = usePathname();
 
   return (
-    <div style={{ maxWidth: 960, margin: "0 auto", padding: "32px 24px 64px" }}>
+    <div style={{ maxWidth: 1120, margin: "0 auto", padding: "32px 24px 64px" }}>
       {/* Mobile nav */}
       <div className="visible-mobile" style={{ marginBottom: 24 }}>
         <select
