@@ -98,6 +98,8 @@ export default function App() {
       {/* ── Content ── */}
       {view === "main" ? (
         <div className="main-content">
+          <h1 className="page-title">Hi, {user.name?.split(" ")[0] || "there"}!</h1>
+
           {/* Pending proposals */}
           {pending.length > 0 && (
             <>
