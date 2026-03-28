@@ -9,14 +9,11 @@ export default function App() {
   const [feed, setFeed] = useState<FeedItem[]>([]);
   const [proofs, setProofs] = useState<V2Proof[]>([]);
   const [proofTotal, setProofTotal] = useState(0);
-  const [expandedProof, setExpandedProof] = useState<number | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
   const pollingRef = useRef<ReturnType<typeof setInterval>>(undefined);
 
-  useEffect(() => {
-    setIsDark(document.documentElement.getAttribute("data-theme") === "dark");
-  }, []);
+  useEffect(() => { setIsDark(document.documentElement.getAttribute("data-theme") === "dark"); }, []);
 
   function toggleTheme() {
     const html = document.documentElement;
@@ -26,9 +23,7 @@ export default function App() {
     setIsDark(!dark);
   }
 
-  useEffect(() => {
-    getMe().then(d => setUser(d.user)).catch(() => {}).finally(() => setLoading(false));
-  }, []);
+  useEffect(() => { getMe().then(d => setUser(d.user)).catch(() => {}).finally(() => setLoading(false)); }, []);
 
   const refresh = useCallback(async () => {
     if (!user) return;
@@ -52,15 +47,7 @@ export default function App() {
     refresh();
   }
 
-  async function handleDeny(id: number) {
-    await deny(id);
-    refresh();
-  }
-
-  async function handleWipe() {
-    await wipeAll();
-    refresh();
-  }
+  async function handleDeny(id: number) { await deny(id); refresh(); }
 
   if (loading) return <div className="page-center"><div className="loader" /></div>;
 
@@ -82,52 +69,7 @@ export default function App() {
 
   return (
     <div className="app-layout">
-      <aside className={`sidebar ${sidebarOpen ? "sidebar-open" : ""}`}>
-        <div className="sidebar-header">
-          <span className="sidebar-logo">OCC</span>
-          <button className="sidebar-close" onClick={() => setSidebarOpen(false)}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
-        </div>
-        <nav className="sidebar-nav">
-          <a href="https://occ.wtf/docs" className="sidebar-item" target="_blank">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-            Documentation
-          </a>
-          <a href="https://github.com/mikeargento/occ" className="sidebar-item" target="_blank">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-            GitHub
-          </a>
-          <a href="/settings" className="sidebar-item">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-            Settings
-          </a>
-          <button className="sidebar-item" onClick={toggleTheme}>
-            {isDark ? (
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-            ) : (
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-            )}
-            {isDark ? "Light mode" : "Dark mode"}
-          </button>
-        </nav>
-        <div className="sidebar-footer">
-          {user && (
-            <div className="sidebar-user">
-              {user.avatar ? (
-                <img src={user.avatar} alt="" className="sidebar-user-avatar" />
-              ) : (
-                <div className="sidebar-user-avatar-placeholder">{user.name?.[0]}</div>
-              )}
-              <div className="sidebar-user-info">
-                <div className="sidebar-user-name">{user.name}</div>
-                <div className="sidebar-user-email">{user.email}</div>
-              </div>
-            </div>
-          )}
-        </div>
-      </aside>
-
+      <Sidebar user={user} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} isDark={isDark} toggleTheme={toggleTheme} />
       {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
 
       <main className="chat-main">
@@ -139,56 +81,40 @@ export default function App() {
           <div style={{ width: 36 }} />
         </div>
 
-        <div className="proof-explorer">
-          <div className="proof-list">
-            {/* Pending — AI proposals awaiting human authority */}
-            {pending.map(item => (
-              <Proposal key={item.id} item={item} onApprove={handleApprove} onDeny={handleDeny} />
-            ))}
+        <div className="explorer-page">
+          <h1 className="explorer-title">Explorer</h1>
 
-            {/* Proof Explorer — user's proof chain */}
-            <div className="proof-section-header">
-              <span>Your Proofs</span>
-              <span className="proof-total">{proofTotal} total</span>
-            </div>
+          {/* Pending proposals */}
+          {pending.map(item => (
+            <Proposal key={item.id} item={item} onApprove={handleApprove} onDeny={handleDeny} />
+          ))}
 
-            {proofs.length === 0 ? (
-              <div className="proof-empty">
-                <div>No proofs yet</div>
-                <div className="proof-empty-sub">When you authorize an action, the proof appears here.</div>
-              </div>
-            ) : (
-              <table className="explorer-table">
-                <thead>
-                  <tr>
-                    <th></th>
-                    <th>Digest</th>
-                    <th>Tool</th>
-                    <th>Agent</th>
-                    <th>Time</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {proofs.map(p => (
-                    <ProofTableRow key={p.id} proof={p} expanded={expandedProof === p.id} onToggle={() => setExpandedProof(expandedProof === p.id ? null : p.id)} />
-                  ))}
-                </tbody>
-              </table>
-            )}
+          {/* Recent Proofs */}
+          <div className="explorer-section-header">
+            <span className="explorer-section-label">Recent Proofs</span>
+            {proofTotal > 0 && <span className="explorer-section-count">{proofTotal.toLocaleString()} total</span>}
           </div>
+
+          {proofs.length === 0 ? (
+            <div className="explorer-empty">
+              <div>No proofs yet.</div>
+              <div className="explorer-empty-sub">When you authorize an action, the proof appears here.</div>
+            </div>
+          ) : (
+            <div className="explorer-list">
+              {proofs.map(p => (
+                <ExplorerRow key={p.id} proof={p} />
+              ))}
+            </div>
+          )}
         </div>
       </main>
     </div>
   );
 }
 
-/* ── Proposal — AI is proposing, user has the authority ── */
-function Proposal({ item, onApprove, onDeny }: {
-  item: FeedItem;
-  onApprove: (id: number, mode: "once" | "always") => void;
-  onDeny: (id: number) => void;
-}) {
+/* ── Proposal ── */
+function Proposal({ item, onApprove, onDeny }: { item: FeedItem; onApprove: (id: number, mode: "once" | "always") => void; onDeny: (id: number) => void }) {
   const toolName = item.tool.startsWith("mcp__") ? (item.tool.split("__").pop() || item.tool).replace(/[_-]/g, " ") : item.tool;
   const args = (item.args && typeof item.args === "object" ? item.args : {}) as Record<string, unknown>;
   const target = extractTarget(args);
@@ -203,58 +129,107 @@ function Proposal({ item, onApprove, onDeny }: {
       {target && <div className="proposal-target">{target}</div>}
       {(item.summary || item.label) && <div className="proposal-reason">{item.summary || item.label}</div>}
       {Object.keys(args).length > 0 && <pre className="proposal-args">{JSON.stringify(args, null, 2)}</pre>}
-      <div className="proof-actions">
-        <button className="proof-action-deny" onClick={() => onDeny(item.id)}>No</button>
-        <button className="proof-action-approve" onClick={() => onApprove(item.id, "once")}>Yes</button>
-        <button className="proof-action-always" onClick={() => onApprove(item.id, "always")}>Always</button>
+      <div className="proposal-buttons">
+        <button className="proposal-btn proposal-btn-deny" onClick={() => onDeny(item.id)}>No</button>
+        <button className="proposal-btn proposal-btn-approve" onClick={() => onApprove(item.id, "once")}>Yes</button>
+        <button className="proposal-btn proposal-btn-always" onClick={() => onApprove(item.id, "always")}>Always</button>
       </div>
     </div>
   );
 }
 
 function extractTarget(args: Record<string, unknown>): string | null {
-  // Extract the most meaningful "target" from args
   for (const key of ["file_path", "path", "url", "to", "command", "recipient", "target"]) {
     if (args[key] && typeof args[key] === "string") return String(args[key]);
   }
   return null;
 }
 
-/* ── Proof Table Row (expandable) ── */
-function ProofTableRow({ proof: p, expanded, onToggle }: { proof: V2Proof; expanded: boolean; onToggle: () => void }) {
+/* ── Explorer Row (matches occ.wtf/explorer) ── */
+function ExplorerRow({ proof: p }: { proof: V2Proof }) {
+  const [expanded, setExpanded] = useState(false);
   const receipt = p.receipt as Record<string, unknown> | undefined;
+  const commit = receipt?.commit as Record<string, unknown> | undefined;
+  const env = receipt?.environment as Record<string, unknown> | undefined;
+  const signer = receipt?.signer as Record<string, unknown> | undefined;
+  const timestamps = receipt?.timestamps as Record<string, unknown> | undefined;
+  const enforcement = (env?.enforcement as string) || "stub";
+  const commitTime = (commit?.time as number) || null;
+  const hasTsa = !!timestamps;
 
   return (
-    <>
-      <tr onClick={onToggle} style={{ cursor: "pointer" }} className={p.allowed ? "explorer-row-allowed" : "explorer-row-denied"}>
-        <td><span className={`explorer-dot ${p.allowed ? "explorer-dot-allowed" : "explorer-dot-denied"}`} /></td>
-        <td className="explorer-digest">{p.proofDigest ? truncateDigest(p.proofDigest) : "—"}</td>
-        <td className="explorer-tool">{p.tool}</td>
-        <td className="explorer-agent">{p.agentId}</td>
-        <td className="explorer-time">{relativeTime(p.createdAt)}</td>
-        <td>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" strokeWidth="2" style={{ transform: expanded ? "rotate(90deg)" : "rotate(0)", transition: "transform 0.15s" }}>
-            <polyline points="9 18 15 12 9 6"/>
+    <div className="explorer-row-wrap">
+      <div className="explorer-row" onClick={() => setExpanded(!expanded)}>
+        <button className="explorer-chevron" onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}>
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ transform: expanded ? "rotate(90deg)" : "rotate(0)", transition: "transform 0.15s" }}>
+            <path d="M3 1.5L7 5L3 8.5" />
           </svg>
-        </td>
-      </tr>
-      {expanded && (
-        <tr className="explorer-detail-row">
-          <td colSpan={6}>
-            <div className="explorer-detail">
-              {receipt ? (
-                <CopyableJson data={receipt} />
-              ) : (
-                <div style={{ color: "var(--text-tertiary)", fontSize: 13 }}>No receipt available</div>
-              )}
+        </button>
+
+        <code className="explorer-row-digest">{p.proofDigest || "—"}</code>
+
+        <span className={`explorer-badge ${enforcement === "measured-tee" ? "explorer-badge-tee" : enforcement === "hw-key" ? "explorer-badge-hw" : "explorer-badge-sw"}`}>
+          {enforcement === "measured-tee" ? "Hardware Enclave" : enforcement === "hw-key" ? "Hardware Key" : "Software"}
+        </span>
+
+        <div className="explorer-row-icons">
+          {hasTsa && (
+            <span className="explorer-icon-tsa" title="RFC 3161 timestamped">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>
+            </span>
+          )}
+          <span className="explorer-row-time">{commitTime ? relativeTime(commitTime) : "—"}</span>
+        </div>
+      </div>
+
+      {expanded && receipt && (
+        <div className="explorer-expanded">
+          <div className="explorer-detail-field">
+            <div className="explorer-detail-label">SHA-256 Digest</div>
+            <code className="explorer-detail-code">{p.proofDigest || "—"}</code>
+          </div>
+
+          <div className="explorer-detail-grid">
+            {signer && (
+              <div>
+                <div className="explorer-detail-label">Signer</div>
+                <code className="explorer-detail-code-sm">{truncate(signer.publicKeyB64 as string, 20)}</code>
+              </div>
+            )}
+            <div>
+              <div className="explorer-detail-label">Enforcement</div>
+              <span className={`explorer-detail-enforcement ${enforcement === "measured-tee" ? "explorer-badge-tee" : ""}`}>
+                {enforcement === "measured-tee" ? "Hardware Enclave" : enforcement === "hw-key" ? "Hardware Key" : "Software"}
+              </span>
             </div>
-          </td>
-        </tr>
+            {commitTime && (
+              <div>
+                <div className="explorer-detail-label">Committed</div>
+                <span>{new Date(commitTime).toLocaleString()}</span>
+              </div>
+            )}
+            {commit?.counter && (
+              <div>
+                <div className="explorer-detail-label">Counter</div>
+                <span>#{commit.counter as string}</span>
+              </div>
+            )}
+            {(timestamps as any)?.artifact?.authority && (
+              <div>
+                <div className="explorer-detail-label">Timestamp</div>
+                <span className="explorer-icon-tsa">{(timestamps as any).artifact.authority}</span>
+              </div>
+            )}
+          </div>
+
+          <CopyableJson data={receipt} />
+        </div>
       )}
-    </>
+    </div>
   );
 }
 
+/* ── Copyable JSON ── */
 function CopyableJson({ data }: { data: Record<string, unknown> }) {
   const [copied, setCopied] = useState(false);
   const json = JSON.stringify(data, null, 2);
@@ -267,36 +242,18 @@ function CopyableJson({ data }: { data: Record<string, unknown> }) {
   }
 
   return (
-    <div style={{ position: "relative" }}>
-      <pre className="explorer-detail-json" onClick={handleClick} style={{ cursor: "pointer" }}>
-        {json}
-      </pre>
-      <span className={`copy-badge ${copied ? "copy-badge-show" : ""}`}>
-        {copied ? "Copied!" : "Click to copy"}
-      </span>
+    <div style={{ position: "relative", marginTop: 12 }}>
+      <pre className="explorer-json" onClick={handleClick}>{json}</pre>
+      <span className={`copy-badge ${copied ? "copy-badge-show" : ""}`}>{copied ? "Copied!" : "Click to copy"}</span>
     </div>
   );
 }
 
-function enforcementLabel(e: string): string {
-  switch (e) {
-    case "measured-tee": return "Hardware Enclave";
-    case "hw-key": return "Hardware Key";
-    case "stub": return "Software";
-    default: return e;
-  }
-}
+/* ── Helpers ── */
+function truncate(s: string, len = 32): string { return s && s.length > len ? s.slice(0, len) + "..." : s || "—"; }
 
-function toUrlSafe(b64: string): string {
-  return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
-
-function truncateDigest(d: string): string {
-  return d.length > 32 ? d.slice(0, 32) + "..." : d;
-}
-
-function relativeTime(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
+function relativeTime(ms: number): string {
+  const diff = Date.now() - ms;
   const s = Math.floor(diff / 1000);
   if (s < 60) return "just now";
   const m = Math.floor(s / 60);
@@ -305,6 +262,53 @@ function relativeTime(dateStr: string): string {
   if (h < 24) return `${h}h ago`;
   const d = Math.floor(h / 24);
   return `${d}d ago`;
+}
+
+/* ── Sidebar ── */
+function Sidebar({ user, sidebarOpen, setSidebarOpen, isDark, toggleTheme }: any) {
+  return (
+    <aside className={`sidebar ${sidebarOpen ? "sidebar-open" : ""}`}>
+      <div className="sidebar-header">
+        <span className="sidebar-logo">OCC</span>
+        <button className="sidebar-close" onClick={() => setSidebarOpen(false)}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <nav className="sidebar-nav">
+        <a href="https://occ.wtf/docs" className="sidebar-item" target="_blank">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Documentation
+        </a>
+        <a href="https://github.com/mikeargento/occ" className="sidebar-item" target="_blank">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          GitHub
+        </a>
+        <a href="/settings" className="sidebar-item">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          Settings
+        </a>
+        <button className="sidebar-item" onClick={toggleTheme}>
+          {isDark ? (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          ) : (
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          )}
+          {isDark ? "Light mode" : "Dark mode"}
+        </button>
+      </nav>
+      <div className="sidebar-footer">
+        {user && (
+          <div className="sidebar-user">
+            {user.avatar ? <img src={user.avatar} alt="" className="sidebar-user-avatar" /> : <div className="sidebar-user-avatar-placeholder">{user.name?.[0]}</div>}
+            <div className="sidebar-user-info">
+              <div className="sidebar-user-name">{user.name}</div>
+              <div className="sidebar-user-email">{user.email}</div>
+            </div>
+          </div>
+        )}
+      </div>
+    </aside>
+  );
 }
 
 /* ── Icons ── */
