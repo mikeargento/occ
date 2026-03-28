@@ -141,10 +141,11 @@ export default function App() {
           {/* Proof chain */}
           <div className="section-header" style={pending.length === 0 ? { marginTop: 0 } : undefined}>
             <span className="section-label">Explorer</span>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <button className="explorer-view-toggle" onClick={() => { setShowFullChain(!showFullChain); setProofs([]); }} style={{ color: showFullChain ? "var(--accent)" : "var(--text-tertiary)" }}>
-                {showFullChain ? "Full chain" : "Actions only"}
-              </button>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div className="explorer-view-tabs">
+                <button className={`explorer-view-tab ${!showFullChain ? "explorer-view-tab-active" : ""}`} onClick={() => { if (showFullChain) { setShowFullChain(false); setProofs([]); } }}>Actions</button>
+                <button className={`explorer-view-tab ${showFullChain ? "explorer-view-tab-active" : ""}`} onClick={() => { if (!showFullChain) { setShowFullChain(true); setProofs([]); } }}>Full chain</button>
+              </div>
               {proofTotal > 0 && <span className="section-count">{proofTotal.toLocaleString()} total</span>}
             </div>
           </div>

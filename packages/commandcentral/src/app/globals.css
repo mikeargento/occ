@@ -85,9 +85,12 @@ body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro
 .section-empty { border: 1px solid var(--border-light); border-radius: 16px; background: var(--surface); padding: 56px; text-align: center; color: var(--text-secondary); font-size: 15px; }
 .section-empty-sub { font-size: 13px; color: var(--text-tertiary); margin-top: 8px; }
 
-/* ── Explorer View Toggle ── */
-.explorer-view-toggle { font-size: 12px; font-weight: 500; background: none; border: 1px solid var(--border-light); border-radius: 6px; padding: 4px 10px; cursor: pointer; font-family: inherit; transition: all 0.15s; }
-.explorer-view-toggle:hover { border-color: var(--accent); color: var(--accent); }
+/* ── Explorer View Tabs ── */
+.explorer-view-tabs { display: flex; border: 1px solid var(--border-light); border-radius: 8px; overflow: hidden; }
+.explorer-view-tab { font-size: 12px; font-weight: 500; padding: 5px 14px; background: none; border: none; color: var(--text-tertiary); cursor: pointer; font-family: inherit; transition: all 0.15s; }
+.explorer-view-tab:first-child { border-right: 1px solid var(--border-light); }
+.explorer-view-tab:hover { color: var(--text); }
+.explorer-view-tab-active { background: var(--surface); color: var(--text); }
 
 /* ── Explorer Search ── */
 .explorer-search { display: flex; gap: 8px; margin-bottom: 14px; position: relative; }
