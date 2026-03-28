@@ -63,12 +63,28 @@ export async function deleteApiKey(): Promise<{ ok: boolean }> {
   return api("/settings/api-key", { method: "DELETE" });
 }
 
-// User's proofs (TEE proof log)
-export async function getProofs(): Promise<{ entries: ProofEntry[] }> {
-  return api("/audit?limit=100");
+// User's proofs (TEE proof log via V2 API)
+export async function getProofs(): Promise<{ proofs: V2Proof[]; total: number }> {
+  return v2("/proofs?limit=50");
+}
+
+// Wipe all test data
+export async function wipeAll(): Promise<{ ok: boolean }> {
+  return v2("/wipe", { method: "POST" });
 }
 
 // Types
+export interface V2Proof {
+  id: number;
+  agentId: string;
+  tool: string;
+  allowed: boolean;
+  reason?: string;
+  proofDigest: string | null;
+  args?: unknown;
+  createdAt: string;
+}
+
 export interface ProofEntry {
   id: string;
   agentId: string;

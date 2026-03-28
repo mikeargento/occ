@@ -345,6 +345,12 @@ export async function handleApiV2(req: IncomingMessage, res: ServerResponse, url
     return json(res, { proof: formatProof(proof) });
   }
 
+  // Wipe all test data
+  if (path === "/wipe" && method === "POST") {
+    await db.v2WipeAll(userId);
+    return json(res, { ok: true });
+  }
+
   // ═══════════════════════════════════════════════════════
   // POLICY / RISK LANES
   // ═══════════════════════════════════════════════════════

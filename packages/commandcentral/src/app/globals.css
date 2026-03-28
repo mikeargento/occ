@@ -204,6 +204,31 @@ body {
 .proof-action-approve { background: var(--green); color: #000; }
 .proof-action-always { background: var(--accent); color: #fff; }
 
+.proof-section-header { display: flex; justify-content: space-between; align-items: baseline; }
+.proof-total { font-size: 13px; font-weight: 400; color: var(--text-tertiary); text-transform: none; letter-spacing: 0; }
+
+/* ── Explorer Table ── */
+.explorer-table {
+  width: 100%; border-collapse: collapse; font-size: 14px;
+}
+.explorer-table th {
+  text-align: left; padding: 8px 12px; font-size: 12px; font-weight: 500;
+  color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--border-light);
+}
+.explorer-table td { padding: 10px 12px; border-bottom: 1px solid var(--border-light); }
+.explorer-table tbody tr { transition: background 0.1s; }
+.explorer-table tbody tr:hover { background: var(--surface-hover); }
+
+.explorer-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; }
+.explorer-dot-allowed { background: var(--green); }
+.explorer-dot-denied { background: var(--red); }
+
+.explorer-digest { font-family: "SF Mono", "Menlo", monospace; font-size: 13px; color: var(--green); }
+.explorer-tool { font-weight: 500; }
+.explorer-agent { font-size: 13px; color: var(--text-secondary); }
+.explorer-time { font-size: 13px; color: var(--text-tertiary); white-space: nowrap; }
+
 /* ── Settings ── */
 .settings-layout { min-height: 100%; background: var(--bg-secondary); }
 .settings-container { max-width: 560px; margin: 0 auto; padding: 32px 24px 64px; }
