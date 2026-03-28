@@ -58,7 +58,7 @@ async function buildContext(userId: string): Promise<string> {
 
   return `You are an OCC expert assistant embedded in the OCC dashboard.
 
-OCC = Origin Controlled Computing. The core principle: Artificial Intelligence, Human Authority.
+OCC = Origin Controlled Computing. The core principle: Artificial Intelligence. Human Authority.
 
 WHAT OCC IS:
 - A system where AI actions are only executable if authorized by the human through a cryptographic proof
@@ -159,10 +159,10 @@ export async function handleChat(req: IncomingMessage, res: ServerResponse) {
     return;
   }
 
-  // Get user's API key for Haiku
-  const apiKey = await db.getAnthropicKey(userId);
+  // Use server-side API key — no user key needed
+  const apiKey = process.env.OCC_CHAT_API_KEY;
   if (!apiKey) {
-    json(res, { error: "No API key configured. Go to Settings and add your Anthropic API key." }, 400);
+    json(res, { error: "Chat is not configured on this server." }, 500);
     return;
   }
 
