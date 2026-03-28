@@ -201,7 +201,9 @@ export default function App() {
                         <span className={`explorer-dot ${p.allowed ? "explorer-dot-allowed" : "explorer-dot-denied"}`} />
                       </td>
                       <td className="explorer-digest">
-                        {p.proofDigest ? truncateDigest(p.proofDigest) : "—"}
+                        {p.proofDigest ? (
+                          <a href={`https://occ.wtf/explorer/${encodeURIComponent(toUrlSafe(p.proofDigest))}`} target="_blank" rel="noopener">{truncateDigest(p.proofDigest)}</a>
+                        ) : "—"}
                       </td>
                       <td className="explorer-tool">{p.tool}</td>
                       <td className="explorer-agent">{p.agentId}</td>
@@ -216,6 +218,10 @@ export default function App() {
       </main>
     </div>
   );
+}
+
+function toUrlSafe(b64: string): string {
+  return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
 function truncateDigest(d: string): string {

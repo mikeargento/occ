@@ -224,7 +224,9 @@ body {
 .explorer-dot-allowed { background: var(--green); }
 .explorer-dot-denied { background: var(--red); }
 
-.explorer-digest { font-family: "SF Mono", "Menlo", monospace; font-size: 13px; color: var(--green); }
+.explorer-digest { font-family: "SF Mono", "Menlo", monospace; font-size: 13px; }
+.explorer-digest a { color: var(--green); text-decoration: none; }
+.explorer-digest a:hover { text-decoration: underline; }
 .explorer-tool { font-weight: 500; }
 .explorer-agent { font-size: 13px; color: var(--text-secondary); }
 .explorer-time { font-size: 13px; color: var(--text-tertiary); white-space: nowrap; }
