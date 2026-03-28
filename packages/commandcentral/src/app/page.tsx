@@ -72,13 +72,13 @@ export default function App() {
       <nav className="topnav">
         <a href="/" className="topnav-logo">OCC</a>
         <div className="topnav-links">
-          <a href="https://occ.wtf/explorer" className="topnav-link" target="_blank">
+          <a href="https://occ.wtf/explorer" className="topnav-link">
             <span>Explorer</span>
           </a>
-          <a href="https://occ.wtf/docs" className="topnav-link" target="_blank">
+          <a href="https://occ.wtf/docs" className="topnav-link">
             <span>Docs</span>
           </a>
-          <a href="https://github.com/mikeargento/occ" className="topnav-link" target="_blank">
+          <a href="https://github.com/mikeargento/occ" className="topnav-link" target="_blank" rel="noopener">
             <span>GitHub</span>
           </a>
           <div className="topnav-sep" />
