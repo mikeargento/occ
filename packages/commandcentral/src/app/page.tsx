@@ -148,12 +148,18 @@ export default function App() {
 
 /* ── Proposal ── */
 function Proposal({ item, onApprove, onDeny }: { item: FeedItem; onApprove: (id: number, mode: "once" | "always") => void; onDeny: (id: number) => void }) {
+  const [acting, setActing] = useState<string | null>(null);
   const toolName = item.tool.startsWith("mcp__") ? (item.tool.split("__").pop() || item.tool).replace(/[_-]/g, " ") : item.tool;
   const args = (item.args && typeof item.args === "object" ? item.args : {}) as Record<string, unknown>;
   const target = extractTarget(args);
 
+  async function act(action: string, fn: () => void) {
+    setActing(action);
+    fn();
+  }
+
   return (
-    <div className="proposal">
+    <div className="proposal" style={acting ? { opacity: 0.6, pointerEvents: "none" } : undefined}>
       <div className="proposal-header">
         <span className="proposal-id">#{item.id}</span>
         <span className="proposal-time">{new Date(item.createdAt).toLocaleString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>
@@ -162,11 +168,18 @@ function Proposal({ item, onApprove, onDeny }: { item: FeedItem; onApprove: (id:
       {target && <div className="proposal-target">{target}</div>}
       {(item.summary || item.label) && <div className="proposal-reason">{item.summary || item.label}</div>}
       {Object.keys(args).length > 0 && <pre className="proposal-args">{JSON.stringify(args, null, 2)}</pre>}
-      <div className="proposal-buttons">
-        <button className="proposal-btn proposal-btn-deny" onClick={() => onDeny(item.id)}>No</button>
-        <button className="proposal-btn proposal-btn-approve" onClick={() => onApprove(item.id, "once")}>Yes</button>
-        <button className="proposal-btn proposal-btn-always" onClick={() => onApprove(item.id, "always")}>Always</button>
-      </div>
+      {acting ? (
+        <div className="proposal-progress">
+          <div className="proposal-progress-bar" />
+          <span className="proposal-progress-text">{acting === "deny" ? "Denying..." : "Forging proof..."}</span>
+        </div>
+      ) : (
+        <div className="proposal-buttons">
+          <button className="proposal-btn proposal-btn-deny" onClick={() => act("deny", () => onDeny(item.id))}>No</button>
+          <button className="proposal-btn proposal-btn-approve" onClick={() => act("approve", () => onApprove(item.id, "once"))}>Yes</button>
+          <button className="proposal-btn proposal-btn-always" onClick={() => act("always", () => onApprove(item.id, "always"))}>Always</button>
+        </div>
+      )}
     </div>
   );
 }

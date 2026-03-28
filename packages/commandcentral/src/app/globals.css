@@ -69,6 +69,11 @@ body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui,
 .proposal-btn-deny { background: var(--red); color: #fff; }
 .proposal-btn-approve { background: var(--green); color: #000; }
 .proposal-btn-always { background: var(--accent); color: #fff; }
+.proposal-progress { display: flex; flex-direction: column; gap: 8px; }
+.proposal-progress-bar { height: 4px; border-radius: 2px; background: var(--border-light); overflow: hidden; position: relative; }
+.proposal-progress-bar::after { content: ""; position: absolute; top: 0; left: 0; height: 100%; width: 40%; background: var(--accent); border-radius: 2px; animation: progressSlide 1s ease-in-out infinite; }
+.proposal-progress-text { font-size: 13px; color: var(--text-secondary); text-align: center; }
+@keyframes progressSlide { 0% { left: -40%; } 100% { left: 100%; } }
 
 /* ── Section headers ── */
 .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; margin-top: 32px; }
