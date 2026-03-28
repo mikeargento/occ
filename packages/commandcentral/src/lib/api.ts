@@ -31,8 +31,12 @@ export async function getFeed(): Promise<{ requests: FeedItem[] }> {
   return v2("/requests?limit=100");
 }
 
-// Approve
-export async function approve(id: number, mode: "once" | "always" = "always"): Promise<unknown> {
+// Approve — returns authorization + execution proof digests
+export interface ApproveResponse {
+  decision: { id: number; proofDigest: string; mode: string; decidedAt: string };
+  execution: { id: number; authDigest: string; execDigest: string };
+}
+export async function approve(id: number, mode: "once" | "always" = "always"): Promise<ApproveResponse> {
   return v2(`/requests/${id}/approve`, { method: "POST", body: JSON.stringify({ mode }) });
 }
 

@@ -1,32 +1,27 @@
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-/* ── Light (iMessage exact) ── */
+/* ── Light ── */
 :root {
   --bg: #ffffff;
-  --bg-secondary: #f2f2f7;
+  --bg-secondary: #f5f5f7;
   --surface: #ffffff;
-  --surface-hover: #f2f2f7;
-  --border: #c6c6c8;
-  --border-light: #e5e5ea;
-  --text: #000000;
-  --text-secondary: rgba(60,60,67,0.6);
-  --text-tertiary: rgba(60,60,67,0.3);
-  --bubble-sent: #007AFF;
-  --bubble-received: #E5E5EA;
-  --text-sent: #ffffff;
-  --text-received: #000000;
-  --green: #34c759;
-  --red: #ff3b30;
+  --surface-hover: #f5f5f7;
+  --border: #d2d2d7;
+  --border-light: #e8e8ed;
+  --text: #1d1d1f;
+  --text-secondary: #6e6e73;
+  --text-tertiary: #aeaeb2;
+  --green: #34d399;
+  --red: #ff453a;
   --accent: #007AFF;
   --accent-light: rgba(0,122,255,0.08);
-  --input-bg: #ffffff;
-  --input-border: #c6c6c8;
+  --input-bg: #f5f5f7;
   --shadow: 0 1px 3px rgba(0,0,0,0.06);
   --shadow-lg: 0 4px 12px rgba(0,0,0,0.08);
   color-scheme: light;
 }
 
-/* ── Dark (iMessage exact) ── */
+/* ── Dark ── */
 [data-theme="dark"] {
   --bg: #000000;
   --bg-secondary: #1c1c1e;
@@ -34,19 +29,14 @@
   --surface-hover: #2c2c2e;
   --border: #38383a;
   --border-light: #2c2c2e;
-  --text: #ffffff;
-  --text-secondary: rgba(235,235,245,0.6);
-  --text-tertiary: rgba(235,235,245,0.3);
-  --bubble-sent: #0A84FF;
-  --bubble-received: #2C2C2E;
-  --text-sent: #ffffff;
-  --text-received: #ffffff;
-  --green: #30d158;
+  --text: #f5f5f7;
+  --text-secondary: #a1a1a6;
+  --text-tertiary: #636366;
+  --green: #34d399;
   --red: #ff453a;
   --accent: #0A84FF;
   --accent-light: rgba(10,132,255,0.15);
   --input-bg: #1c1c1e;
-  --input-border: #38383a;
   --shadow: 0 1px 3px rgba(0,0,0,0.4);
   --shadow-lg: 0 4px 12px rgba(0,0,0,0.5);
   color-scheme: dark;
@@ -55,11 +45,10 @@
 html, body, #__next { height: 100%; }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro", system-ui, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
   background: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
 ::selection { background: var(--accent-light); color: var(--accent); }
@@ -80,9 +69,9 @@ body {
   display: flex; align-items: center; justify-content: center; gap: 10px;
   height: 50px; border-radius: 12px; font-size: 17px; font-weight: 500;
   text-decoration: none; transition: opacity 0.15s;
+  background: var(--text); color: var(--bg);
 }
 .auth-btn:hover { opacity: 0.85; }
-.auth-btn { background: var(--text); color: var(--bg); }
 
 /* ── App layout ── */
 .app-layout { display: flex; height: 100%; background: var(--bg); }
@@ -111,7 +100,6 @@ body {
   cursor: pointer; transition: all 0.15s;
 }
 .sidebar-item:hover { background: var(--surface-hover); color: var(--text); }
-.sidebar-item-active { background: var(--accent); color: #fff; font-weight: 500; }
 .sidebar-footer { padding: 8px; border-top: 1px solid var(--border-light); margin-top: auto; }
 .sidebar-user { display: flex; align-items: center; gap: 10px; padding: 8px 12px; }
 .sidebar-user-avatar { width: 28px; height: 28px; border-radius: 50%; }
@@ -121,7 +109,7 @@ body {
 .sidebar-user-email { font-size: 11px; color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sidebar-overlay { display: none; }
 
-/* ── Chat main ── */
+/* ── Main ── */
 .chat-main { flex: 1; display: flex; flex-direction: column; min-width: 0; height: 100%; background: var(--bg); }
 .mobile-header { display: none; }
 .topbar-title { font-size: 17px; font-weight: 600; }
@@ -132,152 +120,89 @@ body {
   color: var(--accent); cursor: pointer;
 }
 
-/* ── iMessage thread ── */
-.imessage-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; }
-.imessage-thread { max-width: 680px; width: 100%; margin: 0 auto; padding: 8px 16px 16px; display: flex; flex-direction: column; justify-content: flex-end; flex: 1; min-height: 100%; }
+/* ── Proof Explorer ── */
+.proof-explorer {
+  flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+}
+.proof-list {
+  max-width: 720px; width: 100%; margin: 0 auto;
+  padding: 16px 16px 48px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.proof-section-header {
+  font-size: 12px; font-weight: 600; color: var(--text-tertiary);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  padding: 12px 0 4px;
+}
+.proof-empty {
+  text-align: center; padding: 80px 0; color: var(--text-tertiary); font-size: 15px;
+}
+.proof-empty-sub { font-size: 13px; margin-top: 6px; }
 
-/* Bubbles */
-.bubble-row { display: flex; margin-bottom: 2px; animation: fadeIn 0.15s ease-out; }
-.bubble-row-received { justify-content: flex-start; }
-.bubble-row-sent { justify-content: flex-end; }
-.bubble-row-spaced { margin-top: 12px; }
+/* ── Proof Entry ── */
+.proof-entry {
+  background: var(--surface);
+  border: 1px solid var(--border-light);
+  border-left: 3px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  animation: fadeIn 0.15s ease-out;
+}
+.proof-entry-pending { border-left-color: var(--accent); }
+.proof-entry-approved { border-left-color: var(--green); }
+.proof-entry-denied { border-left-color: var(--red); }
+.proof-entry-expired { border-left-color: var(--text-tertiary); }
 
-.bubble {
-  max-width: 70%;
-  padding: 8px 14px;
-  border-radius: 18px;
-  font-size: 17px;
-  line-height: 22px;
-  word-break: break-word;
-  white-space: pre-wrap;
+.proof-entry-header {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+}
+.proof-entry-left { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.proof-entry-right { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0; }
+.proof-entry-tool { font-size: 15px; font-weight: 600; }
+.proof-entry-agent { font-size: 12px; color: var(--text-tertiary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.proof-entry-status { font-size: 12px; font-weight: 600; }
+.proof-entry-status-pending { color: var(--accent); }
+.proof-entry-status-approved { color: var(--green); }
+.proof-entry-status-denied { color: var(--red); }
+.proof-entry-status-expired { color: var(--text-tertiary); }
+.proof-entry-time { font-size: 11px; color: var(--text-tertiary); }
+
+.proof-entry-summary {
+  font-size: 14px; color: var(--text-secondary);
+  margin-top: 6px; line-height: 1.4;
 }
 
-.bubble-received {
-  background: var(--bubble-received);
-  color: var(--text-received);
-}
-.bubble-received.bubble-tail { border-bottom-left-radius: 4px; }
-
-.bubble-sent {
-  background: var(--bubble-sent);
-  color: var(--text-sent);
-}
-.bubble-sent.bubble-tail { border-bottom-right-radius: 4px; }
-
-.bubble-tool {
-  font-weight: 600;
-  font-size: 15px;
-  line-height: 20px;
+.proof-entry-args {
+  font-size: 12px; font-family: "SF Mono", "Menlo", monospace;
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  padding: 10px 12px; border-radius: 8px;
+  margin-top: 8px; max-height: 120px;
+  overflow: auto; white-space: pre-wrap;
+  word-break: break-all; line-height: 1.5;
+  border: none;
 }
 
-.bubble-summary {
-  font-size: 15px;
-  line-height: 20px;
-  margin-top: 2px;
+.proof-entry-digest {
+  font-size: 12px; font-family: "SF Mono", "Menlo", monospace;
+  color: var(--green);
+  margin-top: 8px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
-.bubble-args {
-  font-size: 13px;
-  font-family: "SF Mono", "Menlo", monospace;
-  background: rgba(0,0,0,0.05);
-  padding: 8px 10px;
-  border-radius: 12px;
-  margin-top: 6px;
-  max-height: 100px;
-  overflow: auto;
-  white-space: pre-wrap;
-  word-break: break-all;
-  line-height: 18px;
+/* ── Proof Actions (No / Yes / Always) ── */
+.proof-actions {
+  display: flex; gap: 8px; margin-top: 12px;
 }
-[data-theme="dark"] .bubble-args { background: rgba(255,255,255,0.08); }
-
-/* Status pill */
-.bubble-status {
-  display: inline-block;
-  font-size: 13px;
-  font-weight: 500;
-  margin-top: 4px;
-}
-.bubble-status-approved { color: var(--green); }
-.bubble-status-denied { color: var(--red); }
-.bubble-status-expired { color: var(--text-secondary); }
-
-/* Quick reply */
-.quick-reply { display: flex; gap: 8px; margin-top: 8px; }
-.quick-reply button {
-  flex: 1; padding: 8px 0; border: none; border-radius: 18px;
+.proof-actions button {
+  flex: 1; padding: 10px 0; border: none; border-radius: 8px;
   font-size: 15px; font-weight: 600; font-family: inherit;
   cursor: pointer; transition: opacity 0.15s;
 }
-.quick-reply button:hover { opacity: 0.85; }
-.quick-reply-deny { background: var(--red); color: #fff; }
-.quick-reply-approve { background: var(--green); color: #fff; }
-.quick-reply-always { background: var(--accent); color: #fff; }
-
-/* Timestamp */
-.time-separator {
-  text-align: center;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  padding: 16px 0 8px;
-}
-
-/* Delivered text */
-.delivered-text {
-  text-align: right;
-  font-size: 11px;
-  font-weight: 400;
-  color: var(--text-secondary);
-  padding: 2px 4px 0;
-}
-
-/* ── iMessage input bar ── */
-.imessage-input-bar {
-  flex-shrink: 0;
-  padding: 8px 12px;
-  padding-bottom: calc(8px + env(safe-area-inset-bottom));
-  background: var(--bg);
-  border-top: 1px solid var(--border-light);
-}
-.imessage-input-wrapper {
-  max-width: 680px;
-  margin: 0 auto;
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
-}
-.imessage-input {
-  flex: 1;
-  border: 1px solid var(--input-border);
-  border-radius: 20px;
-  padding: 8px 16px;
-  font-size: 17px;
-  line-height: 22px;
-  font-family: inherit;
-  background: var(--input-bg);
-  color: var(--text);
-  outline: none;
-  resize: none;
-  min-height: 38px;
-  max-height: 120px;
-}
-.imessage-input::placeholder { color: var(--text-tertiary); }
-.imessage-input:focus { border-color: var(--border); }
-.imessage-send {
-  width: 32px; height: 32px;
-  border-radius: 50%;
-  border: none;
-  background: var(--accent);
-  color: #fff;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-  cursor: pointer;
-  transition: opacity 0.15s;
-  margin-bottom: 3px;
-}
-.imessage-send:hover:not(:disabled) { opacity: 0.85; }
-.imessage-send:disabled { background: var(--border-light); cursor: default; }
+.proof-actions button:hover { opacity: 0.85; }
+.proof-action-deny { background: var(--red); color: #fff; }
+.proof-action-approve { background: var(--green); color: #000; }
+.proof-action-always { background: var(--accent); color: #fff; }
 
 /* ── Settings ── */
 .settings-layout { min-height: 100%; background: var(--bg-secondary); }
@@ -326,7 +251,6 @@ body {
     border-bottom: 1px solid var(--border-light);
     background: var(--bg-secondary);
   }
-  .bubble { max-width: 80%; }
   .login-card { margin: 16px; padding: 32px 24px; }
   .settings-container { padding: 24px 16px 48px; }
 }

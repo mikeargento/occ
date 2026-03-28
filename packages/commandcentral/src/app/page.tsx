@@ -1,15 +1,16 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { getMe, getFeed, approve, deny, type FeedItem } from "@/lib/api";
+import { getMe, getFeed, getProofs, approve, deny, type FeedItem, type ProofEntry, type ApproveResponse } from "@/lib/api";
 
 export default function App() {
   const [user, setUser] = useState<{ id: string; name: string; email: string; avatar: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [feed, setFeed] = useState<FeedItem[]>([]);
+  const [proofs, setProofs] = useState<ProofEntry[]>([]);
+  const [recentDigests, setRecentDigests] = useState<Map<number, string>>(new Map());
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
-  const endRef = useRef<HTMLDivElement>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval>>(undefined);
 
   useEffect(() => {
@@ -28,36 +29,35 @@ export default function App() {
     getMe().then(d => setUser(d.user)).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
-  const refreshFeed = useCallback(async () => {
+  const refresh = useCallback(async () => {
     if (!user) return;
     try {
-      const data = await getFeed();
-      setFeed(data.requests ?? []);
+      const [feedData, proofData] = await Promise.all([getFeed(), getProofs()]);
+      setFeed(feedData.requests ?? []);
+      setProofs(proofData.entries ?? []);
     } catch {}
   }, [user]);
 
   useEffect(() => {
     if (!user) return;
-    refreshFeed();
-    pollingRef.current = setInterval(refreshFeed, 3000);
+    refresh();
+    pollingRef.current = setInterval(refresh, 3000);
     return () => clearInterval(pollingRef.current);
-  }, [user, refreshFeed]);
+  }, [user, refresh]);
 
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [feed]);
-
-  async function handleApprove(id: number) {
-    await approve(id);
-    refreshFeed();
+  async function handleApprove(id: number, mode: "once" | "always" = "once") {
+    try {
+      const res: ApproveResponse = await approve(id, mode);
+      if (res.execution?.execDigest) {
+        setRecentDigests(prev => new Map(prev).set(id, res.execution.execDigest));
+      }
+    } catch {}
+    refresh();
   }
 
   async function handleDeny(id: number) {
     await deny(id);
-    refreshFeed();
-  }
-
-  async function handleApproveAlways(id: number) {
-    await approve(id, "always");
-    refreshFeed();
+    refresh();
   }
 
   if (loading) return <div className="page-center"><div className="loader" /></div>;
@@ -68,17 +68,19 @@ export default function App() {
         <h1 className="login-title">OCC</h1>
         <p className="login-sub">Define what your AI does.</p>
         <div className="login-buttons">
-          <a href="/auth/login/github" className="auth-btn auth-github"><GithubIcon /> Continue with GitHub</a>
-          <a href="/auth/login/google" className="auth-btn auth-google"><GoogleIcon /> Continue with Google</a>
-          <a href="/auth/login/apple" className="auth-btn auth-apple"><AppleIcon /> Continue with Apple</a>
+          <a href="/auth/login/github" className="auth-btn"><GithubIcon /> Continue with GitHub</a>
+          <a href="/auth/login/google" className="auth-btn"><GoogleIcon /> Continue with Google</a>
+          <a href="/auth/login/apple" className="auth-btn"><AppleIcon /> Continue with Apple</a>
         </div>
       </div>
     </div>
   );
 
+  const pending = feed.filter(r => r.status === "pending");
+  const resolved = feed.filter(r => r.status !== "pending");
+
   return (
     <div className="app-layout">
-      {/* Sidebar */}
       <aside className={`sidebar ${sidebarOpen ? "sidebar-open" : ""}`}>
         <div className="sidebar-header">
           <span className="sidebar-logo">OCC</span>
@@ -136,72 +138,101 @@ export default function App() {
           <div style={{ width: 36 }} />
         </div>
 
-        {/* iMessage thread */}
-        <div className="imessage-scroll">
-          <div className="imessage-thread">
-            {feed.length === 0 && (
-              <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-tertiary)", fontSize: 15 }}>
-                No messages yet
-              </div>
+        <div className="proof-explorer">
+          <div className="proof-list">
+            {pending.length > 0 && (
+              <>
+                <div className="proof-section-header">Pending</div>
+                {pending.map(item => (
+                  <ProofRow key={item.id} item={item} digest={recentDigests.get(item.id)} onApprove={handleApprove} onDeny={handleDeny} />
+                ))}
+              </>
             )}
 
-            {feed.map((item, i) => {
-              const next = feed[i + 1];
-              const prev = feed[i - 1];
-              const showTime = !prev || (new Date(item.createdAt).getTime() - new Date(prev.createdAt).getTime() > 300000);
-              const isLastReceived = !next || next.status !== item.status;
-              const isPending = item.status === "pending";
-              const isResolved = item.status === "approved" || item.status === "auto_approved" || item.status === "denied";
-              const toolName = item.tool.startsWith("mcp__") ? (item.tool.split("__").pop() || item.tool).replace(/[_-]/g, " ") : item.tool;
-              const args = (item.args && typeof item.args === "object" ? item.args : {}) as Record<string, unknown>;
+            {resolved.length > 0 && (
+              <>
+                <div className="proof-section-header">Proof Chain</div>
+                {resolved.map(item => {
+                  const digest = recentDigests.get(item.id) || findDigest(item, proofs);
+                  return <ProofRow key={item.id} item={item} digest={digest} />;
+                })}
+              </>
+            )}
 
-              return (
-                <div key={item.id}>
-                  {showTime && (
-                    <div className="time-separator">
-                      {new Date(item.createdAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
-                    </div>
-                  )}
-
-                  {/* OCC's message — gray bubble, left */}
-                  <div className={`bubble-row bubble-row-received${showTime ? " bubble-row-spaced" : ""}`}>
-                    <div className={`bubble bubble-received${isLastReceived ? " bubble-tail" : ""}`}>
-                      <div className="bubble-tool">🤖 {toolName}</div>
-                      {(item.summary || item.label) && (
-                        <div className="bubble-summary">{item.summary || item.label}</div>
-                      )}
-                      {Object.keys(args).length > 0 && (
-                        <div className="bubble-args">{JSON.stringify(args, null, 2)}</div>
-                      )}
-                      {isPending && (
-                        <div className="quick-reply">
-                          <button className="quick-reply-deny" onClick={() => handleDeny(item.id)}>No</button>
-                          <button className="quick-reply-approve" onClick={() => handleApprove(item.id)}>Yes</button>
-                          <button className="quick-reply-always" onClick={() => handleApproveAlways(item.id)}>Always</button>
-                        </div>
-                      )}
-                      {isResolved && (
-                        <div className={`bubble-status bubble-status-${item.status === "auto_approved" ? "approved" : item.status}`}>
-                          {item.status === "auto_approved" ? "Auto-allowed" : item.status === "approved" ? "Allowed" : "Denied"}
-                        </div>
-                      )}
-                      {item.status === "expired" && (
-                        <div className="bubble-status bubble-status-expired">Expired</div>
-                      )}
-                    </div>
-                  </div>
-
-                </div>
-              );
-            })}
-
-            <div ref={endRef} />
+            {feed.length === 0 && (
+              <div className="proof-empty">
+                <div>No activity yet</div>
+                <div className="proof-empty-sub">When your AI proposes an action, it appears here.</div>
+              </div>
+            )}
           </div>
         </div>
-
       </main>
     </div>
   );
+}
+
+/* ── Proof Row ── */
+function ProofRow({ item, digest, onApprove, onDeny }: {
+  item: FeedItem;
+  digest?: string;
+  onApprove?: (id: number, mode: "once" | "always") => void;
+  onDeny?: (id: number) => void;
+}) {
+  const isPending = item.status === "pending";
+  const isApproved = item.status === "approved" || item.status === "auto_approved";
+  const isDenied = item.status === "denied";
+  const toolName = item.tool.startsWith("mcp__") ? (item.tool.split("__").pop() || item.tool).replace(/[_-]/g, " ") : item.tool;
+  const args = (item.args && typeof item.args === "object" ? item.args : {}) as Record<string, unknown>;
+  const statusClass = isPending ? "pending" : isApproved ? "approved" : isDenied ? "denied" : "expired";
+
+  return (
+    <div className={`proof-entry proof-entry-${statusClass}`}>
+      <div className="proof-entry-header">
+        <div className="proof-entry-left">
+          <span className="proof-entry-tool">🤖 {toolName}</span>
+          {item.agentId && <span className="proof-entry-agent">{item.agentId}</span>}
+        </div>
+        <div className="proof-entry-right">
+          <span className={`proof-entry-status proof-entry-status-${statusClass}`}>
+            {isPending ? "Awaiting" : isApproved ? (item.status === "auto_approved" ? "Auto" : "Allowed") : isDenied ? "Denied" : "Expired"}
+          </span>
+          <span className="proof-entry-time">
+            {new Date(item.createdAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+          </span>
+        </div>
+      </div>
+
+      {(item.summary || item.label) && (
+        <div className="proof-entry-summary">{item.summary || item.label}</div>
+      )}
+
+      {Object.keys(args).length > 0 && (
+        <pre className="proof-entry-args">{JSON.stringify(args, null, 2)}</pre>
+      )}
+
+      {digest && (
+        <div className="proof-entry-digest">{digest}</div>
+      )}
+
+      {isPending && onApprove && onDeny && (
+        <div className="proof-actions">
+          <button className="proof-action-deny" onClick={() => onDeny(item.id)}>No</button>
+          <button className="proof-action-approve" onClick={() => onApprove(item.id, "once")}>Yes</button>
+          <button className="proof-action-always" onClick={() => onApprove(item.id, "always")}>Always</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function findDigest(item: FeedItem, proofs: ProofEntry[]): string | undefined {
+  for (const p of proofs) {
+    if (p.tool === item.tool && p.agentId === item.agentId && p.proofDigestB64 && p.decision?.allowed) {
+      return p.proofDigestB64;
+    }
+  }
+  return undefined;
 }
 
 /* ── Icons ── */
