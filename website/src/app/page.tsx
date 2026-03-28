@@ -6,8 +6,9 @@ export default function Home() {
       {/* Hero */}
       <div style={{ marginBottom: 80 }}>
         <h1 style={{
-          fontSize: "clamp(36px, 6vw, 56px)", fontWeight: 700,
+          fontSize: "clamp(24px, 5vw, 56px)", fontWeight: 700,
           letterSpacing: "-0.03em", lineHeight: 1.1, marginBottom: 16,
+          whiteSpace: "nowrap",
         }}>
           Define what your AI does.
         </h1>
