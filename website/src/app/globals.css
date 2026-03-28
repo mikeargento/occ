@@ -29,14 +29,14 @@
 /* ── Design Tokens ── */
 :root {
   --bg: #ffffff;
-  --bg-elevated: #f7f7f8;
-  --bg-subtle: #ebebed;
-  --c-border: #e2e2e5;
-  --c-border-subtle: #ececee;
-  --c-text: #0c0c0d;
-  --c-text-secondary: #3c3c43;
-  --c-text-tertiary: #86868b;
-  --c-accent: #2563eb;
+  --bg-elevated: #f8f8fa;
+  --bg-subtle: #f0f0f2;
+  --c-border: #d2d2d7;
+  --c-border-subtle: #e8e8ed;
+  --c-text: #1d1d1f;
+  --c-text-secondary: #6e6e73;
+  --c-text-tertiary: #aeaeb2;
+  --c-accent: #007AFF;
   --c-accent-dim: #93c5fd;
   --c-syntax-key: #1d4ed8;
   --c-syntax-string: #047857;
@@ -45,15 +45,15 @@
 }
 
 [data-theme="dark"] {
-  --bg: #000000;
-  --bg-elevated: #1c1c1e;
-  --bg-subtle: #2c2c2e;
-  --c-border: #38383a;
-  --c-border-subtle: #2c2c2e;
+  --bg: #0a0a0a;
+  --bg-elevated: #141416;
+  --bg-subtle: #1c1c1e;
+  --c-border: #333336;
+  --c-border-subtle: #232326;
   --c-text: #f5f5f7;
-  --c-text-secondary: #a1a1a6;
-  --c-text-tertiary: #636366;
-  --c-accent: #3b82f6;
+  --c-text-secondary: #98989f;
+  --c-text-tertiary: #56565a;
+  --c-accent: #0A84FF;
   --c-accent-dim: #1e40af;
   --c-syntax-key: #60a5fa;
   --c-syntax-string: #34d399;
