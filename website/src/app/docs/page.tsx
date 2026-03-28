@@ -33,6 +33,7 @@ export default function DocsPage() {
             <Link
               href={p.href}
               className="group block border border-border-subtle bg-bg-elevated p-8 card-hover hover:border-border relative"
+              style={{ borderRadius: 12 }}
             >
               <div className="flex items-start gap-5">
                 <span className="text-xs font-mono text-text-tertiary mt-1 shrink-0">

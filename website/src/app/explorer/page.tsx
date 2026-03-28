@@ -191,9 +191,9 @@ function ExplorerPage() {
   }, [searchQuery]);
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-16 sm:py-24">
+    <div style={{ maxWidth: 960, margin: "0 auto", padding: "32px 24px 64px" }}>
       {/* Header */}
-      <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-text">
+      <h1 style={{ fontSize: 28, fontWeight: 700, letterSpacing: "-0.02em", marginBottom: 4 }}>
         Explorer
       </h1>
 
@@ -255,7 +255,7 @@ function ExplorerPage() {
             </div>
 
             {/* Verification checks */}
-            <div className="border border-border-subtle bg-bg-elevated overflow-hidden">
+            <div className="border border-border-subtle bg-bg-elevated overflow-hidden" style={{ borderRadius: 12 }}>
               <div className="px-5 py-3 border-b border-border-subtle">
                 <span className="text-xs text-text-tertiary font-medium">Verification checks</span>
               </div>
@@ -438,11 +438,13 @@ function ExplorerPage() {
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
             placeholder="Search by digest, attribution, signer key, or counter..."
             className="flex-1 h-12 border border-border-subtle bg-bg-elevated px-4 text-sm text-text placeholder:text-text-tertiary focus:outline-none focus:border-text/30 transition-colors"
+            style={{ borderRadius: 8 }}
           />
           <button
             onClick={handleSearch}
             disabled={searching || searchQuery.trim().length < 2}
             className="h-12 px-6 bg-text text-bg text-sm font-medium hover:bg-text/90 transition-colors disabled:opacity-40"
+            style={{ borderRadius: 8 }}
           >
             {searching ? "..." : "Search"}
           </button>
@@ -518,7 +520,7 @@ function ExplorerPage() {
 
 function ProofTable({ proofs, label }: { proofs: ProofSummary[]; label?: string }) {
   return (
-    <div className="border border-border-subtle bg-bg-elevated overflow-hidden">
+    <div className="border border-border-subtle bg-bg-elevated overflow-hidden" style={{ borderRadius: 12 }}>
       {label && (
         <div className="px-5 py-3 border-b border-border-subtle">
           <span className="text-xs text-text-tertiary">{label}</span>
@@ -580,8 +582,8 @@ function ProofRow({ proof: p }: { proof: ProofSummary }) {
           href={`/explorer/${encodeURIComponent(toUrlSafeB64(p.digestB64))}`}
           className="flex items-center justify-between flex-1 min-w-0"
         >
-          <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
-            <code className="text-xs sm:text-sm font-mono text-text truncate min-w-0">
+          <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0, overflow: "hidden" }}>
+            <code style={{ fontSize: 13, fontFamily: "var(--font-mono)", color: "var(--c-text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>
               {p.digestB64}
             </code>
             <span className={`text-[10px] sm:text-xs font-medium shrink-0 ${enforcementColor(p.enforcement)}`}>
