@@ -114,6 +114,18 @@ TRUST MODEL
 - Policy binding — rules are SHA-256 hashed and signed into every proof
 
 ═══════════════════════════════════════
+EPOCH TRANSITIONS & TEE RESTARTS
+═══════════════════════════════════════
+- The TEE generates a new epochId each time it starts up
+- Within an epoch, the counter is monotonic and each proof links to the previous via prevB64
+- When the TEE restarts, a new epoch begins with a new epochId
+- The first proof of the new epoch still references the last proof of the previous epoch via prevB64
+- The epoch changes. The causal chain does not break
+- During restart: TEE is unavailable → all actions are denied (fail closed)
+- After restart: chain resumes from the last proof. Counter increments. prevB64 links back. No gap
+- A TEE restart is invisible to the proof chain's integrity — only the epochId changes
+
+═══════════════════════════════════════
 FAIL-CLOSED MODEL
 ═══════════════════════════════════════
 If any of the following are true, no execution path exists:
