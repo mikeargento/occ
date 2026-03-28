@@ -26,25 +26,8 @@
   --font-mono: var(--font-mono, "JetBrains Mono", "SF Mono", ui-monospace, monospace);
 }
 
-/* ── Design Tokens ── */
+/* ── Design Tokens — dark only ── */
 :root {
-  --bg: #ffffff;
-  --bg-elevated: #f8f8fa;
-  --bg-subtle: #f0f0f2;
-  --c-border: #d2d2d7;
-  --c-border-subtle: #e8e8ed;
-  --c-text: #1d1d1f;
-  --c-text-secondary: #6e6e73;
-  --c-text-tertiary: #aeaeb2;
-  --c-accent: #007AFF;
-  --c-accent-dim: #93c5fd;
-  --c-syntax-key: #1d4ed8;
-  --c-syntax-string: #047857;
-  --c-syntax-number: #b45309;
-  color-scheme: light;
-}
-
-[data-theme="dark"] {
   --bg: #0a0a0a;
   --bg-elevated: #141416;
   --bg-subtle: #1c1c1e;
@@ -301,14 +284,9 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
 /* Gradient text */
 .text-gradient {
-  background: linear-gradient(135deg, #111111 0%, #3B82F6 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-[data-theme="dark"] .text-gradient {
   background: linear-gradient(135deg, #f5f5f7 0%, #60a5fa 100%);
   -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
