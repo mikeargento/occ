@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "AiMessage",
-  description: "Your AI asks before it acts.",
+  title: "OCC",
+  description: "Artificial Intelligence. Human Authority.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
