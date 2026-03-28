@@ -43,11 +43,8 @@ IS_DENIED=$(echo "$RESPONSE" | node -e "let d='';process.stdin.on('data',c=>d+=c
 
 if [ "$HAS_TOKEN" = "yes" ]; then
   # Token forged — user authorized this action
-  # Pass the OCC token to Claude as context
   DIGEST=$(echo "$RESPONSE" | node -e "let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const j=JSON.parse(d);console.log(j.token.proofDigest||'unknown')}catch{console.log('unknown')}})" 2>/dev/null || echo 'unknown')
-  cat <<EOF
-{"hookSpecificOutput":{"permissionDecision":"allow"},"systemMessage":"OCC: Action authorized. Token forged with proof digest ${DIGEST}"}
-EOF
+  echo "{\"hookSpecificOutput\":{\"permissionDecision\":\"allow\",\"additionalContext\":\"[OCC AUTHORIZED] Proof digest: ${DIGEST}\"}}"
   exit 0
 elif [ "$IS_DENIED" = "yes" ]; then
   # No token — user denied or timed out
