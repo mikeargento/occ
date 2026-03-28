@@ -199,17 +199,17 @@ function ExplorerRow({ proof: p }: { proof: V2Proof }) {
             <span className={p.allowed ? "explorer-summary-allowed" : "explorer-summary-denied"}>
               {p.allowed ? "Allowed" : "Denied"}
             </span>
-            {" "}<strong>{p.tool}</strong> by <strong>{p.agentId}</strong>
-            {commitTime && <> at {new Date(commitTime).toLocaleString()}</>}
+            {" "}<strong>{String(p.tool)}</strong>{" by "}<strong>{String(p.agentId)}</strong>
+            {commitTime ? ` at ${new Date(commitTime).toLocaleString()}` : ""}
           </div>
 
           {/* What was the action */}
-          {p.args && Object.keys(p.args as object).length > 0 && (
+          {(p.args && typeof p.args === "object" && Object.keys(p.args as Record<string, unknown>).length > 0) ? (
             <div className="explorer-detail-field">
               <div className="explorer-detail-label">What was requested</div>
               <pre className="explorer-detail-args">{JSON.stringify(p.args, null, 2)}</pre>
             </div>
-          )}
+          ) : null}
 
           {/* Proof identity */}
           {p.proofDigest && (
@@ -225,7 +225,7 @@ function ExplorerRow({ proof: p }: { proof: V2Proof }) {
               {commit?.counter && (
                 <div>
                   <div className="explorer-detail-label">Position in chain</div>
-                  <span>#{commit.counter as string}</span>
+                  <span>#{String(commit.counter)}</span>
                 </div>
               )}
               <div>
@@ -243,31 +243,31 @@ function ExplorerRow({ proof: p }: { proof: V2Proof }) {
               {principal && (
                 <div>
                   <div className="explorer-detail-label">Authorized by</div>
-                  <span>{(principal.provider as string) || "unknown"}:{truncate((principal.id as string) || "", 16)}</span>
+                  <span>{String(principal.provider || "unknown")}:{truncate(String(principal.id || ""), 16)}</span>
                 </div>
               )}
               {signer && (
                 <div>
                   <div className="explorer-detail-label">Signer public key</div>
-                  <code className="explorer-detail-code-sm">{truncate(signer.publicKeyB64 as string, 20)}</code>
+                  <code className="explorer-detail-code-sm">{truncate(String(signer.publicKeyB64 || ""), 20)}</code>
                 </div>
               )}
               {commit?.prevB64 && (
                 <div>
                   <div className="explorer-detail-label">Previous proof</div>
-                  <code className="explorer-detail-code-sm">{truncate(commit.prevB64 as string, 20)}</code>
+                  <code className="explorer-detail-code-sm">{truncate(String(commit.prevB64 || ""), 20)}</code>
                 </div>
               )}
               {policy?.digestB64 && (
                 <div>
                   <div className="explorer-detail-label">Policy binding</div>
-                  <code className="explorer-detail-code-sm">{truncate(policy.digestB64 as string, 20)}</code>
+                  <code className="explorer-detail-code-sm">{truncate(String(policy.digestB64 || ""), 20)}</code>
                 </div>
               )}
               {(timestamps as any)?.artifact?.authority && (
                 <div>
                   <div className="explorer-detail-label">Timestamp authority</div>
-                  <span className="explorer-icon-tsa">{(timestamps as any).artifact.authority}</span>
+                  <span className="explorer-icon-tsa">{String((timestamps as any).artifact.authority)}</span>
                 </div>
               )}
             </div>
