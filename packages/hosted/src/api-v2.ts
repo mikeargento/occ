@@ -8,7 +8,7 @@
 
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { db } from "./db.js";
-import { classifyRisk, RISK_LANES, type RiskLane } from "./risk.js";
+import { classifyRisk, assessRisk, RISK_LANES, type RiskLane } from "./risk.js";
 import { generateSummary, toolLabel } from "./summaries.js";
 import { createAuthorizationObject, createExecutionProof } from "./authorization.js";
 import { eventBus } from "./events.js";
@@ -428,6 +428,7 @@ export async function handleApiV2(req: IncomingMessage, res: ServerResponse, url
     const hookAgentId = agent?.id ?? agentId;
     const riskLane = classifyRisk(tool);
     const summary = generateSummary(tool, args);
+    const risk = assessRisk(tool, args as Record<string, unknown> | undefined);
 
     // Check risk lane policy first
     const laneMode = await db.v2GetRiskLane(hookUserId, riskLane);
@@ -489,8 +490,11 @@ export async function handleApiV2(req: IncomingMessage, res: ServerResponse, url
     }
 
     // ASK mode — propose to the user and wait for their authority
+    const riskSummary = risk.warnings.length > 0
+      ? `${risk.summary} — ${risk.warnings.join(", ")}`
+      : risk.summary;
     const request = await db.v2CreateRequest(hookUserId, {
-      agentId: hookAgentId, tool, riskLane, summary,
+      agentId: hookAgentId, tool, riskLane, summary: riskSummary,
       label: toolLabel(tool), originType: "hook", originClient: "Claude Code",
       requestArgs: args,
     });

@@ -28,11 +28,12 @@ export default function Home() {
           Artificial Intelligence. Human Authority.
         </p>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-          <a href="https://agent.occ.wtf" style={{
+          <a href="https://agent.occ.wtf"
+            style={{
             display: "inline-flex", alignItems: "center", height: 44, padding: "0 24px",
             borderRadius: 8, fontSize: 15, fontWeight: 600,
             background: "var(--c-text)", color: "var(--bg)",
-            textDecoration: "none", transition: "opacity 0.15s",
+            textDecoration: "none", transition: "all 0.2s",
           }}>
             Get started
           </a>

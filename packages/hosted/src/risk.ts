@@ -65,3 +65,83 @@ export function classifyRisk(toolName: string): RiskLane {
 export function getRiskLabel(lane: RiskLane): string {
   return RISK_LANES[lane]?.label ?? "Unknown";
 }
+
+/**
+ * Generate a human-readable risk assessment for a tool call.
+ * Helps the user decide whether to authorize.
+ */
+export function assessRisk(toolName: string, args?: Record<string, unknown>): {
+  lane: RiskLane;
+  severity: number;
+  label: string;
+  summary: string;
+  warnings: string[];
+} {
+  const lane = classifyRisk(toolName);
+  const info = RISK_LANES[lane];
+  const warnings: string[] = [];
+  let summary = info.description;
+
+  // Tool-specific assessments
+  const cleanName = toolName.toLowerCase().replace(/^mcp__[^_]+__/, "");
+
+  if (cleanName === "write" || cleanName === "write_file" || cleanName === "edit") {
+    const path = String(args?.file_path || args?.path || "");
+    if (path.includes(".env") || path.includes("credentials") || path.includes(".ssh")) {
+      warnings.push("Targets a sensitive file");
+    }
+    if (path.includes("/etc/") || path.includes("/usr/") || path.includes("/System/")) {
+      warnings.push("Targets a system directory");
+    }
+    if (path.includes("settings.json") || path.includes("config")) {
+      warnings.push("Modifies configuration");
+    }
+    summary = path ? `Writes to ${path}` : "Writes to a file";
+  }
+
+  if (cleanName === "bash" || cleanName === "run_command" || cleanName === "exec") {
+    const cmd = String(args?.command || args?.cmd || "");
+    if (cmd.includes("rm ") || cmd.includes("rm -")) warnings.push("Contains delete command");
+    if (cmd.includes("sudo")) warnings.push("Requests elevated privileges");
+    if (cmd.includes("curl") || cmd.includes("wget")) warnings.push("Downloads from the internet");
+    if (cmd.includes("chmod") || cmd.includes("chown")) warnings.push("Changes file permissions");
+    if (cmd.includes("|") || cmd.includes(">")) warnings.push("Pipes or redirects output");
+    summary = cmd ? `Runs: ${cmd.length > 60 ? cmd.slice(0, 60) + "..." : cmd}` : "Executes a shell command";
+  }
+
+  if (cleanName === "delete_file" || cleanName === "delete") {
+    warnings.push("Permanently deletes a file");
+    const path = String(args?.file_path || args?.path || "");
+    summary = path ? `Deletes ${path}` : "Deletes a file";
+  }
+
+  if (cleanName === "move_file" || cleanName === "move" || cleanName === "rename") {
+    summary = "Moves or renames a file";
+  }
+
+  if (lane === "external_comms") {
+    warnings.push("Communicates externally");
+    const to = String(args?.to || args?.recipient || args?.email || "");
+    if (to) summary = `Sends to ${to}`;
+  }
+
+  if (lane === "credential_access") {
+    warnings.push("Accesses sensitive credentials");
+  }
+
+  if (lane === "financial") {
+    warnings.push("Involves financial action");
+  }
+
+  if (lane === "deployment") {
+    warnings.push("May affect production systems");
+  }
+
+  return {
+    lane,
+    severity: info.severity,
+    label: info.label,
+    summary,
+    warnings,
+  };
+}

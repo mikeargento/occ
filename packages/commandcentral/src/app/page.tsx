@@ -304,6 +304,13 @@ function Proposal({ item, onApprove, onDeny }: { item: FeedItem; onApprove: (id:
   const args = (item.args && typeof item.args === "object" ? item.args : {}) as Record<string, unknown>;
   const target = extractTarget(args);
 
+  // Parse risk from summary (format: "summary — warning1, warning2")
+  const summaryParts = (item.summary || "").split(" — ");
+  const riskSummary = summaryParts[0];
+  const warnings = summaryParts[1]?.split(", ").filter(Boolean) ?? [];
+  const riskLane = item.riskLane || "unknown";
+  const severityColor = riskLane === "read_only" ? "var(--green)" : riskLane === "file_modification" ? "var(--accent)" : riskLane === "credential_access" || riskLane === "financial" || riskLane === "deployment" ? "var(--red)" : "var(--text-tertiary)";
+
   async function act(action: string, fn: () => void) {
     setActing(action);
     fn();
@@ -313,12 +320,23 @@ function Proposal({ item, onApprove, onDeny }: { item: FeedItem; onApprove: (id:
     <div className="proposal" style={acting ? { opacity: 0.6, pointerEvents: "none" } : undefined}>
       <div className="proposal-header">
         <span className="proposal-id">#{item.id}</span>
-        <span className="proposal-time">{new Date(item.createdAt).toLocaleString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span className="proposal-risk-badge" style={{ color: severityColor, borderColor: severityColor }}>{riskLane.replace(/_/g, " ")}</span>
+          <span className="proposal-time">{new Date(item.createdAt).toLocaleString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>
+        </div>
       </div>
       <div style={{ fontSize: 11, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-tertiary)", marginBottom: 4 }}>Proposed Action</div>
-      <div className="proposal-action">{toolName}</div>
+      <div className="proposal-action">
+        <span className="proposal-icon">{riskIcon(riskLane)}</span>
+        {toolName}
+      </div>
       {target && <div className="proposal-target">{target}</div>}
-      {(item.summary || item.label) && <div className="proposal-reason">{item.summary || item.label}</div>}
+      {riskSummary && <div className="proposal-reason">{riskSummary}</div>}
+      {warnings.length > 0 && (
+        <div className="proposal-warnings">
+          {warnings.map((w, i) => <span key={i} className="proposal-warning">⚠ {w}</span>)}
+        </div>
+      )}
       {Object.keys(args).length > 0 && <pre className="proposal-args">{JSON.stringify(args, null, 2)}</pre>}
       {acting ? (
         <div className="proposal-progress">
@@ -334,6 +352,18 @@ function Proposal({ item, onApprove, onDeny }: { item: FeedItem; onApprove: (id:
       )}
     </div>
   );
+}
+
+function riskIcon(lane: string): string {
+  switch (lane) {
+    case "read_only": return "👁";
+    case "file_modification": return "📁";
+    case "external_comms": return "📧";
+    case "deployment": return "🚀";
+    case "financial": return "💳";
+    case "credential_access": return "🔑";
+    default: return "⚡";
+  }
 }
 
 function extractTarget(args: Record<string, unknown>): string | null {
