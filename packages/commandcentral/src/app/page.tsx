@@ -115,7 +115,7 @@ export default function App() {
 
           {/* Proof chain */}
           <div className="section-header" style={pending.length === 0 ? { marginTop: 0 } : undefined}>
-            <span className="section-label">Proof Chain</span>
+            <span className="section-label">Explorer</span>
             {proofTotal > 0 && <span className="section-count">{proofTotal.toLocaleString()} total</span>}
           </div>
 
