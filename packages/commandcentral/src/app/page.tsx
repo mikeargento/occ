@@ -79,7 +79,7 @@ export default function App() {
     <div>
       {/* ── Top Nav ── */}
       <div className="topnav-wrap"><nav className="topnav">
-        <a href="/" className="topnav-logo">OCC</a>
+        <a href="https://occ.wtf" className="topnav-logo">OCC</a>
         <div className="topnav-links">
           <a href="/" className="topnav-link">
             <span>Dashboard</span>
