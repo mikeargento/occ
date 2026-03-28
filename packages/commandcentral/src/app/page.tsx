@@ -491,37 +491,16 @@ function CopyableJson({ data }: { data: Record<string, unknown> }) {
 /* ── Settings View ── */
 function SettingsView({ user }: { user: { id: string; name: string; email: string; avatar: string } }) {
   const [token, setToken] = useState<string | null>(null);
-  const [apiKey, setApiKey] = useState<{ hasKey: boolean; maskedKey: string | null }>({ hasKey: false, maskedKey: null });
-  const [apiInput, setApiInput] = useState("");
-  const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/settings/token").then(r => r.ok ? r.json() : null).then(d => { if (d?.token) setToken(d.token); }).catch(() => {});
-    fetch("/api/settings/api-key").then(r => r.ok ? r.json() : null).then(d => { if (d) setApiKey(d); }).catch(() => {});
   }, []);
 
   function copy(text: string, label: string) {
     navigator.clipboard.writeText(text);
     setCopied(label);
     setTimeout(() => setCopied(null), 2000);
-  }
-
-  async function saveKey() {
-    if (!apiInput.trim()) return;
-    setSaving(true);
-    try {
-      const r = await fetch("/api/settings/api-key", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ key: apiInput.trim() }) });
-      const d = await r.json();
-      if (r.ok) { setApiKey({ hasKey: true, maskedKey: d.maskedKey }); setApiInput(""); }
-    } catch {}
-    setSaving(false);
-  }
-
-  async function removeKey() {
-    setSaving(true);
-    try { await fetch("/api/settings/api-key", { method: "DELETE" }); setApiKey({ hasKey: false, maskedKey: null }); } catch {}
-    setSaving(false);
   }
 
   return (
@@ -572,30 +551,6 @@ function SettingsView({ user }: { user: { id: string; name: string; email: strin
           </div>
         </div>
       )}
-
-      {/* API Key */}
-      <div className="settings-section">
-        <div className="settings-label">API Key</div>
-        <div className="settings-card">
-          <div className="settings-row" style={{ flexDirection: "column", alignItems: "stretch", gap: 8 }}>
-            <div>
-              <div className="settings-row-label">Anthropic API Key</div>
-              <div className="settings-row-desc">Optional. Powers AI chat features.</div>
-            </div>
-            {apiKey.hasKey ? (
-              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                <code style={{ flex: 1, fontSize: 13, fontFamily: "'SF Mono', monospace", color: "var(--text-secondary)" }}>{apiKey.maskedKey}</code>
-                <button onClick={removeKey} disabled={saving} className="settings-btn settings-btn-danger" style={{ height: 32, fontSize: 13 }}>Remove</button>
-              </div>
-            ) : (
-              <div style={{ display: "flex", gap: 8 }}>
-                <input type="password" placeholder="sk-ant-..." value={apiInput} onChange={e => setApiInput(e.target.value)} onKeyDown={e => e.key === "Enter" && saveKey()} className="settings-input" style={{ borderRadius: 8, border: "1px solid var(--border-light)" }} />
-                <button onClick={saveKey} disabled={saving || !apiInput.trim()} className="settings-btn settings-btn-primary" style={{ height: 44, fontSize: 14 }}>Save</button>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
 
       {/* Sign out */}
       <div className="settings-section">
