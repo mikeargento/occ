@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { getMe, getFeed, getProofs, approve, deny, wipeAll, type FeedItem, type V2Proof } from "@/lib/api";
+import { getMe, getFeed, getProofs, approve, deny, type FeedItem, type V2Proof } from "@/lib/api";
 
 export default function App() {
   const [user, setUser] = useState<{ id: string; name: string; email: string; avatar: string } | null>(null);
@@ -9,8 +9,8 @@ export default function App() {
   const [feed, setFeed] = useState<FeedItem[]>([]);
   const [proofs, setProofs] = useState<V2Proof[]>([]);
   const [proofTotal, setProofTotal] = useState(0);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
+  const [view, setView] = useState<"explorer" | "settings">("explorer");
   const pollingRef = useRef<ReturnType<typeof setInterval>>(undefined);
 
   useEffect(() => { setIsDark(document.documentElement.getAttribute("data-theme") === "dark"); }, []);
@@ -46,7 +46,6 @@ export default function App() {
     try { await approve(id, mode); } catch {}
     refresh();
   }
-
   async function handleDeny(id: number) { await deny(id); refresh(); }
 
   if (loading) return <div className="page-center"><div className="loader" /></div>;
@@ -68,47 +67,76 @@ export default function App() {
   const pending = feed.filter(r => r.status === "pending");
 
   return (
-    <div className="app-layout">
-      <Sidebar user={user} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} isDark={isDark} toggleTheme={toggleTheme} />
-      {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
-
-      <main className="chat-main">
-        <div className="mobile-header">
-          <button className="topbar-btn" onClick={() => setSidebarOpen(true)}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    <div>
+      {/* ── Top Nav ── */}
+      <nav className="topnav">
+        <a href="/" className="topnav-logo">OCC</a>
+        <div className="topnav-links">
+          <button className={`topnav-link ${view === "explorer" ? "topnav-link-active" : ""}`} onClick={() => setView("explorer")}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span>Explorer</span>
           </button>
-          <span className="topbar-title">OCC</span>
-          <div style={{ width: 36 }} />
+          <a href="https://occ.wtf/docs" className="topnav-link" target="_blank">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <span>Docs</span>
+          </a>
+          <a href="https://github.com/mikeargento/occ" className="topnav-link" target="_blank">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+            <span>GitHub</span>
+          </a>
+          <div className="topnav-sep" />
+          <button className="topnav-link" onClick={() => setView("settings")}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </button>
+          <button className="topnav-link" onClick={toggleTheme}>
+            {isDark ? (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            ) : (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            )}
+          </button>
+          <div className="topnav-user">
+            {user.avatar ? <img src={user.avatar} alt="" className="topnav-avatar" /> : <div className="topnav-avatar-placeholder">{user.name?.[0]}</div>}
+          </div>
         </div>
+      </nav>
 
-        <div className="explorer-page">
-          <h1 className="explorer-title">Explorer</h1>
-
+      {/* ── Content ── */}
+      {view === "explorer" ? (
+        <div className="main-content">
           {/* Pending proposals */}
-          {pending.map(item => (
-            <Proposal key={item.id} item={item} onApprove={handleApprove} onDeny={handleDeny} />
-          ))}
+          {pending.length > 0 && (
+            <>
+              <div className="section-header" style={{ marginTop: 0 }}>
+                <span className="section-label">Pending Approval</span>
+                <span className="section-count">{pending.length} waiting</span>
+              </div>
+              {pending.map(item => (
+                <Proposal key={item.id} item={item} onApprove={handleApprove} onDeny={handleDeny} />
+              ))}
+            </>
+          )}
 
-          {/* Recent Proofs */}
-          <div className="explorer-section-header">
-            <span className="explorer-section-label">Recent Proofs</span>
-            {proofTotal > 0 && <span className="explorer-section-count">{proofTotal.toLocaleString()} total</span>}
+          {/* Proof chain */}
+          <div className="section-header" style={pending.length === 0 ? { marginTop: 0 } : undefined}>
+            <span className="section-label">Proof Chain</span>
+            {proofTotal > 0 && <span className="section-count">{proofTotal.toLocaleString()} total</span>}
           </div>
 
           {proofs.length === 0 ? (
-            <div className="explorer-empty">
+            <div className="section-empty">
               <div>No proofs yet.</div>
-              <div className="explorer-empty-sub">When you authorize an action, the proof appears here.</div>
+              <div className="section-empty-sub">When you authorize an action, the proof appears here.</div>
             </div>
           ) : (
             <div className="explorer-list">
-              {proofs.map(p => (
-                <ExplorerRow key={p.id} proof={p} />
-              ))}
+              {proofs.map(p => <ExplorerRow key={p.id} proof={p} />)}
             </div>
           )}
         </div>
-      </main>
+      ) : (
+        <SettingsView user={user} />
+      )}
     </div>
   );
 }
@@ -125,7 +153,7 @@ function Proposal({ item, onApprove, onDeny }: { item: FeedItem; onApprove: (id:
         <span className="proposal-id">#{item.id}</span>
         <span className="proposal-time">{new Date(item.createdAt).toLocaleString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>
       </div>
-      <div className="proposal-action">🤖 {toolName}</div>
+      <div className="proposal-action">{toolName}</div>
       {target && <div className="proposal-target">{target}</div>}
       {(item.summary || item.label) && <div className="proposal-reason">{item.summary || item.label}</div>}
       {Object.keys(args).length > 0 && <pre className="proposal-args">{JSON.stringify(args, null, 2)}</pre>}
@@ -145,7 +173,7 @@ function extractTarget(args: Record<string, unknown>): string | null {
   return null;
 }
 
-/* ── Explorer Row (matches occ.wtf/explorer) ── */
+/* ── Explorer Row ── */
 function ExplorerRow({ proof: p }: { proof: V2Proof }) {
   const [expanded, setExpanded] = useState(false);
   const receipt = p.receipt as Record<string, unknown> | undefined;
@@ -156,11 +184,8 @@ function ExplorerRow({ proof: p }: { proof: V2Proof }) {
   const enforcement = (env?.enforcement as string) || "stub";
   const commitTime = (commit?.time as number) || null;
   const hasTsa = !!timestamps;
-
   const policy = receipt?.policy as Record<string, unknown> | undefined;
   const principal = receipt?.principal as Record<string, unknown> | undefined;
-  const metadata = receipt?.metadata as Record<string, unknown> | undefined;
-  const statusDot = p.allowed ? "explorer-dot-allowed" : "explorer-dot-denied";
 
   return (
     <div className="explorer-row-wrap">
@@ -170,18 +195,14 @@ function ExplorerRow({ proof: p }: { proof: V2Proof }) {
             <path d="M3 1.5L7 5L3 8.5" />
           </svg>
         </button>
-
-        <span className={`explorer-dot ${statusDot}`} />
-
+        <span className={`explorer-dot ${p.allowed ? "explorer-dot-allowed" : "explorer-dot-denied"}`} />
         <div className="explorer-row-info">
           <span className="explorer-row-tool">{p.tool}</span>
           <span className="explorer-row-agent">{p.agentId}</span>
         </div>
-
         <span className={`explorer-badge ${enforcement === "measured-tee" ? "explorer-badge-tee" : enforcement === "hw-key" ? "explorer-badge-hw" : "explorer-badge-sw"}`}>
           {enforcement === "measured-tee" ? "Hardware Enclave" : enforcement === "hw-key" ? "Hardware Key" : "Software"}
         </span>
-
         <div className="explorer-row-icons">
           {hasTsa && (
             <span className="explorer-icon-tsa" title="RFC 3161 timestamped">
@@ -194,7 +215,6 @@ function ExplorerRow({ proof: p }: { proof: V2Proof }) {
 
       {expanded && (
         <div className="explorer-expanded">
-          {/* Human-readable summary */}
           <div className="explorer-summary">
             <span className={p.allowed ? "explorer-summary-allowed" : "explorer-summary-denied"}>
               {p.allowed ? "Allowed" : "Denied"}
@@ -203,7 +223,6 @@ function ExplorerRow({ proof: p }: { proof: V2Proof }) {
             {commitTime ? ` at ${new Date(commitTime).toLocaleString()}` : ""}
           </div>
 
-          {/* What was the action */}
           {(p.args && typeof p.args === "object" && Object.keys(p.args as Record<string, unknown>).length > 0) ? (
             <div className="explorer-detail-field">
               <div className="explorer-detail-label">What was requested</div>
@@ -211,7 +230,6 @@ function ExplorerRow({ proof: p }: { proof: V2Proof }) {
             </div>
           ) : null}
 
-          {/* Proof identity */}
           {p.proofDigest && (
             <div className="explorer-detail-field">
               <div className="explorer-detail-label">Proof digest (SHA-256)</div>
@@ -219,10 +237,9 @@ function ExplorerRow({ proof: p }: { proof: V2Proof }) {
             </div>
           )}
 
-          {/* Key details grid */}
           {receipt && (
             <div className="explorer-detail-grid">
-              {commit?.counter && (
+              {commit?.counter != null && (
                 <div>
                   <div className="explorer-detail-label">Position in chain</div>
                   <span>#{String(commit.counter)}</span>
@@ -234,34 +251,34 @@ function ExplorerRow({ proof: p }: { proof: V2Proof }) {
                   {enforcement === "measured-tee" ? "AWS Nitro Enclave" : enforcement === "hw-key" ? "Hardware Key" : "Software Key"}
                 </span>
               </div>
-              {commitTime && (
+              {commitTime != null && (
                 <div>
                   <div className="explorer-detail-label">When</div>
                   <span>{new Date(commitTime).toLocaleString()}</span>
                 </div>
               )}
-              {principal && (
+              {principal != null && (
                 <div>
                   <div className="explorer-detail-label">Authorized by</div>
-                  <span>{String(principal.provider || "unknown")}:{truncate(String(principal.id || ""), 16)}</span>
+                  <span>{String((principal as any).provider || "unknown")}:{truncate(String((principal as any).id || ""), 16)}</span>
                 </div>
               )}
-              {signer && (
+              {signer != null && (
                 <div>
                   <div className="explorer-detail-label">Signer public key</div>
-                  <code className="explorer-detail-code-sm">{truncate(String(signer.publicKeyB64 || ""), 20)}</code>
+                  <code className="explorer-detail-code-sm">{truncate(String((signer as any).publicKeyB64 || ""), 20)}</code>
                 </div>
               )}
-              {commit?.prevB64 && (
+              {commit?.prevB64 != null && (
                 <div>
                   <div className="explorer-detail-label">Previous proof</div>
-                  <code className="explorer-detail-code-sm">{truncate(String(commit.prevB64 || ""), 20)}</code>
+                  <code className="explorer-detail-code-sm">{truncate(String(commit.prevB64), 20)}</code>
                 </div>
               )}
-              {policy?.digestB64 && (
+              {policy?.digestB64 != null && (
                 <div>
                   <div className="explorer-detail-label">Policy binding</div>
-                  <code className="explorer-detail-code-sm">{truncate(String(policy.digestB64 || ""), 20)}</code>
+                  <code className="explorer-detail-code-sm">{truncate(String(policy.digestB64), 20)}</code>
                 </div>
               )}
               {(timestamps as any)?.artifact?.authority && (
@@ -273,7 +290,6 @@ function ExplorerRow({ proof: p }: { proof: V2Proof }) {
             </div>
           )}
 
-          {/* Full proof JSON */}
           {receipt && <CopyableJson data={receipt} />}
 
           {!receipt && p.reason && (
@@ -292,18 +308,57 @@ function ExplorerRow({ proof: p }: { proof: V2Proof }) {
 function CopyableJson({ data }: { data: Record<string, unknown> }) {
   const [copied, setCopied] = useState(false);
   const json = JSON.stringify(data, null, 2);
-
   function handleClick() {
-    navigator.clipboard.writeText(json).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
+    navigator.clipboard.writeText(json).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); });
   }
-
   return (
     <div style={{ position: "relative", marginTop: 12 }}>
       <pre className="explorer-json" onClick={handleClick}>{json}</pre>
       <span className={`copy-badge ${copied ? "copy-badge-show" : ""}`}>{copied ? "Copied!" : "Click to copy"}</span>
+    </div>
+  );
+}
+
+/* ── Settings View ── */
+function SettingsView({ user }: { user: { id: string; name: string; email: string; avatar: string } }) {
+  return (
+    <div className="settings-container">
+      <h1 className="page-title">Settings</h1>
+      <p className="page-subtitle">Account and configuration</p>
+
+      <div className="settings-section">
+        <div className="settings-label">Account</div>
+        <div className="settings-card">
+          <div className="settings-row">
+            <div>
+              <div className="settings-row-label">{user.name || "—"}</div>
+              <div className="settings-row-desc">{user.email || "—"}</div>
+            </div>
+            {user.avatar && <img src={user.avatar} alt="" style={{ width: 40, height: 40, borderRadius: "50%" }} />}
+          </div>
+          <div className="settings-row">
+            <a href="/auth/logout" className="settings-btn settings-btn-danger" style={{ textDecoration: "none" }}>Sign out</a>
+          </div>
+        </div>
+      </div>
+
+      <div className="settings-section">
+        <div className="settings-label">Resources</div>
+        <div className="settings-card">
+          <a href="https://occ.wtf/explorer" className="settings-row" style={{ textDecoration: "none", color: "var(--text)" }}>
+            <span className="settings-row-label">Proof Explorer</span>
+            <span style={{ color: "var(--text-tertiary)" }}>→</span>
+          </a>
+          <a href="https://occ.wtf/docs" className="settings-row" style={{ textDecoration: "none", color: "var(--text)" }}>
+            <span className="settings-row-label">Documentation</span>
+            <span style={{ color: "var(--text-tertiary)" }}>→</span>
+          </a>
+          <a href="https://github.com/mikeargento/occ" className="settings-row" style={{ textDecoration: "none", color: "var(--text)" }}>
+            <span className="settings-row-label">GitHub</span>
+            <span style={{ color: "var(--text-tertiary)" }}>→</span>
+          </a>
+        </div>
+      </div>
     </div>
   );
 }
@@ -321,53 +376,6 @@ function relativeTime(ms: number): string {
   if (h < 24) return `${h}h ago`;
   const d = Math.floor(h / 24);
   return `${d}d ago`;
-}
-
-/* ── Sidebar ── */
-function Sidebar({ user, sidebarOpen, setSidebarOpen, isDark, toggleTheme }: any) {
-  return (
-    <aside className={`sidebar ${sidebarOpen ? "sidebar-open" : ""}`}>
-      <div className="sidebar-header">
-        <span className="sidebar-logo">OCC</span>
-        <button className="sidebar-close" onClick={() => setSidebarOpen(false)}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
-      </div>
-      <nav className="sidebar-nav">
-        <a href="https://occ.wtf/docs" className="sidebar-item" target="_blank">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          Documentation
-        </a>
-        <a href="https://github.com/mikeargento/occ" className="sidebar-item" target="_blank">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-          GitHub
-        </a>
-        <a href="/settings" className="sidebar-item">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-          Settings
-        </a>
-        <button className="sidebar-item" onClick={toggleTheme}>
-          {isDark ? (
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-          ) : (
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-          )}
-          {isDark ? "Light mode" : "Dark mode"}
-        </button>
-      </nav>
-      <div className="sidebar-footer">
-        {user && (
-          <div className="sidebar-user">
-            {user.avatar ? <img src={user.avatar} alt="" className="sidebar-user-avatar" /> : <div className="sidebar-user-avatar-placeholder">{user.name?.[0]}</div>}
-            <div className="sidebar-user-info">
-              <div className="sidebar-user-name">{user.name}</div>
-              <div className="sidebar-user-email">{user.email}</div>
-            </div>
-          </div>
-        )}
-      </div>
-    </aside>
-  );
 }
 
 /* ── Icons ── */
