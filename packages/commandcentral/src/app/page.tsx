@@ -107,13 +107,13 @@ export default function App() {
       {/* ── Content ── */}
       {view === "main" ? (
         <div className="main-content">
-          <h1 className="page-title" style={{ marginBottom: 32 }}>Hi, {user.name?.split(" ")[0] || "there"}!</h1>
+          <h1 className="page-title" style={{ marginBottom: 32 }}>Welcome, {user.name?.split(" ")[0] || "there"}</h1>
 
           {/* Pending proposals */}
           {pending.length > 0 && (
             <>
               <div className="section-header" style={{ marginTop: 0 }}>
-                <span className="section-label">Pending Approval</span>
+                <span className="section-label">Awaiting Your Authority</span>
                 <span className="section-count">{pending.length} waiting</span>
               </div>
               {pending.map(item => (
@@ -164,6 +164,7 @@ function Proposal({ item, onApprove, onDeny }: { item: FeedItem; onApprove: (id:
         <span className="proposal-id">#{item.id}</span>
         <span className="proposal-time">{new Date(item.createdAt).toLocaleString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>
       </div>
+      <div style={{ fontSize: 11, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-tertiary)", marginBottom: 4 }}>Proposed Action</div>
       <div className="proposal-action">{toolName}</div>
       {target && <div className="proposal-target">{target}</div>}
       {(item.summary || item.label) && <div className="proposal-reason">{item.summary || item.label}</div>}
@@ -175,9 +176,9 @@ function Proposal({ item, onApprove, onDeny }: { item: FeedItem; onApprove: (id:
         </div>
       ) : (
         <div className="proposal-buttons">
-          <button className="proposal-btn proposal-btn-deny" onClick={() => act("deny", () => onDeny(item.id))}>No</button>
-          <button className="proposal-btn proposal-btn-approve" onClick={() => act("approve", () => onApprove(item.id, "once"))}>Yes</button>
-          <button className="proposal-btn proposal-btn-always" onClick={() => act("always", () => onApprove(item.id, "always"))}>Always</button>
+          <button className="proposal-btn proposal-btn-deny" onClick={() => act("deny", () => onDeny(item.id))}>Deny</button>
+          <button className="proposal-btn proposal-btn-approve" onClick={() => act("approve", () => onApprove(item.id, "once"))}>Authorize</button>
+          <button className="proposal-btn proposal-btn-always" onClick={() => act("always", () => onApprove(item.id, "always"))}>Always Authorize</button>
         </div>
       )}
     </div>
