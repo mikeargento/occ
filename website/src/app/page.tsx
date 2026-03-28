@@ -22,8 +22,8 @@ export default function Home() {
           Define what your AI does.
         </h1>
         <p style={{
-          fontSize: 18, lineHeight: 1.6, color: "var(--c-text-secondary)",
-          maxWidth: 560, marginBottom: 32,
+          fontSize: "clamp(28px, 4vw, 42px)", lineHeight: 1.2, color: "var(--c-text-secondary)",
+          fontWeight: 600, letterSpacing: "-0.02em", marginBottom: 32,
         }}>
           Artificial Intelligence. Human Authority.
         </p>
