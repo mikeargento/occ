@@ -1,7 +1,7 @@
 #!/bin/bash
 # OCC Hook for Claude Code
 # Reads tool call from stdin, sends to OCC for approval.
-# Exit 0 = allow, Exit 2 = deny.
+# Exit 0 = allow (OCC token forged), Exit 2 = deny (no token).
 #
 # Config: set OCC_TOKEN in your environment
 # Get your token from agent.occ.wtf → Settings
@@ -10,8 +10,7 @@ OCC_URL="${OCC_URL:-https://agent.occ.wtf}"
 TOKEN="${OCC_TOKEN:-}"
 
 if [ -z "$TOKEN" ]; then
-  echo '{"decision":"allow"}' # No token = no enforcement, pass through
-  exit 0
+  exit 0 # No token = no enforcement, pass through
 fi
 
 # Read hook input from stdin
@@ -19,35 +18,44 @@ INPUT=$(cat)
 
 # Extract tool name and args
 TOOL=$(echo "$INPUT" | grep -o '"tool_name":"[^"]*"' | head -1 | cut -d'"' -f4)
-# Extract tool_input as JSON — use node for reliable parsing
 TOOL_INPUT=$(echo "$INPUT" | node -e "let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const j=JSON.parse(d);console.log(JSON.stringify(j.tool_input||{}))}catch{console.log('{}')}})" 2>/dev/null || echo '{}')
 
 if [ -z "$TOOL" ]; then
-  exit 0 # Can't parse, allow
+  exit 0
 fi
 
-# Skip internal/read-only tools that don't need approval
+# Skip read-only tools — no token needed
 case "$TOOL" in
   Read|Glob|Grep|WebSearch|TodoRead|TaskOutput)
     exit 0
     ;;
 esac
 
-# Call OCC
+# Call OCC — blocks until user approves/denies (up to 55s)
 RESPONSE=$(curl -s -m 60 -X POST "${OCC_URL}/api/v2/hook/check" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer ${TOKEN}" \
   -d "{\"tool\":\"$TOOL\",\"args\":$TOOL_INPUT}")
 
-DECISION=$(echo "$RESPONSE" | grep -o '"decision":"[^"]*"' | head -1 | cut -d'"' -f4)
-REASON=$(echo "$RESPONSE" | grep -o '"reason":"[^"]*"' | head -1 | cut -d'"' -f4)
+# Check for token (user said Yes) or denial (user said No / timeout)
+HAS_TOKEN=$(echo "$RESPONSE" | node -e "let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const j=JSON.parse(d);console.log(j.token?'yes':'no')}catch{console.log('no')}})" 2>/dev/null || echo 'no')
+IS_DENIED=$(echo "$RESPONSE" | node -e "let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const j=JSON.parse(d);console.log(j.denied?'yes':'no')}catch{console.log('no')}})" 2>/dev/null || echo 'no')
 
-if [ "$DECISION" = "allow" ]; then
+if [ "$HAS_TOKEN" = "yes" ]; then
+  # Token forged — user authorized this action
+  # Pass the OCC token to Claude as context
+  DIGEST=$(echo "$RESPONSE" | node -e "let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const j=JSON.parse(d);console.log(j.token.proofDigest||'unknown')}catch{console.log('unknown')}})" 2>/dev/null || echo 'unknown')
+  cat <<EOF
+{"hookSpecificOutput":{"permissionDecision":"allow"},"systemMessage":"OCC: Action authorized. Token forged with proof digest ${DIGEST}"}
+EOF
   exit 0
-elif [ "$DECISION" = "deny" ]; then
-  echo "OCC: Action denied — ${REASON:-No reason given}" >&2
+elif [ "$IS_DENIED" = "yes" ]; then
+  # No token — user denied or timed out
+  REASON=$(echo "$RESPONSE" | node -e "let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const j=JSON.parse(d);console.log(j.reason||'Denied')}catch{console.log('Denied')}})" 2>/dev/null || echo 'Denied')
+  echo "OCC: Action denied — ${REASON}" >&2
   exit 2
 else
-  # Unknown response, allow by default
-  exit 0
+  # Unexpected response — deny by default (safe)
+  echo "OCC: Unexpected response from server" >&2
+  exit 2
 fi
