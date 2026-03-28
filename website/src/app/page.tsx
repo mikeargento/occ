@@ -1,16 +1,6 @@
-"use client";
-
 import Link from "next/link";
-import { useState } from "react";
 
 export default function Home() {
-  const [copied, setCopied] = useState(false);
-  const installCmd = "curl -fsSL https://agent.occ.wtf/install | bash";
-  function copy() {
-    navigator.clipboard.writeText(installCmd);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
   return (
     <div style={{ maxWidth: 1120, margin: "0 auto", padding: "80px 24px 64px" }}>
       {/* Hero */}
@@ -73,38 +63,24 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Quick setup */}
+      {/* Sign in */}
       <div style={{
-        background: "var(--bg-elevated)", borderRadius: 12,
-        border: "1px solid var(--c-border-subtle)", padding: 32, marginBottom: 48,
+        background: "var(--bg-elevated)", borderRadius: 16,
+        border: "1px solid var(--c-border-subtle)", padding: "40px 32px",
+        marginBottom: 48, textAlign: "center",
       }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <h2 style={{ fontSize: 20, fontWeight: 600 }}>Quick setup</h2>
-        </div>
-        <div style={{ position: "relative" }}>
-          <pre onClick={copy} style={{
-            fontSize: 14, fontFamily: "var(--font-mono)",
-            color: "var(--c-text-secondary)", lineHeight: 2,
-            overflow: "auto", cursor: "pointer",
-          }}>{installCmd}</pre>
-          <button onClick={copy} style={{
-            position: "absolute", top: 0, right: 0,
-            width: 32, height: 32, borderRadius: 6,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            background: "none", border: "none",
-            color: copied ? "var(--c-accent)" : "var(--c-text-tertiary)",
-            cursor: "pointer", transition: "all 0.15s",
-          }} title="Copy to clipboard">
-            {copied ? (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
-            ) : (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-            )}
-          </button>
-        </div>
-        <p style={{ fontSize: 14, color: "var(--c-text-tertiary)", marginTop: 12 }}>
-          Installs OCC for Claude Code. AI can think freely. Actions require your authority.
+        <h2 style={{ fontSize: 22, fontWeight: 600, marginBottom: 8 }}>Get started</h2>
+        <p style={{ fontSize: 15, color: "var(--c-text-tertiary)", marginBottom: 24 }}>
+          Sign in to set up OCC and start controlling your AI.
         </p>
+        <a href="https://agent.occ.wtf" style={{
+          display: "inline-flex", alignItems: "center", height: 48, padding: "0 32px",
+          borderRadius: 12, fontSize: 16, fontWeight: 600,
+          background: "var(--c-text)", color: "var(--bg)",
+          textDecoration: "none", transition: "all 0.2s",
+        }}>
+          Sign in →
+        </a>
       </div>
     </div>
   );
