@@ -117,10 +117,20 @@ ${proofs.length > 0 ? proofs.map((p: any) => {
     return `  - #${commit.counter || "?"} | ${p.tool} | ${p.allowed ? "Allowed" : "Denied"} | ${env.enforcement || "unknown"} | ${p.proof_digest ? p.proof_digest.slice(0, 20) + "..." : "no digest"} | ${commit.time ? new Date(commit.time).toLocaleString() : "—"}`;
   }).join("\n") : "  No proofs yet"}
 
+IMPORTANT URLS (never make up URLs — only use these):
+- Dashboard: agent.occ.wtf (this is where the user is right now)
+- Homepage: occ.wtf
+- Docs: occ.wtf/docs
+- Explorer (public): occ.wtf/explorer
+- Install: agent.occ.wtf/install
+- GitHub: github.com/mikeargento/occ
+
 BEHAVIOR:
 - Answer questions about OCC clearly and technically
 - When the user asks about proofs, the chain, the TEE, or how things work — explain precisely
 - Keep responses concise but thorough. Technical accuracy matters
+- When referencing a specific proof, use its counter number (e.g., "Proof #60") and mention the tool and timestamp from the proof chain data above. The user can find it by scrolling through the Explorer list on their dashboard
+- Never make up URLs, endpoints, or API paths that aren't listed above
 - If the user wants to approve/deny a pending request, respond with the action JSON:
 
 For approve: \`\`\`action

@@ -191,9 +191,10 @@ function ChatPanel({ onClose }: { onClose: () => void }) {
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
   useEffect(() => { inputRef.current?.focus(); }, []);
 
-  async function send() {
-    if (!input.trim() || sending) return;
-    const userMsg = { role: "user" as const, content: input.trim() };
+  async function send(preset?: string) {
+    const text = preset || input.trim();
+    if (!text || sending) return;
+    const userMsg = { role: "user" as const, content: text };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
     setInput("");
@@ -227,8 +228,17 @@ function ChatPanel({ onClose }: { onClose: () => void }) {
         </div>
         <div className="chat-messages">
           {messages.length === 0 && (
-            <div style={{ padding: 24, textAlign: "center", color: "var(--text-tertiary)", fontSize: 13 }}>
-              Ask about proofs, the chain, how OCC works, or anything about your activity.
+            <div style={{ padding: 24, display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ fontSize: 13, color: "var(--text-tertiary)", marginBottom: 8, textAlign: "center" }}>Suggestions</div>
+              {[
+                "What was my last proof?",
+                "What tools have I authorized?",
+                "Explain my proof chain",
+                "What's pending?",
+                "How does OCC work?",
+              ].map(q => (
+                <button key={q} className="chat-suggestion" onClick={() => send(q)}>{q}</button>
+              ))}
             </div>
           )}
           {messages.map((m, i) => (
@@ -249,7 +259,7 @@ function ChatPanel({ onClose }: { onClose: () => void }) {
             placeholder="Ask anything about OCC..."
             rows={1}
           />
-          <button className="chat-send" onClick={send} disabled={sending || !input.trim()}>
+          <button className="chat-send" onClick={() => send()} disabled={sending || !input.trim()}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           </button>
         </div>
