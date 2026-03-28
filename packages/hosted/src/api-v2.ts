@@ -429,8 +429,44 @@ export async function handleApiV2(req: IncomingMessage, res: ServerResponse, url
 
     // Check risk lane policy first
     const laneMode = await db.v2GetRiskLane(hookUserId, riskLane);
+    // Helper: forge the token (OCC command object)
+    async function forgeToken(requestId: number) {
+      try {
+        const chainId = `${hookUserId}:${hookAgentId}`;
+        const { proof, digest } = await createAuthorizationObject(
+          hookUserId, hookAgentId, tool, { args }, chainId, undefined
+        );
+        return {
+          token: {
+            requestId,
+            tool,
+            args,
+            agentId: hookAgentId,
+            authorizedBy: hookUserId,
+            authorizedAt: new Date().toISOString(),
+            proofDigest: digest,
+            proof,
+            singleUse: true,
+          }
+        };
+      } catch {
+        // TEE unavailable — token without cryptographic proof
+        return {
+          token: {
+            requestId,
+            tool,
+            args,
+            agentId: hookAgentId,
+            authorizedBy: hookUserId,
+            authorizedAt: new Date().toISOString(),
+            singleUse: true,
+          }
+        };
+      }
+    }
+
     if (laneMode === "auto_approve") {
-      // Auto-approve — don't wait for human
+      // "Always" — user previously forged a standing token for this tool
       const request = await db.v2CreateRequest(hookUserId, {
         agentId: hookAgentId, tool, riskLane, summary,
         label: toolLabel(tool), originType: "hook", originClient: "Claude Code",
@@ -439,9 +475,9 @@ export async function handleApiV2(req: IncomingMessage, res: ServerResponse, url
       await db.v2UpdateRequestStatus(request.id, "auto_approved");
       await db.v2CreateDecision({
         requestId: request.id, userId: hookUserId, decidedBy: "policy_auto",
-        decision: "approved", mode: "always", reason: `Risk lane "${riskLane}" is auto-approve`,
+        decision: "approved", mode: "always", reason: `Standing authorization for "${riskLane}"`,
       });
-      return json(res, { decision: "allow", requestId: request.id });
+      return json(res, await forgeToken(request.id));
     }
 
     if (laneMode === "auto_deny") {
@@ -453,12 +489,13 @@ export async function handleApiV2(req: IncomingMessage, res: ServerResponse, url
       await db.v2UpdateRequestStatus(request.id, "denied");
       await db.v2CreateDecision({
         requestId: request.id, userId: hookUserId, decidedBy: "policy_auto",
-        decision: "denied", mode: "always", reason: `Risk lane "${riskLane}" is auto-deny`,
+        decision: "denied", mode: "always", reason: `Blocked by policy: ${riskLane}`,
       });
-      return json(res, { decision: "deny", reason: `Blocked by policy: ${riskLane}`, requestId: request.id });
+      // No token — denied. AI has no executable path.
+      return json(res, { denied: true, reason: `Blocked by policy: ${riskLane}`, requestId: request.id });
     }
 
-    // ASK mode — create request and wait for human
+    // ASK mode — propose to the user and wait for their authority
     const request = await db.v2CreateRequest(hookUserId, {
       agentId: hookAgentId, tool, riskLane, summary,
       label: toolLabel(tool), originType: "hook", originClient: "Claude Code",
@@ -470,43 +507,31 @@ export async function handleApiV2(req: IncomingMessage, res: ServerResponse, url
       status: "pending", riskLane, summary, timestamp: Date.now(),
     });
 
-    // Send SMS notification
+    // Notify user
     sendApprovalSMS(hookUserId, hookAgentId, tool, args, request.id, summary).catch(err => {
       console.log("  [hook] SMS send failed:", (err as Error).message);
     });
 
-    // Long-poll: wait up to 55 seconds for human decision (Railway timeout is 120s)
+    // Long-poll: wait up to 55 seconds for user to forge the token
     const deadline = Date.now() + 55_000;
     while (Date.now() < deadline) {
       const updated = await db.v2GetRequest(request.id);
       if (updated && updated.status !== "pending") {
         if (updated.status === "approved" || updated.status === "auto_approved") {
-          // Create TEE-signed proof — this IS the authorization message back
-          try {
-            const { proof, digest } = await createAuthorizationObject(
-              userId, "hook", tool, { args: body.args }, undefined, undefined
-            );
-            return json(res, {
-              decision: "allow",
-              requestId: request.id,
-              proof: { digest, receipt: proof }
-            });
-          } catch {
-            // TEE unavailable — still allow but without proof
-            return json(res, { decision: "allow", requestId: request.id });
-          }
+          // User said yes — forge the token
+          return json(res, await forgeToken(request.id));
         } else {
-          const reason = updated.decisions?.[0]?.reason ?? "Denied by human";
-          return json(res, { decision: "deny", reason, requestId: request.id });
+          // User said no — no token exists
+          const reason = updated.decisions?.[0]?.reason ?? "Denied by user";
+          return json(res, { denied: true, reason, requestId: request.id });
         }
       }
-      // Wait 1 second before polling again
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
 
-    // Timeout — deny by default (safe)
+    // Timeout — no token forged, AI cannot proceed
     await db.v2UpdateRequestStatus(request.id, "expired");
-    return json(res, { decision: "deny", reason: "Approval timed out (55s)", requestId: request.id });
+    return json(res, { denied: true, reason: "No authorization received (55s timeout)", requestId: request.id });
   }
 
   // ═══════════════════════════════════════════════════════
@@ -517,6 +542,21 @@ export async function handleApiV2(req: IncomingMessage, res: ServerResponse, url
     const { seedDemoData } = await import("./seed.js");
     await seedDemoData(userId);
     return json(res, { ok: true, message: "Demo data seeded" });
+  }
+
+  // System prompt — the OCC operating model
+  if (path === "/system-prompt" && method === "GET") {
+    const fs = await import("node:fs");
+    const path_ = await import("node:path");
+    const promptPath = path_.resolve(import.meta.dirname ?? ".", "..", "occ-system-prompt.md");
+    try {
+      const content = fs.readFileSync(promptPath, "utf-8");
+      res.writeHead(200, { "Content-Type": "text/markdown" });
+      res.end(content);
+      return;
+    } catch {
+      return json(res, { error: "System prompt not found" }, 404);
+    }
   }
 
   json(res, { error: "Not found" }, 404);

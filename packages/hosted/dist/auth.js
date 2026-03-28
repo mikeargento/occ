@@ -4,6 +4,10 @@ const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID ?? "";
 const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET ?? "";
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID ?? "";
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET ?? "";
+const APPLE_CLIENT_ID = process.env.APPLE_CLIENT_ID ?? ""; // Service ID (e.g. com.occ.agent)
+const APPLE_TEAM_ID = process.env.APPLE_TEAM_ID ?? "";
+const APPLE_KEY_ID = process.env.APPLE_KEY_ID ?? "";
+const APPLE_PRIVATE_KEY = (process.env.APPLE_PRIVATE_KEY ?? "").replace(/\\n/g, "\n");
 const AUTH_URL = process.env.AUTH_URL ?? "https://agent.occ.wtf";
 function redirect(res, url) {
     res.writeHead(302, { Location: url });
@@ -32,13 +36,37 @@ export function getSessionUserId(req) {
 async function createOrGetUser(provider, providerId, email, name, avatar) {
     const userId = `${provider}-${providerId}`;
     const existing = await db.getUserById(userId);
-    if (!existing) {
-        const mcpToken = crypto.randomBytes(24).toString("hex");
-        await db.upsertUser({ id: userId, email, name, avatar, provider, providerId, mcpToken });
-        // Create a default agent for the user
-        await db.upsertAgent(userId, { id: "default", name: "Default" });
-    }
+    if (existing)
+        return userId;
+    // Check if a user with this email already exists (different provider, same person)
+    const byEmail = await db.getUserByEmail(email);
+    if (byEmail)
+        return byEmail.id; // Log them in as the existing user
+    const mcpToken = crypto.randomBytes(24).toString("hex");
+    await db.upsertUser({ id: userId, email, name, avatar, provider, providerId, mcpToken });
+    // No default agent — user must create their first agent explicitly.
+    // Creating an agent produces a birth proof (slot 0 on the agent's chain).
     return userId;
+}
+async function generateAppleClientSecret() {
+    if (!APPLE_PRIVATE_KEY || !APPLE_TEAM_ID || !APPLE_KEY_ID || !APPLE_CLIENT_ID)
+        return null;
+    try {
+        const now = Math.floor(Date.now() / 1000);
+        const header = Buffer.from(JSON.stringify({ alg: "ES256", kid: APPLE_KEY_ID })).toString("base64url");
+        const payload = Buffer.from(JSON.stringify({
+            iss: APPLE_TEAM_ID, iat: now, exp: now + 86400 * 180,
+            aud: "https://appleid.apple.com", sub: APPLE_CLIENT_ID,
+        })).toString("base64url");
+        const signingInput = `${header}.${payload}`;
+        const key = crypto.createPrivateKey({ key: APPLE_PRIVATE_KEY, format: "pem" });
+        const sig = crypto.sign("sha256", Buffer.from(signingInput), { key, dsaEncoding: "ieee-p1363" });
+        return `${signingInput}.${sig.toString("base64url")}`;
+    }
+    catch (e) {
+        console.error("[auth] Failed to generate Apple client secret:", e);
+        return null;
+    }
 }
 export async function handleAuth(req, res, pathname) {
     // ── GitHub ──
@@ -128,6 +156,70 @@ export async function handleAuth(req, res, pathname) {
         });
         const gUser = await userRes.json();
         const userId = await createOrGetUser("google", gUser.id, gUser.email, gUser.name, gUser.picture);
+        setCookie(res, "occ_session", userId);
+        return redirect(res, "/");
+    }
+    // ── Apple ──
+    if (pathname === "/auth/login/apple") {
+        if (!APPLE_CLIENT_ID)
+            return json(res, { error: "Apple Sign In not configured" }, 500);
+        const state = crypto.randomBytes(16).toString("hex");
+        setCookie(res, "occ_oauth_state", state, 600);
+        const params = new URLSearchParams({
+            client_id: APPLE_CLIENT_ID,
+            redirect_uri: `${AUTH_URL}/auth/callback/apple`,
+            response_type: "code",
+            scope: "name email",
+            response_mode: "form_post",
+            state,
+        });
+        return redirect(res, `https://appleid.apple.com/auth/authorize?${params}`);
+    }
+    if (pathname === "/auth/callback/apple" && req.method === "POST") {
+        // Apple sends form_post
+        const body = await new Promise((resolve) => {
+            let data = "";
+            req.on("data", (chunk) => { data += chunk.toString(); });
+            req.on("end", () => resolve(data));
+        });
+        const params = new URLSearchParams(body);
+        const code = params.get("code");
+        const userJson = params.get("user"); // Only sent on first login
+        if (!code)
+            return redirect(res, "/?error=no_code");
+        // Generate Apple client_secret JWT
+        const clientSecret = await generateAppleClientSecret();
+        if (!clientSecret)
+            return redirect(res, "/?error=apple_config");
+        const tokenRes = await fetch("https://appleid.apple.com/auth/token", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({
+                client_id: APPLE_CLIENT_ID,
+                client_secret: clientSecret,
+                code,
+                grant_type: "authorization_code",
+                redirect_uri: `${AUTH_URL}/auth/callback/apple`,
+            }),
+        });
+        const tokenData = await tokenRes.json();
+        if (!tokenData.id_token)
+            return redirect(res, "/?error=auth_failed");
+        // Decode the JWT payload (base64url, no verification needed — Apple signed it)
+        const payload = JSON.parse(Buffer.from(tokenData.id_token.split(".")[1], "base64url").toString());
+        const appleId = payload.sub;
+        const email = payload.email ?? "";
+        // Parse user info (only available on first sign-in)
+        let name = email.split("@")[0];
+        if (userJson) {
+            try {
+                const u = JSON.parse(userJson);
+                if (u.name)
+                    name = [u.name.firstName, u.name.lastName].filter(Boolean).join(" ");
+            }
+            catch { }
+        }
+        const userId = await createOrGetUser("apple", appleId, email, name, "");
         setCookie(res, "occ_session", userId);
         return redirect(res, "/");
     }

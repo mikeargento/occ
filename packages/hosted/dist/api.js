@@ -32,18 +32,41 @@ export async function handleApi(req, res, url) {
         return json(res, { ok: true, timestamp: Date.now() });
     }
     if (path === "/status") {
-        return json(res, { ok: true, mode: "hosted", timestamp: Date.now() });
+        return json(res, { ok: true, mode: "hosted", version: "2025-03-25-await-fwd", timestamp: Date.now() });
     }
     // Auth-gated endpoints
     const userId = getUserId(req) ?? "anonymous";
+    // Build principal for proof signing — cached per request
+    let _principal;
+    async function getPrincipal() {
+        if (_principal)
+            return _principal;
+        const user = await db.getUserById(userId);
+        _principal = user ? { id: userId, provider: user.provider } : { id: userId };
+        return _principal;
+    }
     // ── Agents ──
     if (path === "/agents" && method === "GET") {
         const agents = await db.getAgents(userId);
+        const host = req.headers.host ?? "agent.occ.wtf";
+        const proto = host.includes("localhost") ? "http" : "https";
+        // Get active connections for connection status
+        const activeConns = getActiveConnections();
         const summaries = agents.map((a) => {
             const tools = a.allowed_tools ?? [];
+            const blocked = a.blocked_tools ?? [];
+            // Find connection for this agent
+            const conn = activeConns.find(c => c.agentId === a.id);
             return {
                 id: a.id,
                 name: a.name,
+                mcpUrl: a.mcp_token ? `${proto}://${host}/mcp/${a.mcp_token}` : null,
+                proxyUrl: a.proxy_token ? `${proto}://${host}/v1/${a.proxy_token}` : null,
+                allowedTools: tools,
+                blockedTools: blocked,
+                connected: !!conn,
+                lastSeen: conn ? conn.lastSeen.toISOString() : null,
+                clientName: conn?.clientName ?? null,
                 policy: tools.length > 0 ? {
                     version: "occ/policy/1",
                     name: a.name,
@@ -58,14 +81,29 @@ export async function handleApi(req, res, url) {
                 auditCount: a.total_calls ?? 0,
             };
         });
-        // No auto-creation — let the user create their own agents
         return json(res, { agents: summaries });
     }
     if (path === "/agents" && method === "POST") {
+        const crypto = await import("node:crypto");
         const body = JSON.parse(await readBody(req));
         const id = body.name?.toLowerCase().replace(/[^a-z0-9-]/g, "-") ?? "agent-" + Date.now();
-        await db.upsertAgent(userId, { id, name: body.name ?? id, allowedTools: body.allowedTools });
-        return json(res, { agent: { id, name: body.name ?? id, status: "active", createdAt: Date.now() } }, 201);
+        const agentToken = crypto.randomBytes(24).toString("hex");
+        const proxyToken = crypto.randomBytes(24).toString("hex");
+        await db.upsertAgent(userId, { id, name: body.name ?? id, allowedTools: body.allowedTools, mcpToken: agentToken, proxyToken });
+        // Birth proof — slot 0 on this agent's chain.
+        // The agent cannot exist without this proof existing first.
+        const { commitPolicyProof } = await import("./authorization.js");
+        const birthChainId = `${userId}:${id}`;
+        const birthProof = await commitPolicyProof(userId, {
+            categories: {},
+            customRules: [`Agent "${body.name ?? id}" created`],
+        }, birthChainId, await getPrincipal()).catch(e => { console.error("  [occ] Birth proof failed:", e.message); return null; });
+        const host = req.headers.host ?? "agent.occ.wtf";
+        const proto = host.includes("localhost") ? "http" : "https";
+        return json(res, {
+            agent: { id, name: body.name ?? id, status: "active", createdAt: Date.now(), mcpUrl: `${proto}://${host}/mcp/${agentToken}`, proxyUrl: `${proto}://${host}/v1/${proxyToken}` },
+            birthProof: birthProof?.proof ?? null,
+        }, 201);
     }
     // /agents/:id
     const agentMatch = path.match(/^\/agents\/([^/]+)$/);
@@ -100,9 +138,33 @@ export async function handleApi(req, res, url) {
             });
         }
         if (method === "DELETE") {
+            // Death proof — final slot on this agent's chain. Seals it permanently.
+            const { commitPolicyProof } = await import("./authorization.js");
+            const deathChainId = `${userId}:${agentId}`;
+            const deathProof = await commitPolicyProof(userId, {
+                categories: {},
+                customRules: [`Agent "${agentId}" terminated`],
+            }, deathChainId, await getPrincipal()).catch(e => { console.error("  [occ] Death proof failed:", e.message); return null; });
             await db.deleteAgent(userId, agentId);
-            return json(res, { deleted: true });
+            return json(res, { deleted: true, deathProof: deathProof?.proof ?? null });
         }
+        if (method === "PUT") {
+            const body = JSON.parse(await readBody(req));
+            if (body.name) {
+                await db.renameAgent(userId, agentId, body.name);
+                return json(res, { renamed: true, name: body.name });
+            }
+            return json(res, { error: "Nothing to update" }, 400);
+        }
+    }
+    // /agents/:id/activity — per-agent proof log
+    const activityMatch = path.match(/^\/agents\/([^/]+)\/activity$/);
+    if (activityMatch && method === "GET") {
+        const agentId = decodeURIComponent(activityMatch[1]);
+        const p = (await import("pg")).default;
+        const pool = new p.Pool({ connectionString: process.env.DATABASE_URL, ssl: process.env.DATABASE_URL?.includes("railway") ? { rejectUnauthorized: false } : undefined });
+        const res2 = await pool.query("SELECT * FROM occ_proofs WHERE user_id = $1 AND agent_id = $2 ORDER BY created_at DESC LIMIT 50", [userId, agentId]);
+        return json(res, { entries: res2.rows });
     }
     // /agents/:id/policy
     const policyMatch = path.match(/^\/agents\/([^/]+)\/policy$/);
@@ -149,6 +211,14 @@ export async function handleApi(req, res, url) {
             return json(res, { tool, enabled: false });
         }
     }
+    // /agents/:id/tools/:tool/unblock
+    const unblockMatch = path.match(/^\/agents\/([^/]+)\/tools\/([^/]+)\/unblock$/);
+    if (unblockMatch && method === "POST") {
+        const agentId = decodeURIComponent(unblockMatch[1]);
+        const tool = decodeURIComponent(unblockMatch[2]);
+        await db.unblockTool(userId, agentId, tool);
+        return json(res, { tool, unblocked: true });
+    }
     // ── Policy ──
     if (path === "/policy" && method === "GET") {
         if (!userId)
@@ -159,14 +229,9 @@ export async function handleApi(req, res, url) {
         return json(res, {
             policy: {
                 version: "occ/policy/1",
-                name: policy.name,
-                createdAt: new Date(policy.created_at).getTime(),
-                globalConstraints: {
-                    allowedTools: policy.allowed_tools ?? [],
-                    maxSpendCents: undefined,
-                    rateLimit: policy.rate_limit ? { maxCalls: parseInt(policy.rate_limit), windowMs: 3600000 } : undefined,
-                },
-                skills: {},
+                categories: policy.categories ?? {},
+                customRules: policy.custom_rules ?? [],
+                allowedTools: policy.allowed_tools ?? [],
             },
             policyDigestB64: policy.policy_digest,
             committedAt: new Date(policy.created_at).getTime(),
@@ -174,16 +239,32 @@ export async function handleApi(req, res, url) {
     }
     if (path === "/policy" && method === "PUT") {
         const body = JSON.parse(await readBody(req));
+        // Commit the policy through TEE — the proof IS the rule
+        const { commitPolicyProof } = await import("./authorization.js");
+        const policyAgentId = body.agentId ?? "default";
+        const policyChainId = `${userId}:${policyAgentId}`;
+        const { proof, digest } = await commitPolicyProof(userId, {
+            categories: body.categories ?? {},
+            customRules: body.customRules ?? [],
+        }, policyChainId, await getPrincipal());
         const policy = await db.createPolicy(userId, {
             name: body.name ?? "default",
             allowedTools: body.allowedTools ?? [],
             maxActions: body.maxActions,
             rateLimit: body.rateLimit,
+            categories: body.categories,
+            customRules: body.customRules,
+            policyDigest: digest,
         });
         return json(res, {
-            policy: { allowedTools: policy.allowed_tools },
-            policyDigestB64: policy.policy_digest,
-            committedAt: new Date(policy.created_at).getTime(),
+            policy: {
+                categories: policy.categories ?? body.categories,
+                customRules: policy.custom_rules ?? body.customRules,
+                allowedTools: policy.allowed_tools ?? [],
+            },
+            policyDigestB64: digest,
+            proof,
+            committedAt: Date.now(),
         });
     }
     // ── Audit ──
@@ -277,7 +358,12 @@ export async function handleApi(req, res, url) {
     }
     // ── Connections ──
     if (path === "/connections" && method === "GET") {
-        const connections = getActiveConnections().map(c => ({
+        // Filter connections to only show this user's agents
+        const agents = await db.getAgents(userId);
+        const agentIds = new Set(agents.map((a) => a.id));
+        const connections = getActiveConnections()
+            .filter(c => c.agentId && agentIds.has(c.agentId))
+            .map(c => ({
             name: c.clientName,
             transport: "streamable-http",
             status: "connected",
@@ -300,6 +386,7 @@ export async function handleApi(req, res, url) {
         return json(res, { permissions: all.map((r) => ({
                 id: r.id, agentId: r.agent_id, tool: r.tool, status: r.status,
                 clientName: r.client_name || "Unknown",
+                toolDescription: r.tool_description || null,
                 requestedAt: new Date(r.requested_at).getTime(),
                 resolvedAt: r.resolved_at ? new Date(r.resolved_at).getTime() : null,
                 requestArgs: r.request_args,
@@ -311,6 +398,7 @@ export async function handleApi(req, res, url) {
         const pending = await db.getPendingPermissions(userId);
         return json(res, { requests: pending.map((r) => ({
                 id: r.id, agentId: r.agent_id, tool: r.tool, clientName: r.client_name,
+                toolDescription: r.tool_description || null,
                 requestedAt: new Date(r.requested_at).getTime(), requestArgs: r.request_args,
             })) });
     }
@@ -351,31 +439,60 @@ export async function handleApi(req, res, url) {
         const req_entry = pending.find((r) => r.id === requestId);
         if (!req_entry)
             return json(res, { error: "Permission request not found" }, 404);
+        // Parse optional body for approval mode
+        let approvalMode = "always";
+        let denyMode = "once";
+        try {
+            const body = JSON.parse(await readBody(req));
+            if (decision === "approve" && body.mode === "once")
+                approvalMode = "once";
+            if (decision === "approve" && body.mode === "always")
+                approvalMode = "always";
+            if (decision === "deny" && body.mode === "always")
+                denyMode = "always";
+        }
+        catch { /* no body or invalid JSON — use defaults */ }
         let digestB64 = "";
         let proof = null;
         if (decision === "approve") {
             // ── CREATE AUTHORIZATION OBJECT ──
-            // This is NOT a flag flip. This creates a cryptographic object
-            // that must exist before execution is reachable.
-            const authResult = await createAuthorizationObject(userId, req_entry.agent_id, req_entry.tool);
+            // This creates a cryptographic object that must exist before execution.
+            const chainId = `${userId}:${req_entry.agent_id}`;
+            const authResult = await createAuthorizationObject(userId, req_entry.agent_id, req_entry.tool, undefined, chainId, await getPrincipal());
             digestB64 = authResult.digest;
             proof = authResult.proof;
+            if (approvalMode === "always") {
+                // Durable: add tool to agent's allowed list (remembered policy)
+                await db.enableTool(userId, req_entry.agent_id, req_entry.tool);
+            }
+            // "once" mode: authorization object exists for this execution,
+            // but tool is NOT added to allowed_tools. Next request will ask again.
         }
-        // Resolve the permission request (updates status, stores proof ref)
+        if (decision === "deny" && denyMode === "always") {
+            // Durable deny: add to blocked list
+            await db.disableTool(userId, req_entry.agent_id, req_entry.tool);
+        }
+        // Resolve the permission request
         await db.resolvePermission(userId, requestId, status, digestB64, proof);
         // Log to proof table
         await db.addProof(userId, {
             agentId: req_entry.agent_id, tool: req_entry.tool,
             allowed: decision === "approve",
-            reason: decision === "approve" ? `Authorization object created: ${digestB64}` : "Denied — no authorization object created",
+            reason: decision === "approve"
+                ? `${approvalMode === "always" ? "Always allowed" : "Allowed once"} — authorization: ${digestB64}`
+                : `${denyMode === "always" ? "Always denied" : "Denied once"} — no authorization object`,
             proofDigest: digestB64 || undefined, receipt: proof,
         });
         eventBus.emit(userId, {
             type: "permission-resolved",
             tool: req_entry.tool, agentId: req_entry.agent_id,
-            decision: status, proofDigest: digestB64, timestamp: Date.now(),
+            decision: status, mode: decision === "approve" ? approvalMode : denyMode,
+            proofDigest: digestB64, timestamp: Date.now(),
         });
-        return json(res, { permission: { tool: req_entry.tool, status }, proof: { digestB64 } });
+        return json(res, {
+            permission: { tool: req_entry.tool, status, mode: decision === "approve" ? approvalMode : denyMode },
+            proof: { digestB64 },
+        });
     }
     // POST /api/permissions/revoke
     if (path === "/permissions/revoke" && method === "POST") {
@@ -385,16 +502,23 @@ export async function handleApi(req, res, url) {
             return json(res, { error: "agentId and tool required" }, 400);
         // Find the authorization object to revoke
         const authObj = await db.getValidAuthorization(userId, agentId, tool);
-        if (!authObj)
-            return json(res, { error: "No active authorization to revoke" }, 404);
-        // ── CREATE REVOCATION OBJECT ──
-        // This supersedes the authorization. After this, no execution path exists.
-        const { proof, digest } = await createRevocationObject(userId, agentId, tool, authObj.proofDigest);
+        let digest = "";
+        let proof = null;
+        if (authObj) {
+            // ── CREATE REVOCATION OBJECT ──
+            // This supersedes the authorization. After this, no execution path exists.
+            const revokeChainId = `${userId}:${agentId}`;
+            const result = await createRevocationObject(userId, agentId, tool, authObj.proofDigest, revokeChainId, await getPrincipal());
+            digest = result.digest;
+            proof = result.proof;
+        }
+        // Always revoke the permission and disable the tool — even without an auth object
         await db.revokePermission(userId, agentId, tool, digest, proof);
+        await db.disableTool(userId, agentId, tool);
         await db.addProof(userId, {
             agentId, tool, allowed: false,
-            reason: `Revocation object created: ${digest} (supersedes ${authObj.proofDigest})`,
-            proofDigest: digest, receipt: proof,
+            reason: digest ? `Revocation object created: ${digest}` : "Tool revoked (no authorization object)",
+            proofDigest: digest || undefined, receipt: proof,
         });
         eventBus.emit(userId, {
             type: "permission-resolved", tool, agentId,
@@ -454,6 +578,112 @@ export async function handleApi(req, res, url) {
                 },
             },
         });
+    }
+    // ── Hook Token ──
+    if (path === "/settings/token" && method === "GET") {
+        const user = await db.getUserById(userId);
+        if (!user)
+            return json(res, { error: "User not found" }, 404);
+        return json(res, { token: user.mcp_token });
+    }
+    // ── API Key Management ──
+    if (path === "/settings/api-key" && method === "GET") {
+        const key = await db.getAnthropicKey(userId);
+        return json(res, { hasKey: !!key, maskedKey: key ? `sk-ant-...${key.slice(-8)}` : null });
+    }
+    if (path === "/settings/api-key" && method === "PUT") {
+        const body = JSON.parse(await readBody(req));
+        if (!body.key || !body.key.startsWith("sk-ant-")) {
+            return json(res, { error: "Invalid Anthropic API key" }, 400);
+        }
+        await db.setAnthropicKey(userId, body.key);
+        return json(res, { ok: true, maskedKey: `sk-ant-...${body.key.slice(-8)}` });
+    }
+    if (path === "/settings/api-key" && method === "DELETE") {
+        await db.deleteAnthropicKey(userId);
+        return json(res, { ok: true });
+    }
+    // ── Phone Number ──
+    if (path === "/settings/phone" && method === "GET") {
+        const user = await db.getUserById(userId);
+        return json(res, { phone: user?.phone ?? null });
+    }
+    if (path === "/settings/phone" && method === "PUT") {
+        const body = JSON.parse(await readBody(req));
+        if (!body.phone)
+            return json(res, { error: "Phone number required" }, 400);
+        // Normalize: ensure + prefix
+        const phone = body.phone.startsWith("+") ? body.phone : `+1${body.phone.replace(/\D/g, "")}`;
+        await db.setPhone(userId, phone);
+        return json(res, { ok: true, phone });
+    }
+    // ── Notifications ──
+    if (path === "/notifications/count" && method === "GET") {
+        const count = await db.getUnreadNotificationCount(userId);
+        return json(res, { count });
+    }
+    if (path === "/notifications/mark-read" && method === "POST") {
+        await db.markNotificationsRead(userId);
+        return json(res, { ok: true });
+    }
+    // ── Bulk Approve/Deny ──
+    if (path === "/permissions/bulk" && method === "POST") {
+        const body = JSON.parse(await readBody(req));
+        const { action, mode, ids, agentId } = body;
+        if (!action || (action !== "approve" && action !== "deny")) {
+            return json(res, { error: "action must be 'approve' or 'deny'" }, 400);
+        }
+        // If agentId is provided, get all pending for that agent
+        let targetIds = ids ?? [];
+        if (agentId && !ids) {
+            const pending = await db.getPendingPermissions(userId);
+            targetIds = pending
+                .filter((r) => r.agent_id === agentId)
+                .map((r) => r.id);
+        }
+        if (targetIds.length === 0) {
+            return json(res, { processed: 0 });
+        }
+        const resolveMode = mode ?? (action === "approve" ? "always" : "once");
+        let processed = 0;
+        for (const requestId of targetIds) {
+            const pending = await db.getPendingPermissions(userId);
+            const req_entry = pending.find((r) => r.id === requestId);
+            if (!req_entry)
+                continue;
+            const status = action === "approve" ? "approved" : "denied";
+            let digestB64 = "";
+            let proof = null;
+            if (action === "approve") {
+                const chainId = `${userId}:${req_entry.agent_id}`;
+                const authResult = await createAuthorizationObject(userId, req_entry.agent_id, req_entry.tool, undefined, chainId, await getPrincipal());
+                digestB64 = authResult.digest;
+                proof = authResult.proof;
+                if (resolveMode === "always") {
+                    await db.enableTool(userId, req_entry.agent_id, req_entry.tool);
+                }
+            }
+            if (action === "deny" && resolveMode === "always") {
+                await db.disableTool(userId, req_entry.agent_id, req_entry.tool);
+            }
+            await db.resolvePermission(userId, requestId, status, digestB64, proof);
+            await db.addProof(userId, {
+                agentId: req_entry.agent_id, tool: req_entry.tool,
+                allowed: action === "approve",
+                reason: action === "approve"
+                    ? `${resolveMode === "always" ? "Always allowed" : "Allowed once"} (bulk) -- authorization: ${digestB64}`
+                    : `${resolveMode === "always" ? "Always denied" : "Denied once"} (bulk)`,
+                proofDigest: digestB64 || undefined, receipt: proof,
+            });
+            eventBus.emit(userId, {
+                type: "permission-resolved",
+                tool: req_entry.tool, agentId: req_entry.agent_id,
+                decision: status, mode: resolveMode,
+                proofDigest: digestB64, timestamp: Date.now(),
+            });
+            processed++;
+        }
+        return json(res, { processed });
     }
     json(res, { error: "Not found" }, 404);
 }

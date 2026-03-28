@@ -10,7 +10,10 @@ interface ActiveConnection {
 }
 /** Get all active connections (for the dashboard) */
 export declare function getActiveConnections(): ActiveConnection[];
-export declare function commitProof(tool: string, args: unknown, agentId: string, allowed: boolean): Promise<{
+export declare function commitProof(tool: string, args: unknown, agentId: string, allowed: boolean, chainId?: string, principal?: {
+    id: string;
+    provider?: string;
+}): Promise<{
     proof: any;
     digestB64: string;
 }>;

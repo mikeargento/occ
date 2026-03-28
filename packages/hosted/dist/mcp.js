@@ -1,7 +1,9 @@
 import { sha256 } from "@noble/hashes/sha256";
 import { db } from "./db.js";
 import { eventBus } from "./events.js";
-import { validateAuthorization, createExecutionProof } from "./authorization.js";
+import { validateAuthorization, createExecutionProof, createAuthorizationObject } from "./authorization.js";
+import { getToolDef, getToolContext, getToolsForListing, isOccInternal, isLocalTool } from "./capabilities.js";
+import { executeTool, hasExecutor } from "./executors.js";
 const activeConnections = new Map();
 /** Get all active connections (for the dashboard) */
 export function getActiveConnections() {
@@ -60,32 +62,39 @@ function toBase64(bytes) {
 }
 // ── TEE Commit via Nitro Enclave ──
 const TEE_URL = "https://nitro.occproof.com/commit";
-export async function commitProof(tool, args, agentId, allowed) {
+export async function commitProof(tool, args, agentId, allowed, chainId, principal) {
     const payload = JSON.stringify({ tool, args, agentId, allowed, timestamp: Date.now() });
     const bytes = new TextEncoder().encode(payload);
     const digestB64 = toBase64(sha256(bytes));
     try {
+        const commitBody = {
+            digests: [{ digestB64, hashAlg: "sha256" }],
+            metadata: {
+                kind: allowed ? "tool-execution" : "tool-denial",
+                tool,
+                agentId,
+                decision: allowed ? "allowed" : "denied",
+                adapter: "hosted-mcp",
+                runtime: "agent.occ.wtf",
+            },
+        };
+        if (chainId) {
+            commitBody.chainId = chainId;
+        }
+        if (principal) {
+            commitBody.principal = principal;
+        }
         const res = await fetch(TEE_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                digests: [{ digestB64, hashAlg: "sha256" }],
-                metadata: {
-                    kind: allowed ? "tool-execution" : "tool-denial",
-                    tool,
-                    agentId,
-                    decision: allowed ? "allowed" : "denied",
-                    adapter: "hosted-mcp",
-                    runtime: "agent.occ.wtf",
-                },
-            }),
+            body: JSON.stringify(commitBody),
         });
         if (!res.ok)
             throw new Error(`TEE ${res.status}`);
         const data = await res.json();
         const proof = Array.isArray(data) ? data[0] : data.proofs?.[0] ?? data;
         // Forward proof to occ.wtf explorer
-        fetch("https://occ.wtf/api/proofs", {
+        fetch("https://www.occ.wtf/api/proofs", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ proof }),
@@ -120,10 +129,21 @@ export async function handleMcp(req, res, pathname) {
     if (!token) {
         return json(res, { error: "Missing token" }, 401);
     }
-    // Authenticate by token
-    const user = await db.getUserByToken(token);
-    if (!user) {
-        return json(res, { error: "Invalid token" }, 401);
+    // Authenticate by token — try per-agent token first, then fall back to user token
+    let user;
+    let agentId = "default";
+    const agentByToken = await db.getAgentByToken(token);
+    if (agentByToken) {
+        // Per-agent token — maps directly to a specific agent
+        user = { id: agentByToken.user_id, email: agentByToken.email, provider: agentByToken.provider, provider_id: agentByToken.provider_id };
+        agentId = agentByToken.id;
+    }
+    else {
+        // Fall back to user-level token (backward compat)
+        user = await db.getUserByToken(token);
+        if (!user) {
+            return json(res, { error: "Invalid token" }, 401);
+        }
     }
     const method = req.method ?? "GET";
     // MCP uses JSON-RPC 2.0 over HTTP POST
@@ -156,60 +176,42 @@ export async function handleMcp(req, res, pathname) {
                 return;
             }
             case "tools/list": {
-                // Return tools from user's policy
-                const policy = await db.getActivePolicy(user.id);
-                const tools = (policy?.allowed_tools ?? []).map((name) => ({
-                    name,
-                    description: `Tool: ${name}`,
-                    inputSchema: { type: "object", properties: {} },
-                }));
-                // Always include built-in OCC tools
-                const occTools = [
-                    {
-                        name: "occ_create_issue",
-                        description: "Create a new issue/task in OCC Agent",
-                        inputSchema: {
-                            type: "object",
-                            properties: {
-                                title: { type: "string", description: "Issue title" },
-                                description: { type: "string", description: "Issue description" },
-                            },
-                            required: ["title"],
-                        },
-                    },
-                    {
-                        name: "occ_list_proofs",
-                        description: "List recent proof log entries",
-                        inputSchema: {
-                            type: "object",
-                            properties: {
-                                limit: { type: "number", description: "Number of entries to return (default 10)" },
-                            },
-                        },
-                    },
-                    {
-                        name: "occ_get_policy",
-                        description: "Get the current active policy",
-                        inputSchema: { type: "object", properties: {} },
-                    },
-                ];
+                // Return ALL capability tools — always visible regardless of policy.
+                // Policy governs execution, not visibility.
+                // The agent should see what it COULD do, and get a clean denial if policy blocks it.
+                const tools = getToolsForListing();
                 return json(res, {
                     jsonrpc: "2.0",
                     id: body.id,
-                    result: { tools: [...occTools, ...tools] },
+                    result: { tools },
                 });
             }
             case "tools/call": {
                 const toolName = body.params?.name;
                 const args = body.params?.arguments ?? {};
                 const agents = await db.getAgents(user.id);
-                const agentId = agents.length > 0 ? agents[0].id : "default-agent";
                 trackConnection(req, token, agentId);
                 const agent = agents.find((a) => a.id === agentId);
                 const isPaused = agent?.paused ?? false;
                 const clientName = detectClient(req.headers["user-agent"] ?? "");
-                // ── AUTHORIZATION-OBJECT ENFORCEMENT ──
-                // An action cannot exist unless a prior authorization object exists.
+                // Look up tool definition from capability registry
+                const toolDef = getToolDef(toolName);
+                const toolContext = getToolContext(toolName);
+                // ── THREE-WAY AUTHORIZATION MODEL ──
+                //
+                // Tool in allowed_tools  → ALLOW (execute immediately)
+                // Tool in blocked_tools  → DENY  (reject immediately)
+                // Tool in neither        → ASK   (pending human approval)
+                //
+                // This is the core of request-first control:
+                // agents request, humans govern, decisions become policy.
+                // 0. Unknown tool
+                if (!toolDef) {
+                    return json(res, {
+                        jsonrpc: "2.0", id: body.id,
+                        error: { code: -32602, message: `Unknown tool: "${toolName}"` },
+                    });
+                }
                 // 1. Global kill switch
                 if (isPaused) {
                     await db.incrementAgentCalls(user.id, agentId, false);
@@ -218,53 +220,176 @@ export async function handleMcp(req, res, pathname) {
                         error: { code: -32600, message: "Denied: all access is suspended" },
                     });
                 }
-                // 2. Look up authorization object
-                const authObj = await validateAuthorization(user.id, agentId, toolName);
-                // 3. No authorization object → execution path does not exist
-                if (!authObj) {
-                    // Create a pending permission request so the user can authorize it
-                    const permReq = await db.createPermissionRequest(user.id, agentId, toolName, clientName, args);
+                // 2. OCC internal tools skip policy (always allowed)
+                if (isOccInternal(toolName)) {
+                    if (toolName === "occ_list_proofs") {
+                        const { entries } = await db.getProofs(user.id, args.limit ?? 10);
+                        return json(res, {
+                            jsonrpc: "2.0", id: body.id,
+                            result: { content: [{ type: "text", text: JSON.stringify(entries, null, 2) }] },
+                        });
+                    }
+                    if (toolName === "occ_get_policy") {
+                        const policy = await db.getActivePolicy(user.id);
+                        return json(res, {
+                            jsonrpc: "2.0", id: body.id,
+                            result: { content: [{ type: "text", text: policy ? JSON.stringify(policy, null, 2) : "No active policy" }] },
+                        });
+                    }
+                    if (toolName === "occ_check_request") {
+                        const requestId = args.requestId;
+                        if (!requestId) {
+                            return json(res, {
+                                jsonrpc: "2.0", id: body.id,
+                                error: { code: -32602, message: "requestId is required" },
+                            });
+                        }
+                        const permReq = await db.getPermissionRequest(requestId);
+                        if (!permReq || permReq.user_id !== user.id) {
+                            return json(res, {
+                                jsonrpc: "2.0", id: body.id,
+                                result: { content: [{ type: "text", text: JSON.stringify({ error: "Request not found" }) }] },
+                            });
+                        }
+                        return json(res, {
+                            jsonrpc: "2.0", id: body.id,
+                            result: { content: [{ type: "text", text: JSON.stringify({
+                                            requestId: permReq.id,
+                                            tool: permReq.tool,
+                                            status: permReq.status,
+                                            resolvedAt: permReq.resolved_at ? new Date(permReq.resolved_at).toISOString() : null,
+                                            hint: permReq.status === "pending"
+                                                ? "Still waiting for human approval at agent.occ.wtf"
+                                                : permReq.status === "approved"
+                                                    ? "Approved! You can now call the tool directly."
+                                                    : "Denied by the user.",
+                                        }, null, 2) }] },
+                        });
+                    }
+                    return json(res, {
+                        jsonrpc: "2.0", id: body.id,
+                        result: { content: [{ type: "text", text: `${toolName} executed` }] },
+                    });
+                }
+                // 3. Resolve capability mode: allow / deny / ask
+                const allowedTools = agent?.allowed_tools ?? [];
+                const blockedTools = agent?.blocked_tools ?? [];
+                const isAllowed = allowedTools.includes(toolName);
+                const isBlocked = blockedTools.includes(toolName);
+                // ── DENY: tool is explicitly blocked ──
+                if (isBlocked) {
                     await db.incrementAgentCalls(user.id, agentId, false);
+                    // Log denial proof
+                    await db.addProof(user.id, {
+                        agentId, tool: toolName, allowed: false, args,
+                        reason: "DENIED_BY_POLICY",
+                    });
+                    return json(res, {
+                        jsonrpc: "2.0", id: body.id,
+                        error: {
+                            code: -32600,
+                            message: `DENIED_BY_POLICY: "${toolDef.label}" is blocked.`,
+                            data: {
+                                denied: true,
+                                reason: "DENIED_BY_POLICY",
+                                tool: toolName,
+                                capability: toolContext?.capability ?? toolName,
+                                label: toolContext?.label ?? toolName,
+                                description: toolDef.description,
+                            },
+                        },
+                    });
+                }
+                // ── ASK: tool is not yet authorized — requires human approval ──
+                if (!isAllowed) {
+                    const permReq = await db.createPermissionRequest(user.id, agentId, toolName, clientName, args, toolDef.description);
+                    await db.incrementAgentCalls(user.id, agentId, false);
+                    // Log pending proof
+                    await db.addProof(user.id, {
+                        agentId, tool: toolName, allowed: false, args,
+                        reason: "PENDING_HUMAN_APPROVAL",
+                    });
                     eventBus.emit(user.id, {
                         type: "permission-requested",
                         tool: toolName, agentId, clientName,
                         requestId: permReq.id, timestamp: Date.now(),
+                        capability: toolContext?.capability ?? toolName,
+                        label: toolContext?.label ?? toolName,
+                        description: toolDef.description,
                     });
                     return json(res, {
                         jsonrpc: "2.0", id: body.id,
-                        error: { code: -32600, message: `No authorization exists for "${toolName}". Approve it at agent.occ.wtf` },
+                        error: {
+                            code: -32000,
+                            message: `REQUIRES_HUMAN_APPROVAL: "${toolDef.label}" needs approval.`,
+                            data: {
+                                pending: true,
+                                reason: "REQUIRES_HUMAN_APPROVAL",
+                                tool: toolName,
+                                capability: toolContext?.capability ?? toolName,
+                                label: toolContext?.label ?? toolName,
+                                description: toolDef.description,
+                                requestId: permReq.id,
+                                hint: "A request has been sent to the dashboard. Approve it at agent.occ.wtf",
+                            },
+                        },
                     });
                 }
-                // 4. Authorization object exists → create execution proof
-                // The execution proof references the authorization's digest.
-                // This is the causal link: authorization came first, execution depends on it.
-                const { proof: execProof, digest: execDigest } = await createExecutionProof(user.id, agentId, toolName, args, authObj.proofDigest);
-                // 5. Handle built-in tools
-                if (toolName === "occ_list_proofs") {
-                    const { entries } = await db.getProofs(user.id, args.limit ?? 10);
+                // ── ALLOW: tool is authorized — execute ──
+                // Ensure authorization object exists (create if this is first execution after toggle)
+                let authObj = await validateAuthorization(user.id, agentId, toolName);
+                if (!authObj) {
+                    const principal = { id: user.id, provider: user.provider ?? undefined };
+                    const chainId = `${user.id}:${agentId}`;
+                    await createAuthorizationObject(user.id, agentId, toolName, undefined, chainId, principal);
+                    authObj = await validateAuthorization(user.id, agentId, toolName);
+                }
+                // Create execution proof (causal link: authorization → execution)
+                const principal = { id: user.id, provider: user.provider ?? undefined };
+                const execChainId = `${user.id}:${agentId}`;
+                const authDigest = authObj?.proofDigest ?? "";
+                const { digest: execDigest } = await createExecutionProof(user.id, agentId, toolName, args, authDigest, execChainId, principal);
+                // ── LOCAL TOOLS: proxy authorizes, client executes ──
+                // The proxy never touches the filesystem. It returns the authorization
+                // proof and the original args. The client does the actual work.
+                if (isLocalTool(toolName)) {
                     return json(res, {
                         jsonrpc: "2.0", id: body.id,
-                        result: { content: [{ type: "text", text: JSON.stringify(entries, null, 2) }] },
+                        result: {
+                            content: [{
+                                    type: "text",
+                                    text: JSON.stringify({
+                                        authorized: true,
+                                        proof: execDigest,
+                                        authorizationDigest: authDigest,
+                                        tool: toolName,
+                                        capability: toolContext?.capability ?? toolName,
+                                        args,
+                                        execution: "local",
+                                        instruction: "This action has been authorized by OCC. Execute it locally using your native capabilities. The proof has been recorded.",
+                                    }),
+                                }],
+                        },
                     });
                 }
-                if (toolName === "occ_get_policy") {
-                    const policy = await db.getActivePolicy(user.id);
-                    return json(res, {
-                        jsonrpc: "2.0", id: body.id,
-                        result: { content: [{ type: "text", text: policy ? JSON.stringify(policy, null, 2) : "No active policy" }] },
-                    });
+                // ── REMOTE TOOLS: proxy authorizes AND executes ──
+                if (hasExecutor(toolName)) {
+                    const result = await executeTool(toolName, args);
+                    if (result) {
+                        return json(res, {
+                            jsonrpc: "2.0", id: body.id,
+                            result: {
+                                content: result.content,
+                                ...(result.isError ? { isError: true } : {}),
+                            },
+                        });
+                    }
                 }
-                if (toolName === "occ_create_issue") {
-                    return json(res, {
-                        jsonrpc: "2.0", id: body.id,
-                        result: { content: [{ type: "text", text: `Issue created: ${args.title ?? "Untitled"}` }] },
-                    });
-                }
-                // 6. Generic tool — execution happened, proof was created
+                // Tool has no executor yet (stub) — proof was still created
                 return json(res, {
                     jsonrpc: "2.0", id: body.id,
                     result: {
-                        content: [{ type: "text", text: `${toolName} executed. Proof: ${execDigest}` }],
+                        content: [{ type: "text", text: `${toolName} authorized. Proof: ${execDigest}. (No executor wired yet.)` }],
                     },
                 });
             }

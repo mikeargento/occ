@@ -142,36 +142,9 @@ export default function App() {
         <div className="proof-explorer">
           <div className="proof-list">
             {/* Pending — AI proposals awaiting human authority */}
-            {pending.length > 0 && (
-              <>
-                <div className="proof-section-header">Pending</div>
-                {pending.map(item => {
-                  const toolName = item.tool.startsWith("mcp__") ? (item.tool.split("__").pop() || item.tool).replace(/[_-]/g, " ") : item.tool;
-                  const args = (item.args && typeof item.args === "object" ? item.args : {}) as Record<string, unknown>;
-                  return (
-                    <div key={item.id} className="proof-entry proof-entry-pending">
-                      <div className="proof-entry-header">
-                        <div className="proof-entry-left">
-                          <span className="proof-entry-tool">🤖 {toolName}</span>
-                          {item.agentId && <span className="proof-entry-agent">{item.agentId}</span>}
-                        </div>
-                        <div className="proof-entry-right">
-                          <span className="proof-entry-status proof-entry-status-pending">Awaiting</span>
-                          <span className="proof-entry-time">{new Date(item.createdAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
-                        </div>
-                      </div>
-                      {(item.summary || item.label) && <div className="proof-entry-summary">{item.summary || item.label}</div>}
-                      {Object.keys(args).length > 0 && <pre className="proof-entry-args">{JSON.stringify(args, null, 2)}</pre>}
-                      <div className="proof-actions">
-                        <button className="proof-action-deny" onClick={() => handleDeny(item.id)}>No</button>
-                        <button className="proof-action-approve" onClick={() => handleApprove(item.id, "once")}>Yes</button>
-                        <button className="proof-action-always" onClick={() => handleApprove(item.id, "always")}>Always</button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </>
-            )}
+            {pending.map(item => (
+              <Proposal key={item.id} item={item} onApprove={handleApprove} onDeny={handleDeny} />
+            ))}
 
             {/* Proof Explorer — user's proof chain */}
             <div className="proof-section-header">
@@ -208,6 +181,43 @@ export default function App() {
       </main>
     </div>
   );
+}
+
+/* ── Proposal — AI is proposing, user has the authority ── */
+function Proposal({ item, onApprove, onDeny }: {
+  item: FeedItem;
+  onApprove: (id: number, mode: "once" | "always") => void;
+  onDeny: (id: number) => void;
+}) {
+  const toolName = item.tool.startsWith("mcp__") ? (item.tool.split("__").pop() || item.tool).replace(/[_-]/g, " ") : item.tool;
+  const args = (item.args && typeof item.args === "object" ? item.args : {}) as Record<string, unknown>;
+  const target = extractTarget(args);
+
+  return (
+    <div className="proposal">
+      <div className="proposal-header">
+        <span className="proposal-id">#{item.id}</span>
+        <span className="proposal-time">{new Date(item.createdAt).toLocaleString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>
+      </div>
+      <div className="proposal-action">🤖 {toolName}</div>
+      {target && <div className="proposal-target">{target}</div>}
+      {(item.summary || item.label) && <div className="proposal-reason">{item.summary || item.label}</div>}
+      {Object.keys(args).length > 0 && <pre className="proposal-args">{JSON.stringify(args, null, 2)}</pre>}
+      <div className="proof-actions">
+        <button className="proof-action-deny" onClick={() => onDeny(item.id)}>No</button>
+        <button className="proof-action-approve" onClick={() => onApprove(item.id, "once")}>Yes</button>
+        <button className="proof-action-always" onClick={() => onApprove(item.id, "always")}>Always</button>
+      </div>
+    </div>
+  );
+}
+
+function extractTarget(args: Record<string, unknown>): string | null {
+  // Extract the most meaningful "target" from args
+  for (const key of ["file_path", "path", "url", "to", "command", "recipient", "target"]) {
+    if (args[key] && typeof args[key] === "string") return String(args[key]);
+  }
+  return null;
 }
 
 /* ── Proof Table Row (expandable) ── */

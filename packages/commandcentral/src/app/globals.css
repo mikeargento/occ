@@ -139,6 +139,39 @@ body {
 }
 .proof-empty-sub { font-size: 13px; margin-top: 6px; }
 
+/* ── Proposal (pending request from AI) ── */
+.proposal {
+  background: var(--surface);
+  border: 2px solid var(--accent);
+  border-radius: 12px;
+  padding: 16px 20px;
+  animation: fadeIn 0.2s ease-out;
+  margin-bottom: 16px;
+}
+.proposal-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 8px;
+}
+.proposal-id { font-size: 13px; font-weight: 600; color: var(--accent); font-family: "SF Mono", "Menlo", monospace; }
+.proposal-time { font-size: 12px; color: var(--text-tertiary); }
+.proposal-action { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+.proposal-target {
+  font-size: 14px; font-family: "SF Mono", "Menlo", monospace;
+  color: var(--green); margin-bottom: 4px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.proposal-reason { font-size: 14px; color: var(--text-secondary); margin-bottom: 8px; }
+.proposal-args {
+  font-size: 12px; font-family: "SF Mono", "Menlo", monospace;
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  padding: 10px 12px; border-radius: 8px;
+  margin-bottom: 12px; max-height: 120px;
+  overflow: auto; white-space: pre-wrap;
+  word-break: break-all; line-height: 1.5;
+  border: none;
+}
+
 /* ── Proof Entry ── */
 .proof-entry {
   background: var(--surface);

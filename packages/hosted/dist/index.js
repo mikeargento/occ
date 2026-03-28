@@ -3,8 +3,12 @@ import { existsSync, readFileSync, statSync } from "node:fs";
 import { join, extname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { handleApi } from "./api.js";
+import { handleApiV2 } from "./api-v2.js";
 import { handleMcp } from "./mcp.js";
 import { handleAuth } from "./auth.js";
+import { handleLlmProxy } from "./llm-proxy.js";
+import { handleSmsWebhook } from "./sms.js";
+import { handleChat } from "./chat.js";
 import { db } from "./db.js";
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const DASHBOARD_DIR = resolve(__dirname, "../dashboard");
@@ -76,6 +80,40 @@ async function handler(req, res) {
         res.end();
         return;
     }
+    // SMS webhook from Twilio
+    if (pathname === "/sms/webhook" && req.method === "POST") {
+        await handleSmsWebhook(req, res);
+        return;
+    }
+    // Hook files: /hooks/occ-check.sh, /install
+    if (pathname === "/install" || pathname === "/hooks/install.sh") {
+        const installPath = resolve(__dirname, "../hooks/install.sh");
+        if (existsSync(installPath)) {
+            const content = readFileSync(installPath);
+            res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8", "Content-Length": content.length });
+            res.end(content);
+            return;
+        }
+    }
+    if (pathname === "/hooks/occ-check.sh") {
+        const hookPath = resolve(__dirname, "../hooks/occ-check.sh");
+        if (existsSync(hookPath)) {
+            const content = readFileSync(hookPath);
+            res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8", "Content-Length": content.length });
+            res.end(content);
+            return;
+        }
+    }
+    // LLM API Proxy: /v1/{proxyToken}/v1/...
+    // Agent sets base_url to https://agent.occ.wtf/v1/{token}
+    // SDK appends /v1/messages, so full path is /v1/{token}/v1/messages
+    const proxyMatch = pathname.match(/^\/v1\/([a-f0-9]+)(\/.*)?$/);
+    if (proxyMatch) {
+        const proxyToken = proxyMatch[1];
+        const apiPath = proxyMatch[2] ?? "/v1/messages";
+        await handleLlmProxy(req, res, proxyToken, apiPath);
+        return;
+    }
     // MCP endpoint: /mcp/:token
     if (pathname.startsWith("/mcp/")) {
         await handleMcp(req, res, pathname);
@@ -86,7 +124,17 @@ async function handler(req, res) {
         await handleAuth(req, res, pathname);
         return;
     }
-    // API endpoints
+    // Chat endpoint
+    if (pathname === "/api/chat" && req.method === "POST") {
+        await handleChat(req, res);
+        return;
+    }
+    // V2 API endpoints
+    if (pathname.startsWith("/api/v2/")) {
+        await handleApiV2(req, res, url);
+        return;
+    }
+    // API endpoints (v1 — legacy)
     if (pathname.startsWith("/api/")) {
         await handleApi(req, res, url);
         return;
@@ -129,6 +177,7 @@ async function main() {
         console.log(`  Dashboard:  http://localhost:${PORT}`);
         console.log(`  API:        http://localhost:${PORT}/api`);
         console.log(`  MCP:        http://localhost:${PORT}/mcp/:token`);
+        console.log(`  LLM Proxy:  http://localhost:${PORT}/v1/:token`);
         console.log("");
     });
 }
