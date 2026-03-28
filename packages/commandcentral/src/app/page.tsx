@@ -233,7 +233,7 @@ function ProofTableRow({ proof: p, expanded, onToggle }: { proof: V2Proof; expan
           <td colSpan={6}>
             <div className="explorer-detail">
               {receipt ? (
-                <pre className="explorer-detail-json">{JSON.stringify(receipt, null, 2)}</pre>
+                <CopyableJson data={receipt} />
               ) : (
                 <div style={{ color: "var(--text-tertiary)", fontSize: 13 }}>No receipt available</div>
               )}
@@ -242,6 +242,29 @@ function ProofTableRow({ proof: p, expanded, onToggle }: { proof: V2Proof; expan
         </tr>
       )}
     </>
+  );
+}
+
+function CopyableJson({ data }: { data: Record<string, unknown> }) {
+  const [copied, setCopied] = useState(false);
+  const json = JSON.stringify(data, null, 2);
+
+  function handleClick() {
+    navigator.clipboard.writeText(json).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  return (
+    <div style={{ position: "relative" }}>
+      <pre className="explorer-detail-json" onClick={handleClick} style={{ cursor: "pointer" }}>
+        {json}
+      </pre>
+      <span className={`copy-badge ${copied ? "copy-badge-show" : ""}`}>
+        {copied ? "Copied!" : "Click to copy"}
+      </span>
+    </div>
   );
 }
 
