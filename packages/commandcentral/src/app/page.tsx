@@ -10,26 +10,54 @@ export default function App() {
   const [feed, setFeed] = useState<FeedItem[]>([]);
   const [proofs, setProofs] = useState<V2Proof[]>([]);
   const [proofTotal, setProofTotal] = useState(0);
+  const [proofSearch, setProofSearch] = useState("");
+  const [proofSearchInput, setProofSearchInput] = useState("");
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [view, setView] = useState<"main" | "settings">("main");
   const [chatOpen, setChatOpen] = useState(false);
   const pollingRef = useRef<ReturnType<typeof setInterval>>(undefined);
+  const observerRef = useRef<HTMLDivElement>(null);
+  const PAGE_SIZE = 20;
 
   useEffect(() => { getMe().then(d => setUser(d.user)).catch(() => {}).finally(() => setLoading(false)); }, []);
 
   const refresh = useCallback(async () => {
     if (!user) return;
     try {
-      const [feedData, proofData] = await Promise.all([getFeed(), getProofs()]);
+      const [feedData, proofData] = await Promise.all([getFeed(), getProofs(PAGE_SIZE, 0, proofSearch)]);
       setFeed(feedData.requests ?? []);
       setProofs(proofData.proofs ?? []);
       setProofTotal(proofData.total ?? 0);
+      setHasMore((proofData.proofs?.length ?? 0) < (proofData.total ?? 0));
     } catch {}
-  }, [user]);
+  }, [user, proofSearch]);
+
+  const loadMore = useCallback(async () => {
+    if (!user || loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    try {
+      const data = await getProofs(PAGE_SIZE, proofs.length, proofSearch);
+      setProofs(prev => [...prev, ...(data.proofs ?? [])]);
+      setHasMore(proofs.length + (data.proofs?.length ?? 0) < (data.total ?? 0));
+    } catch {}
+    setLoadingMore(false);
+  }, [user, proofs.length, loadingMore, hasMore, proofSearch]);
+
+  // Infinite scroll observer
+  useEffect(() => {
+    if (!observerRef.current) return;
+    const observer = new IntersectionObserver(entries => {
+      if (entries[0]?.isIntersecting) loadMore();
+    }, { threshold: 0.1 });
+    observer.observe(observerRef.current);
+    return () => observer.disconnect();
+  }, [loadMore]);
 
   useEffect(() => {
     if (!user) return;
     refresh();
-    pollingRef.current = setInterval(refresh, 3000);
+    pollingRef.current = setInterval(refresh, 5000);
     return () => clearInterval(pollingRef.current);
   }, [user, refresh]);
 
@@ -115,16 +143,38 @@ export default function App() {
             {proofTotal > 0 && <span className="section-count">{proofTotal.toLocaleString()} total</span>}
           </div>
 
+          {/* Search */}
+          <div className="explorer-search">
+            <input
+              className="explorer-search-input"
+              type="text"
+              placeholder="Search by tool, agent, digest..."
+              value={proofSearchInput}
+              onChange={e => setProofSearchInput(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") { setProofSearch(proofSearchInput); } }}
+            />
+            {proofSearch && (
+              <button className="explorer-search-clear" onClick={() => { setProofSearch(""); setProofSearchInput(""); }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            )}
+          </div>
+
           {proofs.length === 0 ? (
             <div className="section-empty">
-              <div>No proofs yet.</div>
-              <div className="section-empty-sub">When you authorize an action, the proof appears here.</div>
+              <div>{proofSearch ? "No proofs match your search." : "No proofs yet."}</div>
+              <div className="section-empty-sub">{proofSearch ? "Try a different search term." : "When you authorize an action, the proof appears here."}</div>
             </div>
           ) : (
             <div className="explorer-list">
               {proofs.map(p => <ExplorerRow key={p.id} proof={p} />)}
             </div>
           )}
+
+          {/* Infinite scroll trigger */}
+          {hasMore && <div ref={observerRef} style={{ height: 40, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            {loadingMore && <div className="loader" style={{ width: 18, height: 18 }} />}
+          </div>}
         </div>
       ) : (
         <SettingsView user={user} />

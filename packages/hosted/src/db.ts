@@ -893,13 +893,18 @@ export const db = {
   // ── V2 Proofs (reads from existing occ_proofs + v2_executions) ──
 
   async v2GetProofs(userId: string, filters?: {
-    agentId?: string; tool?: string; digest?: string;
+    agentId?: string; tool?: string; digest?: string; search?: string;
     limit?: number; offset?: number;
   }) {
     const p = getPool();
     const where = ["user_id = $1"];
     const params: unknown[] = [userId];
     let idx = 2;
+    if (filters?.search) {
+      where.push(`(tool ILIKE $${idx} OR agent_id ILIKE $${idx} OR proof_digest ILIKE $${idx} OR reason ILIKE $${idx})`);
+      params.push(`%${filters.search}%`);
+      idx++;
+    }
     if (filters?.agentId) { where.push(`agent_id = $${idx++}`); params.push(filters.agentId); }
     if (filters?.tool) { where.push(`tool = $${idx++}`); params.push(filters.tool); }
     if (filters?.digest) { where.push(`proof_digest ILIKE $${idx++}`); params.push(`%${filters.digest}%`); }

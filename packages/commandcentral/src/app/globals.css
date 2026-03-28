@@ -81,6 +81,14 @@ body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro
 .section-empty { border: 1px solid var(--border-light); border-radius: 16px; background: var(--surface); padding: 56px; text-align: center; color: var(--text-secondary); font-size: 15px; }
 .section-empty-sub { font-size: 13px; color: var(--text-tertiary); margin-top: 8px; }
 
+/* ── Explorer Search ── */
+.explorer-search { display: flex; gap: 8px; margin-bottom: 14px; position: relative; }
+.explorer-search-input { flex: 1; height: 44px; padding: 0 16px; border-radius: 12px; border: 1px solid var(--border-light); background: var(--surface); color: var(--text); font-size: 14px; font-family: inherit; outline: none; transition: border-color 0.2s; }
+.explorer-search-input:focus { border-color: var(--accent); }
+.explorer-search-input::placeholder { color: var(--text-tertiary); }
+.explorer-search-clear { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; border-radius: 6px; border: none; background: var(--surface-hover); color: var(--text-tertiary); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s; }
+.explorer-search-clear:hover { color: var(--text); background: var(--border-light); }
+
 /* ── Explorer List ── */
 .explorer-list { border: 1px solid var(--border-light); border-radius: 16px; background: var(--surface); overflow: hidden; }
 .explorer-row-wrap { border-bottom: 1px solid var(--border-light); }

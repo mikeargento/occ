@@ -327,11 +327,13 @@ export async function handleApiV2(req: IncomingMessage, res: ServerResponse, url
   // ═══════════════════════════════════════════════════════
 
   if (path === "/proofs" && method === "GET") {
+    const search = url.searchParams.get("search") ?? undefined;
     const { proofs, total } = await db.v2GetProofs(userId, {
       agentId: url.searchParams.get("agent_id") ?? undefined,
-      tool: url.searchParams.get("tool") ?? undefined,
-      digest: url.searchParams.get("digest") ?? undefined,
-      limit: parseInt(url.searchParams.get("limit") ?? "50"),
+      tool: search ? undefined : (url.searchParams.get("tool") ?? undefined),
+      digest: search ? undefined : (url.searchParams.get("digest") ?? undefined),
+      search,
+      limit: parseInt(url.searchParams.get("limit") ?? "20"),
       offset: parseInt(url.searchParams.get("offset") ?? "0"),
     });
     return json(res, { proofs: proofs.map(formatProof), total });

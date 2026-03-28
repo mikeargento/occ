@@ -64,8 +64,9 @@ export async function deleteApiKey(): Promise<{ ok: boolean }> {
 }
 
 // User's proofs (TEE proof log via V2 API)
-export async function getProofs(): Promise<{ proofs: V2Proof[]; total: number }> {
-  return v2("/proofs?limit=50");
+export async function getProofs(limit = 20, offset = 0, search = ""): Promise<{ proofs: V2Proof[]; total: number }> {
+  const params = `limit=${limit}&offset=${offset}${search ? `&search=${encodeURIComponent(search)}` : ""}`;
+  return v2(`/proofs?${params}`);
 }
 
 // Wipe all test data
