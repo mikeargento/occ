@@ -157,6 +157,11 @@ function ExplorerRow({ proof: p }: { proof: V2Proof }) {
   const commitTime = (commit?.time as number) || null;
   const hasTsa = !!timestamps;
 
+  const policy = receipt?.policy as Record<string, unknown> | undefined;
+  const principal = receipt?.principal as Record<string, unknown> | undefined;
+  const metadata = receipt?.metadata as Record<string, unknown> | undefined;
+  const statusDot = p.allowed ? "explorer-dot-allowed" : "explorer-dot-denied";
+
   return (
     <div className="explorer-row-wrap">
       <div className="explorer-row" onClick={() => setExpanded(!expanded)}>
@@ -166,7 +171,12 @@ function ExplorerRow({ proof: p }: { proof: V2Proof }) {
           </svg>
         </button>
 
-        <code className="explorer-row-digest">{p.proofDigest || "—"}</code>
+        <span className={`explorer-dot ${statusDot}`} />
+
+        <div className="explorer-row-info">
+          <span className="explorer-row-tool">{p.tool}</span>
+          <span className="explorer-row-agent">{p.agentId}</span>
+        </div>
 
         <span className={`explorer-badge ${enforcement === "measured-tee" ? "explorer-badge-tee" : enforcement === "hw-key" ? "explorer-badge-hw" : "explorer-badge-sw"}`}>
           {enforcement === "measured-tee" ? "Hardware Enclave" : enforcement === "hw-key" ? "Hardware Key" : "Software"}
@@ -182,47 +192,96 @@ function ExplorerRow({ proof: p }: { proof: V2Proof }) {
         </div>
       </div>
 
-      {expanded && receipt && (
+      {expanded && (
         <div className="explorer-expanded">
-          <div className="explorer-detail-field">
-            <div className="explorer-detail-label">SHA-256 Digest</div>
-            <code className="explorer-detail-code">{p.proofDigest || "—"}</code>
+          {/* Human-readable summary */}
+          <div className="explorer-summary">
+            <span className={p.allowed ? "explorer-summary-allowed" : "explorer-summary-denied"}>
+              {p.allowed ? "Allowed" : "Denied"}
+            </span>
+            {" "}<strong>{p.tool}</strong> by <strong>{p.agentId}</strong>
+            {commitTime && <> at {new Date(commitTime).toLocaleString()}</>}
           </div>
 
-          <div className="explorer-detail-grid">
-            {signer && (
-              <div>
-                <div className="explorer-detail-label">Signer</div>
-                <code className="explorer-detail-code-sm">{truncate(signer.publicKeyB64 as string, 20)}</code>
-              </div>
-            )}
-            <div>
-              <div className="explorer-detail-label">Enforcement</div>
-              <span className={`explorer-detail-enforcement ${enforcement === "measured-tee" ? "explorer-badge-tee" : ""}`}>
-                {enforcement === "measured-tee" ? "Hardware Enclave" : enforcement === "hw-key" ? "Hardware Key" : "Software"}
-              </span>
+          {/* What was the action */}
+          {p.args && Object.keys(p.args as object).length > 0 && (
+            <div className="explorer-detail-field">
+              <div className="explorer-detail-label">What was requested</div>
+              <pre className="explorer-detail-args">{JSON.stringify(p.args, null, 2)}</pre>
             </div>
-            {commitTime && (
-              <div>
-                <div className="explorer-detail-label">Committed</div>
-                <span>{new Date(commitTime).toLocaleString()}</span>
-              </div>
-            )}
-            {commit?.counter && (
-              <div>
-                <div className="explorer-detail-label">Counter</div>
-                <span>#{commit.counter as string}</span>
-              </div>
-            )}
-            {(timestamps as any)?.artifact?.authority && (
-              <div>
-                <div className="explorer-detail-label">Timestamp</div>
-                <span className="explorer-icon-tsa">{(timestamps as any).artifact.authority}</span>
-              </div>
-            )}
-          </div>
+          )}
 
-          <CopyableJson data={receipt} />
+          {/* Proof identity */}
+          {p.proofDigest && (
+            <div className="explorer-detail-field">
+              <div className="explorer-detail-label">Proof digest (SHA-256)</div>
+              <code className="explorer-detail-code">{p.proofDigest}</code>
+            </div>
+          )}
+
+          {/* Key details grid */}
+          {receipt && (
+            <div className="explorer-detail-grid">
+              {commit?.counter && (
+                <div>
+                  <div className="explorer-detail-label">Position in chain</div>
+                  <span>#{commit.counter as string}</span>
+                </div>
+              )}
+              <div>
+                <div className="explorer-detail-label">Signed by</div>
+                <span className={enforcement === "measured-tee" ? "explorer-badge-tee" : ""}>
+                  {enforcement === "measured-tee" ? "AWS Nitro Enclave" : enforcement === "hw-key" ? "Hardware Key" : "Software Key"}
+                </span>
+              </div>
+              {commitTime && (
+                <div>
+                  <div className="explorer-detail-label">When</div>
+                  <span>{new Date(commitTime).toLocaleString()}</span>
+                </div>
+              )}
+              {principal && (
+                <div>
+                  <div className="explorer-detail-label">Authorized by</div>
+                  <span>{(principal.provider as string) || "unknown"}:{truncate((principal.id as string) || "", 16)}</span>
+                </div>
+              )}
+              {signer && (
+                <div>
+                  <div className="explorer-detail-label">Signer public key</div>
+                  <code className="explorer-detail-code-sm">{truncate(signer.publicKeyB64 as string, 20)}</code>
+                </div>
+              )}
+              {commit?.prevB64 && (
+                <div>
+                  <div className="explorer-detail-label">Previous proof</div>
+                  <code className="explorer-detail-code-sm">{truncate(commit.prevB64 as string, 20)}</code>
+                </div>
+              )}
+              {policy?.digestB64 && (
+                <div>
+                  <div className="explorer-detail-label">Policy binding</div>
+                  <code className="explorer-detail-code-sm">{truncate(policy.digestB64 as string, 20)}</code>
+                </div>
+              )}
+              {(timestamps as any)?.artifact?.authority && (
+                <div>
+                  <div className="explorer-detail-label">Timestamp authority</div>
+                  <span className="explorer-icon-tsa">{(timestamps as any).artifact.authority}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Full proof JSON */}
+          {receipt && <CopyableJson data={receipt} />}
+
+          {!receipt && p.reason && (
+            <div className="explorer-detail-field">
+              <div className="explorer-detail-label">Reason</div>
+              <span style={{ color: "var(--red)" }}>{p.reason}</span>
+            </div>
+          )}
         </div>
       )}
     </div>

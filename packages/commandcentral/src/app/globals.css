@@ -96,7 +96,12 @@ body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui,
 .explorer-row:hover { background: var(--surface-hover); }
 .explorer-chevron { background: none; border: none; cursor: pointer; color: var(--text-tertiary); padding: 2px; margin-right: 12px; flex-shrink: 0; }
 .explorer-chevron:hover { color: var(--text); }
-.explorer-row-digest { font-size: 13px; font-family: "SF Mono", "Menlo", monospace; color: var(--text); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.explorer-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-right: 10px; }
+.explorer-dot-allowed { background: var(--green); }
+.explorer-dot-denied { background: var(--red); }
+.explorer-row-info { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; }
+.explorer-row-tool { font-size: 14px; font-weight: 600; }
+.explorer-row-agent { font-size: 12px; color: var(--text-tertiary); }
 .explorer-badge { font-size: 11px; font-weight: 500; flex-shrink: 0; margin-left: 12px; }
 .explorer-badge-tee { color: #3b82f6; }
 .explorer-badge-hw { color: #3b82f6; }
@@ -106,6 +111,10 @@ body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui,
 .explorer-row-time { font-size: 12px; color: var(--text-tertiary); min-width: 56px; text-align: right; }
 
 /* ── Expanded Detail ── */
+.explorer-summary { font-size: 15px; margin-bottom: 16px; line-height: 1.5; }
+.explorer-summary-allowed { color: var(--green); font-weight: 600; }
+.explorer-summary-denied { color: var(--red); font-weight: 600; }
+.explorer-detail-args { font-size: 12px; font-family: "SF Mono", "Menlo", monospace; color: var(--text-secondary); background: var(--surface); padding: 10px 12px; max-height: 100px; overflow: auto; white-space: pre-wrap; word-break: break-all; line-height: 1.5; border: none; margin: 4px 0 0; }
 .explorer-expanded { padding: 16px 16px 20px 40px; background: var(--bg-secondary); animation: fadeIn 0.15s ease-out; }
 .explorer-detail-field { margin-bottom: 10px; }
 .explorer-detail-label { font-size: 10px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 2px; }
