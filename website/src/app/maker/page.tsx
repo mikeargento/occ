@@ -16,7 +16,7 @@ import {
   type ActorIdentity,
   type ProofVerifyResult,
 } from "@/lib/occ";
-import { toUrlSafeB64 } from "@/lib/explorer";
+import { toUrlSafeB64, relativeTime } from "@/lib/explorer";
 import { zipSync } from "fflate";
 
 /* ── Types ── */
@@ -622,29 +622,7 @@ export default function MakerPage() {
                 overflow: "hidden",
               }}>
                 {ledger.map((entry, i) => (
-                  <div key={entry.digest + i} style={{
-                    padding: "14px 20px",
-                    borderBottom: i < ledger.length - 1 ? "1px solid var(--c-border-subtle)" : "none",
-                    display: "flex", alignItems: "center", justifyContent: "space-between",
-                    gap: 16,
-                  }}>
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <div style={{
-                        fontSize: 12, fontFamily: "monospace", color: "#30d158",
-                        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                      }}>
-                        {entry.digest}
-                      </div>
-                      <div style={{ display: "flex", gap: 10, fontSize: 11, color: "var(--c-text-tertiary)", marginTop: 4, flexWrap: "wrap" }}>
-                        {entry.counter && <span>#{entry.counter}</span>}
-                        <span>{entry.enforcement}</span>
-                        {entry.attribution && <span>{entry.attribution}</span>}
-                      </div>
-                    </div>
-                    <div style={{ fontSize: 11, color: "var(--c-text-tertiary)", whiteSpace: "nowrap" }}>
-                      {entry.time ? new Date(entry.time).toLocaleString() : ""}
-                    </div>
-                  </div>
+                  <LedgerRow key={entry.digest + i} entry={entry} isLast={i === ledger.length - 1} />
                 ))}
               </div>
 
@@ -680,6 +658,299 @@ export default function MakerPage() {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Ledger Row — expandable, fetches full proof on first click
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+function LedgerRow({ entry, isLast }: { entry: ProofEntry; isLast: boolean }) {
+  const [expanded, setExpanded] = useState(false);
+  const [proof, setProof] = useState<OCCProof | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function toggle() {
+    if (!expanded && !proof && entry.digest !== "—") {
+      setLoading(true);
+      try {
+        const resp = await fetch(`/api/proofs/${encodeURIComponent(toUrlSafeB64(entry.digest))}`);
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data.proofs?.[0]?.proof) setProof(data.proofs[0].proof as OCCProof);
+        }
+      } catch { /* silent */ }
+      setLoading(false);
+    }
+    setExpanded(e => !e);
+  }
+
+  const commit = proof?.commit;
+  const signer = proof?.signer;
+  const env = proof?.environment;
+  const proofAny = proof as unknown as Record<string, unknown> | undefined;
+  const policy = proofAny?.policy as Record<string, unknown> | undefined;
+  const principal = proofAny?.principal as Record<string, unknown> | undefined;
+  const timestamps = proof?.timestamps as Record<string, unknown> | undefined;
+
+  return (
+    <div style={{ borderBottom: isLast ? "none" : "1px solid var(--c-border-subtle)" }}>
+      {/* Collapsed row */}
+      <div onClick={toggle} style={{
+        padding: "14px 20px", display: "flex", alignItems: "center", gap: 12,
+        cursor: "pointer", transition: "background 0.15s",
+      }}>
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5"
+          style={{ transform: expanded ? "rotate(90deg)" : "rotate(0)", transition: "transform 0.15s", flexShrink: 0, color: "var(--c-text-tertiary)" }}>
+          <path d="M3 1.5L7 5L3 8.5" />
+        </svg>
+        <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#30d158", flexShrink: 0 }} />
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div style={{
+            fontSize: 12, fontFamily: "monospace", color: "#30d158",
+            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+          }}>
+            {entry.digest}
+          </div>
+          <div style={{ display: "flex", gap: 10, fontSize: 11, color: "var(--c-text-tertiary)", marginTop: 3, flexWrap: "wrap" }}>
+            {entry.counter && <span>#{entry.counter}</span>}
+            <span style={{
+              padding: "1px 6px", borderRadius: 4, fontSize: 10, fontWeight: 600,
+              background: entry.enforcement === "Hardware Enclave" ? "rgba(59,130,246,0.15)" : "rgba(255,149,0,0.15)",
+              color: entry.enforcement === "Hardware Enclave" ? "#3b82f6" : "#ff9500",
+            }}>
+              {entry.enforcement}
+            </span>
+            {entry.attribution && <span>{entry.attribution}</span>}
+          </div>
+        </div>
+        <div style={{ fontSize: 11, color: "var(--c-text-tertiary)", whiteSpace: "nowrap" }}>
+          {entry.time ? relativeTime(entry.time) : ""}
+        </div>
+      </div>
+
+      {/* Expanded detail */}
+      {expanded && (
+        <div style={{
+          padding: "0 20px 20px 42px",
+          animation: "slideDownFade 0.2s ease-out",
+        }}>
+          {loading && (
+            <div style={{ fontSize: 13, color: "var(--c-text-tertiary)", padding: "8px 0" }}>Loading proof...</div>
+          )}
+
+          {proof && (
+            <>
+              {/* Section grid — same as dashboard */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
+
+                {/* Artifact */}
+                <ProofSection title="Artifact">
+                  <LedgerProofField label="Digest (SHA-256)" value={proof.artifact?.digestB64 || "—"} mono />
+                  <LedgerProofField label="Algorithm" value={proof.artifact?.hashAlg?.toUpperCase() || "SHA256"} />
+                  {proof.version && <LedgerProofField label="Version" value={proof.version} />}
+                </ProofSection>
+
+                {/* Commit */}
+                {commit && (
+                  <ProofSection title="Commit">
+                    {commit.time != null && <LedgerProofField label="Time" value={new Date(commit.time).toLocaleString()} />}
+                    {commit.counter != null && <LedgerProofField label="Counter" value={`#${commit.counter}`} />}
+                    {(commit as Record<string, unknown>).chainId ? <LedgerProofField label="Chain ID" value={String((commit as Record<string, unknown>).chainId)} mono /> : null}
+                    {commit.epochId && <LedgerProofField label="Epoch ID" value={commit.epochId} mono />}
+                    {commit.prevB64 && <LedgerProofField label="Previous Hash" value={commit.prevB64} mono />}
+                    {commit.nonceB64 && <LedgerProofField label="Nonce" value={commit.nonceB64} mono />}
+                    {commit.slotCounter && <LedgerProofField label="Slot Counter" value={`#${commit.slotCounter}`} />}
+                    {commit.slotHashB64 && <LedgerProofField label="Slot Hash" value={commit.slotHashB64} mono />}
+                  </ProofSection>
+                )}
+
+                {/* Signer */}
+                {signer && (
+                  <ProofSection title="Signer">
+                    <LedgerProofField label="Public Key" value={signer.publicKeyB64} mono />
+                    <LedgerProofField label="Signature" value={signer.signatureB64} mono />
+                  </ProofSection>
+                )}
+
+                {/* Environment */}
+                {env && (
+                  <ProofSection title="Environment">
+                    <LedgerProofField
+                      label="Enforcement"
+                      value={env.enforcement === "measured-tee" ? "Hardware Enclave (AWS Nitro)" : env.enforcement === "hw-key" ? "Hardware Key" : "Software"}
+                      color={env.enforcement === "measured-tee" ? "#3b82f6" : undefined}
+                    />
+                    {env.measurement && <LedgerProofField label="Measurement" value={env.measurement} mono />}
+                  </ProofSection>
+                )}
+
+                {/* Principal */}
+                {principal && (
+                  <ProofSection title="Principal">
+                    {(principal as Record<string, unknown>).provider ? <LedgerProofField label="Provider" value={String((principal as Record<string, unknown>).provider)} /> : null}
+                    {(principal as Record<string, unknown>).id ? <LedgerProofField label="ID" value={String((principal as Record<string, unknown>).id)} mono /> : null}
+                  </ProofSection>
+                )}
+
+                {/* Policy */}
+                {policy && (
+                  <ProofSection title="Policy">
+                    {policy.name ? <LedgerProofField label="Name" value={String(policy.name)} /> : null}
+                    {policy.digestB64 ? <LedgerProofField label="Digest" value={String(policy.digestB64)} mono /> : null}
+                  </ProofSection>
+                )}
+
+                {/* Timestamps */}
+                {timestamps && (
+                  <ProofSection title="Timestamps">
+                    {(timestamps as Record<string, unknown>).artifact ? (
+                      <>
+                        {((timestamps as Record<string, unknown>).artifact as Record<string, unknown>)?.authority
+                          ? <LedgerProofField label="Authority" value={String(((timestamps as Record<string, unknown>).artifact as Record<string, unknown>).authority)} />
+                          : null}
+                        {((timestamps as Record<string, unknown>).artifact as Record<string, unknown>)?.time
+                          ? <LedgerProofField label="Time" value={String(((timestamps as Record<string, unknown>).artifact as Record<string, unknown>).time)} />
+                          : null}
+                      </>
+                    ) : null}
+                  </ProofSection>
+                )}
+
+                {/* Attribution */}
+                {proof.attribution && (
+                  <ProofSection title="Attribution">
+                    {proof.attribution.name && <LedgerProofField label="Name" value={proof.attribution.name} />}
+                  </ProofSection>
+                )}
+
+                {/* Slot Allocation */}
+                {proof.slotAllocation && (
+                  <ProofSection title="Slot Allocation">
+                    <LedgerProofField label="Counter" value={`#${proof.slotAllocation.counter}`} />
+                    <LedgerProofField label="Time" value={new Date(proof.slotAllocation.time).toLocaleString()} />
+                    <LedgerProofField label="Public Key" value={proof.slotAllocation.publicKeyB64} mono />
+                    <LedgerProofField label="Signature" value={proof.slotAllocation.signatureB64} mono />
+                  </ProofSection>
+                )}
+              </div>
+
+              {/* Full JSON */}
+              <LedgerCopyableJson data={proof} />
+            </>
+          )}
+
+          {!loading && !proof && (
+            <div style={{ fontSize: 13, color: "var(--c-text-tertiary)" }}>Full proof not available for this entry.</div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── Section wrapper ── */
+function ProofSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div style={{
+      border: "1px solid var(--c-border-subtle)", borderRadius: 8,
+      padding: "12px 16px", background: "rgba(255,255,255,0.02)",
+    }}>
+      <div style={{
+        fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em",
+        color: "var(--c-text-tertiary)", marginBottom: 8,
+      }}>
+        {title}
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/* ── Field with copy ── */
+function LedgerProofField({ label, value, mono, color }: { label: string; value: string; mono?: boolean; color?: string }) {
+  const [copied, setCopied] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const isLong = value.length > 64;
+  const displayValue = isLong && !expanded ? value.slice(0, 48) + "..." : value;
+
+  return (
+    <div style={{ display: "flex", alignItems: "baseline", gap: 10, fontSize: 12, lineHeight: 1.6 }}>
+      <span style={{ color: "var(--c-text-tertiary)", minWidth: 100, flexShrink: 0 }}>{label}</span>
+      <span
+        style={{
+          color: color || (mono ? "#30d158" : "var(--c-text-secondary)"),
+          fontFamily: mono ? "var(--font-mono), monospace" : "inherit",
+          wordBreak: "break-all",
+          cursor: isLong ? "pointer" : "default",
+        }}
+        onClick={isLong ? () => setExpanded(!expanded) : undefined}
+      >
+        {displayValue}
+      </span>
+      {value.length > 30 && (
+        <button onClick={() => { navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
+          style={{
+            border: "none", background: "transparent", cursor: "pointer", padding: 2,
+            color: copied ? "#30d158" : "var(--c-text-tertiary)", flexShrink: 0,
+            opacity: 0.5, transition: "opacity 0.15s",
+          }}
+          title="Copy"
+        >
+          {copied ? (
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 6L9 17l-5-5"/></svg>
+          ) : (
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          )}
+        </button>
+      )}
+    </div>
+  );
+}
+
+/* ── Copyable full JSON ── */
+function LedgerCopyableJson({ data }: { data: unknown }) {
+  const [copied, setCopied] = useState(false);
+  const [open, setOpen] = useState(false);
+  const json = JSON.stringify(data, null, 2);
+  const sizeKb = (new TextEncoder().encode(json).length / 1024).toFixed(1);
+
+  return (
+    <div>
+      <button onClick={() => setOpen(!open)} style={{
+        fontSize: 12, fontWeight: 500, padding: "6px 14px", borderRadius: 6,
+        border: "1px solid var(--c-border)", background: "transparent",
+        color: "var(--c-text-secondary)", cursor: "pointer", marginBottom: open ? 8 : 0,
+      }}>
+        {open ? "Hide" : "Raw JSON"} ({sizeKb} KB)
+      </button>
+      {open && (
+        <div style={{ position: "relative" }}>
+          <pre
+            onClick={() => { navigator.clipboard.writeText(json); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
+            style={{
+              fontSize: 11, fontFamily: "var(--font-mono), monospace", lineHeight: 1.5,
+              color: "#30d158", background: "#0a0a0a",
+              padding: 16, borderRadius: 6, overflow: "auto", maxHeight: 400,
+              cursor: "pointer", transition: "box-shadow 0.2s",
+            }}
+          >
+            {json}
+          </pre>
+          {copied && (
+            <span style={{
+              position: "absolute", top: 8, right: 12,
+              fontSize: 11, fontWeight: 600, color: "#30d158",
+              background: "#0a0a0a", padding: "2px 8px", borderRadius: 4,
+            }}>
+              Copied
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }
