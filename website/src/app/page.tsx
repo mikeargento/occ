@@ -5,35 +5,19 @@ import Link from "next/link";
 function KittScanner() {
   return (
     <div style={{
-      width: "100%", maxWidth: 480, height: 4,
-      background: "rgba(255,0,0,0.08)",
+      width: "100%", maxWidth: 480, height: 2,
       position: "relative",
       marginBottom: 40,
     }}>
-      {/* LED segments */}
-      <div style={{
-        position: "absolute", inset: 0,
-        backgroundImage: "repeating-linear-gradient(90deg, transparent, transparent 6px, rgba(0,0,0,0.8) 6px, rgba(0,0,0,0.8) 8px)",
-        zIndex: 2,
-      }} />
-      {/* Sweeping light */}
+      {/* Core light */}
       <div style={{
         position: "absolute",
-        top: -4, left: 0,
-        width: "20%", height: 12,
-        background: "radial-gradient(ellipse at center, #ff1a1a 0%, #ff0000 30%, rgba(255,0,0,0.6) 50%, transparent 80%)",
-        boxShadow: "0 0 12px 4px rgba(255,0,0,0.5), 0 0 40px 8px rgba(255,0,0,0.2), inset 0 0 8px rgba(255,100,100,0.3)",
+        top: -3, left: 0,
+        width: "12%", height: 8,
+        borderRadius: 4,
+        background: "#ff0000",
+        boxShadow: "0 0 8px 2px #ff0000, 0 0 24px 6px rgba(255,0,0,0.5), 0 0 60px 12px rgba(255,0,0,0.2)",
         animation: "kitt 1.8s ease-in-out infinite",
-        zIndex: 1,
-      }} />
-      {/* Ambient glow on track */}
-      <div style={{
-        position: "absolute",
-        top: -8, left: 0,
-        width: "30%", height: 20,
-        background: "radial-gradient(ellipse at center, rgba(255,0,0,0.15), transparent 70%)",
-        animation: "kitt 1.8s ease-in-out infinite",
-        zIndex: 0,
       }} />
     </div>
   );
