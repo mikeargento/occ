@@ -28,19 +28,19 @@
 
 /* ── Design Tokens — dark only ── */
 :root {
-  --bg: #0a0a0a;
-  --bg-elevated: #141416;
-  --bg-subtle: #1c1c1e;
-  --c-border: #333336;
-  --c-border-subtle: #232326;
+  --bg: #000000;
+  --bg-elevated: #1c1c1e;
+  --bg-subtle: #2c2c2e;
+  --c-border: #3a3a3c;
+  --c-border-subtle: #1c1c1e;
   --c-text: #f5f5f7;
-  --c-text-secondary: #98989f;
-  --c-text-tertiary: #56565a;
+  --c-text-secondary: #86868b;
+  --c-text-tertiary: #48484a;
   --c-accent: #0A84FF;
   --c-accent-dim: #1e40af;
   --c-syntax-key: #60a5fa;
-  --c-syntax-string: #34d399;
-  --c-syntax-number: #fbbf24;
+  --c-syntax-string: #30d158;
+  --c-syntax-number: #ffd60a;
   color-scheme: dark;
 }
 
@@ -291,7 +291,7 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 }
 
 /* ── Nav link hover ── */
-.nav-link:hover { background: var(--bg-elevated) !important; color: var(--c-text) !important; border-radius: 8px; }
+.nav-link:hover { color: var(--c-text) !important; }
 
 /* ── Nav responsive ── */
 @media (max-width: 768px) {
