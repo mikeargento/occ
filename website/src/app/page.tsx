@@ -50,6 +50,15 @@ export default function Home() {
           }}>
             Docs
           </a>
+          <a href="/maker" style={{
+            display: "flex", alignItems: "center", justifyContent: "center",
+            height: 52, borderRadius: 14, fontSize: 16, fontWeight: 500,
+            textDecoration: "none", background: "transparent",
+            color: "var(--c-text-secondary)", border: "1px solid var(--c-border)",
+            letterSpacing: "-0.01em",
+          }}>
+            Maker
+          </a>
           <a href="https://github.com/mikeargento/occ" target="_blank" rel="noopener" style={{
             display: "flex", alignItems: "center", justifyContent: "center",
             height: 52, borderRadius: 14, fontSize: 16, fontWeight: 500,
