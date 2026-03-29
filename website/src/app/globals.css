@@ -290,6 +290,12 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   background-clip: text;
 }
 
+/* ── KITT scanner ── */
+@keyframes kitt {
+  0%, 100% { left: 0; }
+  50% { left: 70%; }
+}
+
 /* ── Nav link hover ── */
 .nav-link:hover { background: var(--bg-elevated) !important; color: var(--c-text) !important; border-radius: 8px; }
 

@@ -1,10 +1,36 @@
+"use client";
+
 import Link from "next/link";
+
+function KittScanner() {
+  return (
+    <div style={{
+      width: "100%", maxWidth: 400, height: 6,
+      background: "rgba(255,255,255,0.04)",
+      borderRadius: 3,
+      overflow: "hidden",
+      position: "relative",
+      marginBottom: 32,
+    }}>
+      <div style={{
+        position: "absolute",
+        top: 0, left: 0,
+        width: "30%", height: "100%",
+        borderRadius: 3,
+        background: "linear-gradient(90deg, transparent, #ff0000, #ff0000, transparent)",
+        boxShadow: "0 0 20px #ff0000, 0 0 60px rgba(255,0,0,0.4)",
+        animation: "kitt 2.4s ease-in-out infinite",
+      }} />
+    </div>
+  );
+}
 
 export default function Home() {
   return (
     <div style={{ maxWidth: 1120, margin: "0 auto", padding: "80px 24px 64px" }}>
       {/* Hero */}
       <div style={{ marginBottom: 80 }}>
+        <KittScanner />
         <h1 style={{
           fontSize: "clamp(36px, 6vw, 56px)", fontWeight: 700,
           letterSpacing: "-0.03em", lineHeight: 1.1, marginBottom: 16,
