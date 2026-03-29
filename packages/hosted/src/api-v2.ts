@@ -183,9 +183,11 @@ export async function handleApiV2(req: IncomingMessage, res: ServerResponse, url
 
     await db.v2UpdateRequestStatus(requestId, "approved");
 
-    // If mode is "always", update the risk lane to auto_approve for this tool's lane
+    // If mode is "always", set the risk lane to auto_approve
     if (mode === "always") {
       await db.enableTool(userId, request.agent_id, request.tool);
+      const riskLane = classifyRisk(request.tool);
+      await db.v2SetRiskLane(userId, riskLane, "auto_approve");
     }
 
     eventBus.emit(userId, {
