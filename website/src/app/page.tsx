@@ -36,7 +36,7 @@ export default function Home() {
             marginBottom: 48,
           }}
         >
-          No proof, no action. You hold the key.
+          AI proposes. You authorize. Nothing else runs.
         </p>
         <div style={{ display: "flex", justifyContent: "center" }}>
           <a
@@ -81,12 +81,12 @@ export default function Home() {
               color: "var(--c-text-secondary)",
             }}
           >
-            AI thinks. You decide. Without your authorization, no execution path exists.
+            AI thinks freely. Execution requires your command. No command, no action.
           </p>
         </div>
         <div style={{ padding: "24px 0" }}>
           <h3 style={{ fontSize: 17, fontWeight: 600, marginBottom: 8 }}>
-            Your yes forges the proof
+            Your authorization creates the command
           </h3>
           <p
             style={{
@@ -95,12 +95,12 @@ export default function Home() {
               color: "var(--c-text-secondary)",
             }}
           >
-            Authorization creates a cryptographic object inside a hardware enclave. That object — and nothing else — makes the action possible.
+            When you say yes, a signed object is created inside a hardware enclave. That object is what makes execution possible.
           </p>
         </div>
         <div style={{ padding: "24px 0" }}>
           <h3 style={{ fontSize: 17, fontWeight: 600, marginBottom: 8 }}>
-            Every proof chains to the last
+            Every command links to the last
           </h3>
           <p
             style={{
@@ -109,7 +109,7 @@ export default function Home() {
               color: "var(--c-text-secondary)",
             }}
           >
-            One decision links to the next. No gaps. No rewrites. An unbroken record of human authority.
+            One authorization follows another. No gaps. No rewrites. A permanent chain of your decisions.
           </p>
         </div>
       </div>
