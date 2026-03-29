@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import { JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import "katex/dist/katex.min.css";
-import { Nav } from "@/components/nav";
-import { Footer } from "@/components/footer";
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
@@ -43,9 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="stylesheet" href="https://use.typekit.net/svq0oqy.css" />
       </head>
       <body style={{ fontFamily: "acumin-pro, -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif" }}>
-        <Nav />
         <main style={{ minHeight: "100vh" }}>{children}</main>
-        <Footer />
       </body>
     </html>
   );

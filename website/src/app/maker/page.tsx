@@ -3,9 +3,35 @@
 import { useState } from "react";
 import { FileDrop } from "@/components/file-drop";
 import { hashFile, commitDigest, formatFileSize, type OCCProof } from "@/lib/occ";
-import Link from "next/link";
+import { zipSync } from "fflate";
 
 type Step = "drop" | "hashing" | "signing" | "done" | "error";
+
+function buildVerifyTxt(filename: string, p: OCCProof): string {
+  return `VERIFY.txt — OCC Proof Package
+===================================
+
+FILE:       ${filename}
+DIGEST:     ${p.artifact.digestB64}
+ALGORITHM:  ${p.artifact.hashAlg.toUpperCase()}
+COUNTER:    #${p.commit.counter ?? "—"}
+TIME:       ${p.commit.time ? new Date(p.commit.time).toISOString() : "—"}
+ENFORCEMENT: ${p.environment?.enforcement === "measured-tee" ? "Hardware Enclave (AWS Nitro)" : "Software"}
+SIGNER:     ${p.signer.publicKeyB64}
+
+HOW TO VERIFY
+-------------
+1. Compute SHA-256 of the original file
+2. Base64-encode the result (standard, not URL-safe)
+3. Compare to the DIGEST above
+4. If they match, proof.json covers this exact file
+
+The proof was signed inside an AWS Nitro Enclave using Ed25519.
+The private key was generated inside the enclave and has never left it.
+
+Learn more: https://occ.wtf/docs
+`;
+}
 
 export default function MakerPage() {
   const [file, setFile] = useState<File | null>(null);
@@ -47,35 +73,34 @@ export default function MakerPage() {
     setTimeout(() => setCopied(false), 2000);
   }
 
+  async function downloadZip() {
+    if (!proof || !file) return;
+    const fileBytes = new Uint8Array(await file.arrayBuffer());
+    const proofJson = new TextEncoder().encode(JSON.stringify(proof, null, 2));
+    const verifyTxt = new TextEncoder().encode(buildVerifyTxt(file.name, proof));
+
+    const zipped = zipSync({
+      [file.name]: fileBytes,
+      "proof.json": proofJson,
+      "VERIFY.txt": verifyTxt,
+    });
+
+    const blob = new Blob([zipped.buffer as ArrayBuffer], { type: "application/zip" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const baseName = file.name.replace(/\.[^.]+$/, "");
+    a.href = url;
+    a.download = `${baseName}-occ-proof.zip`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div style={{
       minHeight: "100vh",
       background: "var(--bg)",
       color: "var(--c-text)",
     }}>
-      {/* Nav */}
-      <header style={{
-        position: "sticky", top: 0, zIndex: 50,
-        borderBottom: "1px solid var(--c-border-subtle)",
-        background: "var(--bg)",
-      }}>
-        <div style={{
-          maxWidth: 960, margin: "0 auto", padding: "0 24px",
-          height: 56, display: "flex", alignItems: "center", justifyContent: "space-between",
-        }}>
-          <Link href="/" style={{
-            fontSize: 18, fontWeight: 700, textDecoration: "none",
-            color: "var(--c-text)", letterSpacing: "-0.03em",
-          }}>OCC</Link>
-          <div style={{ display: "flex", gap: 24, fontSize: 14, color: "var(--c-text-secondary)" }}>
-            <Link href="/docs" style={{ textDecoration: "none", color: "inherit" }}>Docs</Link>
-            <a href="https://github.com/mikeargento/occ" target="_blank" rel="noopener"
-              style={{ textDecoration: "none", color: "inherit" }}>GitHub</a>
-          </div>
-        </div>
-      </header>
-
-      {/* Content */}
       <div style={{
         maxWidth: 640, margin: "0 auto", padding: "80px 24px",
       }}>
@@ -138,7 +163,7 @@ export default function MakerPage() {
 
         {step === "done" && proof && (
           <div>
-            {/* Success header */}
+            {/* Success */}
             <div style={{
               border: "1px solid var(--c-border-subtle)",
               padding: "32px 24px",
@@ -177,7 +202,6 @@ export default function MakerPage() {
               border: "1px solid var(--c-border-subtle)",
               padding: "20px 24px",
               background: "var(--bg-elevated)",
-              position: "relative",
               marginBottom: 16,
             }}>
               <div style={{
@@ -208,6 +232,13 @@ export default function MakerPage() {
 
             {/* Actions */}
             <div style={{ display: "flex", gap: 12 }}>
+              <button onClick={downloadZip} style={{
+                flex: 1, height: 48, fontSize: 15, fontWeight: 500,
+                border: "none", borderRadius: 10,
+                background: "var(--c-text)", color: "var(--bg)", cursor: "pointer",
+              }}>
+                Download .zip
+              </button>
               <button onClick={reset} style={{
                 flex: 1, height: 48, fontSize: 15, fontWeight: 500,
                 border: "1px solid var(--c-border)", borderRadius: 10,
