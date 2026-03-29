@@ -730,27 +730,33 @@ function LedgerRow({ entry, isLast }: { entry: ProofEntry; isLast: boolean }) {
         </div>
       </div>
 
-      {/* Expanded detail */}
+      {/* Expanded detail — matches dashboard explorer-expanded */}
       {expanded && (
         <div style={{
-          padding: "0 20px 20px 42px",
-          animation: "slideDownFade 0.2s ease-out",
-          position: "relative",
+          padding: 24, background: "rgba(255,255,255,0.015)",
+          borderTop: "1px solid var(--c-border-subtle)",
+          animation: "slideDownFade 0.25s ease-out",
         }}>
-          {/* Red X close button */}
-          <button onClick={(e) => { e.stopPropagation(); setExpanded(false); }} style={{
-            position: "absolute", top: 0, right: 20,
-            width: 28, height: 28, borderRadius: 6,
-            border: "1px solid rgba(255,69,58,0.3)", background: "transparent",
-            color: "#ff453a", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-            transition: "all 0.15s",
-          }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = "#ff453a"; e.currentTarget.style.color = "#fff"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#ff453a"; }}
-            title="Close"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
+          {/* Summary + Close — same as dashboard */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+            <div style={{ fontSize: 15, lineHeight: 1.5 }}>
+              <span style={{ color: "#30d158", fontWeight: 600 }}>Proof</span>
+              {" "}{entry.digest.slice(0, 16)}...
+              {entry.time ? ` at ${new Date(entry.time).toLocaleString()}` : ""}
+            </div>
+            <button onClick={(e) => { e.stopPropagation(); setExpanded(false); }} style={{
+              width: 30, height: 30, borderRadius: 8,
+              border: "1px solid #ff453a", background: "transparent",
+              color: "#ff453a", display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", transition: "all 0.2s", flexShrink: 0,
+            }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "#ff453a"; e.currentTarget.style.color = "#fff"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#ff453a"; }}
+              title="Close"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
 
           {loading && (
             <div style={{ fontSize: 13, color: "var(--c-text-tertiary)", padding: "8px 0" }}>Loading proof...</div>
@@ -758,14 +764,12 @@ function LedgerRow({ entry, isLast }: { entry: ProofEntry; isLast: boolean }) {
 
           {proof && (
             <>
-              {/* Section grid — same as dashboard */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
 
                 {/* Artifact */}
                 <ProofSection title="Artifact">
                   <LedgerProofField label="Digest (SHA-256)" value={proof.artifact?.digestB64 || "—"} mono />
-                  <LedgerProofField label="Algorithm" value={proof.artifact?.hashAlg?.toUpperCase() || "SHA256"} />
-                  {proof.version && <LedgerProofField label="Version" value={proof.version} />}
+                  {proof.version ? <LedgerProofField label="Version" value={proof.version} last /> : null}
                 </ProofSection>
 
                 {/* Commit */}
@@ -866,20 +870,23 @@ function LedgerRow({ entry, isLast }: { entry: ProofEntry; isLast: boolean }) {
   );
 }
 
-/* ── Section wrapper ── */
+/* ── Section wrapper — matches dashboard explorer-section exactly ── */
 function ProofSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{
-      border: "1px solid var(--c-border-subtle)", borderRadius: 8,
-      padding: "12px 16px", background: "rgba(255,255,255,0.02)",
+      border: "1px solid var(--c-border-subtle)", borderRadius: 12,
+      overflow: "hidden", background: "var(--bg-elevated)",
+      transition: "border-color 0.2s",
     }}>
       <div style={{
-        fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em",
-        color: "var(--c-text-tertiary)", marginBottom: 8,
+        fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em",
+        color: "var(--c-text-tertiary)", padding: "10px 16px",
+        borderBottom: "1px solid var(--c-border-subtle)",
+        background: "rgba(255,255,255,0.02)",
       }}>
         {title}
       </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+      <div style={{ padding: "8px 16px" }}>
         {children}
       </div>
     </div>
@@ -887,12 +894,12 @@ function ProofSection({ title, children }: { title: string; children: React.Reac
 }
 
 /* ── Field with copy — matches dashboard ProofField exactly ── */
-function LedgerProofField({ label, value, mono, color }: { label: string; value: string; mono?: boolean; color?: string }) {
+function LedgerProofField({ label, value, mono, color, last }: { label: string; value: string; mono?: boolean; color?: string; last?: boolean }) {
   const [copied, setCopied] = useState(false);
   return (
     <div style={{
       display: "flex", alignItems: "baseline", gap: 16,
-      padding: "7px 0", borderBottom: "1px solid var(--c-border-subtle)",
+      padding: "7px 0", borderBottom: last ? "none" : "1px solid var(--c-border-subtle)",
       fontSize: 12, lineHeight: 1.6,
     }}>
       <span style={{ color: "var(--c-text-tertiary)", flexShrink: 0, minWidth: 100, fontSize: 12 }}>{label}</span>
