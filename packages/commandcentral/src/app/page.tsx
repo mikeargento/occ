@@ -87,7 +87,7 @@ export default function App() {
   if (!user) return (
     <div className="page-center" style={{ minHeight: "100vh" }}>
       <div className="login-card">
-        <h1 className="login-title">Sign in to OCC</h1>
+        <h1 className="login-title" style={{ marginBottom: 32 }}>Sign in to OCC</h1>
         <div className="login-buttons">
           <a href="/auth/login/github" className="auth-btn"><GithubIcon /> Continue with GitHub</a>
           <a href="/auth/login/google" className="auth-btn"><GoogleIcon /> Continue with Google</a>
