@@ -387,7 +387,7 @@ function ExplorerRow({ proof: p, onRefresh }: { proof: V2Proof; onRefresh?: () =
   const toggle = () => setExpanded(e => !e);
 
   async function handleRevoke() {
-    if (!confirm(`Revoke standing authorization for "${p.tool}"?`)) return;
+    if (!confirm(`Stop auto-approving "${p.tool}"? It will ask you next time.`)) return;
     setRevoking(true);
     try {
       await revokeAuth(String(p.tool), String(p.agentId));
@@ -452,7 +452,7 @@ function ExplorerRow({ proof: p, onRefresh }: { proof: V2Proof; onRefresh?: () =
                   opacity: revoking ? 0.5 : 1, transition: "all 0.2s",
                   fontFamily: "inherit",
                 }}>
-                  {revoking ? "Revoking..." : "Revoke"}
+                  {revoking ? "Stopping..." : "Stop auto-approve"}
                 </button>
               )}
               <button onClick={(e) => { e.stopPropagation(); setExpanded(false); }} className="explorer-close-btn" title="Close">

@@ -330,36 +330,23 @@ export async function handleApiV2(req: IncomingMessage, res: ServerResponse, url
     return json(res, { proofs: proofs.map(formatProof), total });
   }
 
-  // POST /proofs/revoke — revoke a standing authorization
+  // POST /proofs/revoke — turn off auto-approve for a tool
   if (path === "/proofs/revoke" && method === "POST") {
     const body = JSON.parse(await readBody(req));
     const { tool, agentId } = body;
     if (!tool) return json(res, { error: "tool is required" }, 400);
     const agent = agentId ?? "claude-code";
 
-    // Find the standing authorization
-    const authObj = await db.getValidAuthorization(userId, agent, tool);
-    if (!authObj) return json(res, { error: "No standing authorization found for this tool" }, 404);
-
-    // Create revocation proof via TEE
-    const chainId = `${userId}:${agent}`;
-    const principal = _principal ?? { id: userId, provider: userId.split("-")[0] };
-    const { createRevocationObject } = await import("./authorization.js");
-    const result = await createRevocationObject(userId, agent, tool, authObj.proofDigest, chainId, principal);
-
-    // Disable the tool + update risk lane back to "ask"
-    await db.disableTool(userId, agent, tool);
-
-    // Remove auto_approve for this tool's risk lane
+    // Turn off auto-approve — next call will ask the user again
     const riskLane = classifyRisk(tool);
     await db.v2SetRiskLane(userId, riskLane, "ask");
+    await db.disableTool(userId, agent, tool);
 
     eventBus.emit(userId, {
-      type: "v2:revocation", tool, agentId: agent,
-      proofDigest: result.digest, timestamp: Date.now(),
+      type: "v2:revocation", tool, agentId: agent, timestamp: Date.now(),
     });
 
-    return json(res, { ok: true, proofDigest: result.digest });
+    return json(res, { ok: true });
   }
 
   const proofMatch = path.match(/^\/proofs\/(.+)$/);
@@ -483,36 +470,8 @@ export async function handleApiV2(req: IncomingMessage, res: ServerResponse, url
     }
 
     if (laneMode === "auto_approve") {
-      // "Always" — reuse the existing authorization proof, don't mint a new one
-      const existingAuth = await db.getValidAuthorization(hookUserId, hookAgentId, tool);
-      if (existingAuth) {
-        // Standing authorization exists — return it directly, no TEE call
-        return json(res, {
-          token: {
-            requestId: 0,
-            tool,
-            args,
-            agentId: hookAgentId,
-            authorizedBy: hookUserId,
-            authorizedAt: new Date().toISOString(),
-            proofDigest: existingAuth.proofDigest,
-            proof: existingAuth.proof,
-            singleUse: false,
-          }
-        });
-      }
-      // No existing auth found (shouldn't happen if auto_approve is set) — forge one
-      const request = await db.v2CreateRequest(hookUserId, {
-        agentId: hookAgentId, tool, riskLane, summary,
-        label: toolLabel(tool), originType: "hook", originClient: "Claude Code",
-        requestArgs: args,
-      });
-      await db.v2UpdateRequestStatus(request.id, "auto_approved");
-      await db.v2CreateDecision({
-        requestId: request.id, userId: hookUserId, decidedBy: "policy_auto",
-        decision: "approved", mode: "always", reason: `Standing authorization for "${riskLane}"`,
-      });
-      return json(res, await forgeToken(request.id));
+      // "Always" — auto-stamp a fresh proof without asking the user
+      return json(res, await forgeToken(0));
     }
 
     if (laneMode === "auto_deny") {
