@@ -149,8 +149,8 @@ export default function App() {
             <span className="section-label">Explorer</span>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <div className="explorer-view-tabs">
-                <button className={`explorer-view-tab ${!showFullChain ? "explorer-view-tab-active" : ""}`} onClick={() => { if (showFullChain) { setShowFullChain(false); } }}>Actions</button>
-                <button className={`explorer-view-tab ${showFullChain ? "explorer-view-tab-active" : ""}`} onClick={() => { if (!showFullChain) { setShowFullChain(true); } }}>Detailed</button>
+                <button className={`explorer-view-tab ${!showFullChain ? "explorer-view-tab-active" : ""}`} onClick={() => setShowFullChain(false)}>Collapsed</button>
+                <button className={`explorer-view-tab ${showFullChain ? "explorer-view-tab-active" : ""}`} onClick={() => setShowFullChain(true)}>Expanded</button>
               </div>
               {proofTotal > 0 && <span className="section-count">{proofTotal.toLocaleString()} total</span>}
             </div>
@@ -389,6 +389,17 @@ function extractTarget(args: Record<string, unknown>): string | null {
 /* ── Explorer Row ── */
 function ExplorerRow({ proof: p, autoExpand = false }: { proof: V2Proof; autoExpand?: boolean }) {
   const [expanded, setExpanded] = useState(autoExpand);
+  const [manualToggle, setManualToggle] = useState(false);
+
+  // Sync with autoExpand prop (but not if user manually toggled)
+  useEffect(() => {
+    if (!manualToggle) setExpanded(autoExpand);
+  }, [autoExpand, manualToggle]);
+
+  const toggle = () => {
+    setManualToggle(true);
+    setExpanded(e => !e);
+  };
   const receipt = p.receipt as Record<string, unknown> | undefined;
   const commit = receipt?.commit as Record<string, unknown> | undefined;
   const env = receipt?.environment as Record<string, unknown> | undefined;
@@ -402,8 +413,8 @@ function ExplorerRow({ proof: p, autoExpand = false }: { proof: V2Proof; autoExp
 
   return (
     <div className="explorer-row-wrap">
-      <div className="explorer-row" onClick={() => setExpanded(!expanded)}>
-        <button className="explorer-chevron" onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}>
+      <div className="explorer-row" onClick={toggle}>
+        <button className="explorer-chevron" onClick={(e) => { e.stopPropagation(); toggle(); }}>
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ transform: expanded ? "rotate(90deg)" : "rotate(0)", transition: "transform 0.15s" }}>
             <path d="M3 1.5L7 5L3 8.5" />
           </svg>
@@ -437,7 +448,7 @@ function ExplorerRow({ proof: p, autoExpand = false }: { proof: V2Proof; autoExp
               {" "}<strong>{String(p.tool)}</strong>{" by "}<strong>{String(p.agentId)}</strong>
               {commitTime ? ` at ${new Date(commitTime).toLocaleString()}` : ""}
             </div>
-            <button onClick={(e) => { e.stopPropagation(); setExpanded(false); }} className="explorer-close-btn" title="Close">
+            <button onClick={(e) => { e.stopPropagation(); setManualToggle(true); setExpanded(false); }} className="explorer-close-btn" title="Close">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
