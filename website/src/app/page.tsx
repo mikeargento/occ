@@ -122,8 +122,8 @@ export default function Home() {
         </div>
         <div className="stat-divider" />
         <div className="stat">
-          <div className="stat-value">0ms</div>
-          <div className="stat-label">AI bypass possible</div>
+          <div className="stat-value">0</div>
+          <div className="stat-label">Ways to skip OCC</div>
         </div>
       </div>
 
