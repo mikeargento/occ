@@ -275,8 +275,8 @@ function ChatPanel({ onClose }: { onClose: () => void }) {
               {[
                 "What was my last proof?",
                 "What tools have I authorized?",
-                "Explain my proof chain",
-                "What's pending?",
+                "Is my data private?",
+                "Do I need my own TEE?",
                 "How does OCC work?",
               ].map(q => (
                 <button key={q} className="chat-suggestion" onClick={() => send(q)}>{q}</button>

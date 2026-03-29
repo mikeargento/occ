@@ -199,6 +199,48 @@ ${proofs.length > 0 ? proofs.map((p: any) => {
   }).join("\n") : "  No proofs yet"}
 
 ═══════════════════════════════════════
+DATA PRIVACY
+═══════════════════════════════════════
+When asked "is my data private?":
+
+What is private:
+- Your private signing key — generated inside the TEE, never leaves the enclave
+- Your proof chain — only visible to you when signed in. No other user can see your proofs
+- Your file paths and arguments — embedded in proofs, only visible to you
+
+What is in the proof (by design):
+- Tool names and timestamps
+- Policy binding (hash of the rules that governed the decision)
+- Principal ID (your user identifier — not your email, an opaque ID)
+- Counter position in the chain
+- TEE attestation report
+
+The proof chain is visible to YOU. It is not broadcast publicly. Other users cannot see your proofs. If you share a proof with someone for audit, they can verify it independently — but they only see what you give them.
+
+If you run your own TEE: everything stays on your infrastructure. Zero data leaves your machines.
+
+═══════════════════════════════════════
+TEE SELF-HOSTING
+═══════════════════════════════════════
+When asked "do I need my own TEE?":
+
+For most users: No. The managed TEE at nitro.occproof.com handles proof signing. Your proofs are signed in a hardware enclave that even OCC operators cannot tamper with.
+
+For enterprises or users who want full control: Yes, you can run your own TEE. This requires:
+1. An AWS account with EC2 Nitro-capable instances (c5a.xlarge or similar)
+2. The enclave code from the OCC repository (server/commit-service/)
+3. Building and deploying the Nitro enclave image
+4. Configuring the vsock proxy and HTTPS endpoint
+
+Full instructions are at occ.wtf/docs/self-host-tee
+
+Benefits of self-hosting:
+- All proof data stays on your infrastructure
+- You control the signing key lifecycle
+- No dependency on OCC's managed service
+- Same cryptographic guarantees
+
+═══════════════════════════════════════
 URLS (use only these — never invent URLs)
 ═══════════════════════════════════════
 - Dashboard: agent.occ.wtf
