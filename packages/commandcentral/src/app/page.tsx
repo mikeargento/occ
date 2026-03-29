@@ -742,21 +742,17 @@ function SettingsView({ user }: { user: { id: string; name: string; email: strin
 /* ── Proof Field ── */
 function ProofField({ label, value, mono, color }: { label: string; value: string; mono?: boolean; color?: string }) {
   const [copied, setCopied] = useState(false);
-  const [expanded, setExpanded] = useState(false);
-  const isLong = value.length > 64;
-  const displayValue = isLong && !expanded ? value.slice(0, 48) + "..." : value;
   return (
     <div className="proof-field">
       <span className="proof-field-label">{label}</span>
       <span
-        className={`proof-field-value ${mono ? "proof-field-mono" : ""} ${isLong ? "proof-field-expandable" : ""}`}
+        className={`proof-field-value ${mono ? "proof-field-mono" : ""}`}
         style={color ? { color } : undefined}
-        onClick={isLong ? () => setExpanded(!expanded) : undefined}
       >
-        {displayValue}
+        {value}
       </span>
-      {(isLong || value.length > 30) && (
-        <button className="proof-field-copy" onClick={() => { navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 1500); }} title="Copy full value">
+      {value.length > 30 && (
+        <button className="proof-field-copy" onClick={() => { navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 1500); }} title="Copy">
           {copied ? (
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 6L9 17l-5-5"/></svg>
           ) : (

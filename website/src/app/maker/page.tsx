@@ -735,7 +735,23 @@ function LedgerRow({ entry, isLast }: { entry: ProofEntry; isLast: boolean }) {
         <div style={{
           padding: "0 20px 20px 42px",
           animation: "slideDownFade 0.2s ease-out",
+          position: "relative",
         }}>
+          {/* Red X close button */}
+          <button onClick={(e) => { e.stopPropagation(); setExpanded(false); }} style={{
+            position: "absolute", top: 0, right: 20,
+            width: 28, height: 28, borderRadius: 6,
+            border: "1px solid rgba(255,69,58,0.3)", background: "transparent",
+            color: "#ff453a", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+            transition: "all 0.15s",
+          }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "#ff453a"; e.currentTarget.style.color = "#fff"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#ff453a"; }}
+            title="Close"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+
           {loading && (
             <div style={{ fontSize: 13, color: "var(--c-text-tertiary)", padding: "8px 0" }}>Loading proof...</div>
           )}
@@ -870,34 +886,33 @@ function ProofSection({ title, children }: { title: string; children: React.Reac
   );
 }
 
-/* ── Field with copy ── */
+/* ── Field with copy — matches dashboard ProofField exactly ── */
 function LedgerProofField({ label, value, mono, color }: { label: string; value: string; mono?: boolean; color?: string }) {
   const [copied, setCopied] = useState(false);
-  const [expanded, setExpanded] = useState(false);
-  const isLong = value.length > 64;
-  const displayValue = isLong && !expanded ? value.slice(0, 48) + "..." : value;
-
   return (
-    <div style={{ display: "flex", alignItems: "baseline", gap: 10, fontSize: 12, lineHeight: 1.6 }}>
-      <span style={{ color: "var(--c-text-tertiary)", minWidth: 100, flexShrink: 0 }}>{label}</span>
-      <span
-        style={{
-          color: color || (mono ? "#30d158" : "var(--c-text-secondary)"),
-          fontFamily: mono ? "var(--font-mono), monospace" : "inherit",
-          wordBreak: "break-all",
-          cursor: isLong ? "pointer" : "default",
-        }}
-        onClick={isLong ? () => setExpanded(!expanded) : undefined}
-      >
-        {displayValue}
+    <div style={{
+      display: "flex", alignItems: "baseline", gap: 16,
+      padding: "7px 0", borderBottom: "1px solid var(--c-border-subtle)",
+      fontSize: 12, lineHeight: 1.6,
+    }}>
+      <span style={{ color: "var(--c-text-tertiary)", flexShrink: 0, minWidth: 100, fontSize: 12 }}>{label}</span>
+      <span style={{
+        color: color || (mono ? "#30d158" : "var(--c-text)"),
+        fontFamily: mono ? "var(--font-mono), 'SF Mono', Menlo, monospace" : "inherit",
+        fontSize: mono ? 12 : 13,
+        wordBreak: "break-all", textAlign: "left", minWidth: 0,
+      }}>
+        {value}
       </span>
       {value.length > 30 && (
         <button onClick={() => { navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
           style={{
             border: "none", background: "transparent", cursor: "pointer", padding: 2,
             color: copied ? "#30d158" : "var(--c-text-tertiary)", flexShrink: 0,
-            opacity: 0.5, transition: "opacity 0.15s",
+            opacity: 0, transition: "opacity 0.15s",
           }}
+          onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.6"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.opacity = "0"; }}
           title="Copy"
         >
           {copied ? (

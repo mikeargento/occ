@@ -139,13 +139,11 @@ body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro
 .explorer-detail-args { font-size: 12px; font-family: "SF Mono", "Menlo", monospace; color: var(--text-tertiary); background: var(--bg-secondary); padding: 12px 16px; max-height: 140px; overflow: auto; white-space: pre-wrap; word-break: break-all; line-height: 1.6; border: none; border-top: 1px solid var(--border-light); margin: 0; }
 
 /* ── Proof Field ── */
-.proof-field { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 7px 0; border-bottom: 1px solid var(--border-light); }
+.proof-field { display: flex; align-items: baseline; gap: 16px; padding: 7px 0; border-bottom: 1px solid var(--border-light); }
 .proof-field:last-child { border-bottom: none; }
-.proof-field-label { font-size: 12px; color: var(--text-tertiary); flex-shrink: 0; }
-.proof-field-value { font-size: 13px; color: var(--text); text-align: right; word-break: break-all; min-width: 0; }
-.proof-field-mono { font-family: "SF Mono", "Menlo", monospace; font-size: 12px; color: var(--text-secondary); }
-.proof-field-expandable { cursor: pointer; }
-.proof-field-expandable:hover { color: var(--accent) !important; }
+.proof-field-label { font-size: 12px; color: var(--text-tertiary); flex-shrink: 0; min-width: 100px; }
+.proof-field-value { font-size: 13px; color: var(--text); text-align: left; word-break: break-all; min-width: 0; }
+.proof-field-mono { font-family: "SF Mono", "Menlo", monospace; font-size: 12px; color: #30d158; }
 .proof-field-copy { background: none; border: none; color: var(--text-tertiary); cursor: pointer; padding: 2px; flex-shrink: 0; opacity: 0; transition: all 0.2s; }
 .proof-field:hover .proof-field-copy { opacity: 0.6; }
 .proof-field-copy:hover { opacity: 1 !important; color: var(--accent); }
