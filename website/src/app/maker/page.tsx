@@ -696,37 +696,57 @@ function LedgerRow({ entry, isLast }: { entry: ProofEntry; isLast: boolean }) {
 
   return (
     <div style={{ borderBottom: isLast ? "none" : "1px solid var(--c-border-subtle)" }}>
-      {/* Collapsed row */}
+      {/* Collapsed row — matches dashboard explorer-row layout */}
       <div onClick={toggle} style={{
-        padding: "14px 20px", display: "flex", alignItems: "center", gap: 12,
+        padding: "12px 20px", display: "flex", alignItems: "center", gap: 12,
         cursor: "pointer", transition: "background 0.15s",
       }}>
-        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5"
-          style={{ transform: expanded ? "rotate(90deg)" : "rotate(0)", transition: "transform 0.15s", flexShrink: 0, color: "var(--c-text-tertiary)" }}>
-          <path d="M3 1.5L7 5L3 8.5" />
-        </svg>
-        <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#30d158", flexShrink: 0 }} />
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{
-            fontSize: 12, fontFamily: "monospace", color: "#30d158",
+        {/* Chevron */}
+        <button onClick={(e) => { e.stopPropagation(); toggle(); }} style={{
+          background: "none", border: "none", cursor: "pointer", padding: 2,
+          color: "var(--c-text-tertiary)", flexShrink: 0, transition: "all 0.2s",
+        }}>
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5"
+            style={{ transform: expanded ? "rotate(90deg)" : "rotate(0)", transition: "transform 0.15s" }}>
+            <path d="M3 1.5L7 5L3 8.5" />
+          </svg>
+        </button>
+        {/* Dot */}
+        <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#30d158", boxShadow: "0 0 8px rgba(48,209,88,0.4)", flexShrink: 0 }} />
+        {/* Info — tool + agent (or digest + counter for public ledger) */}
+        <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{
+            fontSize: 15, fontWeight: 600, letterSpacing: "-0.01em",
             overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
           }}>
-            {entry.digest}
-          </div>
-          <div style={{ display: "flex", gap: 10, fontSize: 11, color: "var(--c-text-tertiary)", marginTop: 3, flexWrap: "wrap" }}>
-            {entry.counter && <span>#{entry.counter}</span>}
-            <span style={{
-              padding: "1px 6px", borderRadius: 4, fontSize: 10, fontWeight: 600,
-              background: entry.enforcement === "Hardware Enclave" ? "rgba(59,130,246,0.15)" : "rgba(255,149,0,0.15)",
-              color: entry.enforcement === "Hardware Enclave" ? "#3b82f6" : "#ff9500",
-            }}>
-              {entry.enforcement}
-            </span>
-            {entry.attribution && <span>{entry.attribution}</span>}
-          </div>
+            {entry.attribution || entry.digest.slice(0, 24) + "..."}
+          </span>
+          <span style={{ fontSize: 13, color: "var(--c-text-tertiary)" }}>
+            {entry.counter ? `#${entry.counter}` : ""}
+          </span>
         </div>
-        <div style={{ fontSize: 11, color: "var(--c-text-tertiary)", whiteSpace: "nowrap" }}>
-          {entry.time ? relativeTime(entry.time) : ""}
+        {/* Badge */}
+        <span style={{
+          fontSize: 11, fontWeight: 500, flexShrink: 0,
+          padding: "2px 8px", borderRadius: 4,
+          color: entry.enforcement === "Hardware Enclave" ? "#3b82f6" : "#eab308",
+          background: entry.enforcement === "Hardware Enclave" ? "rgba(59,130,246,0.1)" : "rgba(234,179,8,0.1)",
+        }}>
+          {entry.enforcement}
+        </span>
+        {/* Icons + time */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {/* TSA clock icon */}
+          <span style={{ color: "#a855f7" }} title="RFC 3161 timestamped">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>
+          </span>
+          <span style={{
+            fontSize: 12, color: "var(--c-text-tertiary)",
+            minWidth: 56, textAlign: "right" as const,
+            fontFamily: "var(--font-mono), 'SF Mono', Menlo, monospace",
+          }}>
+            {entry.time ? relativeTime(entry.time) : "—"}
+          </span>
         </div>
       </div>
 
@@ -856,8 +876,26 @@ function LedgerRow({ entry, isLast }: { entry: ProofEntry; isLast: boolean }) {
                 )}
               </div>
 
-              {/* Full JSON */}
-              <LedgerCopyableJson data={proof} />
+              {/* Full JSON + Download */}
+              <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+                <LedgerCopyableJson data={proof} />
+                <button onClick={() => {
+                  const json = JSON.stringify(proof, null, 2);
+                  const blob = new Blob([json], { type: "application/json" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `occ-proof-${(proof.artifact?.digestB64 || "unknown").slice(0, 12)}.json`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }} style={{
+                  fontSize: 12, fontWeight: 500, padding: "6px 14px", borderRadius: 6,
+                  border: "1px solid var(--c-border)", background: "transparent",
+                  color: "var(--c-text-secondary)", cursor: "pointer",
+                }}>
+                  Export .json
+                </button>
+              </div>
             </>
           )}
 
