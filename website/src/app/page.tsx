@@ -36,7 +36,7 @@ export default function Home() {
             marginBottom: 48,
           }}
         >
-          Every action requires a cryptographic proof. Only you can create one.
+          No proof, no action. You hold the key.
         </p>
         <div style={{ display: "flex", justifyContent: "center" }}>
           <a
@@ -72,7 +72,7 @@ export default function Home() {
       >
         <div style={{ padding: "24px 0" }}>
           <h3 style={{ fontSize: 17, fontWeight: 600, marginBottom: 8 }}>
-            Nothing moves without you
+            Nothing runs without you
           </h3>
           <p
             style={{
@@ -81,12 +81,12 @@ export default function Home() {
               color: "var(--c-text-secondary)",
             }}
           >
-            AI has intelligence. You have authority. No proof from you, no execution path for it.
+            AI thinks. You decide. Without your authorization, no execution path exists.
           </p>
         </div>
         <div style={{ padding: "24px 0" }}>
           <h3 style={{ fontSize: 17, fontWeight: 600, marginBottom: 8 }}>
-            Your yes is the proof
+            Your yes forges the proof
           </h3>
           <p
             style={{
@@ -95,12 +95,12 @@ export default function Home() {
               color: "var(--c-text-secondary)",
             }}
           >
-            When you authorize an action, a cryptographic object is created inside a hardware enclave. That object is the only thing that makes execution possible.
+            Authorization creates a cryptographic object inside a hardware enclave. That object — and nothing else — makes the action possible.
           </p>
         </div>
         <div style={{ padding: "24px 0" }}>
           <h3 style={{ fontSize: 17, fontWeight: 600, marginBottom: 8 }}>
-            Every proof extends the last
+            Every proof chains to the last
           </h3>
           <p
             style={{
@@ -109,7 +109,7 @@ export default function Home() {
               color: "var(--c-text-secondary)",
             }}
           >
-            Each authorization links to the one before it. One chain. One history. No gaps, no rewrites. Your decisions, in order, forever.
+            One decision links to the next. No gaps. No rewrites. An unbroken record of human authority.
           </p>
         </div>
       </div>
