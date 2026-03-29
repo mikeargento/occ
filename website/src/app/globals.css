@@ -293,7 +293,39 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 /* ── KITT scanner ── */
 @keyframes kitt {
   0%, 100% { left: 0; }
-  50% { left: 70%; }
+  50% { left: 80%; }
+}
+
+/* ── Feature cards ── */
+.feature-card {
+  padding: 32px;
+  border: 1px solid var(--c-border-subtle);
+  border-radius: 12px;
+  background: var(--bg-elevated);
+  transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+}
+.feature-card:hover {
+  border-color: rgba(255, 0, 0, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(255, 0, 0, 0.06);
+}
+.feature-card-index {
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--c-text-tertiary);
+  letter-spacing: 0.08em;
+  margin-bottom: 16px;
+}
+.feature-card-title {
+  font-size: 17px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  letter-spacing: -0.01em;
+}
+.feature-card-desc {
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--c-text-secondary);
 }
 
 /* ── Nav link hover ── */

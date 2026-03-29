@@ -5,21 +5,35 @@ import Link from "next/link";
 function KittScanner() {
   return (
     <div style={{
-      width: "100%", maxWidth: 400, height: 6,
-      background: "rgba(255,255,255,0.04)",
-      borderRadius: 3,
-      overflow: "hidden",
+      width: "100%", maxWidth: 480, height: 4,
+      background: "rgba(255,0,0,0.08)",
       position: "relative",
-      marginBottom: 32,
+      marginBottom: 40,
     }}>
+      {/* LED segments */}
+      <div style={{
+        position: "absolute", inset: 0,
+        backgroundImage: "repeating-linear-gradient(90deg, transparent, transparent 6px, rgba(0,0,0,0.8) 6px, rgba(0,0,0,0.8) 8px)",
+        zIndex: 2,
+      }} />
+      {/* Sweeping light */}
       <div style={{
         position: "absolute",
-        top: 0, left: 0,
-        width: "30%", height: "100%",
-        borderRadius: 3,
-        background: "linear-gradient(90deg, transparent, #ff0000, #ff0000, transparent)",
-        boxShadow: "0 0 20px #ff0000, 0 0 60px rgba(255,0,0,0.4)",
-        animation: "kitt 2.4s ease-in-out infinite",
+        top: -4, left: 0,
+        width: "20%", height: 12,
+        background: "radial-gradient(ellipse at center, #ff1a1a 0%, #ff0000 30%, rgba(255,0,0,0.6) 50%, transparent 80%)",
+        boxShadow: "0 0 12px 4px rgba(255,0,0,0.5), 0 0 40px 8px rgba(255,0,0,0.2), inset 0 0 8px rgba(255,100,100,0.3)",
+        animation: "kitt 1.8s ease-in-out infinite",
+        zIndex: 1,
+      }} />
+      {/* Ambient glow on track */}
+      <div style={{
+        position: "absolute",
+        top: -8, left: 0,
+        width: "30%", height: 20,
+        background: "radial-gradient(ellipse at center, rgba(255,0,0,0.15), transparent 70%)",
+        animation: "kitt 1.8s ease-in-out infinite",
+        zIndex: 0,
       }} />
     </div>
   );
@@ -64,29 +78,31 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Three columns */}
+      {/* Three cards */}
       <div style={{
-        display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-        gap: 24, marginBottom: 80,
+        display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+        gap: 16, marginBottom: 80,
       }}>
-        <div style={{ padding: "24px 0" }}>
-          <h3 style={{ fontSize: 17, fontWeight: 600, marginBottom: 8 }}>No action without you</h3>
-          <p style={{ fontSize: 15, lineHeight: 1.6, color: "var(--c-text-secondary)" }}>
-            AI can think freely. But nothing executes unless you authorize it. No approval, no execution path.
-          </p>
-        </div>
-        <div style={{ padding: "24px 0" }}>
-          <h3 style={{ fontSize: 17, fontWeight: 600, marginBottom: 8 }}>Approval becomes execution</h3>
-          <p style={{ fontSize: 15, lineHeight: 1.6, color: "var(--c-text-secondary)" }}>
-            Your authorization creates the cryptographic object that makes the action possible. The proof is the command.
-          </p>
-        </div>
-        <div style={{ padding: "24px 0" }}>
-          <h3 style={{ fontSize: 17, fontWeight: 600, marginBottom: 8 }}>Every action must follow the last</h3>
-          <p style={{ fontSize: 15, lineHeight: 1.6, color: "var(--c-text-secondary)" }}>
-            Each proof links to the previous one. No gaps, no rewrites, no forks. A causal chain of human decisions.
-          </p>
-        </div>
+        {[
+          {
+            title: "No action without you",
+            desc: "AI can think freely. But nothing executes unless you authorize it. No approval, no execution path.",
+          },
+          {
+            title: "Approval becomes execution",
+            desc: "Your authorization creates the cryptographic object that makes the action possible. The proof is the command.",
+          },
+          {
+            title: "Every action must follow the last",
+            desc: "Each proof links to the previous one. No gaps, no rewrites, no forks. A causal chain of human decisions.",
+          },
+        ].map((card, i) => (
+          <div key={i} className="feature-card">
+            <div className="feature-card-index">{String(i + 1).padStart(2, "0")}</div>
+            <h3 className="feature-card-title">{card.title}</h3>
+            <p className="feature-card-desc">{card.desc}</p>
+          </div>
+        ))}
       </div>
 
       <div style={{ height: 48 }} />
