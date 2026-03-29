@@ -6,19 +6,18 @@ import { usePathname } from "next/navigation";
 const sections = [
   { href: "/docs", label: "Overview" },
   { href: "/docs/what-is-occ", label: "What is OCC" },
+  { href: "/docs/whitepaper", label: "Whitepaper" },
   { href: "/docs/proof-format", label: "Proof Format (occ/1)" },
   { href: "/docs/verification", label: "Verification" },
   { href: "/docs/trust-model", label: "Trust Model" },
+  { href: "/docs/self-host-tee", label: "Self-Host TEE" },
   { href: "/docs/integration", label: "Integration Guide" },
   { href: "/docs/agent-sdk", label: "Agent SDK" },
   { href: "/docs/what-occ-is-not", label: "What OCC is Not" },
-  { href: "/docs/self-host-tee", label: "Self-Host TEE" },
   { href: "/docs/faq", label: "FAQ" },
 ];
 
 const extras = [
-  { href: "/docs/whitepaper", label: "Whitepaper" },
-  { href: "/api-reference", label: "API Reference" },
   { href: "https://github.com/mikeargento/occ", label: "GitHub", external: true },
 ];
 
