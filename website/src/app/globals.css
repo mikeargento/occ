@@ -290,6 +290,41 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   background-clip: text;
 }
 
+/* ── Pillar cells ── */
+.pillar-cell {
+  padding: 48px 32px;
+  background: var(--bg);
+  transition: background 0.4s ease, padding 0.4s ease;
+  cursor: default;
+}
+.pillar-cell:hover {
+  background: var(--bg-elevated);
+  padding: 56px 32px;
+}
+.pillar-cell-title {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+  transition: color 0.3s ease;
+}
+.pillar-cell:hover .pillar-cell-title {
+  color: var(--c-accent);
+}
+.pillar-cell-desc {
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--c-text-secondary);
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease, opacity 0.3s ease 0.1s;
+}
+.pillar-cell:hover .pillar-cell-desc {
+  max-height: 200px;
+  opacity: 1;
+}
+
 /* ── Nav link hover ── */
 .nav-link:hover { color: var(--c-text) !important; }
 

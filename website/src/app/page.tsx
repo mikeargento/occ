@@ -97,21 +97,11 @@ export default function Home() {
               desc: "Each proof links to the previous one. No gaps, no rewrites, no forks. A causal chain of human decisions.",
             },
           ].map((p) => (
-            <div key={p.title} style={{
-              padding: "48px 32px",
-              background: "var(--bg)",
-            }}>
-              <h3 style={{
-                fontSize: 20, fontWeight: 600,
-                letterSpacing: "-0.02em",
-                marginBottom: 12,
-              }}>
+            <div key={p.title} className="pillar-cell">
+              <h3 className="pillar-cell-title">
                 {p.title}
               </h3>
-              <p style={{
-                fontSize: 15, lineHeight: 1.65,
-                color: "var(--c-text-secondary)",
-              }}>
+              <p className="pillar-cell-desc">
                 {p.desc}
               </p>
             </div>
