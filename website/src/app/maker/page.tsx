@@ -16,6 +16,7 @@ import {
   type ActorIdentity,
   type ProofVerifyResult,
 } from "@/lib/occ";
+import { toUrlSafeB64 } from "@/lib/explorer";
 import { zipSync } from "fflate";
 
 /* ── Types ── */
@@ -147,17 +148,14 @@ export default function MakerPage() {
       const resp = await fetch(`/api/proofs?page=${page}&limit=15`);
       if (!resp.ok) return;
       const data = await resp.json();
-      const entries: ProofEntry[] = (data.proofs || []).map((p: Record<string, unknown>) => {
-        const proof = p.proof as OCCProof | undefined;
-        return {
-          digest: proof?.artifact?.digestB64 || (p.digest_b64 as string) || "—",
-          counter: proof?.commit?.counter || (p.counter as string) || undefined,
-          enforcement: proof?.environment?.enforcement === "measured-tee" ? "Hardware Enclave" : "Software",
-          time: proof?.commit?.time || (p.committed_at ? new Date(p.committed_at as string).getTime() : undefined),
-          attribution: proof?.attribution?.name || (p.attribution_name as string) || undefined,
-          signer: proof?.signer?.publicKeyB64?.slice(0, 12) || "—",
-        };
-      });
+      const entries: ProofEntry[] = (data.proofs || []).map((p: Record<string, unknown>) => ({
+        digest: (p.digestB64 as string) || "—",
+        counter: (p.counter as string) || undefined,
+        enforcement: (p.enforcement as string) === "measured-tee" ? "Hardware Enclave" : "Software",
+        time: p.commitTime ? Number(p.commitTime) : undefined,
+        attribution: (p.attrName as string) || undefined,
+        signer: ((p.signerPub as string) || "").slice(0, 12) || "—",
+      }));
       setLedger(entries);
       setLedgerTotal(data.total || 0);
       setLedgerPage(page);
@@ -294,7 +292,7 @@ export default function MakerPage() {
       } else {
         // User dropped a regular file — hash it and check against the ledger
         const d = await hashFile(f);
-        const resp = await fetch(`/api/proofs/${encodeURIComponent(d)}`);
+        const resp = await fetch(`/api/proofs/${encodeURIComponent(toUrlSafeB64(d))}`);
         if (resp.ok) {
           const data = await resp.json();
           if (data.proofs?.length > 0) {
@@ -350,7 +348,7 @@ export default function MakerPage() {
     <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--c-text)" }}>
       <Nav />
 
-      <div style={{ maxWidth: 720, margin: "0 auto", padding: "60px 24px" }}>
+      <div style={{ maxWidth: 1120, margin: "0 auto", padding: "60px 36px" }}>
         {/* Header */}
         <h1 style={{ fontSize: 36, fontWeight: 700, letterSpacing: "-0.03em", marginBottom: 8 }}>
           Maker
@@ -382,11 +380,33 @@ export default function MakerPage() {
           <>
             {makeStep === "drop" && (
               <>
-                {/* Options */}
-                <div style={{ display: "flex", gap: 16, marginBottom: 20, flexWrap: "wrap" }}>
+                <FileDrop
+                  multiple
+                  onFile={(f) => handleMakeFiles([f])}
+                  onFiles={handleMakeFiles}
+                  hint="Drop file(s). Hashed locally — nothing uploaded. Supports batch."
+                />
+                {/* Options below the drop zone */}
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 20, marginTop: 16,
+                  padding: "12px 16px",
+                  border: "1px solid var(--c-border-subtle)", background: "var(--bg-elevated)",
+                }}>
+                  <input
+                    type="text"
+                    value={attribution}
+                    onChange={(e) => setAttribution(e.target.value)}
+                    placeholder="Author name (optional)"
+                    style={{
+                      flex: 1, height: 32, padding: "0 10px",
+                      fontSize: 13, border: "1px solid var(--c-border)", borderRadius: 6,
+                      background: "transparent", color: "var(--c-text)",
+                    }}
+                  />
                   <label style={{
-                    display: "flex", alignItems: "center", gap: 8,
+                    display: "flex", alignItems: "center", gap: 6,
                     fontSize: 13, color: "var(--c-text-secondary)", cursor: "pointer",
+                    whiteSpace: "nowrap",
                   }}>
                     <input
                       type="checkbox"
@@ -394,26 +414,9 @@ export default function MakerPage() {
                       onChange={(e) => setUseBiometrics(e.target.checked)}
                       style={{ accentColor: "var(--accent)" }}
                     />
-                    Sign with biometrics
+                    Biometric authorship
                   </label>
-                  <input
-                    type="text"
-                    value={attribution}
-                    onChange={(e) => setAttribution(e.target.value)}
-                    placeholder="Attribution (optional)"
-                    style={{
-                      flex: 1, minWidth: 180, height: 36, padding: "0 12px",
-                      fontSize: 13, border: "1px solid var(--c-border)", borderRadius: 8,
-                      background: "transparent", color: "var(--c-text)",
-                    }}
-                  />
                 </div>
-                <FileDrop
-                  multiple
-                  onFile={(f) => handleMakeFiles([f])}
-                  onFiles={handleMakeFiles}
-                  hint="Drop file(s). Hashed locally — nothing uploaded. Supports batch."
-                />
               </>
             )}
 
