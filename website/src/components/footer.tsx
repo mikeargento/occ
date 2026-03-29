@@ -4,7 +4,7 @@ export function Footer() {
   return (
     <footer style={{
       padding: "48px 24px 32px",
-      borderTop: "1px solid var(--c-border-subtle)",
+      borderTop: "none",
       marginTop: 64,
     }}>
       <div style={{

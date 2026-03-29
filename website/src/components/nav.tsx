@@ -17,7 +17,7 @@ export function Nav() {
     <header style={{
       position: "sticky", top: 0, zIndex: 50,
       background: "var(--bg)",
-      borderBottom: "1px solid var(--c-border-subtle)",
+      borderBottom: "none",
       backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)",
     }}>
      <div style={{
@@ -47,7 +47,7 @@ export function Nav() {
             <Link key={l.href} href={l.href} className="nav-link" style={style}>{l.label}</Link>
           );
         })}
-        <div style={{ width: 1, height: 20, background: "var(--c-border-subtle)", margin: "0 4px" }} />
+        <div style={{ width: 8 }} />
         <a href="https://agent.occ.wtf" style={{
           display: "flex", alignItems: "center", justifyContent: "center",
           height: 32, padding: "0 14px", borderRadius: 8,
