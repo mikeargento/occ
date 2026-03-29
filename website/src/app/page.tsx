@@ -179,20 +179,7 @@ export default function Home() {
         AI can think freely. Actions require your authority.
       </p>
 
-      {/* ── Sign in ── */}
-      <div className="cta-card">
-        <h2 style={{ fontSize: 28, fontWeight: 700, letterSpacing: "-0.03em", marginBottom: 8 }}>
-          Ready to take control?
-        </h2>
-        <p style={{ fontSize: 16, color: "var(--c-text-secondary)", marginBottom: 28, maxWidth: 400 }}>
-          Set up OCC in under a minute. One install command. Full authority over every AI action.
-        </p>
-        <a href="https://agent.occ.wtf" className="btn-primary" style={{ height: 48, padding: "0 32px", fontSize: 16 }}>
-          Sign in →
-        </a>
-      </div>
-
-      <div style={{ height: 64 }} />
+      <div style={{ height: 32 }} />
     </div>
   );
 }
