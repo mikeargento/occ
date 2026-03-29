@@ -69,6 +69,11 @@ export async function getProofs(limit = 20, offset = 0, search = "", fullChain =
   return v2(`/proofs?${params}`);
 }
 
+// Revoke standing authorization for a tool
+export async function revokeAuth(tool: string, agentId?: string): Promise<{ ok: boolean; proofDigest: string }> {
+  return v2("/proofs/revoke", { method: "POST", body: JSON.stringify({ tool, agentId }) });
+}
+
 // Wipe all test data
 export async function wipeAll(): Promise<{ ok: boolean }> {
   return v2("/wipe", { method: "POST" });

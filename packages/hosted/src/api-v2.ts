@@ -330,6 +330,38 @@ export async function handleApiV2(req: IncomingMessage, res: ServerResponse, url
     return json(res, { proofs: proofs.map(formatProof), total });
   }
 
+  // POST /proofs/revoke — revoke a standing authorization
+  if (path === "/proofs/revoke" && method === "POST") {
+    const body = JSON.parse(await readBody(req));
+    const { tool, agentId } = body;
+    if (!tool) return json(res, { error: "tool is required" }, 400);
+    const agent = agentId ?? "claude-code";
+
+    // Find the standing authorization
+    const authObj = await db.getValidAuthorization(userId, agent, tool);
+    if (!authObj) return json(res, { error: "No standing authorization found for this tool" }, 404);
+
+    // Create revocation proof via TEE
+    const chainId = `${userId}:${agent}`;
+    const principal = _principal ?? { id: userId, provider: userId.split("-")[0] };
+    const { createRevocationObject } = await import("./authorization.js");
+    const result = await createRevocationObject(userId, agent, tool, authObj.proofDigest, chainId, principal);
+
+    // Disable the tool + update risk lane back to "ask"
+    await db.disableTool(userId, agent, tool);
+
+    // Remove auto_approve for this tool's risk lane
+    const riskLane = classifyRisk(tool);
+    await db.v2SetRiskLane(userId, riskLane, "ask");
+
+    eventBus.emit(userId, {
+      type: "v2:revocation", tool, agentId: agent,
+      proofDigest: result.digest, timestamp: Date.now(),
+    });
+
+    return json(res, { ok: true, proofDigest: result.digest });
+  }
+
   const proofMatch = path.match(/^\/proofs\/(.+)$/);
   if (proofMatch && method === "GET") {
     const digest = decodeURIComponent(proofMatch[1]!);

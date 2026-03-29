@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import Markdown from "react-markdown";
-import { getMe, getFeed, getProofs, approve, deny, type FeedItem, type V2Proof } from "@/lib/api";
+import { getMe, getFeed, getProofs, approve, deny, revokeAuth, type FeedItem, type V2Proof } from "@/lib/api";
 
 export default function App() {
   const [user, setUser] = useState<{ id: string; name: string; email: string; avatar: string } | null>(null);
@@ -174,7 +174,7 @@ export default function App() {
             </div>
           ) : (
             <div className="explorer-list">
-              {proofs.map(p => <ExplorerRow key={p.id} proof={p} />)}
+              {proofs.map(p => <ExplorerRow key={p.id} proof={p} onRefresh={refresh} />)}
             </div>
           )}
 
@@ -381,9 +381,20 @@ function extractTarget(args: Record<string, unknown>): string | null {
 }
 
 /* ── Explorer Row ── */
-function ExplorerRow({ proof: p }: { proof: V2Proof }) {
+function ExplorerRow({ proof: p, onRefresh }: { proof: V2Proof; onRefresh?: () => void }) {
   const [expanded, setExpanded] = useState(false);
+  const [revoking, setRevoking] = useState(false);
   const toggle = () => setExpanded(e => !e);
+
+  async function handleRevoke() {
+    if (!confirm(`Revoke standing authorization for "${p.tool}"?`)) return;
+    setRevoking(true);
+    try {
+      await revokeAuth(String(p.tool), String(p.agentId));
+      onRefresh?.();
+    } catch {}
+    setRevoking(false);
+  }
   const receipt = p.receipt as Record<string, unknown> | undefined;
   const commit = receipt?.commit as Record<string, unknown> | undefined;
   const env = receipt?.environment as Record<string, unknown> | undefined;
@@ -432,9 +443,22 @@ function ExplorerRow({ proof: p }: { proof: V2Proof }) {
               {" "}<strong>{String(p.tool)}</strong>{" by "}<strong>{String(p.agentId)}</strong>
               {commitTime ? ` at ${new Date(commitTime).toLocaleString()}` : ""}
             </div>
-            <button onClick={(e) => { e.stopPropagation(); setExpanded(false); }} className="explorer-close-btn" title="Close">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              {p.allowed && (
+                <button onClick={(e) => { e.stopPropagation(); handleRevoke(); }} disabled={revoking} style={{
+                  fontSize: 12, fontWeight: 500, padding: "4px 12px", borderRadius: 6,
+                  border: "1px solid var(--red, #ef4444)", background: "transparent",
+                  color: "var(--red, #ef4444)", cursor: revoking ? "wait" : "pointer",
+                  opacity: revoking ? 0.5 : 1, transition: "all 0.2s",
+                  fontFamily: "inherit",
+                }}>
+                  {revoking ? "Revoking..." : "Revoke"}
+                </button>
+              )}
+              <button onClick={(e) => { e.stopPropagation(); setExpanded(false); }} className="explorer-close-btn" title="Close">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
           </div>
 
           <div className="explorer-sections">
