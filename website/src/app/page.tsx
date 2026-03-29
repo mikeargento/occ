@@ -28,6 +28,16 @@ export default function Home() {
         >
           Artificial Intelligence. Human Authority.
         </p>
+        <p
+          style={{
+            fontSize: 16,
+            lineHeight: 1.5,
+            color: "var(--c-text-tertiary)",
+            marginBottom: 48,
+          }}
+        >
+          Every action requires a cryptographic proof. Only you can create one.
+        </p>
         <div style={{ display: "flex", justifyContent: "center" }}>
           <a
             href="https://agent.occ.wtf"
@@ -62,7 +72,7 @@ export default function Home() {
       >
         <div style={{ padding: "24px 0" }}>
           <h3 style={{ fontSize: 17, fontWeight: 600, marginBottom: 8 }}>
-            No action without you
+            Nothing moves without you
           </h3>
           <p
             style={{
@@ -71,13 +81,12 @@ export default function Home() {
               color: "var(--c-text-secondary)",
             }}
           >
-            AI can think freely. But nothing executes unless you authorize it.
-            No approval, no execution path.
+            AI has intelligence. You have authority. No proof from you, no execution path for it.
           </p>
         </div>
         <div style={{ padding: "24px 0" }}>
           <h3 style={{ fontSize: 17, fontWeight: 600, marginBottom: 8 }}>
-            Approval becomes execution
+            Your yes is the proof
           </h3>
           <p
             style={{
@@ -86,13 +95,12 @@ export default function Home() {
               color: "var(--c-text-secondary)",
             }}
           >
-            Your authorization creates the cryptographic object that makes the
-            action possible. The proof is the command.
+            When you authorize an action, a cryptographic object is created inside a hardware enclave. That object is the only thing that makes execution possible.
           </p>
         </div>
         <div style={{ padding: "24px 0" }}>
           <h3 style={{ fontSize: 17, fontWeight: 600, marginBottom: 8 }}>
-            Every action must follow the last
+            Every proof extends the last
           </h3>
           <p
             style={{
@@ -101,8 +109,7 @@ export default function Home() {
               color: "var(--c-text-secondary)",
             }}
           >
-            Each proof links to the previous one. No gaps, no rewrites, no
-            forks. A causal chain of human decisions.
+            Each authorization links to the one before it. One chain. One history. No gaps, no rewrites. Your decisions, in order, forever.
           </p>
         </div>
       </div>
