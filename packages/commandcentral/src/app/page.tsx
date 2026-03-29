@@ -17,6 +17,7 @@ export default function App() {
   const [hasMore, setHasMore] = useState(true);
   const [view, setView] = useState<"main" | "settings">("main");
   const [chatOpen, setChatOpen] = useState(false);
+  const [autoLanes, setAutoLanes] = useState<string[]>([]);
   const pollingRef = useRef<ReturnType<typeof setInterval>>(undefined);
   const observerRef = useRef<HTMLDivElement>(null);
   const PAGE_SIZE = 20;
@@ -26,7 +27,14 @@ export default function App() {
   const refresh = useCallback(async () => {
     if (!user) return;
     try {
-      const [feedData, proofData] = await Promise.all([getFeed(), getProofs(PAGE_SIZE, 0, proofSearch)]);
+      const [feedData, proofData, lanesData] = await Promise.all([
+        getFeed(),
+        getProofs(PAGE_SIZE, 0, proofSearch),
+        fetch("/api/v2/policy/lanes").then(r => r.ok ? r.json() : null).catch(() => null),
+      ]);
+      if (lanesData?.lanes) {
+        setAutoLanes(lanesData.lanes.filter((l: any) => l.mode === "auto_approve").map((l: any) => l.label || l.lane));
+      }
       setFeed(feedData.requests ?? []);
       // Only update proofs if data changed (prevents resetting expanded state)
       const newProofs = proofData.proofs ?? [];
@@ -144,8 +152,41 @@ export default function App() {
             </>
           )}
 
+          {/* Auto-approved */}
+          {autoLanes.length > 0 && (
+            <div style={{ marginBottom: 24 }}>
+              <div className="section-header" style={pending.length === 0 ? { marginTop: 0 } : undefined}>
+                <span className="section-label">Auto-approved</span>
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {autoLanes.map(lane => (
+                  <div key={lane} style={{
+                    display: "flex", alignItems: "center", gap: 10,
+                    padding: "8px 14px",
+                    borderRadius: 8,
+                    border: "1px solid var(--border-light)",
+                    background: "var(--surface)",
+                    fontSize: 13,
+                  }}>
+                    <span style={{ color: "var(--text-secondary)" }}>{lane}</span>
+                    <button onClick={async () => {
+                      await revokeAuth(lane);
+                      setAutoLanes(prev => prev.filter(l => l !== lane));
+                    }} style={{
+                      fontSize: 12, padding: "2px 8px", borderRadius: 4,
+                      border: "1px solid var(--red)", background: "transparent",
+                      color: "var(--red)", cursor: "pointer", fontFamily: "inherit",
+                    }}>
+                      Stop
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Proof chain */}
-          <div className="section-header" style={pending.length === 0 ? { marginTop: 0 } : undefined}>
+          <div className="section-header" style={pending.length === 0 && autoLanes.length === 0 ? { marginTop: 0 } : undefined}>
             <span className="section-label">Explorer</span>
             {proofTotal > 0 && <span className="section-count">{proofTotal.toLocaleString()} proofs</span>}
           </div>
