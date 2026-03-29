@@ -85,23 +85,15 @@ export default function App() {
   if (loading) return <div className="page-center"><div className="loader" /></div>;
 
   if (!user) return (
-    <div>
-      <div className="topnav-wrap"><nav className="topnav">
-        <a href="https://occ.wtf" className="topnav-logo">OCC</a>
-        <div className="topnav-links">
-          <a href="https://occ.wtf/docs" className="topnav-link"><span>Docs</span></a>
-          <a href="https://github.com/mikeargento/occ" className="topnav-link" target="_blank" rel="noopener"><span>GitHub</span></a>
-        </div>
-      </nav></div>
-      <div className="page-center" style={{ minHeight: "calc(100vh - 52px)" }}>
-        <div className="login-card">
-          <h1 className="login-title">OCC</h1>
-          <p className="login-sub">Define what your AI does.</p>
-          <div className="login-buttons">
-            <a href="/auth/login/github" className="auth-btn"><GithubIcon /> Continue with GitHub</a>
-            <a href="/auth/login/google" className="auth-btn"><GoogleIcon /> Continue with Google</a>
-            <a href="/auth/login/apple" className="auth-btn"><AppleIcon /> Continue with Apple</a>
-          </div>
+    <div className="page-center" style={{ minHeight: "100vh" }}>
+      <div className="login-card">
+        <h1 className="login-title">Sign in to OCC</h1>
+        <div className="login-buttons">
+          <a href="/auth/login/github" className="auth-btn"><GithubIcon /> Continue with GitHub</a>
+          <a href="/auth/login/google" className="auth-btn"><GoogleIcon /> Continue with Google</a>
+          <a href="/auth/login/apple" className="auth-btn"><AppleIcon /> Continue with Apple</a>
+          <a href="https://occ.wtf/docs" className="auth-btn-outline">Docs</a>
+          <a href="https://github.com/mikeargento/occ" className="auth-btn-outline" target="_blank" rel="noopener">GitHub</a>
         </div>
       </div>
     </div>
