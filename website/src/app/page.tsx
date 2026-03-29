@@ -89,25 +89,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Sign in */}
-      <div style={{
-        background: "var(--bg-elevated)", borderRadius: 16,
-        border: "1px solid var(--c-border-subtle)", padding: "40px 32px",
-        marginBottom: 48, textAlign: "center",
-      }}>
-        <h2 style={{ fontSize: 22, fontWeight: 600, marginBottom: 8 }}>Get started</h2>
-        <p style={{ fontSize: 15, color: "var(--c-text-tertiary)", marginBottom: 24 }}>
-          Sign in to set up OCC and start controlling your AI.
-        </p>
-        <a href="https://agent.occ.wtf" style={{
-          display: "inline-flex", alignItems: "center", height: 48, padding: "0 32px",
-          borderRadius: 12, fontSize: 16, fontWeight: 600,
-          background: "var(--c-text)", color: "var(--bg)",
-          textDecoration: "none", transition: "all 0.2s",
-        }}>
-          Sign in →
-        </a>
-      </div>
+      <div style={{ height: 48 }} />
     </div>
   );
 }
