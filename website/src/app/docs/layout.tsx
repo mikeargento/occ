@@ -26,25 +26,6 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <div style={{ maxWidth: 1120, margin: "0 auto", padding: "32px 24px 64px" }}>
-      {/* Mobile nav */}
-      <div className="visible-mobile" style={{ marginBottom: 24 }}>
-        <select
-          onChange={(e) => window.location.href = e.target.value}
-          value={pathname}
-          style={{
-            width: "100%", height: 44, padding: "0 16px",
-            background: "var(--bg-elevated)", border: "1px solid var(--c-border-subtle)",
-            borderRadius: 8, fontSize: 14, fontWeight: 500,
-            color: "var(--c-text)", fontFamily: "inherit",
-            appearance: "none", cursor: "pointer",
-            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23707070' stroke-width='1.5'%3E%3Cpath d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E")`,
-            backgroundRepeat: "no-repeat", backgroundPosition: "right 1rem center",
-          }}
-        >
-          {sections.map((s) => <option key={s.href} value={s.href}>{s.label}</option>)}
-        </select>
-      </div>
-
       <div style={{ display: "flex", gap: 48 }}>
         {/* Sidebar — desktop only */}
         <aside className="hidden-mobile" style={{ width: 200, flexShrink: 0 }}>
