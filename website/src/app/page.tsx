@@ -21,13 +21,14 @@ export default function Home() {
           Your AI<br />asks first.
         </h1>
         <p style={{
-          fontSize: 18,
-          lineHeight: 1.6,
+          fontSize: "clamp(18px, 2.5vw, 24px)",
+          lineHeight: 1.3,
+          fontWeight: 500,
+          letterSpacing: "-0.02em",
           color: "var(--c-text-secondary)",
-          maxWidth: 400,
           marginBottom: 48,
         }}>
-          Every action needs a cryptographic ticket. You're the only one who can create it.
+          Artificial Intelligence. Human Authority.
         </p>
         <a href="https://agent.occ.wtf" style={{
           display: "inline-flex", alignItems: "center",
@@ -94,16 +95,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section style={{ paddingBottom: 120 }}>
-        <p style={{
-          fontSize: "clamp(20px, 3.5vw, 32px)",
-          fontWeight: 600,
-          letterSpacing: "-0.03em",
-          color: "var(--c-text-tertiary)",
-        }}>
-          Artificial Intelligence. <span style={{ color: "var(--c-text)" }}>Human Authority.</span>
-        </p>
-      </section>
+      <div style={{ height: 80 }} />
     </div>
   );
 }
