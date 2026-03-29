@@ -10,7 +10,7 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import { db } from "./db.js";
 import { classifyRisk, assessRisk, RISK_LANES, type RiskLane } from "./risk.js";
 import { generateSummary, toolLabel } from "./summaries.js";
-import { createAuthorizationObject, createExecutionProof } from "./authorization.js";
+import { createAuthorizationObject } from "./authorization.js";
 import { eventBus } from "./events.js";
 import { sendApprovalSMS } from "./sms.js";
 
@@ -110,16 +110,10 @@ export async function handleApiV2(req: IncomingMessage, res: ServerResponse, url
       });
 
       if (status === "auto_approved") {
-        // Execute immediately
+        // Create authorization proof — the permission slip
         const chainId = `${userId}:${agentId}`;
         const principal = await getPrincipal();
-        const authResult = await createAuthorizationObject(userId, agentId, tool, undefined, chainId, principal);
-        const execResult = await createExecutionProof(userId, agentId, tool, body.args, authResult.digest, chainId, principal);
-        await db.v2CreateExecution({
-          requestId: request.id, decisionId: decision.id, userId, agentId, tool,
-          args: body.args, authDigest: authResult.digest, execDigest: execResult.digest,
-          proof: execResult.proof,
-        });
+        await createAuthorizationObject(userId, agentId, tool, undefined, chainId, principal);
       }
     }
 
@@ -194,15 +188,6 @@ export async function handleApiV2(req: IncomingMessage, res: ServerResponse, url
       await db.enableTool(userId, request.agent_id, request.tool);
     }
 
-    // Create execution proof
-    const execResult = await createExecutionProof(userId, request.agent_id, request.tool, request.request_args, authResult.digest, chainId, principal);
-    const execution = await db.v2CreateExecution({
-      requestId, decisionId: decision.id, userId, agentId: request.agent_id,
-      tool: request.tool, args: request.request_args,
-      authDigest: authResult.digest, execDigest: execResult.digest,
-      proof: execResult.proof,
-    });
-
     eventBus.emit(userId, {
       type: "v2:decision", requestId, decision: "approved", mode,
       tool: request.tool, agentId: request.agent_id, timestamp: Date.now(),
@@ -210,7 +195,6 @@ export async function handleApiV2(req: IncomingMessage, res: ServerResponse, url
 
     return json(res, {
       decision: formatDecision(decision),
-      execution: formatExecution(execution),
     });
   }
 
@@ -286,7 +270,6 @@ export async function handleApiV2(req: IncomingMessage, res: ServerResponse, url
             proofDigest: authResult.digest, proof: authResult.proof,
           });
           await db.v2UpdateRequestStatus(id, "approved");
-          await createExecutionProof(userId, request.agent_id, request.tool, request.request_args, authResult.digest, chainId, principal);
         } else {
           await db.v2CreateDecision({
             requestId: id, userId, decidedBy: "human",
