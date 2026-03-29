@@ -332,20 +332,19 @@ export async function handleApiV2(req: IncomingMessage, res: ServerResponse, url
     return json(res, { proofs: proofs.map(formatProof), total });
   }
 
-  // POST /proofs/revoke — turn off auto-approve for a tool
+  // POST /proofs/revoke — turn off auto-approve for a tool or lane
   if (path === "/proofs/revoke" && method === "POST") {
     const body = JSON.parse(await readBody(req));
-    const { tool, agentId } = body;
-    if (!tool) return json(res, { error: "tool is required" }, 400);
-    const agent = agentId ?? "claude-code";
+    const { tool, lane } = body;
 
-    // Turn off auto-approve — next call will ask the user again
-    const riskLane = classifyRisk(tool);
-    await db.v2SetRiskLane(userId, riskLane, "ask");
-    await db.disableTool(userId, agent, tool);
+    // Support disabling by lane key directly
+    const targetLane = lane ?? (tool ? classifyRisk(tool) : null);
+    if (!targetLane) return json(res, { error: "tool or lane is required" }, 400);
+
+    await db.v2SetRiskLane(userId, targetLane, "ask");
 
     eventBus.emit(userId, {
-      type: "v2:revocation", tool, agentId: agent, timestamp: Date.now(),
+      type: "v2:revocation", lane: targetLane, timestamp: Date.now(),
     });
 
     return json(res, { ok: true });

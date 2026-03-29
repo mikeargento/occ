@@ -17,7 +17,7 @@ export default function App() {
   const [hasMore, setHasMore] = useState(true);
   const [view, setView] = useState<"main" | "settings">("main");
   const [chatOpen, setChatOpen] = useState(false);
-  const [autoLanes, setAutoLanes] = useState<string[]>([]);
+  const [autoLanes, setAutoLanes] = useState<{ key: string; label: string }[]>([]);
   const pollingRef = useRef<ReturnType<typeof setInterval>>(undefined);
   const observerRef = useRef<HTMLDivElement>(null);
   const PAGE_SIZE = 20;
@@ -33,7 +33,7 @@ export default function App() {
         fetch("/api/v2/policy/lanes").then(r => r.ok ? r.json() : null).catch(() => null),
       ]);
       if (lanesData?.lanes) {
-        setAutoLanes(lanesData.lanes.filter((l: any) => l.mode === "auto_approve").map((l: any) => l.label || l.lane));
+        setAutoLanes(lanesData.lanes.filter((l: any) => l.mode === "auto_approve").map((l: any) => ({ key: l.lane, label: l.label || l.lane })));
       }
       setFeed(feedData.requests ?? []);
       // Only update proofs if data changed (prevents resetting expanded state)
@@ -160,7 +160,7 @@ export default function App() {
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                 {autoLanes.map(lane => (
-                  <div key={lane} style={{
+                  <div key={lane.key} style={{
                     display: "flex", alignItems: "center", gap: 10,
                     padding: "8px 14px",
                     borderRadius: 8,
@@ -168,10 +168,10 @@ export default function App() {
                     background: "var(--surface)",
                     fontSize: 13,
                   }}>
-                    <span style={{ color: "var(--text-secondary)" }}>{lane}</span>
+                    <span style={{ color: "var(--text-secondary)" }}>{lane.label}</span>
                     <button onClick={async () => {
-                      await revokeAuth(lane);
-                      setAutoLanes(prev => prev.filter(l => l !== lane));
+                      await fetch("/api/v2/proofs/revoke", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ lane: lane.key }) });
+                      setAutoLanes(prev => prev.filter(l => l.key !== lane.key));
                     }} style={{
                       fontSize: 12, padding: "2px 8px", borderRadius: 4,
                       border: "1px solid var(--red)", background: "transparent",
