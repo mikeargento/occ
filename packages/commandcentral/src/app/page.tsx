@@ -174,7 +174,7 @@ export default function App() {
             </div>
           ) : (
             <div className="explorer-list">
-              {proofs.map(p => <ExplorerRow key={p.id} proof={p} onRefresh={refresh} />)}
+              {proofs.map(p => <ExplorerRow key={p.id} proof={p} />)}
             </div>
           )}
 
@@ -381,20 +381,9 @@ function extractTarget(args: Record<string, unknown>): string | null {
 }
 
 /* ── Explorer Row ── */
-function ExplorerRow({ proof: p, onRefresh }: { proof: V2Proof; onRefresh?: () => void }) {
+function ExplorerRow({ proof: p }: { proof: V2Proof }) {
   const [expanded, setExpanded] = useState(false);
-  const [revoking, setRevoking] = useState(false);
   const toggle = () => setExpanded(e => !e);
-
-  async function handleRevoke() {
-    if (!confirm(`Stop auto-approving "${p.tool}"? It will ask you next time.`)) return;
-    setRevoking(true);
-    try {
-      await revokeAuth(String(p.tool), String(p.agentId));
-      onRefresh?.();
-    } catch {}
-    setRevoking(false);
-  }
   const receipt = p.receipt as Record<string, unknown> | undefined;
   const commit = receipt?.commit as Record<string, unknown> | undefined;
   const env = receipt?.environment as Record<string, unknown> | undefined;
@@ -443,22 +432,9 @@ function ExplorerRow({ proof: p, onRefresh }: { proof: V2Proof; onRefresh?: () =
               {" "}<strong>{String(p.tool)}</strong>{" by "}<strong>{String(p.agentId)}</strong>
               {commitTime ? ` at ${new Date(commitTime).toLocaleString()}` : ""}
             </div>
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              {p.allowed && (
-                <button onClick={(e) => { e.stopPropagation(); handleRevoke(); }} disabled={revoking} style={{
-                  fontSize: 12, fontWeight: 500, padding: "4px 12px", borderRadius: 6,
-                  border: "1px solid var(--red, #ef4444)", background: "transparent",
-                  color: "var(--red, #ef4444)", cursor: revoking ? "wait" : "pointer",
-                  opacity: revoking ? 0.5 : 1, transition: "all 0.2s",
-                  fontFamily: "inherit",
-                }}>
-                  {revoking ? "Stopping..." : "Stop auto-approve"}
-                </button>
-              )}
-              <button onClick={(e) => { e.stopPropagation(); setExpanded(false); }} className="explorer-close-btn" title="Close">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </button>
-            </div>
+            <button onClick={(e) => { e.stopPropagation(); setExpanded(false); }} className="explorer-close-btn" title="Close">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
           </div>
 
           <div className="explorer-sections">
@@ -587,10 +563,23 @@ function CopyableJson({ data }: { data: Record<string, unknown> }) {
 function SettingsView({ user }: { user: { id: string; name: string; email: string; avatar: string } }) {
   const [token, setToken] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  const [autoTools, setAutoTools] = useState<string[]>([]);
 
   useEffect(() => {
     fetch("/api/settings/token").then(r => r.ok ? r.json() : null).then(d => { if (d?.token) setToken(d.token); }).catch(() => {});
+    // Fetch auto-approved tools
+    fetch("/api/v2/policy/lanes").then(r => r.ok ? r.json() : null).then(d => {
+      if (d?.lanes) {
+        const auto = d.lanes.filter((l: any) => l.mode === "auto_approve").map((l: any) => l.label || l.lane);
+        setAutoTools(auto);
+      }
+    }).catch(() => {});
   }, []);
+
+  async function stopAutoApprove(lane: string) {
+    await revokeAuth(lane);
+    setAutoTools(prev => prev.filter(t => t !== lane));
+  }
 
   function copy(text: string, label: string) {
     navigator.clipboard.writeText(text);
@@ -643,6 +632,27 @@ function SettingsView({ user }: { user: { id: string; name: string; email: strin
                 {copied === "cmd" ? "Copied!" : "Copy setup commands"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Auto-approved tools */}
+      {autoTools.length > 0 && (
+        <div className="settings-section">
+          <div className="settings-label">Auto-approved</div>
+          <div className="settings-card">
+            {autoTools.map(tool => (
+              <div key={tool} className="settings-row">
+                <div className="settings-row-label" style={{ fontFamily: "'SF Mono', monospace", fontSize: 14 }}>{tool}</div>
+                <button onClick={() => stopAutoApprove(tool)} className="settings-btn" style={{
+                  height: 32, fontSize: 13, padding: "0 12px", borderRadius: 6,
+                  border: "1px solid var(--red)", background: "transparent", color: "var(--red)",
+                  cursor: "pointer", fontFamily: "inherit",
+                }}>
+                  Stop
+                </button>
+              </div>
+            ))}
           </div>
         </div>
       )}
