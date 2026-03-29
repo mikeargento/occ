@@ -60,60 +60,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Three columns */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-          gap: 48,
-          marginBottom: 80,
-          textAlign: "left",
-        }}
-      >
-        <div style={{ padding: "24px 0" }}>
-          <h3 style={{ fontSize: 17, fontWeight: 600, marginBottom: 8 }}>
-            Nothing runs without you
-          </h3>
-          <p
-            style={{
-              fontSize: 15,
-              lineHeight: 1.6,
-              color: "var(--c-text-secondary)",
-            }}
-          >
-            AI thinks freely. Execution requires your command. No command, no action.
-          </p>
-        </div>
-        <div style={{ padding: "24px 0" }}>
-          <h3 style={{ fontSize: 17, fontWeight: 600, marginBottom: 8 }}>
-            Your authorization creates the command
-          </h3>
-          <p
-            style={{
-              fontSize: 15,
-              lineHeight: 1.6,
-              color: "var(--c-text-secondary)",
-            }}
-          >
-            When you say yes, a signed object is created inside a hardware enclave. That object is what makes execution possible.
-          </p>
-        </div>
-        <div style={{ padding: "24px 0" }}>
-          <h3 style={{ fontSize: 17, fontWeight: 600, marginBottom: 8 }}>
-            Every command links to the last
-          </h3>
-          <p
-            style={{
-              fontSize: 15,
-              lineHeight: 1.6,
-              color: "var(--c-text-secondary)",
-            }}
-          >
-            One authorization follows another. No gaps. No rewrites. A permanent chain of your decisions.
-          </p>
-        </div>
-      </div>
-
       <div style={{ height: 48 }} />
     </div>
   );
