@@ -4,7 +4,7 @@ export default function Home() {
   return (
     <div style={{ maxWidth: 1120, margin: "0 auto", padding: "80px 24px 64px" }}>
       {/* Hero */}
-      <div style={{ marginBottom: 80 }}>
+      <div style={{ marginBottom: 80, textAlign: "center" }}>
         <h1 style={{
           fontSize: "clamp(36px, 6vw, 56px)", fontWeight: 700,
           letterSpacing: "-0.03em", lineHeight: 1.1, marginBottom: 16,
@@ -17,7 +17,7 @@ export default function Home() {
         }}>
           Artificial Intelligence. Human Authority.
         </p>
-        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
           <a href="https://agent.occ.wtf" style={{
             display: "inline-flex", alignItems: "center", height: 44, padding: "0 24px",
             borderRadius: 8, fontSize: 15, fontWeight: 600,
