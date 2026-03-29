@@ -1,101 +1,87 @@
-"use client";
-
 import Link from "next/link";
-import { useState } from "react";
 
 export default function Home() {
-  const [copied, setCopied] = useState(false);
-  const cmd = "curl -fsSL https://agent.occ.wtf/install | bash";
-
   return (
-    <div style={{ maxWidth: 980, margin: "0 auto", padding: "0 24px" }}>
-
-      <section style={{ paddingTop: "22vh", paddingBottom: 100 }}>
+    <div style={{ maxWidth: 1120, margin: "0 auto", padding: "80px 24px 64px" }}>
+      {/* Hero */}
+      <div style={{ marginBottom: 80 }}>
         <h1 style={{
-          fontSize: "clamp(48px, 10vw, 120px)",
-          fontWeight: 800,
-          letterSpacing: "-0.06em",
-          lineHeight: 0.95,
-          marginBottom: 32,
+          fontSize: "clamp(36px, 6vw, 56px)", fontWeight: 700,
+          letterSpacing: "-0.03em", lineHeight: 1.1, marginBottom: 16,
         }}>
-          Your AI<br />asks first.
+          Define what your AI does.
         </h1>
         <p style={{
-          fontSize: "clamp(18px, 2.5vw, 24px)",
-          lineHeight: 1.3,
-          fontWeight: 500,
-          letterSpacing: "-0.02em",
-          color: "var(--c-text-secondary)",
-          marginBottom: 48,
+          fontSize: "clamp(28px, 4vw, 42px)", lineHeight: 1.2, color: "var(--c-text-secondary)",
+          fontWeight: 600, letterSpacing: "-0.02em", marginBottom: 32,
         }}>
           Artificial Intelligence. Human Authority.
         </p>
-        <a href="https://agent.occ.wtf" style={{
-          display: "inline-flex", alignItems: "center",
-          height: 44, padding: "0 20px",
-          borderRadius: 8, fontSize: 14, fontWeight: 600,
-          background: "#fff", color: "#000",
-          textDecoration: "none",
-        }}>
-          Let's go →
-        </a>
-      </section>
-
-      <section style={{ paddingBottom: 100 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 48 }}>
-          <div>
-            <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>AI proposes</h3>
-            <p style={{ fontSize: 15, lineHeight: 1.6, color: "var(--c-text-secondary)" }}>
-              Intelligence without authority. It can think, plan, and suggest — but it cannot act.
-            </p>
-          </div>
-          <div>
-            <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>You say yes</h3>
-            <p style={{ fontSize: 15, lineHeight: 1.6, color: "var(--c-text-secondary)" }}>
-              Your yes forges a signed proof inside a hardware enclave. That's the ticket.
-            </p>
-          </div>
-          <div>
-            <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Every ticket is fresh</h3>
-            <p style={{ fontSize: 15, lineHeight: 1.6, color: "var(--c-text-secondary)" }}>
-              Every action gets its own. Each links to the last. Your chain. Your calls.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section style={{ paddingBottom: 100 }}>
-        <div style={{
-          display: "flex", alignItems: "center", gap: 12,
-          padding: "14px 20px",
-          borderRadius: 10,
-          background: "var(--bg-elevated)",
-          border: "1px solid var(--c-border-subtle)",
-          fontFamily: "var(--font-mono)",
-          fontSize: 13,
-          width: "fit-content",
-        }}>
-          <code style={{ color: "var(--c-text-secondary)", whiteSpace: "nowrap" }}>
-            <span style={{ color: "var(--c-text-tertiary)", userSelect: "none" }}>$ </span>
-            {cmd}
-          </code>
-          <button onClick={() => { navigator.clipboard.writeText(cmd); setCopied(true); setTimeout(() => setCopied(false), 2000); }} style={{
-            flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
-            width: 28, height: 28, borderRadius: 6,
-            border: "none", background: "transparent",
-            color: copied ? "#30d158" : "var(--c-text-tertiary)",
-            cursor: "pointer", transition: "color 0.2s",
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+          <a href="https://agent.occ.wtf"
+            style={{
+            display: "inline-flex", alignItems: "center", height: 44, padding: "0 24px",
+            borderRadius: 8, fontSize: 15, fontWeight: 600,
+            background: "var(--c-text)", color: "var(--bg)",
+            textDecoration: "none", transition: "all 0.2s",
           }}>
-            {copied ? (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
-            ) : (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-            )}
-          </button>
+            Get started
+          </a>
+          <Link href="/docs" style={{
+            display: "inline-flex", alignItems: "center", height: 44, padding: "0 24px",
+            borderRadius: 8, fontSize: 15, fontWeight: 500,
+            border: "1px solid var(--c-border)", color: "var(--c-text)",
+            textDecoration: "none", transition: "all 0.15s",
+          }}>
+            Documentation
+          </Link>
         </div>
-      </section>
+      </div>
 
-      <div style={{ height: 80 }} />
+      {/* Three columns */}
+      <div style={{
+        display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+        gap: 24, marginBottom: 80,
+      }}>
+        <div style={{ padding: "24px 0" }}>
+          <h3 style={{ fontSize: 17, fontWeight: 600, marginBottom: 8 }}>No action without you</h3>
+          <p style={{ fontSize: 15, lineHeight: 1.6, color: "var(--c-text-secondary)" }}>
+            AI can think freely. But nothing executes unless you authorize it. No approval, no execution path.
+          </p>
+        </div>
+        <div style={{ padding: "24px 0" }}>
+          <h3 style={{ fontSize: 17, fontWeight: 600, marginBottom: 8 }}>Approval becomes execution</h3>
+          <p style={{ fontSize: 15, lineHeight: 1.6, color: "var(--c-text-secondary)" }}>
+            Your authorization creates the cryptographic object that makes the action possible. The proof is the command.
+          </p>
+        </div>
+        <div style={{ padding: "24px 0" }}>
+          <h3 style={{ fontSize: 17, fontWeight: 600, marginBottom: 8 }}>Every action must follow the last</h3>
+          <p style={{ fontSize: 15, lineHeight: 1.6, color: "var(--c-text-secondary)" }}>
+            Each proof links to the previous one. No gaps, no rewrites, no forks. A causal chain of human decisions.
+          </p>
+        </div>
+      </div>
+
+      {/* Sign in */}
+      <div style={{
+        background: "var(--bg-elevated)", borderRadius: 16,
+        border: "1px solid var(--c-border-subtle)", padding: "40px 32px",
+        marginBottom: 48, textAlign: "center",
+      }}>
+        <h2 style={{ fontSize: 22, fontWeight: 600, marginBottom: 8 }}>Get started</h2>
+        <p style={{ fontSize: 15, color: "var(--c-text-tertiary)", marginBottom: 24 }}>
+          Sign in to set up OCC and start controlling your AI.
+        </p>
+        <a href="https://agent.occ.wtf" style={{
+          display: "inline-flex", alignItems: "center", height: 48, padding: "0 32px",
+          borderRadius: 12, fontSize: 16, fontWeight: 600,
+          background: "var(--c-text)", color: "var(--bg)",
+          textDecoration: "none", transition: "all 0.2s",
+        }}>
+          Sign in →
+        </a>
+      </div>
     </div>
   );
 }
