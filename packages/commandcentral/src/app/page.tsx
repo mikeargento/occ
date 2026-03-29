@@ -26,7 +26,7 @@ export default function App() {
   const refresh = useCallback(async () => {
     if (!user) return;
     try {
-      const [feedData, proofData] = await Promise.all([getFeed(), getProofs(PAGE_SIZE, 0, proofSearch, showFullChain)]);
+      const [feedData, proofData] = await Promise.all([getFeed(), getProofs(PAGE_SIZE, 0, proofSearch)]);
       setFeed(feedData.requests ?? []);
       // Only update proofs if data changed (prevents resetting expanded state)
       const newProofs = proofData.proofs ?? [];
@@ -44,7 +44,7 @@ export default function App() {
     if (!user || loadingMore || !hasMore) return;
     setLoadingMore(true);
     try {
-      const data = await getProofs(PAGE_SIZE, proofs.length, proofSearch, showFullChain);
+      const data = await getProofs(PAGE_SIZE, proofs.length, proofSearch);
       setProofs(prev => [...prev, ...(data.proofs ?? [])]);
       setHasMore(proofs.length + (data.proofs?.length ?? 0) < (data.total ?? 0));
     } catch {}
@@ -147,13 +147,7 @@ export default function App() {
           {/* Proof chain */}
           <div className="section-header" style={pending.length === 0 ? { marginTop: 0 } : undefined}>
             <span className="section-label">Explorer</span>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div className="explorer-view-tabs">
-                <button className={`explorer-view-tab ${!showFullChain ? "explorer-view-tab-active" : ""}`} onClick={() => setShowFullChain(false)}>Collapsed</button>
-                <button className={`explorer-view-tab ${showFullChain ? "explorer-view-tab-active" : ""}`} onClick={() => setShowFullChain(true)}>Expanded</button>
-              </div>
-              {proofTotal > 0 && <span className="section-count">{proofTotal.toLocaleString()} total</span>}
-            </div>
+            {proofTotal > 0 && <span className="section-count">{proofTotal.toLocaleString()} proofs</span>}
           </div>
 
           {/* Search */}
@@ -180,7 +174,7 @@ export default function App() {
             </div>
           ) : (
             <div className="explorer-list">
-              {proofs.map(p => <ExplorerRow key={p.id} proof={p} autoExpand={showFullChain} />)}
+              {proofs.map(p => <ExplorerRow key={p.id} proof={p} />)}
             </div>
           )}
 
@@ -387,19 +381,9 @@ function extractTarget(args: Record<string, unknown>): string | null {
 }
 
 /* ── Explorer Row ── */
-function ExplorerRow({ proof: p, autoExpand = false }: { proof: V2Proof; autoExpand?: boolean }) {
-  const [expanded, setExpanded] = useState(autoExpand);
-  const [manualToggle, setManualToggle] = useState(false);
-
-  // Sync with autoExpand prop (but not if user manually toggled)
-  useEffect(() => {
-    if (!manualToggle) setExpanded(autoExpand);
-  }, [autoExpand, manualToggle]);
-
-  const toggle = () => {
-    setManualToggle(true);
-    setExpanded(e => !e);
-  };
+function ExplorerRow({ proof: p }: { proof: V2Proof }) {
+  const [expanded, setExpanded] = useState(false);
+  const toggle = () => setExpanded(e => !e);
   const receipt = p.receipt as Record<string, unknown> | undefined;
   const commit = receipt?.commit as Record<string, unknown> | undefined;
   const env = receipt?.environment as Record<string, unknown> | undefined;
@@ -448,37 +432,20 @@ function ExplorerRow({ proof: p, autoExpand = false }: { proof: V2Proof; autoExp
               {" "}<strong>{String(p.tool)}</strong>{" by "}<strong>{String(p.agentId)}</strong>
               {commitTime ? ` at ${new Date(commitTime).toLocaleString()}` : ""}
             </div>
-            <button onClick={(e) => { e.stopPropagation(); setManualToggle(true); setExpanded(false); }} className="explorer-close-btn" title="Close">
+            <button onClick={(e) => { e.stopPropagation(); setExpanded(false); }} className="explorer-close-btn" title="Close">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
 
-          {/* Section cards — matching occ.wtf explorer detail */}
           <div className="explorer-sections">
 
-            {/* Action */}
+            {/* Arguments (only if present) */}
             {(p.args && typeof p.args === "object" && Object.keys(p.args as Record<string, unknown>).length > 0) ? (
               <div className="explorer-section">
-                <div className="explorer-section-title">Action</div>
-                <div className="explorer-section-body">
-                  <ProofField label="Tool" value={String(p.tool)} mono />
-                  <ProofField label="Decision" value={p.allowed ? "Allowed" : "Denied"} color={p.allowed ? "var(--green)" : "var(--red)"} />
-                  <ProofField label="Agent" value={String(p.agentId)} />
-                  {p.reason && <ProofField label="Reason" value={p.reason} />}
-                </div>
+                <div className="explorer-section-title">Arguments</div>
                 <pre className="explorer-detail-args">{JSON.stringify(p.args, null, 2)}</pre>
               </div>
-            ) : (
-              <div className="explorer-section">
-                <div className="explorer-section-title">Action</div>
-                <div className="explorer-section-body">
-                  <ProofField label="Tool" value={String(p.tool)} mono />
-                  <ProofField label="Decision" value={p.allowed ? "Allowed" : "Denied"} color={p.allowed ? "var(--green)" : "var(--red)"} />
-                  <ProofField label="Agent" value={String(p.agentId)} />
-                  {p.reason && <ProofField label="Reason" value={p.reason} />}
-                </div>
-              </div>
-            )}
+            ) : null}
 
             {/* Artifact */}
             {p.proofDigest && (

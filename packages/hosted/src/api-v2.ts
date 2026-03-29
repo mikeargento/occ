@@ -26,9 +26,15 @@ async function readBody(req: IncomingMessage): Promise<string> {
   return Buffer.concat(chunks).toString("utf-8");
 }
 
-function getUserId(req: IncomingMessage): string | null {
+async function getUserId(req: IncomingMessage): Promise<string | null> {
+  // Check Bearer token first — resolve to actual user ID
   const auth = req.headers.authorization;
-  if (auth?.startsWith("Bearer ")) return auth.slice(7);
+  if (auth?.startsWith("Bearer ")) {
+    const token = auth.slice(7);
+    const user = await db.getUserByToken(token);
+    return user?.id ?? null;
+  }
+  // Check session cookie
   const cookies = req.headers.cookie ?? "";
   const match = cookies.match(/occ_session=([^;]+)/);
   return match?.[1] ?? null;
@@ -37,7 +43,7 @@ function getUserId(req: IncomingMessage): string | null {
 export async function handleApiV2(req: IncomingMessage, res: ServerResponse, url: URL) {
   const path = url.pathname.replace(/^\/api\/v2/, "");
   const method = req.method ?? "GET";
-  const userId = getUserId(req) ?? "anonymous";
+  const userId = (await getUserId(req)) ?? "anonymous";
 
   // Build principal for proof signing
   let _principal: { id: string; provider?: string } | undefined;
