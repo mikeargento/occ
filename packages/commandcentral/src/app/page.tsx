@@ -149,8 +149,8 @@ export default function App() {
             <span className="section-label">Explorer</span>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <div className="explorer-view-tabs">
-                <button className={`explorer-view-tab ${!showFullChain ? "explorer-view-tab-active" : ""}`} onClick={() => { if (showFullChain) { setShowFullChain(false); setProofs([]); } }}>Actions</button>
-                <button className={`explorer-view-tab ${showFullChain ? "explorer-view-tab-active" : ""}`} onClick={() => { if (!showFullChain) { setShowFullChain(true); setProofs([]); } }}>Full chain</button>
+                <button className={`explorer-view-tab ${!showFullChain ? "explorer-view-tab-active" : ""}`} onClick={() => { if (showFullChain) { setShowFullChain(false); } }}>Actions</button>
+                <button className={`explorer-view-tab ${showFullChain ? "explorer-view-tab-active" : ""}`} onClick={() => { if (!showFullChain) { setShowFullChain(true); } }}>Detailed</button>
               </div>
               {proofTotal > 0 && <span className="section-count">{proofTotal.toLocaleString()} total</span>}
             </div>
@@ -180,7 +180,7 @@ export default function App() {
             </div>
           ) : (
             <div className="explorer-list">
-              {proofs.map(p => <ExplorerRow key={p.id} proof={p} />)}
+              {proofs.map(p => <ExplorerRow key={p.id} proof={p} autoExpand={showFullChain} />)}
             </div>
           )}
 
@@ -387,8 +387,8 @@ function extractTarget(args: Record<string, unknown>): string | null {
 }
 
 /* ── Explorer Row ── */
-function ExplorerRow({ proof: p }: { proof: V2Proof }) {
-  const [expanded, setExpanded] = useState(false);
+function ExplorerRow({ proof: p, autoExpand = false }: { proof: V2Proof; autoExpand?: boolean }) {
+  const [expanded, setExpanded] = useState(autoExpand);
   const receipt = p.receipt as Record<string, unknown> | undefined;
   const commit = receipt?.commit as Record<string, unknown> | undefined;
   const env = receipt?.environment as Record<string, unknown> | undefined;

@@ -12,6 +12,7 @@ const sections = [
   { href: "/docs/integration", label: "Integration Guide" },
   { href: "/docs/agent-sdk", label: "Agent SDK" },
   { href: "/docs/what-occ-is-not", label: "What OCC is Not" },
+  { href: "/docs/self-host-tee", label: "Self-Host TEE" },
   { href: "/docs/faq", label: "FAQ" },
 ];
 
