@@ -451,7 +451,25 @@ export async function handleApiV2(req: IncomingMessage, res: ServerResponse, url
     }
 
     if (laneMode === "auto_approve") {
-      // "Always" — user previously forged a standing token for this tool
+      // "Always" — reuse the existing authorization proof, don't mint a new one
+      const existingAuth = await db.getValidAuthorization(hookUserId, hookAgentId, tool);
+      if (existingAuth) {
+        // Standing authorization exists — return it directly, no TEE call
+        return json(res, {
+          token: {
+            requestId: 0,
+            tool,
+            args,
+            agentId: hookAgentId,
+            authorizedBy: hookUserId,
+            authorizedAt: new Date().toISOString(),
+            proofDigest: existingAuth.proofDigest,
+            proof: existingAuth.proof,
+            singleUse: false,
+          }
+        });
+      }
+      // No existing auth found (shouldn't happen if auto_approve is set) — forge one
       const request = await db.v2CreateRequest(hookUserId, {
         agentId: hookAgentId, tool, riskLane, summary,
         label: toolLabel(tool), originType: "hook", originClient: "Claude Code",
