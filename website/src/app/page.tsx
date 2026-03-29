@@ -11,40 +11,32 @@ export default function Home() {
     <div>
       {/* ── Hero ── */}
       <section style={{
-        minHeight: "85vh",
+        minHeight: "80vh",
         display: "flex", flexDirection: "column",
         alignItems: "center", justifyContent: "center",
         textAlign: "center",
         padding: "0 24px",
       }}>
-        <p style={{
-          fontSize: 17, fontWeight: 500,
-          color: "var(--c-accent)",
-          letterSpacing: "0.02em",
-          marginBottom: 20,
-        }}>
-          Origin Controlled Computing
-        </p>
         <h1 style={{
-          fontSize: "clamp(40px, 8vw, 80px)",
+          fontSize: "clamp(44px, 9vw, 96px)",
           fontWeight: 700,
-          letterSpacing: "-0.04em",
-          lineHeight: 1.05,
-          marginBottom: 20,
-          maxWidth: 900,
+          letterSpacing: "-0.05em",
+          lineHeight: 1.0,
+          marginBottom: 24,
+          maxWidth: 800,
         }}>
-          Define what your AI does.
+          Your AI asks first.
         </h1>
         <p style={{
-          fontSize: "clamp(20px, 3vw, 28px)",
-          lineHeight: 1.3,
+          fontSize: "clamp(18px, 2.5vw, 24px)",
+          lineHeight: 1.4,
           color: "var(--c-text-secondary)",
-          fontWeight: 500,
-          letterSpacing: "-0.01em",
-          marginBottom: 40,
-          maxWidth: 600,
+          fontWeight: 400,
+          maxWidth: 520,
+          marginBottom: 48,
         }}>
-          Artificial Intelligence. Human Authority.
+          Nothing executes without your proof.<br />
+          Nothing proves without your say.
         </p>
         <div style={{ display: "flex", gap: 16, flexWrap: "wrap", justifyContent: "center" }}>
           <a href="https://agent.occ.wtf" style={{
@@ -63,17 +55,16 @@ export default function Home() {
             borderRadius: 980, fontSize: 17, fontWeight: 500,
             color: "var(--c-accent)",
             textDecoration: "none",
-            transition: "all 0.3s",
           }}>
-            Learn more →
+            Read the docs →
           </Link>
         </div>
       </section>
 
-      {/* ── Three pillars ── */}
+      {/* ── How it works — three beats ── */}
       <section style={{
         maxWidth: 980, margin: "0 auto",
-        padding: "80px 24px 120px",
+        padding: "0 24px 120px",
       }}>
         <div style={{
           display: "grid",
@@ -85,20 +76,31 @@ export default function Home() {
         }}>
           {[
             {
-              title: "No action without you",
-              desc: "AI can think freely. But nothing executes unless you authorize it. No approval, no execution path.",
+              num: "01",
+              title: "AI proposes",
+              desc: "Your AI thinks, plans, and suggests actions. It has intelligence. It does not have authority.",
             },
             {
-              title: "Approval becomes execution",
-              desc: "Your authorization creates the cryptographic proof that makes the action possible. The proof is the command.",
+              num: "02",
+              title: "You authorize",
+              desc: "You say yes. That creates a cryptographic proof — the only object that makes the action executable.",
             },
             {
-              title: "Every action follows the last",
-              desc: "Each proof links to the previous one. No gaps, no rewrites, no forks. A causal chain of human decisions.",
+              num: "03",
+              title: "Proof becomes command",
+              desc: "No proof, no action. Every proof links to the last. An unbreakable chain of your decisions.",
             },
           ].map((p) => (
-            <div key={p.title} className="pillar-cell">
-              <h3 className="pillar-cell-title">
+            <div key={p.num} className="pillar-cell">
+              <span style={{
+                fontSize: 13, fontWeight: 600,
+                color: "var(--c-text-tertiary)",
+                fontFamily: "var(--font-mono)",
+                letterSpacing: "0.04em",
+              }}>
+                {p.num}
+              </span>
+              <h3 className="pillar-cell-title" style={{ marginTop: 12 }}>
                 {p.title}
               </h3>
               <p className="pillar-cell-desc">
@@ -109,24 +111,36 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── The line ── */}
+      <section style={{
+        textAlign: "center",
+        padding: "0 24px 120px",
+      }}>
+        <p style={{
+          fontSize: "clamp(24px, 4vw, 40px)",
+          fontWeight: 600,
+          letterSpacing: "-0.03em",
+          lineHeight: 1.2,
+          maxWidth: 600,
+          margin: "0 auto",
+          color: "var(--c-text)",
+        }}>
+          Artificial Intelligence.<br />
+          <span style={{ color: "var(--c-accent)" }}>Human Authority.</span>
+        </p>
+      </section>
+
       {/* ── Install ── */}
       <section style={{
         textAlign: "center",
         padding: "0 24px 120px",
       }}>
-        <h2 style={{
-          fontSize: "clamp(28px, 5vw, 48px)",
-          fontWeight: 700,
-          letterSpacing: "-0.03em",
-          marginBottom: 16,
-        }}>
-          One command.
-        </h2>
         <p style={{
-          fontSize: 17, color: "var(--c-text-secondary)",
-          marginBottom: 40, maxWidth: 460, margin: "0 auto 40px",
+          fontSize: 15, color: "var(--c-text-tertiary)",
+          marginBottom: 20, letterSpacing: "0.02em",
+          textTransform: "uppercase", fontWeight: 500,
         }}>
-          AI can think freely. Actions require your authority.
+          Quick start
         </p>
         <div style={{
           display: "inline-flex", alignItems: "center", gap: 12,
@@ -148,7 +162,7 @@ export default function Home() {
             display: "flex", alignItems: "center", justifyContent: "center",
             width: 32, height: 32, borderRadius: 8,
             border: "none", background: "transparent",
-            color: copied ? "#22c55e" : "var(--c-text-tertiary)",
+            color: copied ? "#30d158" : "var(--c-text-tertiary)",
             cursor: "pointer", transition: "color 0.2s",
           }}>
             {copied ? (
@@ -158,6 +172,9 @@ export default function Home() {
             )}
           </button>
         </div>
+        <p style={{ fontSize: 14, color: "var(--c-text-tertiary)", marginTop: 16 }}>
+          Works with Claude Code. More runtimes coming.
+        </p>
       </section>
     </div>
   );
