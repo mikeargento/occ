@@ -188,7 +188,27 @@ export default function App() {
           {/* Proof chain */}
           <div className="section-header" style={pending.length === 0 && autoLanes.length === 0 ? { marginTop: 0 } : undefined}>
             <span className="section-label">Explorer</span>
-            {proofTotal > 0 && <span className="section-count">{proofTotal.toLocaleString()} proofs</span>}
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              {proofTotal > 0 && <span className="section-count">{proofTotal.toLocaleString()} proofs</span>}
+              {proofs.length > 0 && (
+                <button onClick={async () => {
+                  const all = await getProofs(1000, 0, "");
+                  const json = JSON.stringify(all.proofs, null, 2);
+                  const blob = new Blob([json], { type: "application/json" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url; a.download = "occ-proofs.json"; a.click();
+                  URL.revokeObjectURL(url);
+                }} style={{
+                  fontSize: 12, fontWeight: 500, padding: "4px 10px", borderRadius: 6,
+                  border: "1px solid var(--border-light)", background: "transparent",
+                  color: "var(--text-secondary)", cursor: "pointer", fontFamily: "inherit",
+                  transition: "all 0.2s",
+                }}>
+                  Export all
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Search */}
@@ -570,8 +590,27 @@ function ExplorerRow({ proof: p }: { proof: V2Proof }) {
             )}
           </div>
 
-          {/* Full JSON */}
-          {receipt && <CopyableJson data={receipt} />}
+          {/* Full JSON + Export */}
+          {receipt && (
+            <div>
+              <CopyableJson data={receipt} />
+              <button onClick={() => {
+                const json = JSON.stringify(receipt, null, 2);
+                const blob = new Blob([json], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url; a.download = `occ-proof-${p.proofDigest?.slice(0, 12) || p.id}.json`; a.click();
+                URL.revokeObjectURL(url);
+              }} style={{
+                marginTop: 8, fontSize: 12, fontWeight: 500, padding: "6px 14px", borderRadius: 6,
+                border: "1px solid var(--border-light)", background: "transparent",
+                color: "var(--text-secondary)", cursor: "pointer", fontFamily: "inherit",
+                transition: "all 0.2s",
+              }}>
+                Export proof
+              </button>
+            </div>
+          )}
 
           {!receipt && p.reason && (
             <div className="explorer-detail-field">
