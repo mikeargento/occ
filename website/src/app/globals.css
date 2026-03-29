@@ -28,7 +28,7 @@
 
 /* ── Design Tokens — dark only ── */
 :root {
-  --bg: #0a0a0a;
+  --bg: #111111;
   --bg-elevated: #141416;
   --bg-subtle: #1c1c1e;
   --c-border: #333336;
