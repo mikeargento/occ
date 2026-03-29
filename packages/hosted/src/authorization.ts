@@ -111,6 +111,16 @@ export async function createAuthorizationObject(
   // Store the authorization object
   await db.storeAuthorization(userId, agentId, tool, "authorization", digestB64, proof, undefined, constraints);
 
+  // Also store in proof log so it's visible in the user's explorer
+  await db.addProof(userId, {
+    agentId,
+    tool,
+    allowed: true,
+    proofDigest: digestB64,
+    receipt: proof,
+    reason: "Authorization created",
+  });
+
   // Update the agent's allowed_tools cache
   await db.enableTool(userId, agentId, tool);
 
@@ -244,6 +254,16 @@ export async function createRevocationObject(
 
   // Store revocation
   await db.storeAuthorization(userId, agentId, tool, "revocation", digestB64, proof, authorizationDigest);
+
+  // Also store in proof log
+  await db.addProof(userId, {
+    agentId,
+    tool,
+    allowed: false,
+    proofDigest: digestB64,
+    receipt: proof,
+    reason: `Revocation of ${authorizationDigest}`,
+  });
 
   // Update cache: remove from allowed
   await db.disableTool(userId, agentId, tool);
