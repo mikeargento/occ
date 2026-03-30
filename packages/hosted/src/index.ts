@@ -225,7 +225,7 @@ async function main() {
     console.log(`  API:        http://localhost:${PORT}/api`);
     console.log(`  MCP:        http://localhost:${PORT}/mcp/:token`);
     console.log(`  LLM Proxy:  http://localhost:${PORT}/v1/:token`);
-    console.log(`  BTC Anchor: every new block → TEE`);
+    console.log(`  ETH Anchor: every 10 min → TEE`);
     console.log("");
 
     // Start Bitcoin anchor service — runs in background

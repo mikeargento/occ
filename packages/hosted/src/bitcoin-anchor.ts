@@ -1,9 +1,12 @@
 /**
- * Bitcoin Anchor Service
+ * Ethereum Anchor Service
  *
- * Periodically commits the latest Bitcoin block hash to the OCC proof chain.
- * This creates an unpredictable external anchor — everything in the chain
- * before this anchor provably existed before that Bitcoin block was mined.
+ * Every 10 minutes, commits the latest Ethereum block hash to the OCC
+ * proof chain via TEE. This creates an unpredictable external anchor —
+ * everything in the OCC chain before this anchor provably existed
+ * before that Ethereum block was mined.
+ *
+ * ~144 anchors/day. ~10 minute time windows.
  *
  * "The future is the strongest clock."
  */
@@ -11,72 +14,74 @@
 import { sha256 } from "@noble/hashes/sha256";
 
 const TEE_URL = "https://nitro.occproof.com";
-const CHAIN_ID = "occ:bitcoin-anchors";
+const CHAIN_ID = "occ:ethereum-anchors";
+const ANCHOR_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
 
 function toBase64(bytes: Uint8Array): string {
   return Buffer.from(bytes).toString("base64");
 }
 
-interface BitcoinBlock {
+interface EthBlock {
   hash: string;
-  height: number;
-  time: number;
+  number: number;
+  timestamp: number;
 }
 
 /**
- * Fetch the latest Bitcoin block from mempool.space.
- * Falls back to blockstream.info if mempool is down.
+ * Fetch the latest Ethereum block.
+ * Uses public JSON-RPC endpoints — no API key needed.
  */
-async function getLatestBlock(): Promise<BitcoinBlock> {
-  // Try mempool.space first (clean JSON API)
-  try {
-    const res = await fetch("https://mempool.space/api/blocks/tip/hash");
-    if (res.ok) {
-      const hash = (await res.text()).trim();
-      // Get block details
-      const detailRes = await fetch(`https://mempool.space/api/block/${hash}`);
-      if (detailRes.ok) {
-        const block = await detailRes.json() as { id: string; height: number; timestamp: number };
-        return { hash: block.id, height: block.height, time: block.timestamp };
-      }
-    }
-  } catch { /* fall through */ }
+async function getLatestBlock(): Promise<EthBlock> {
+  const endpoints = [
+    "https://ethereum-rpc.publicnode.com",
+    "https://rpc.ankr.com/eth",
+    "https://eth.llamarpc.com",
+  ];
 
-  // Fallback: blockstream.info
-  try {
-    const res = await fetch("https://blockstream.info/api/blocks/tip/hash");
-    if (res.ok) {
-      const hash = (await res.text()).trim();
-      const detailRes = await fetch(`https://blockstream.info/api/block/${hash}`);
-      if (detailRes.ok) {
-        const block = await detailRes.json() as { id: string; height: number; timestamp: number };
-        return { hash: block.id, height: block.height, time: block.timestamp };
-      }
-    }
-  } catch { /* fall through */ }
+  for (const rpc of endpoints) {
+    try {
+      const res = await fetch(rpc, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          method: "eth_getBlockByNumber",
+          params: ["latest", false],
+          id: 1,
+        }),
+      });
 
-  throw new Error("Could not fetch Bitcoin block from any source");
+      if (!res.ok) continue;
+      const data = await res.json() as { result?: { hash: string; number: string; timestamp: string } };
+      if (!data.result?.hash) continue;
+
+      return {
+        hash: data.result.hash,
+        number: parseInt(data.result.number, 16),
+        timestamp: parseInt(data.result.timestamp, 16),
+      };
+    } catch { continue; }
+  }
+
+  throw new Error("Could not fetch Ethereum block from any RPC endpoint");
 }
 
 /**
- * Commit a Bitcoin block hash to the OCC chain via TEE.
- * The block hash becomes the artifact — the thing being proven.
- * The metadata carries the full anchor context.
+ * Commit an Ethereum block hash to the OCC chain via TEE.
  */
-async function commitAnchor(block: BitcoinBlock): Promise<{ proof: unknown; digestB64: string } | null> {
-  // The artifact is the SHA-256 of the Bitcoin block hash string
+async function commitAnchor(block: EthBlock): Promise<{ proof: unknown; digestB64: string } | null> {
   const hashBytes = sha256(new TextEncoder().encode(block.hash));
   const digestB64 = toBase64(hashBytes);
 
   const metadata = {
-    type: "bitcoin-anchor",
+    type: "ethereum-anchor",
     anchor: {
-      source: "bitcoin",
-      blockHeight: block.height,
+      source: "ethereum",
+      blockNumber: block.number,
       blockHash: block.hash,
-      blockTime: block.time,
-      blockTimeISO: new Date(block.time * 1000).toISOString(),
-      verify: `https://mempool.space/block/${block.hash}`,
+      blockTime: block.timestamp,
+      blockTimeISO: new Date(block.timestamp * 1000).toISOString(),
+      verify: `https://etherscan.io/block/${block.number}`,
     },
   };
 
@@ -107,53 +112,47 @@ async function commitAnchor(block: BitcoinBlock): Promise<{ proof: unknown; dige
 
     return { proof, digestB64 };
   } catch (err) {
-    console.error("[bitcoin-anchor] TEE commit failed:", (err as Error).message);
+    console.error("[eth-anchor] TEE commit failed:", (err as Error).message);
     return null;
   }
 }
 
 /* ── State ── */
 
-let lastAnchoredHeight = 0;
+let lastAnchoredBlock = 0;
 let intervalId: ReturnType<typeof setInterval> | null = null;
 
 /**
- * Check for a new Bitcoin block and anchor it if it's new.
- * Only anchors if the block height is greater than the last anchored height.
+ * Check for a new Ethereum block and anchor it.
  */
 async function checkAndAnchor(): Promise<void> {
   try {
     const block = await getLatestBlock();
 
-    if (block.height <= lastAnchoredHeight) {
-      return; // Already anchored this block
+    if (block.number <= lastAnchoredBlock) {
+      return; // Already anchored a block at or after this height
     }
 
-    console.log(`[bitcoin-anchor] New block #${block.height} — anchoring...`);
+    console.log(`[eth-anchor] Block #${block.number} — anchoring...`);
     const result = await commitAnchor(block);
 
     if (result) {
-      lastAnchoredHeight = block.height;
-      console.log(`[bitcoin-anchor] Anchored block #${block.height} → ${result.digestB64.slice(0, 20)}...`);
+      lastAnchoredBlock = block.number;
+      console.log(`[eth-anchor] Anchored block #${block.number} → ${result.digestB64.slice(0, 20)}...`);
     }
   } catch (err) {
-    console.error("[bitcoin-anchor] Error:", (err as Error).message);
+    console.error("[eth-anchor] Error:", (err as Error).message);
   }
 }
 
 /**
- * Start the Bitcoin anchor service.
- * Checks every 2 minutes for new blocks (~10 min per Bitcoin block).
- * Anchors every new block it finds.
+ * Start the Ethereum anchor service.
+ * Anchors every 10 minutes (~144 anchors/day).
  */
 export function startBitcoinAnchor(): void {
-  console.log("[bitcoin-anchor] Starting — anchoring every new Bitcoin block");
-
-  // Run immediately on start
+  console.log(`[eth-anchor] Starting — anchoring every ${ANCHOR_INTERVAL_MS / 60000} minutes`);
   checkAndAnchor();
-
-  // Then check every 2 minutes
-  intervalId = setInterval(checkAndAnchor, 2 * 60 * 1000);
+  intervalId = setInterval(checkAndAnchor, ANCHOR_INTERVAL_MS);
 }
 
 /**
@@ -163,18 +162,18 @@ export function stopBitcoinAnchor(): void {
   if (intervalId) {
     clearInterval(intervalId);
     intervalId = null;
-    console.log("[bitcoin-anchor] Stopped");
+    console.log("[eth-anchor] Stopped");
   }
 }
 
 /**
- * Manually trigger an anchor (for API endpoint).
+ * Manually trigger an anchor.
  */
-export async function manualAnchor(): Promise<{ block: BitcoinBlock; proof: unknown; digestB64: string } | null> {
+export async function manualAnchor(): Promise<{ block: EthBlock; proof: unknown; digestB64: string } | null> {
   const block = await getLatestBlock();
   const result = await commitAnchor(block);
   if (result) {
-    lastAnchoredHeight = block.height;
+    lastAnchoredBlock = block.number;
     return { block, ...result };
   }
   return null;
@@ -183,6 +182,11 @@ export async function manualAnchor(): Promise<{ block: BitcoinBlock; proof: unkn
 /**
  * Get the current anchor status.
  */
-export function getAnchorStatus(): { running: boolean; lastAnchoredHeight: number } {
-  return { running: intervalId !== null, lastAnchoredHeight };
+export function getAnchorStatus(): { running: boolean; lastAnchoredBlock: number; source: string; intervalMinutes: number } {
+  return {
+    running: intervalId !== null,
+    lastAnchoredBlock,
+    source: "ethereum",
+    intervalMinutes: ANCHOR_INTERVAL_MS / 60000,
+  };
 }
