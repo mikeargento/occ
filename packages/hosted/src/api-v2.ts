@@ -111,7 +111,7 @@ export async function handleApiV2(req: IncomingMessage, res: ServerResponse, url
 
       if (status === "auto_approved") {
         // Create authorization proof — the permission slip
-        const chainId = `${userId}:${agentId}`;
+        const chainId = "occ:main";
         const principal = await getPrincipal();
         await createAuthorizationObject(userId, agentId, tool, undefined, chainId, principal);
       }
@@ -171,7 +171,7 @@ export async function handleApiV2(req: IncomingMessage, res: ServerResponse, url
     if (request.status !== "pending") return json(res, { error: "Request is not pending" }, 400);
 
     // Create decision
-    const chainId = `${userId}:${request.agent_id}`;
+    const chainId = "occ:main";
     const principal = await getPrincipal();
     const authResult = await createAuthorizationObject(userId, request.agent_id, request.tool, undefined, chainId, principal);
 
@@ -263,7 +263,7 @@ export async function handleApiV2(req: IncomingMessage, res: ServerResponse, url
         if (!request || request.user_id !== userId || request.status !== "pending") continue;
 
         if (action === "approve") {
-          const chainId = `${userId}:${request.agent_id}`;
+          const chainId = "occ:main";
           const principal = await getPrincipal();
           const authResult = await createAuthorizationObject(userId, request.agent_id, request.tool, undefined, chainId, principal);
           const decision = await db.v2CreateDecision({
@@ -446,7 +446,7 @@ export async function handleApiV2(req: IncomingMessage, res: ServerResponse, url
     // Helper: forge the token (OCC command object)
     async function forgeToken(requestId: number) {
       try {
-        const chainId = `${hookUserId}:${hookAgentId}`;
+        const chainId = "occ:main";
         const { proof, digest } = await createAuthorizationObject(
           hookUserId, hookAgentId, tool, { args }, chainId, undefined
         );

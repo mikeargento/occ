@@ -486,7 +486,7 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
     if (decision === "approve") {
       // ── CREATE AUTHORIZATION OBJECT ──
       // This creates a cryptographic object that must exist before execution.
-      const chainId = `${userId}:${req_entry.agent_id}`;
+      const chainId = "occ:main";
       const authResult = await createAuthorizationObject(userId, req_entry.agent_id, req_entry.tool, undefined, chainId, await getPrincipal());
       digestB64 = authResult.digest;
       proof = authResult.proof;
@@ -716,7 +716,7 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, url: 
       let proof: any = null;
 
       if (action === "approve") {
-        const chainId = `${userId}:${req_entry.agent_id}`;
+        const chainId = "occ:main";
         const authResult = await createAuthorizationObject(userId, req_entry.agent_id, req_entry.tool, undefined, chainId, await getPrincipal());
         digestB64 = authResult.digest;
         proof = authResult.proof;

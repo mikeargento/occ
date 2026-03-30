@@ -473,19 +473,15 @@ async function governToolCall(
   allowedTools: Set<string>,
   blockedTools: Set<string>
 ): Promise<{ action: "allow" | "deny" | "ask"; requestId?: number }> {
-  const chainId = `${userId}:${agentId}`;
+  const chainId = "occ:main";
   const principal = { id: userId, provider: agent.provider };
 
   // 1. ALLOWED — tool is in the allow list
   if (allowedTools.has(toolName)) {
-    // Create execution proof
+    // Create authorization proof — the ticket
     const auth = await db.getValidAuthorization(userId, agentId, toolName);
-    if (auth) {
-      await createExecutionProof(userId, agentId, toolName, toolInput, auth.proofDigest, chainId, principal);
-    } else {
-      // Auto-create authorization for tools in allowed list
-      const authResult = await createAuthorizationObject(userId, agentId, toolName, undefined, chainId, principal);
-      await createExecutionProof(userId, agentId, toolName, toolInput, authResult.digest, chainId, principal);
+    if (!auth) {
+      await createAuthorizationObject(userId, agentId, toolName, undefined, chainId, principal);
     }
 
     console.log(`  [proxy] ALLOW ${toolName} for ${agentId}`);

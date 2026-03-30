@@ -15,7 +15,7 @@ import { sha256 } from "@noble/hashes/sha256";
 import { db } from "./db.js";
 
 const TEE_URL = "https://nitro.occproof.com";
-const CHAIN_ID = "occ:ethereum-anchors";
+const CHAIN_ID = "occ:main";
 const ANCHOR_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
 
 function toBase64(bytes: Uint8Array): string {

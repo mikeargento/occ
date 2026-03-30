@@ -384,7 +384,7 @@ export async function handleMcp(req: IncomingMessage, res: ServerResponse, pathn
         let authObj = await validateAuthorization(user.id, agentId, toolName);
         if (!authObj) {
           const principal = { id: user.id, provider: user.provider ?? undefined };
-          const chainId = `${user.id}:${agentId}`;
+          const chainId = "occ:main";
           await createAuthorizationObject(user.id, agentId, toolName, undefined, chainId, principal);
           authObj = await validateAuthorization(user.id, agentId, toolName);
         }

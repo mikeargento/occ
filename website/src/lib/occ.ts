@@ -287,6 +287,7 @@ export async function commitDigest(
   const body: Record<string, unknown> = {
     digests: [{ digestB64, hashAlg: "sha256" }],
     metadata,
+    chainId: "occ:main",
   };
   if (agency) body.agency = agency;
   if (attribution) body.attribution = attribution;
@@ -343,7 +344,7 @@ export async function commitBatch(
   agency?: AgencyEnvelope,
   attribution?: { name?: string; title?: string; message?: string }
 ): Promise<OCCProof[]> {
-  const body: Record<string, unknown> = { digests, metadata };
+  const body: Record<string, unknown> = { digests, metadata, chainId: "occ:main" };
   if (agency) body.agency = agency;
   if (attribution) body.attribution = attribution;
 
