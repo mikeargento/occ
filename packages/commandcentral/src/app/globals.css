@@ -106,7 +106,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro
 .explorer-list { border: 1px solid var(--border-light); border-radius: 16px; background: var(--surface); overflow: hidden; }
 .explorer-row-wrap { border-bottom: 1px solid var(--border-light); }
 .explorer-row-wrap:last-child { border-bottom: none; }
-.explorer-row { display: flex; align-items: center; padding: 16px 24px; cursor: pointer; gap: 14px; transition: all 0.15s ease; }
+.explorer-row { display: flex; align-items: center; padding: 18px 24px; cursor: pointer; gap: 14px; transition: all 0.15s ease; }
 .explorer-row:hover { background: var(--surface-hover); }
 .explorer-chevron { background: none; border: none; cursor: pointer; color: var(--text-tertiary); padding: 2px; flex-shrink: 0; transition: all 0.2s; }
 .explorer-chevron:hover { color: var(--accent); }
@@ -114,15 +114,15 @@ body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro
 .explorer-dot-allowed { background: var(--green); box-shadow: 0 0 8px var(--glow-green); }
 .explorer-dot-denied { background: var(--red); box-shadow: 0 0 8px var(--glow-red); }
 .explorer-row-info { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; }
-.explorer-row-tool { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
-.explorer-row-agent { font-size: 13px; color: var(--text-tertiary); }
-.explorer-badge { font-size: 11px; font-weight: 500; flex-shrink: 0; padding: 2px 8px; border-radius: 4px; }
+.explorer-row-tool { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+.explorer-row-agent { font-size: 14px; color: var(--text-tertiary); }
+.explorer-badge { font-size: 13px; font-weight: 500; flex-shrink: 0; padding: 4px 10px; border-radius: 4px; }
 .explorer-badge-tee { color: #3b82f6; background: rgba(59,130,246,0.1); }
 .explorer-badge-hw { color: #3b82f6; background: rgba(59,130,246,0.1); }
 .explorer-badge-sw { color: #eab308; background: rgba(234,179,8,0.1); }
 .explorer-row-icons { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .explorer-icon-tsa { color: #a855f7; }
-.explorer-row-time { font-size: 12px; color: var(--text-tertiary); min-width: 56px; text-align: right; font-family: "SF Mono", "Menlo", monospace; }
+.explorer-row-time { font-size: 14px; color: var(--text-tertiary); min-width: 56px; text-align: right; font-family: "SF Mono", "Menlo", monospace; }
 
 /* ── Expanded Detail ── */
 .explorer-expanded { padding: 24px; background: var(--bg-secondary); border-top: 1px solid var(--border-light); animation: slideDown 0.25s ease-out; }
@@ -134,19 +134,55 @@ body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro
 .explorer-sections { display: flex; flex-direction: column; gap: 10px; }
 .explorer-section { border: 1px solid var(--border-light); border-radius: 12px; overflow: hidden; background: var(--surface); transition: border-color 0.2s; }
 .explorer-section:hover { border-color: var(--border); }
-.explorer-section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-tertiary); padding: 10px 16px; border-bottom: 1px solid var(--border-light); background: var(--bg-secondary); }
+.explorer-section-title { font-size: 13px; font-weight: 600; text-transform: none; letter-spacing: normal; color: var(--text-tertiary); padding: 10px 16px; border-bottom: 1px solid var(--border-light); background: var(--bg-secondary); }
 .explorer-section-body { padding: 8px 16px; }
 .explorer-detail-args { font-size: 12px; font-family: "SF Mono", "Menlo", monospace; color: var(--text-tertiary); background: var(--bg-secondary); padding: 12px 16px; max-height: 140px; overflow: auto; white-space: pre-wrap; word-break: break-all; line-height: 1.6; border: none; border-top: 1px solid var(--border-light); margin: 0; }
 
 /* ── Proof Field ── */
-.proof-field { display: flex; align-items: baseline; gap: 16px; padding: 7px 0; border-bottom: 1px solid var(--border-light); }
+.proof-field { display: flex; align-items: baseline; gap: 16px; padding: 10px 0; border-bottom: 1px solid var(--border-light); }
 .proof-field:last-child { border-bottom: none; }
-.proof-field-label { font-size: 12px; color: var(--text-tertiary); flex-shrink: 0; min-width: 100px; }
-.proof-field-value { font-size: 13px; color: var(--text); text-align: left; word-break: break-all; min-width: 0; }
-.proof-field-mono { font-family: "SF Mono", "Menlo", monospace; font-size: 12px; color: #30d158; }
+.proof-field-label { font-size: 14px; font-weight: 600; color: var(--text-secondary); flex-shrink: 0; min-width: 100px; }
+.proof-field-value { font-size: 14px; color: var(--text); text-align: left; min-width: 0; }
+.proof-field-mono { font-family: "SF Mono", "Menlo", monospace; font-size: 13px; color: #34d399; }
 .proof-field-copy { background: none; border: none; color: var(--text-tertiary); cursor: pointer; padding: 2px; flex-shrink: 0; opacity: 0; transition: all 0.2s; }
 .proof-field:hover .proof-field-copy { opacity: 0.6; }
 .proof-field-copy:hover { opacity: 1 !important; color: var(--accent); }
+
+/* ── Proof Counter ── */
+.proof-counter {
+  font-size: 22px;
+  font-weight: 700;
+  font-family: 'SF Mono', SFMono-Regular, monospace;
+  color: var(--text);
+  min-width: 48px;
+  flex-shrink: 0;
+}
+
+/* ── View Toggle ── */
+.view-toggle {
+  display: flex;
+  gap: 2px;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  padding: 2px;
+  border: 1px solid var(--border-light);
+}
+.view-toggle button {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+.view-toggle button.active {
+  background: var(--surface);
+  color: var(--text);
+}
 
 /* ── Copyable JSON ── */
 .explorer-json { font-size: 12px; font-family: "SF Mono", "Menlo", monospace; color: #34d399; line-height: 1.7; white-space: pre-wrap; word-break: break-all; margin: 0; border: none; background: #0c0c14; border-radius: 12px; padding: 20px; max-height: 400px; overflow-y: auto; cursor: pointer; transition: all 0.2s; }

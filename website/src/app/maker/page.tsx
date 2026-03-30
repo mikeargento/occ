@@ -143,6 +143,7 @@ export default function MakerPage() {
   const [ledger, setLedger] = useState<ProofEntry[]>([]);
   const [ledgerTotal, setLedgerTotal] = useState(0);
   const [ledgerPage, setLedgerPage] = useState(1);
+  const [ledgerViewMode, setLedgerViewMode] = useState<"normal" | "timeonly">("normal");
 
   // Fetch public ledger
   const fetchLedger = useCallback(async (page: number) => {
@@ -619,15 +620,32 @@ export default function MakerPage() {
         {/* ═══ PUBLIC PROOF LEDGER ═══ */}
         <div style={{ marginTop: 64 }}>
           <div style={{
-            display: "flex", alignItems: "baseline", justifyContent: "space-between",
+            display: "flex", alignItems: "center", justifyContent: "space-between",
             marginBottom: 16,
           }}>
             <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.02em" }}>
               Public proof ledger
             </h2>
-            <span style={{ fontSize: 13, color: "var(--c-text-tertiary)" }}>
-              {ledgerTotal.toLocaleString()} total proofs
-            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <span style={{ fontSize: 13, color: "var(--c-text-tertiary)" }}>
+                {ledgerTotal.toLocaleString()} total proofs
+              </span>
+              <div style={{
+                display: "flex", gap: 2, background: "var(--c-bg-secondary, #141416)", borderRadius: 8,
+                padding: 2, border: "1px solid var(--c-border-subtle)",
+              }}>
+                {(["normal", "timeonly"] as const).map(m => (
+                  <button key={m} onClick={() => setLedgerViewMode(m)} style={{
+                    fontSize: 12, fontWeight: 500, padding: "5px 12px", borderRadius: 6,
+                    border: "none", cursor: "pointer", fontFamily: "inherit", transition: "all 0.15s",
+                    background: ledgerViewMode === m ? "var(--bg-elevated, #1c1c1e)" : "transparent",
+                    color: ledgerViewMode === m ? "var(--c-text)" : "var(--c-text-tertiary)",
+                  }}>
+                    {m === "normal" ? "Normal" : "Time Only"}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
           {ledger.length === 0 ? (
@@ -642,7 +660,7 @@ export default function MakerPage() {
                 overflow: "hidden",
               }}>
                 {ledger.map((entry, i) => (
-                  <LedgerRow key={entry.digest + i} entry={entry} isLast={i === ledger.length - 1} />
+                  <LedgerRow key={entry.digest + i} entry={entry} isLast={i === ledger.length - 1} viewMode={ledgerViewMode} />
                 ))}
               </div>
 
@@ -686,12 +704,13 @@ export default function MakerPage() {
    Ledger Row — expandable, fetches full proof on first click
    ═══════════════════════════════════════════════════════════════════════════ */
 
-function LedgerRow({ entry, isLast }: { entry: ProofEntry; isLast: boolean }) {
+function LedgerRow({ entry, isLast, viewMode }: { entry: ProofEntry; isLast: boolean; viewMode: "normal" | "timeonly" }) {
   const [expanded, setExpanded] = useState(false);
   const [proof, setProof] = useState<OCCProof | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function toggle() {
+    if (viewMode === "timeonly") return;
     if (!expanded && !proof && entry.digest !== "—") {
       setLoading(true);
       try {
@@ -714,64 +733,88 @@ function LedgerRow({ entry, isLast }: { entry: ProofEntry; isLast: boolean }) {
   const principal = proofAny?.principal as Record<string, unknown> | undefined;
   const timestamps = proof?.timestamps as Record<string, unknown> | undefined;
 
+  const wallClockTime = entry.time ? new Date(entry.time).toLocaleString([], { hour: "numeric", minute: "2-digit" }) : "—";
+  const fullDateTime = entry.time ? new Date(entry.time).toLocaleString([], { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", second: "2-digit" }) : "—";
+
   return (
     <div style={{ borderBottom: isLast ? "none" : "1px solid var(--c-border-subtle)" }}>
       {/* Collapsed row — matches dashboard explorer-row layout */}
       <div onClick={toggle} style={{
-        padding: "12px 20px", display: "flex", alignItems: "center", gap: 12,
-        cursor: "pointer", transition: "background 0.15s",
+        padding: "18px 24px", display: "flex", alignItems: "center", gap: 14,
+        cursor: viewMode === "timeonly" ? "default" : "pointer", transition: "background 0.15s",
       }}>
-        {/* Chevron */}
-        <button onClick={(e) => { e.stopPropagation(); toggle(); }} style={{
-          background: "none", border: "none", cursor: "pointer", padding: 2,
-          color: "var(--c-text-tertiary)", flexShrink: 0, transition: "all 0.2s",
-        }}>
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5"
-            style={{ transform: expanded ? "rotate(90deg)" : "rotate(0)", transition: "transform 0.15s" }}>
-            <path d="M3 1.5L7 5L3 8.5" />
-          </svg>
-        </button>
+        {/* Chevron — only in Normal mode */}
+        {viewMode === "normal" && (
+          <button onClick={(e) => { e.stopPropagation(); toggle(); }} style={{
+            background: "none", border: "none", cursor: "pointer", padding: 2,
+            color: "var(--c-text-tertiary)", flexShrink: 0, transition: "all 0.2s",
+          }}>
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5"
+              style={{ transform: expanded ? "rotate(90deg)" : "rotate(0)", transition: "transform 0.15s" }}>
+              <path d="M3 1.5L7 5L3 8.5" />
+            </svg>
+          </button>
+        )}
         {/* Dot */}
-        <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#30d158", boxShadow: "0 0 8px rgba(48,209,88,0.4)", flexShrink: 0 }} />
-        {/* Info — tool + agent (or digest + counter for public ledger) */}
-        <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{
-            fontSize: 15, fontWeight: 600, letterSpacing: "-0.01em",
-            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-          }}>
-            {entry.attribution || entry.digest.slice(0, 24) + "..."}
-          </span>
-          <span style={{ fontSize: 13, color: "var(--c-text-tertiary)" }}>
-            {entry.counter ? `#${entry.counter}` : ""}
-          </span>
-        </div>
-        {/* Badge */}
+        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#30d158", boxShadow: "0 0 8px rgba(48,209,88,0.4)", flexShrink: 0 }} />
+        {/* Counter */}
         <span style={{
-          fontSize: 11, fontWeight: 500, flexShrink: 0,
-          padding: "2px 8px", borderRadius: 4,
-          color: entry.enforcement === "Hardware Enclave" ? "#3b82f6" : "#eab308",
-          background: entry.enforcement === "Hardware Enclave" ? "rgba(59,130,246,0.1)" : "rgba(234,179,8,0.1)",
+          fontSize: 22, fontWeight: 700,
+          fontFamily: "'SF Mono', SFMono-Regular, monospace",
+          color: "var(--c-text)", minWidth: 48, flexShrink: 0,
         }}>
-          {entry.enforcement}
+          #{entry.counter || entry.globalId}
         </span>
-        {/* Icons + time */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          {/* TSA clock icon */}
-          <span style={{ color: "#a855f7" }} title="RFC 3161 timestamped">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>
-          </span>
+        {/* Info — name/attribution in Normal mode only */}
+        {viewMode === "normal" && (
+          <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{
+              fontSize: 16, fontWeight: 600, letterSpacing: "-0.01em",
+              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+            }}>
+              {entry.attribution || entry.digest.slice(0, 24) + "..."}
+            </span>
+          </div>
+        )}
+        {viewMode === "timeonly" && <div style={{ flex: 1 }} />}
+        {/* Badge + time in Normal mode */}
+        {viewMode === "normal" && (
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+            <span style={{
+              fontSize: 13, fontWeight: 500, flexShrink: 0,
+              padding: "4px 10px", borderRadius: 4,
+              color: entry.enforcement === "Hardware Enclave" ? "#3b82f6" : "#eab308",
+              background: entry.enforcement === "Hardware Enclave" ? "rgba(59,130,246,0.1)" : "rgba(234,179,8,0.1)",
+            }}>
+              {entry.enforcement}
+            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ color: "#a855f7" }} title="RFC 3161 timestamped">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>
+              </span>
+              <span style={{
+                fontSize: 14, color: "var(--c-text-tertiary)",
+                minWidth: 56, textAlign: "right" as const,
+                fontFamily: "var(--font-mono), 'SF Mono', Menlo, monospace",
+              }}>
+                {wallClockTime}
+              </span>
+            </div>
+          </div>
+        )}
+        {/* Full date+time in Time Only mode */}
+        {viewMode === "timeonly" && (
           <span style={{
-            fontSize: 12, color: "var(--c-text-tertiary)",
-            minWidth: 56, textAlign: "right" as const,
-            fontFamily: "var(--font-mono), 'SF Mono', Menlo, monospace",
+            fontSize: 16, color: "var(--c-text-secondary)",
+            fontFamily: "'SF Mono', SFMono-Regular, monospace", flexShrink: 0,
           }}>
-            {entry.time ? relativeTime(entry.time) : "—"}
+            {fullDateTime}
           </span>
-        </div>
+        )}
       </div>
 
       {/* Expanded detail — matches dashboard explorer-expanded */}
-      {expanded && (
+      {expanded && viewMode === "normal" && (
         <div style={{
           padding: 24, background: "rgba(255,255,255,0.015)",
           borderTop: "1px solid var(--c-border-subtle)",
@@ -961,7 +1004,7 @@ function ProofSection({ title, children }: { title: string; children: React.Reac
       transition: "border-color 0.2s",
     }}>
       <div style={{
-        fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em",
+        fontSize: 13, fontWeight: 600,
         color: "var(--c-text-tertiary)", padding: "10px 16px",
         borderBottom: "1px solid var(--c-border-subtle)",
         background: "rgba(255,255,255,0.02)",
@@ -978,31 +1021,33 @@ function ProofSection({ title, children }: { title: string; children: React.Reac
 /* ── Field with copy — matches dashboard ProofField exactly ── */
 function LedgerProofField({ label, value, mono, color, last }: { label: string; value: string; mono?: boolean; color?: string; last?: boolean }) {
   const [copied, setCopied] = useState(false);
+  const isLong = mono && value.length > 24;
+  const displayValue = isLong ? value.slice(0, 24) + "..." : value;
   return (
     <div style={{
       display: "flex", alignItems: "baseline", gap: 16,
-      padding: "7px 0", borderBottom: last ? "none" : "1px solid var(--c-border-subtle)",
-      fontSize: 12, lineHeight: 1.6,
+      padding: "10px 0", borderBottom: last ? "none" : "1px solid var(--c-border-subtle)",
+      lineHeight: 1.6,
     }}>
-      <span style={{ color: "var(--c-text-tertiary)", flexShrink: 0, minWidth: 100, fontSize: 12 }}>{label}</span>
+      <span style={{ color: "var(--c-text-secondary)", flexShrink: 0, minWidth: 100, fontSize: 14, fontWeight: 600 }}>{label}</span>
       <span style={{
-        color: color || (mono ? "#30d158" : "var(--c-text)"),
+        color: color || (mono ? "#34d399" : "var(--c-text)"),
         fontFamily: mono ? "var(--font-mono), 'SF Mono', Menlo, monospace" : "inherit",
-        fontSize: mono ? 12 : 13,
-        wordBreak: "break-all", textAlign: "left", minWidth: 0,
+        fontSize: mono ? 13 : 14,
+        textAlign: "left", minWidth: 0,
       }}>
-        {value}
+        {displayValue}
       </span>
-      {value.length > 30 && (
+      {(isLong || value.length > 30) && (
         <button onClick={() => { navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
           style={{
             border: "none", background: "transparent", cursor: "pointer", padding: 2,
-            color: copied ? "#30d158" : "var(--c-text-tertiary)", flexShrink: 0,
+            color: copied ? "#34d399" : "var(--c-text-tertiary)", flexShrink: 0,
             opacity: 0, transition: "opacity 0.15s",
           }}
           onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.6"; }}
           onMouseLeave={(e) => { e.currentTarget.style.opacity = "0"; }}
-          title="Copy"
+          title="Copy full value"
         >
           {copied ? (
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 6L9 17l-5-5"/></svg>
