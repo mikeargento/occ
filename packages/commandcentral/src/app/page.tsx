@@ -460,6 +460,7 @@ function ExplorerRow({ proof: p }: { proof: V2Proof }) {
         <div className="explorer-row-info">
           <span className="explorer-row-tool">{p.tool}</span>
           <span className="explorer-row-agent">{p.agentId}</span>
+          {commit?.counter != null ? <span className="explorer-row-agent">#{String(commit.counter)}</span> : null}
         </div>
         <span className={`explorer-badge ${enforcement === "measured-tee" ? "explorer-badge-tee" : enforcement === "hw-key" ? "explorer-badge-hw" : "explorer-badge-sw"}`}>
           {enforcement === "measured-tee" ? "Hardware Enclave" : enforcement === "hw-key" ? "Hardware Key" : "Software"}

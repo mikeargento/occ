@@ -721,7 +721,7 @@ function LedgerRow({ entry, isLast }: { entry: ProofEntry; isLast: boolean }) {
             {entry.attribution || entry.digest.slice(0, 24) + "..."}
           </span>
           <span style={{ fontSize: 13, color: "var(--c-text-tertiary)" }}>
-            {entry.globalId ? `#${entry.globalId}` : ""}
+            {entry.counter ? `#${entry.counter}` : ""}
           </span>
         </div>
         {/* Badge */}

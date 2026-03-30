@@ -15,13 +15,8 @@ export async function insertProofs(proofs: OCCProof[]) {
 
   // Idempotent migrations
   try { await sql`ALTER TABLE proofs ADD COLUMN IF NOT EXISTS chain_id TEXT`; } catch { }
-  try { await sql`CREATE UNIQUE INDEX IF NOT EXISTS proofs_digest_b64_unique ON proofs (digest_b64)`; } catch {
-    try {
-      await sql`DELETE FROM proofs a USING proofs b WHERE a.id > b.id AND a.digest_b64 = b.digest_b64`;
-      await sql`CREATE UNIQUE INDEX IF NOT EXISTS proofs_digest_b64_unique ON proofs (digest_b64)`;
-    } catch { }
-  }
-  // Drop old (signer_pub, counter) constraint — conflicts with per-agent chains
+  // Drop unique digest constraint — same file can be proven multiple times
+  try { await sql`DROP INDEX IF EXISTS proofs_digest_b64_unique`; } catch { }
   try { await sql`DROP INDEX IF EXISTS proofs_signer_pub_counter_key`; } catch { }
   try { await sql`ALTER TABLE proofs DROP CONSTRAINT IF EXISTS proofs_signer_pub_counter_key`; } catch { }
 
@@ -41,14 +36,14 @@ export async function insertProofs(proofs: OCCProof[]) {
     try {
       await sql`INSERT INTO proofs (digest_b64, counter, epoch_id, commit_time, enforcement, signer_pub, has_agency, has_tsa, attr_name, chain_id, proof_json)
         VALUES (${digestB64}, ${counter}, ${epochId}, ${commitTime}, ${enforcement}, ${signerPub}, ${hasAgency}, ${hasTsa}, ${attrName}, ${chainId}, ${proofJson}::jsonb)
-        ON CONFLICT (digest_b64) DO NOTHING`;
+        ON CONFLICT DO NOTHING`;
       indexed++;
     } catch (e1) {
       console.error("  insert proof (with chain_id) failed:", (e1 as Error).message, "digest:", digestB64?.slice(0, 20));
       try {
         await sql`INSERT INTO proofs (digest_b64, counter, epoch_id, commit_time, enforcement, signer_pub, has_agency, has_tsa, attr_name, proof_json)
           VALUES (${digestB64}, ${counter}, ${epochId}, ${commitTime}, ${enforcement}, ${signerPub}, ${hasAgency}, ${hasTsa}, ${attrName}, ${proofJson}::jsonb)
-          ON CONFLICT (digest_b64) DO NOTHING`;
+          ON CONFLICT DO NOTHING`;
         indexed++;
       } catch (e2) {
         console.error("  insert proof (fallback) also failed:", (e2 as Error).message);
