@@ -326,14 +326,20 @@ export async function commitDigest(
     proof.timestamps = { artifact: raw.metadata.tsa };
   }
 
-  // Auto-index in explorer
+  // Auto-index in explorer — always use absolute URL
   try {
-    await fetch(`${typeof window !== "undefined" ? "" : "https://www.occ.wtf"}/api/proofs`, {
+    const indexUrl = "https://occ.wtf/api/proofs";
+    const indexRes = await fetch(indexUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ proof }),
     });
-  } catch { /* non-critical — proof still valid even if indexing fails */ }
+    if (!indexRes.ok) {
+      console.warn("[occ] Proof index failed:", indexRes.status, await indexRes.text().catch(() => ""));
+    }
+  } catch (e) {
+    console.warn("[occ] Proof index error:", (e as Error).message);
+  }
 
   return proof;
 }
@@ -394,12 +400,17 @@ export async function commitBatch(
 
   // Auto-index all proofs in explorer
   try {
-    await fetch(`${typeof window !== "undefined" ? "" : "https://www.occ.wtf"}/api/proofs`, {
+    const indexRes = await fetch("https://occ.wtf/api/proofs", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ proofs: results }),
     });
-  } catch { /* non-critical */ }
+    if (!indexRes.ok) {
+      console.warn("[occ] Batch index failed:", indexRes.status, await indexRes.text().catch(() => ""));
+    }
+  } catch (e) {
+    console.warn("[occ] Batch index error:", (e as Error).message);
+  }
 
   return results;
 }
