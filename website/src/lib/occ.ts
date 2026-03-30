@@ -291,7 +291,10 @@ export async function commitDigest(
   if (agency) body.agency = agency;
   if (attribution) body.attribution = attribution;
 
-  const resp = await fetch(`${OCC_ENDPOINT}/commit`, {
+  // Route through server-side proxy when in browser — guarantees indexing
+  const commitUrl = typeof window !== "undefined" ? "/api/commit" : `${OCC_ENDPOINT}/commit`;
+
+  const resp = await fetch(commitUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -299,7 +302,7 @@ export async function commitDigest(
 
   if (!resp.ok) {
     const err = await resp.json().catch(() => ({ error: resp.statusText }));
-    throw new Error(err.error || `Enclave returned ${resp.status}`);
+    throw new Error(err.error || `Commit failed: ${resp.status}`);
   }
 
   const proofs = await resp.json();
@@ -326,21 +329,6 @@ export async function commitDigest(
     proof.timestamps = { artifact: raw.metadata.tsa };
   }
 
-  // Auto-index in explorer — always use absolute URL
-  try {
-    const indexUrl = "https://occ.wtf/api/proofs";
-    const indexRes = await fetch(indexUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ proof }),
-    });
-    if (!indexRes.ok) {
-      console.warn("[occ] Proof index failed:", indexRes.status, await indexRes.text().catch(() => ""));
-    }
-  } catch (e) {
-    console.warn("[occ] Proof index error:", (e as Error).message);
-  }
-
   return proof;
 }
 
@@ -359,7 +347,10 @@ export async function commitBatch(
   if (agency) body.agency = agency;
   if (attribution) body.attribution = attribution;
 
-  const resp = await fetch(`${OCC_ENDPOINT}/commit`, {
+  // Route through server-side proxy when in browser — guarantees indexing
+  const commitUrl = typeof window !== "undefined" ? "/api/commit" : `${OCC_ENDPOINT}/commit`;
+
+  const resp = await fetch(commitUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -367,7 +358,7 @@ export async function commitBatch(
 
   if (!resp.ok) {
     const err = await resp.json().catch(() => ({ error: resp.statusText }));
-    throw new Error(err.error || `Enclave returned ${resp.status}`);
+    throw new Error(err.error || `Commit failed: ${resp.status}`);
   }
 
   const raw = await resp.json();
@@ -397,20 +388,6 @@ export async function commitBatch(
 
     return proof;
   });
-
-  // Auto-index all proofs in explorer
-  try {
-    const indexRes = await fetch("https://occ.wtf/api/proofs", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ proofs: results }),
-    });
-    if (!indexRes.ok) {
-      console.warn("[occ] Batch index failed:", indexRes.status, await indexRes.text().catch(() => ""));
-    }
-  } catch (e) {
-    console.warn("[occ] Batch index error:", (e as Error).message);
-  }
 
   return results;
 }
