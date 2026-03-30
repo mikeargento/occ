@@ -11,25 +11,25 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "OCC — Define what your AI does",
+    default: "OCC — Proof Explorer",
     template: "%s | OCC",
   },
   description:
-    "Artificial Intelligence. Human Authority.",
+    "Live cryptographic proof chain. Create, verify, and explore OCC proofs.",
   keywords: [
     "OCC", "Origin Controlled Computing", "AI agent control", "AI safety",
-    "cryptographic policy", "AI governance", "default deny",
+    "cryptographic policy", "AI governance", "default deny", "proof explorer",
   ],
   openGraph: {
-    title: "OCC — Define what your AI does",
-    description: "Origin Controlled Computing. Define what your AI does. Prove what they did.",
+    title: "OCC — Proof Explorer",
+    description: "Live cryptographic proof chain. Create, verify, and explore OCC proofs.",
     type: "website",
     siteName: "OCC",
   },
   twitter: {
     card: "summary_large_image",
-    title: "OCC — Define what your AI does",
-    description: "Origin Controlled Computing. Define what your AI does.",
+    title: "OCC — Proof Explorer",
+    description: "Live cryptographic proof chain. Create, verify, and explore OCC proofs.",
   },
   robots: { index: true, follow: true },
 };

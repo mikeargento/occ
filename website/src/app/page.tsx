@@ -1,75 +1,439 @@
-function GithubIcon() { return <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>; }
-function GoogleIcon() { return <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>; }
-function AppleIcon() { return <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>; }
+"use client";
 
-export default function Home() {
+import { useState, useEffect, useCallback, useRef } from "react";
+import { Nav } from "@/components/nav";
+import { FileDrop } from "@/components/file-drop";
+import {
+  hashFile,
+  commitDigest,
+  commitBatch,
+  formatFileSize,
+  isOCCProof,
+  verifyProofSignature,
+  type OCCProof,
+  type ProofVerifyResult,
+} from "@/lib/occ";
+import { toUrlSafeB64, relativeTime } from "@/lib/explorer";
+import { zipSync } from "fflate";
+
+type Tab = "explorer" | "make" | "verify";
+type ViewMode = "normal" | "timeonly";
+
+interface ProofSummary {
+  id: number;
+  digestB64: string;
+  counter: string | null;
+  commitTime: number | null;
+  enforcement: string;
+  signerPub: string;
+  hasAgency: boolean;
+  hasTsa: boolean;
+  attrName: string | null;
+  indexedAt: string;
+}
+
+export default function HomePage() {
+  const [tab, setTab] = useState<Tab>("explorer");
+  const [viewMode, setViewMode] = useState<ViewMode>("normal");
+  const [proofs, setProofs] = useState<ProofSummary[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [expandedProof, setExpandedProof] = useState<OCCProof | null>(null);
+  const LIMIT = 25;
+
+  const fetchProofs = useCallback(async (p: number) => {
+    try {
+      const res = await fetch(`/api/proofs?page=${p}&limit=${LIMIT}`);
+      const data = await res.json();
+      setProofs(data.proofs || []);
+      setTotal(data.total || 0);
+    } catch {} finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchProofs(page); }, [page, fetchProofs]);
+
+  // Auto-refresh every 30s
+  useEffect(() => {
+    const iv = setInterval(() => fetchProofs(page), 30000);
+    return () => clearInterval(iv);
+  }, [page, fetchProofs]);
+
+  // Fetch full proof when expanding a row
+  async function handleExpand(proof: ProofSummary) {
+    if (expandedId === proof.id) { setExpandedId(null); setExpandedProof(null); return; }
+    setExpandedId(proof.id);
+    try {
+      // The explorer DB stores full proof JSON — fetch by digest
+      const res = await fetch(`/api/proofs/digest/${encodeURIComponent(proof.digestB64)}`);
+      const data = await res.json();
+      if (data.proofs?.[0]?.proof) setExpandedProof(data.proofs[0].proof);
+      else setExpandedProof(null);
+    } catch { setExpandedProof(null); }
+  }
+
+  const totalPages = Math.ceil(total / LIMIT);
+  const trunc = (s: string, n: number) => s && s.length > n ? s.slice(0, n) + "…" : s || "—";
+
+  return (
+    <div style={{ background: "#0a0a0a", minHeight: "100vh", color: "#e5e5e5" }}>
+      {/* Nav */}
+      <nav style={{
+        position: "sticky", top: 0, zIndex: 50, background: "#0a0a0a",
+        borderBottom: "1px solid #1e1e1e", padding: "0 24px", height: 56,
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        maxWidth: 1200, margin: "0 auto", width: "100%",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 32 }}>
+          <a href="/" style={{ fontSize: 18, fontWeight: 700, color: "#e5e5e5", textDecoration: "none", letterSpacing: "-0.02em" }}>OCC</a>
+          <div style={{ display: "flex", gap: 4 }}>
+            {(["explorer", "make", "verify"] as Tab[]).map(t => (
+              <button key={t} onClick={() => setTab(t)} style={{
+                padding: "6px 14px", borderRadius: 6, border: "none",
+                background: tab === t ? "#1e1e1e" : "transparent",
+                color: tab === t ? "#e5e5e5" : "#737373",
+                fontSize: 13, fontWeight: 500, cursor: "pointer",
+                transition: "all 0.15s", textTransform: "capitalize",
+              }}>{t === "make" ? "Prove" : t === "verify" ? "Verify" : "Explorer"}</button>
+            ))}
+          </div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <a href="/docs" style={{ fontSize: 13, color: "#737373", textDecoration: "none" }}>Docs</a>
+          <a href="https://github.com/mikeargento/occ" target="_blank" style={{ fontSize: 13, color: "#737373", textDecoration: "none" }}>GitHub</a>
+          <a href="https://agent.occ.wtf" style={{
+            fontSize: 13, fontWeight: 500, color: "#3b82f6", textDecoration: "none",
+            padding: "6px 14px", borderRadius: 6, border: "1px solid #3b82f6",
+          }}>Sign in</a>
+        </div>
+      </nav>
+
+      <main style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 24px 80px" }}>
+        {tab === "explorer" && (
+          <div>
+            {/* Header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <div>
+                <h1 style={{ fontSize: 20, fontWeight: 600, margin: 0, color: "#e5e5e5" }}>Proof Explorer</h1>
+                <p style={{ fontSize: 13, color: "#737373", margin: "4px 0 0" }}>{total.toLocaleString()} proofs on chain</p>
+              </div>
+              <div style={{ display: "flex", gap: 2, background: "#141414", borderRadius: 6, padding: 2, border: "1px solid #1e1e1e" }}>
+                {(["normal", "timeonly"] as ViewMode[]).map(v => (
+                  <button key={v} onClick={() => setViewMode(v)} style={{
+                    padding: "5px 12px", borderRadius: 4, border: "none",
+                    background: viewMode === v ? "#1e1e1e" : "transparent",
+                    color: viewMode === v ? "#e5e5e5" : "#737373",
+                    fontSize: 12, fontWeight: 500, cursor: "pointer",
+                  }}>{v === "normal" ? "Normal" : "Time"}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* Table */}
+            <div style={{ border: "1px solid #1e1e1e", borderRadius: 12, overflow: "hidden", background: "#141414" }}>
+              {/* Header row */}
+              {viewMode === "normal" && (
+                <div style={{
+                  display: "grid", gridTemplateColumns: "70px 120px 1fr 100px 100px",
+                  padding: "10px 20px", borderBottom: "1px solid #1e1e1e",
+                  fontSize: 11, fontWeight: 600, color: "#525252", textTransform: "uppercase", letterSpacing: "0.05em",
+                }}>
+                  <span>Proof</span>
+                  <span>Type</span>
+                  <span>Artifact</span>
+                  <span>Age</span>
+                  <span style={{ textAlign: "right" }}>Signer</span>
+                </div>
+              )}
+              {viewMode === "timeonly" && (
+                <div style={{
+                  display: "grid", gridTemplateColumns: "80px 1fr",
+                  padding: "10px 20px", borderBottom: "1px solid #1e1e1e",
+                  fontSize: 11, fontWeight: 600, color: "#525252", textTransform: "uppercase", letterSpacing: "0.05em",
+                }}>
+                  <span>Proof</span>
+                  <span>Time</span>
+                </div>
+              )}
+
+              {/* Rows */}
+              {loading ? (
+                <div style={{ padding: "40px 20px", textAlign: "center", color: "#525252" }}>Loading...</div>
+              ) : proofs.length === 0 ? (
+                <div style={{ padding: "40px 20px", textAlign: "center", color: "#525252" }}>No proofs yet.</div>
+              ) : proofs.map(p => (
+                <div key={p.id}>
+                  {viewMode === "timeonly" ? (
+                    <div style={{
+                      display: "grid", gridTemplateColumns: "80px 1fr",
+                      padding: "12px 20px", borderBottom: "1px solid #1a1a1a",
+                      fontSize: 14, alignItems: "center",
+                    }}>
+                      <span style={{ fontWeight: 600, color: "#3b82f6", fontFamily: "monospace" }}>{p.counter || "—"}</span>
+                      <span style={{ color: "#737373", fontFamily: "monospace", fontSize: 13 }}>
+                        {p.commitTime ? new Date(p.commitTime).toLocaleString() : "—"}
+                      </span>
+                    </div>
+                  ) : (
+                    <div onClick={() => handleExpand(p)} style={{
+                      display: "grid", gridTemplateColumns: "70px 120px 1fr 100px 100px",
+                      padding: "12px 20px", borderBottom: "1px solid #1a1a1a",
+                      fontSize: 14, alignItems: "center", cursor: "pointer",
+                      background: expandedId === p.id ? "#1a1a1a" : "transparent",
+                      transition: "background 0.1s",
+                    }}>
+                      <span style={{ fontWeight: 600, color: "#3b82f6", fontFamily: "monospace" }}>{p.counter || "—"}</span>
+                      <span>
+                        <span style={{
+                          display: "inline-block", fontSize: 11, fontWeight: 500,
+                          padding: "2px 8px", borderRadius: 4,
+                          border: "1px solid #1e1e1e", background: "#0a0a0a",
+                          color: "#737373", maxWidth: 110, overflow: "hidden",
+                          textOverflow: "ellipsis", whiteSpace: "nowrap",
+                        }}>{p.attrName || "proof"}</span>
+                      </span>
+                      <span style={{ fontFamily: "monospace", fontSize: 13, color: "#94a3b8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {trunc(p.digestB64, 24)}
+                      </span>
+                      <span style={{ fontSize: 13, color: "#525252" }}>
+                        {p.commitTime ? relativeTime(p.commitTime) : "—"}
+                      </span>
+                      <span style={{ fontFamily: "monospace", fontSize: 12, color: "#525252", textAlign: "right", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {trunc(p.signerPub, 8)}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Expanded Detail — Etherscan style */}
+                  {expandedId === p.id && viewMode === "normal" && (
+                    <div style={{ padding: "20px", background: "#0f0f0f", borderBottom: "1px solid #1e1e1e" }}>
+                      {/* Summary Card */}
+                      <div style={{ marginBottom: 16 }}>
+                        <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>
+                          Proof #{p.counter}
+                          {p.attrName && <span style={{ fontWeight: 400, color: "#737373", marginLeft: 8 }}>— {p.attrName}</span>}
+                        </div>
+
+                        {/* Key fields — Etherscan transaction overview style */}
+                        <div style={{ display: "flex", flexDirection: "column", gap: 0, border: "1px solid #1e1e1e", borderRadius: 8, overflow: "hidden" }}>
+                          <DetailRow label="Artifact Hash" value={p.digestB64} mono />
+                          <DetailRow label="Counter" value={`#${p.counter || "—"}`} />
+                          <DetailRow label="Timestamp" value={p.commitTime ? new Date(p.commitTime).toLocaleString() : "—"} />
+                          <DetailRow label="Enforcement" value={p.enforcement === "measured-tee" ? "Hardware Enclave (AWS Nitro)" : p.enforcement} valueColor="#22c55e" />
+                          <DetailRow label="Signer" value={p.signerPub} mono />
+                          {p.hasTsa && <DetailRow label="RFC 3161 TSA" value="Yes — freetsa.org" valueColor="#22c55e" />}
+                        </div>
+                      </div>
+
+                      {/* More Details (full proof) */}
+                      {expandedProof && <FullProofDetail proof={expandedProof} />}
+                      {!expandedProof && <div style={{ fontSize: 12, color: "#525252" }}>Loading full proof...</div>}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 16 }}>
+                <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} style={{
+                  padding: "6px 14px", borderRadius: 6, border: "1px solid #1e1e1e",
+                  background: "#141414", color: page <= 1 ? "#333" : "#737373",
+                  cursor: page <= 1 ? "default" : "pointer", fontSize: 13,
+                }}>← Prev</button>
+                <span style={{ padding: "6px 14px", fontSize: 13, color: "#525252" }}>Page {page} of {totalPages}</span>
+                <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} style={{
+                  padding: "6px 14px", borderRadius: 6, border: "1px solid #1e1e1e",
+                  background: "#141414", color: page >= totalPages ? "#333" : "#737373",
+                  cursor: page >= totalPages ? "default" : "pointer", fontSize: 13,
+                }}>Next →</button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Make tab — moved from /maker */}
+        {tab === "make" && (
+          <div>
+            <h1 style={{ fontSize: 20, fontWeight: 600, marginBottom: 8 }}>Create a Proof</h1>
+            <p style={{ fontSize: 13, color: "#737373", marginBottom: 24 }}>Drop a file to hash it locally and commit to the OCC chain. Nothing is uploaded.</p>
+            {/* Reuse the existing FileDrop + make flow from maker/page.tsx */}
+            <div style={{ border: "1px solid #1e1e1e", borderRadius: 12, padding: "48px 24px", textAlign: "center", color: "#525252" }}>
+              <p>File drop and proof creation — coming soon in unified view.</p>
+              <p style={{ marginTop: 8 }}>For now, use <a href="/maker" style={{ color: "#3b82f6" }}>the maker page</a>.</p>
+            </div>
+          </div>
+        )}
+
+        {tab === "verify" && (
+          <div>
+            <h1 style={{ fontSize: 20, fontWeight: 600, marginBottom: 8 }}>Verify a Proof</h1>
+            <p style={{ fontSize: 13, color: "#737373", marginBottom: 24 }}>Drop a proof.json or any file to verify its signature or check if it exists on the chain.</p>
+            <div style={{ border: "1px solid #1e1e1e", borderRadius: 12, padding: "48px 24px", textAlign: "center", color: "#525252" }}>
+              <p>Verification — coming soon in unified view.</p>
+              <p style={{ marginTop: 8 }}>For now, use <a href="/maker" style={{ color: "#3b82f6" }}>the maker page</a>.</p>
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
+
+/* -- Detail Row (Etherscan-style key-value) -- */
+function DetailRow({ label, value, mono, valueColor }: { label: string; value: string; mono?: boolean; valueColor?: string }) {
+  const [copied, setCopied] = useState(false);
   return (
     <div style={{
-      minHeight: "100vh",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      background: "var(--bg)",
+      display: "flex", justifyContent: "space-between", alignItems: "center",
+      padding: "10px 16px", borderBottom: "1px solid #1e1e1e", fontSize: 13,
+      gap: 16,
     }}>
-      <div style={{ width: "100%", maxWidth: 380, padding: "56px 36px", textAlign: "center" }}>
-        <h1 style={{
-          fontSize: 40, fontWeight: 700, letterSpacing: "-0.03em",
-          marginBottom: 32,
-        }}>
-          Sign in to OCC
-        </h1>
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          <a href="https://agent.occ.wtf/auth/login/github" style={{
-            display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-            height: 52, borderRadius: 14, fontSize: 16, fontWeight: 500,
-            textDecoration: "none", background: "var(--c-text)", color: "var(--bg)",
-            letterSpacing: "-0.01em",
-          }}>
-            <GithubIcon /> Continue with GitHub
-          </a>
-          <a href="https://agent.occ.wtf/auth/login/google" style={{
-            display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-            height: 52, borderRadius: 14, fontSize: 16, fontWeight: 500,
-            textDecoration: "none", background: "var(--c-text)", color: "var(--bg)",
-            letterSpacing: "-0.01em",
-          }}>
-            <GoogleIcon /> Continue with Google
-          </a>
-          <a href="https://agent.occ.wtf/auth/login/apple" style={{
-            display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-            height: 52, borderRadius: 14, fontSize: 16, fontWeight: 500,
-            textDecoration: "none", background: "var(--c-text)", color: "var(--bg)",
-            letterSpacing: "-0.01em",
-          }}>
-            <AppleIcon /> Continue with Apple
-          </a>
-          <a href="/docs" style={{
-            display: "flex", alignItems: "center", justifyContent: "center",
-            height: 52, borderRadius: 14, fontSize: 16, fontWeight: 500,
-            textDecoration: "none", background: "transparent",
-            color: "var(--c-text-secondary)", border: "1px solid var(--c-border)",
-            letterSpacing: "-0.01em",
-          }}>
-            Docs
-          </a>
-          <a href="/maker" style={{
-            display: "flex", alignItems: "center", justifyContent: "center",
-            height: 52, borderRadius: 14, fontSize: 16, fontWeight: 500,
-            textDecoration: "none", background: "transparent",
-            color: "var(--c-text-secondary)", border: "1px solid var(--c-border)",
-            letterSpacing: "-0.01em",
-          }}>
-            Maker
-          </a>
-          <a href="https://github.com/mikeargento/occ" target="_blank" rel="noopener" style={{
-            display: "flex", alignItems: "center", justifyContent: "center",
-            height: 52, borderRadius: 14, fontSize: 16, fontWeight: 500,
-            textDecoration: "none", background: "transparent",
-            color: "var(--c-text-secondary)", border: "1px solid var(--c-border)",
-            letterSpacing: "-0.01em",
-          }}>
-            GitHub
-          </a>
+      <span style={{ color: "#525252", flexShrink: 0, minWidth: 120 }}>{label}</span>
+      <span
+        onClick={() => { navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
+        style={{
+          color: copied ? "#22c55e" : (valueColor || (mono ? "#94a3b8" : "#e5e5e5")),
+          fontFamily: mono ? "'SF Mono', SFMono-Regular, monospace" : "inherit",
+          fontSize: mono ? 12 : 13,
+          textAlign: "right", cursor: "pointer",
+          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+          maxWidth: "70%",
+        }}
+        title={`Click to copy: ${value}`}
+      >
+        {copied ? "Copied!" : value}
+      </span>
+    </div>
+  );
+}
+
+/* -- Full Proof Detail (hidden by default, "More Details" toggle) -- */
+function FullProofDetail({ proof: p }: { proof: OCCProof }) {
+  const [showRaw, setShowRaw] = useState(false);
+  const commit = p.commit;
+  const signer = p.signer;
+  const env = p.environment;
+  const slot = p.slotAllocation;
+  const attr = p.attribution;
+  const ts = p.timestamps;
+
+  return (
+    <div>
+      <button onClick={() => setShowRaw(!showRaw)} style={{
+        fontSize: 12, fontWeight: 500, padding: "6px 14px", borderRadius: 6,
+        border: "1px solid #1e1e1e", background: "#141414",
+        color: "#737373", cursor: "pointer", marginBottom: showRaw ? 12 : 0,
+      }}>
+        {showRaw ? "Hide Details" : "More Details"}
+      </button>
+
+      {showRaw && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 12 }}>
+          {/* Commit */}
+          <Section title="Commit">
+            {commit.epochId && <SField label="Epoch" value={commit.epochId} mono />}
+            {commit.prevB64 && <SField label="Prev Hash" value={commit.prevB64} mono />}
+            {commit.nonceB64 && <SField label="Nonce" value={commit.nonceB64} mono />}
+            {(commit as any).slotCounter != null && <SField label="Slot #" value={String((commit as any).slotCounter)} />}
+            {(commit as any).slotHashB64 && <SField label="Slot Hash" value={String((commit as any).slotHashB64)} mono />}
+          </Section>
+
+          {/* Signer */}
+          <Section title="Signer">
+            <SField label="Public Key" value={signer.publicKeyB64} mono />
+            <SField label="Signature" value={signer.signatureB64} mono />
+          </Section>
+
+          {/* Environment */}
+          <Section title="Environment">
+            <SField label="Enforcement" value={env.enforcement} />
+            <SField label="Measurement" value={env.measurement} mono />
+            {env.attestation?.format && <SField label="Attestation" value={env.attestation.format} />}
+          </Section>
+
+          {/* Causal Slot */}
+          {slot && (
+            <Section title="Causal Slot">
+              <SField label="Version" value={(slot as any).version || "occ/slot/1"} />
+              <SField label="Counter" value={String((slot as any).counter)} />
+              <SField label="Nonce" value={(slot as any).nonceB64} mono />
+              <SField label="Signature" value={(slot as any).signatureB64} mono />
+            </Section>
+          )}
+
+          {/* Attribution */}
+          {attr && (
+            <Section title="Attribution">
+              {attr.name && <SField label="Name" value={attr.name} />}
+              {attr.title && <SField label="Link" value={attr.title} />}
+              {attr.message && <SField label="Data" value={attr.message} mono />}
+            </Section>
+          )}
+
+          {/* Timestamps */}
+          {ts && (
+            <Section title="Timestamp Authority">
+              {(ts as any).artifact?.authority && <SField label="Authority" value={(ts as any).artifact.authority} />}
+              {(ts as any).artifact?.time && <SField label="Time" value={(ts as any).artifact.time} />}
+            </Section>
+          )}
+
+          {/* Raw JSON */}
+          <div style={{ gridColumn: "1 / -1" }}>
+            <button onClick={() => {
+              const json = JSON.stringify(p, null, 2);
+              const blob = new Blob([json], { type: "application/json" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url; a.download = `occ-proof-${p.artifact.digestB64.slice(0, 12)}.json`; a.click();
+              URL.revokeObjectURL(url);
+            }} style={{
+              fontSize: 12, fontWeight: 500, padding: "6px 14px", borderRadius: 6,
+              border: "1px solid #1e1e1e", background: "#141414",
+              color: "#737373", cursor: "pointer",
+            }}>
+              Download proof.json
+            </button>
+          </div>
         </div>
+      )}
+    </div>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div style={{ border: "1px solid #1e1e1e", borderRadius: 8, overflow: "hidden" }}>
+      <div style={{ fontSize: 11, fontWeight: 600, color: "#525252", padding: "8px 14px", background: "#0a0a0a", borderBottom: "1px solid #1e1e1e", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+        {title}
       </div>
+      {children}
+    </div>
+  );
+}
+
+function SField({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <div style={{ display: "flex", justifyContent: "space-between", padding: "7px 14px", borderBottom: "1px solid #1a1a1a", fontSize: 12, gap: 12 }}>
+      <span style={{ color: "#525252", flexShrink: 0 }}>{label}</span>
+      <span
+        onClick={() => { navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
+        style={{
+          color: copied ? "#22c55e" : (mono ? "#94a3b8" : "#a3a3a3"),
+          fontFamily: mono ? "'SF Mono', SFMono-Regular, monospace" : "inherit",
+          fontSize: 11, textAlign: "right", cursor: "pointer",
+          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+        }}
+        title={value}
+      >
+        {copied ? "Copied!" : (value.length > 32 ? value.slice(0, 24) + "…" : value)}
+      </span>
     </div>
   );
 }
