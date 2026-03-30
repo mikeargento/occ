@@ -18,6 +18,7 @@ import {
 } from "@paperclipai/db";
 import { conflict, notFound } from "../errors.js";
 import { logger } from "../middleware/logger.js";
+import { occService } from "./occ.js";
 import { publishLiveEvent } from "./live-events.js";
 import { getRunLogStore, type RunLogHandle } from "./run-log-store.js";
 import { getServerAdapter, runningProcesses } from "../adapters/index.js";
@@ -2497,6 +2498,21 @@ export function heartbeatService(db: Db) {
         });
       };
 
+      // OCC: Create authorization proof before execution
+      const occ = occService();
+      let occAuthDigest: string | null = null;
+      if (occ.isEnabled()) {
+        try {
+          const authResult = await occ.createRunAuthorizationProof(
+            { id: agent.id, name: agent.name, companyId: agent.companyId, adapterType: agent.adapterType },
+            { id: run.id, status: run.status, contextSnapshot: run.contextSnapshot ?? null },
+          );
+          occAuthDigest = authResult?.digestB64 ?? null;
+        } catch (err) {
+          logger.warn({ err, runId: run.id }, "OCC authorization proof failed (non-fatal)");
+        }
+      }
+
       const adapter = getServerAdapter(agent.adapterType);
       const authToken = adapter.supportsLocalAgentJwt
         ? createLocalAgentJwt(agent.id, agent.companyId, agent.adapterType, run.id)
@@ -2525,6 +2541,28 @@ export function heartbeatService(db: Db) {
         },
         authToken: authToken ?? undefined,
       });
+      // OCC: Create execution proof after completion
+      let occProofDigest: string | null = null;
+      if (occ.isEnabled()) {
+        try {
+          const execResult = await occ.createRunExecutionProof(
+            { id: agent.id, name: agent.name, companyId: agent.companyId, adapterType: agent.adapterType },
+            { id: run.id, status: run.status, contextSnapshot: run.contextSnapshot ?? null },
+            {
+              exitCode: adapterResult.exitCode,
+              timedOut: adapterResult.timedOut,
+              usage: adapterResult.usage as { inputTokens?: number; outputTokens?: number } | undefined ?? null,
+              summary: adapterResult.summary,
+              errorMessage: adapterResult.errorMessage,
+            },
+            occAuthDigest,
+          );
+          occProofDigest = execResult?.digestB64 ?? null;
+        } catch (err) {
+          logger.warn({ err, runId: run.id }, "OCC execution proof failed (non-fatal)");
+        }
+      }
+
       const adapterManagedRuntimeServices = adapterResult.runtimeServices
         ? await persistAdapterManagedRuntimeServices({
             db,
@@ -2668,6 +2706,8 @@ export function heartbeatService(db: Db) {
         logBytes: logSummary?.bytes,
         logSha256: logSummary?.sha256,
         logCompressed: logSummary?.compressed ?? false,
+        occAuthDigestB64: occAuthDigest,
+        occProofDigestB64: occProofDigest,
       });
 
       await setWakeupStatus(run.wakeupRequestId, outcome === "succeeded" ? "completed" : status, {

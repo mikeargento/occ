@@ -38,6 +38,8 @@ export const heartbeatRuns = pgTable(
     }),
     processLossRetryCount: integer("process_loss_retry_count").notNull().default(0),
     contextSnapshot: jsonb("context_snapshot").$type<Record<string, unknown>>(),
+    occAuthDigestB64: text("occ_auth_digest_b64"),
+    occProofDigestB64: text("occ_proof_digest_b64"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

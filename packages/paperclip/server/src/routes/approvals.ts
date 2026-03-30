@@ -9,6 +9,9 @@ import {
 } from "@paperclipai/shared";
 import { validate } from "../middleware/validate.js";
 import { logger } from "../middleware/logger.js";
+import { occService } from "../services/occ.js";
+import { approvals } from "@paperclipai/db";
+import { eq } from "drizzle-orm";
 import {
   approvalService,
   heartbeatService,
@@ -128,6 +131,23 @@ export function approvalRoutes(db: Db) {
     );
 
     if (applied) {
+      // OCC: Create cryptographic proof of this approval decision
+      const occ = occService();
+      if (occ.isEnabled()) {
+        try {
+          const occResult = await occ.createApprovalResolutionProof(
+            { id: approval.id, companyId: approval.companyId, type: approval.type, status: approval.status, payload: approval.payload as Record<string, unknown> },
+            "approved",
+            req.body.decidedByUserId ?? req.actor.userId ?? "board",
+          );
+          if (occResult) {
+            await db.update(approvals).set({ occProofDigestB64: occResult.digestB64 }).where(eq(approvals.id, approval.id));
+          }
+        } catch (err) {
+          logger.warn({ err, approvalId: approval.id }, "OCC approval proof failed (non-fatal)");
+        }
+      }
+
       const linkedIssues = await issueApprovalsSvc.listIssuesForApproval(approval.id);
       const linkedIssueIds = linkedIssues.map((issue) => issue.id);
       const primaryIssueId = linkedIssueIds[0] ?? null;
@@ -223,6 +243,23 @@ export function approvalRoutes(db: Db) {
     );
 
     if (applied) {
+      // OCC: Create cryptographic proof of this rejection
+      const occ = occService();
+      if (occ.isEnabled()) {
+        try {
+          const occResult = await occ.createApprovalResolutionProof(
+            { id: approval.id, companyId: approval.companyId, type: approval.type, status: approval.status, payload: approval.payload as Record<string, unknown> },
+            "rejected",
+            req.body.decidedByUserId ?? req.actor.userId ?? "board",
+          );
+          if (occResult) {
+            await db.update(approvals).set({ occProofDigestB64: occResult.digestB64 }).where(eq(approvals.id, approval.id));
+          }
+        } catch (err) {
+          logger.warn({ err, approvalId: approval.id }, "OCC rejection proof failed (non-fatal)");
+        }
+      }
+
       await logActivity(db, {
         companyId: approval.companyId,
         actorType: "user",
