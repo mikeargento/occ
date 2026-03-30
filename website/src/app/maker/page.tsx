@@ -656,9 +656,36 @@ export default function MakerPage() {
             <>
               <div style={{
                 border: "1px solid var(--c-border-subtle)",
+                borderRadius: 12,
                 background: "var(--bg-elevated)",
                 overflow: "hidden",
               }}>
+                {/* Table header */}
+                <div style={{
+                  display: ledgerViewMode === "timeonly" ? "grid" : "grid",
+                  gridTemplateColumns: ledgerViewMode === "timeonly" ? "80px 1fr" : "60px 100px 1fr 120px 100px 120px",
+                  padding: "12px 20px",
+                  background: "rgba(255,255,255,0.02)",
+                  borderBottom: "1px solid var(--c-border-subtle)",
+                  fontSize: 12, fontWeight: 600, color: "var(--c-text-tertiary)",
+                  textTransform: "uppercase" as const, letterSpacing: "0.04em",
+                }}>
+                  {ledgerViewMode === "timeonly" ? (
+                    <>
+                      <span>#</span>
+                      <span>Time</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>#</span>
+                      <span>Type</span>
+                      <span>Digest</span>
+                      <span>Epoch</span>
+                      <span>Age</span>
+                      <span>Signer</span>
+                    </>
+                  )}
+                </div>
                 {ledger.map((entry, i) => (
                   <LedgerRow key={entry.digest + i} entry={entry} isLast={i === ledger.length - 1} viewMode={ledgerViewMode} />
                 ))}
@@ -708,6 +735,7 @@ function LedgerRow({ entry, isLast, viewMode }: { entry: ProofEntry; isLast: boo
   const [expanded, setExpanded] = useState(false);
   const [proof, setProof] = useState<OCCProof | null>(null);
   const [loading, setLoading] = useState(false);
+  const [copiedDigest, setCopiedDigest] = useState(false);
 
   async function toggle() {
     if (viewMode === "timeonly") return;
@@ -732,125 +760,98 @@ function LedgerRow({ entry, isLast, viewMode }: { entry: ProofEntry; isLast: boo
   const policy = proofAny?.policy as Record<string, unknown> | undefined;
   const principal = proofAny?.principal as Record<string, unknown> | undefined;
   const timestamps = proof?.timestamps as Record<string, unknown> | undefined;
+  const slotAllocation = proofAny?.slotAllocation as Record<string, unknown> | undefined;
+  const attribution = proof?.attribution;
 
-  const wallClockTime = entry.time ? new Date(entry.time).toLocaleString([], { hour: "numeric", minute: "2-digit" }) : "—";
-  const fullDateTime = entry.time ? new Date(entry.time).toLocaleString([], { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit", second: "2-digit" }) : "—";
+  const counter = entry.counter || String(entry.globalId);
+  const trunc = (s: string, n: number) => s.length > n ? s.slice(0, n) + "..." : s;
+  const toolName = entry.attribution || "proof";
+  const epochId = commit?.epochId ? String(commit.epochId) : "";
+  const signerPub = entry.signer || "";
+
+  // Shared cell styles
+  const cellStyle: React.CSSProperties = { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" };
+  const monoFont = "var(--font-mono), 'SF Mono', SFMono-Regular, monospace";
+
+  if (viewMode === "timeonly") {
+    return (
+      <div style={{
+        display: "grid", gridTemplateColumns: "80px 1fr",
+        padding: "14px 20px", alignItems: "center",
+        borderBottom: isLast ? "none" : "1px solid var(--c-border-subtle)",
+        fontSize: 14,
+      }}>
+        <span style={{ ...cellStyle, fontWeight: 600, color: "var(--accent, #0A84FF)", fontFamily: monoFont }}>{counter}</span>
+        <span style={{ ...cellStyle, fontFamily: monoFont, color: "var(--c-text-secondary)" }}>
+          {entry.time ? new Date(entry.time).toLocaleString() : "—"}
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div style={{ borderBottom: isLast ? "none" : "1px solid var(--c-border-subtle)" }}>
-      {/* Collapsed row — matches dashboard explorer-row layout */}
+      {/* Table row */}
       <div onClick={toggle} style={{
-        padding: "18px 24px", display: "flex", alignItems: "center", gap: 14,
-        cursor: viewMode === "timeonly" ? "default" : "pointer", transition: "background 0.15s",
-      }}>
-        {/* Chevron — only in Normal mode */}
-        {viewMode === "normal" && (
-          <button onClick={(e) => { e.stopPropagation(); toggle(); }} style={{
-            background: "none", border: "none", cursor: "pointer", padding: 2,
-            color: "var(--c-text-tertiary)", flexShrink: 0, transition: "all 0.2s",
-          }}>
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5"
-              style={{ transform: expanded ? "rotate(90deg)" : "rotate(0)", transition: "transform 0.15s" }}>
-              <path d="M3 1.5L7 5L3 8.5" />
-            </svg>
-          </button>
-        )}
-        {/* Dot */}
-        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#30d158", boxShadow: "0 0 8px rgba(48,209,88,0.4)", flexShrink: 0 }} />
-        {/* Counter */}
-        <span style={{
-          fontSize: 22, fontWeight: 700,
-          fontFamily: "'SF Mono', SFMono-Regular, monospace",
-          color: "var(--c-text)", minWidth: 48, flexShrink: 0,
-        }}>
-          #{entry.counter || entry.globalId}
-        </span>
-        {/* Info — name/attribution in Normal mode only */}
-        {viewMode === "normal" && (
-          <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{
-              fontSize: 16, fontWeight: 600, letterSpacing: "-0.01em",
-              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-            }}>
-              {entry.attribution || entry.digest.slice(0, 24) + "..."}
-            </span>
-          </div>
-        )}
-        {viewMode === "timeonly" && <div style={{ flex: 1 }} />}
-        {/* Badge + time in Normal mode */}
-        {viewMode === "normal" && (
-          <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-            <span style={{
-              fontSize: 13, fontWeight: 500, flexShrink: 0,
-              padding: "4px 10px", borderRadius: 4,
-              color: entry.enforcement === "Hardware Enclave" ? "#3b82f6" : "#eab308",
-              background: entry.enforcement === "Hardware Enclave" ? "rgba(59,130,246,0.1)" : "rgba(234,179,8,0.1)",
-            }}>
-              {entry.enforcement}
-            </span>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ color: "#a855f7" }} title="RFC 3161 timestamped">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" /></svg>
-              </span>
-              <span style={{
-                fontSize: 14, color: "var(--c-text-tertiary)",
-                minWidth: 56, textAlign: "right" as const,
-                fontFamily: "var(--font-mono), 'SF Mono', Menlo, monospace",
-              }}>
-                {wallClockTime}
-              </span>
-            </div>
-          </div>
-        )}
-        {/* Full date+time in Time Only mode */}
-        {viewMode === "timeonly" && (
+        display: "grid", gridTemplateColumns: "60px 100px 1fr 120px 100px 120px",
+        padding: "14px 20px", alignItems: "center",
+        fontSize: 14, transition: "background 0.1s", cursor: "pointer",
+      }}
+        onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.02)"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+      >
+        <span style={{ ...cellStyle, fontWeight: 600, color: "var(--accent, #0A84FF)", fontFamily: monoFont }}>{counter}</span>
+        <span style={cellStyle}>
           <span style={{
-            fontSize: 16, color: "var(--c-text-secondary)",
-            fontFamily: "'SF Mono', SFMono-Regular, monospace", flexShrink: 0,
-          }}>
-            {fullDateTime}
-          </span>
-        )}
+            display: "inline-block", fontSize: 11, fontWeight: 500, padding: "3px 8px",
+            borderRadius: 4, border: "1px solid var(--c-border-subtle)",
+            background: "rgba(255,255,255,0.02)", color: "var(--c-text-secondary)",
+            whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 90,
+          }} title={toolName}>{trunc(toolName, 12)}</span>
+        </span>
+        <span style={{
+          ...cellStyle, fontFamily: monoFont, fontSize: 13, color: "var(--c-text-secondary)",
+          display: "flex", alignItems: "center", gap: 6,
+        }} onClick={e => { e.stopPropagation(); navigator.clipboard.writeText(entry.digest); setCopiedDigest(true); setTimeout(() => setCopiedDigest(false), 1500); }}>
+          {trunc(entry.digest, 20)}
+          <button style={{
+            opacity: 0, transition: "opacity 0.15s", background: "none", border: "none",
+            color: "var(--c-text-tertiary)", cursor: "pointer", padding: 2,
+            display: "flex", alignItems: "center",
+          }}
+            onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.opacity = "0"; }}
+          >
+            {copiedDigest ? (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2"><path d="M20 6L9 17l-5-5"/></svg>
+            ) : (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            )}
+          </button>
+        </span>
+        <span style={{ ...cellStyle, color: "var(--c-text-secondary)", fontSize: 13 }} title={epochId}>{trunc(epochId, 12)}</span>
+        <span style={{ ...cellStyle, color: "var(--c-text-secondary)", fontSize: 13 }} title={entry.time ? new Date(entry.time).toLocaleString() : ""}>
+          {entry.time ? relativeTime(entry.time) : "—"}
+        </span>
+        <span style={{ ...cellStyle, fontFamily: monoFont, fontSize: 12, color: "var(--c-text-tertiary)" }} title={signerPub}>{trunc(signerPub, 12)}</span>
       </div>
 
-      {/* Expanded detail — matches dashboard explorer-expanded */}
-      {expanded && viewMode === "normal" && (
+      {/* Expanded detail */}
+      {expanded && (
         <div style={{
-          padding: 24, background: "rgba(255,255,255,0.015)",
+          padding: 20, background: "rgba(255,255,255,0.015)",
           borderTop: "1px solid var(--c-border-subtle)",
-          animation: "slideDownFade 0.25s ease-out",
         }}>
-          {/* Summary + Close — same as dashboard */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
-            <div style={{ fontSize: 15, lineHeight: 1.5 }}>
-              <span style={{ color: "#30d158", fontWeight: 600 }}>Proof</span>
-              {" "}{entry.digest.slice(0, 16)}...
-              {entry.time ? ` at ${new Date(entry.time).toLocaleString()}` : ""}
-            </div>
-            <button onClick={(e) => { e.stopPropagation(); setExpanded(false); }} style={{
-              width: 30, height: 30, borderRadius: 8,
-              border: "1px solid #ff453a", background: "transparent",
-              color: "#ff453a", display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: "pointer", transition: "all 0.2s", flexShrink: 0,
-            }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "#ff453a"; e.currentTarget.style.color = "#fff"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#ff453a"; }}
-              title="Close"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            </button>
-          </div>
-
           {loading && (
             <div style={{ fontSize: 13, color: "var(--c-text-tertiary)", padding: "8px 0" }}>Loading proof...</div>
           )}
 
           {proof && (
             <>
-              {/* Ethereum anchor link — detect by chainId or attribution */}
+              {/* Ethereum anchor link */}
               {(proof.commit && (proof.commit as Record<string, unknown>).chainId === "occ:ethereum-anchors") || (proof.attribution?.name?.startsWith("Ethereum #")) ? (
                 <div style={{
-                  padding: "10px 16px", marginBottom: 12, borderRadius: 8,
+                  padding: "10px 16px", marginBottom: 16, borderRadius: 8,
                   border: "1px solid rgba(59,130,246,0.2)", background: "rgba(59,130,246,0.05)",
                   display: "flex", alignItems: "center", gap: 12, fontSize: 13, flexWrap: "wrap",
                 }}>
@@ -863,108 +864,93 @@ function LedgerRow({ entry, isLast, viewMode }: { entry: ProofEntry; isLast: boo
                       View on Etherscan →
                     </a>
                   ) : null}
-                  {proof.attribution?.message ? (
-                    <span style={{ fontSize: 11, fontFamily: "var(--font-mono), monospace", color: "var(--c-text-tertiary)", wordBreak: "break-all" }}>
-                      {proof.attribution.message}
-                    </span>
-                  ) : null}
                 </div>
               ) : null}
 
-              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
-
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                 {/* Artifact */}
-                <ProofSection title="Artifact">
-                  <LedgerProofField label="Digest (SHA-256)" value={proof.artifact?.digestB64 || "—"} mono />
-                  {proof.version ? <LedgerProofField label="Version" value={proof.version} last /> : null}
-                </ProofSection>
+                <LedgerDetailSection title="Artifact">
+                  <LedgerDetailField label="Digest" value={proof.artifact?.digestB64 || "—"} mono />
+                  {proof.version && <LedgerDetailField label="Version" value={proof.version} />}
+                </LedgerDetailSection>
 
                 {/* Commit */}
                 {commit && (
-                  <ProofSection title="Commit">
-                    {commit.time != null && <LedgerProofField label="Time" value={new Date(commit.time).toLocaleString()} />}
-                    {commit.counter != null && <LedgerProofField label="Counter" value={`#${commit.counter}`} />}
-                    {(commit as Record<string, unknown>).chainId ? <LedgerProofField label="Chain ID" value={String((commit as Record<string, unknown>).chainId)} mono /> : null}
-                    {commit.epochId && <LedgerProofField label="Epoch ID" value={commit.epochId} mono />}
-                    {commit.prevB64 && <LedgerProofField label="Previous Hash" value={commit.prevB64} mono />}
-                    {commit.nonceB64 && <LedgerProofField label="Nonce" value={commit.nonceB64} mono />}
-                    {commit.slotCounter && <LedgerProofField label="Slot Counter" value={`#${commit.slotCounter}`} />}
-                    {commit.slotHashB64 && <LedgerProofField label="Slot Hash" value={commit.slotHashB64} mono />}
-                  </ProofSection>
+                  <LedgerDetailSection title="Commit">
+                    {commit.time != null && <LedgerDetailField label="Time" value={new Date(commit.time).toLocaleString()} />}
+                    <LedgerDetailField label="Counter" value={`#${counter}`} />
+                    {commit.epochId && <LedgerDetailField label="Epoch" value={commit.epochId} mono />}
+                    {commit.prevB64 && <LedgerDetailField label="Prev Hash" value={commit.prevB64} mono />}
+                    {commit.nonceB64 && <LedgerDetailField label="Nonce" value={commit.nonceB64} mono />}
+                    {commit.slotCounter != null && <LedgerDetailField label="Slot #" value={String(commit.slotCounter)} />}
+                    {commit.slotHashB64 && <LedgerDetailField label="Slot Hash" value={commit.slotHashB64} mono />}
+                  </LedgerDetailSection>
                 )}
 
                 {/* Signer */}
                 {signer && (
-                  <ProofSection title="Signer">
-                    <LedgerProofField label="Public Key" value={signer.publicKeyB64} mono />
-                    <LedgerProofField label="Signature" value={signer.signatureB64} mono />
-                  </ProofSection>
+                  <LedgerDetailSection title="Signer">
+                    <LedgerDetailField label="Public Key" value={signer.publicKeyB64} mono />
+                    <LedgerDetailField label="Signature" value={signer.signatureB64} mono />
+                  </LedgerDetailSection>
                 )}
 
                 {/* Environment */}
                 {env && (
-                  <ProofSection title="Environment">
-                    <LedgerProofField
-                      label="Enforcement"
-                      value={env.enforcement === "measured-tee" ? "Hardware Enclave (AWS Nitro)" : env.enforcement === "hw-key" ? "Hardware Key" : "Software"}
-                      color={env.enforcement === "measured-tee" ? "#3b82f6" : undefined}
-                    />
-                    {env.measurement && <LedgerProofField label="Measurement" value={env.measurement} mono />}
-                  </ProofSection>
+                  <LedgerDetailSection title="Environment">
+                    <LedgerDetailField label="Enforcement" value={env.enforcement === "measured-tee" ? "Hardware Enclave" : env.enforcement === "hw-key" ? "Hardware Key" : "Software"} />
+                    {env.measurement && <LedgerDetailField label="PCR0" value={env.measurement} mono />}
+                  </LedgerDetailSection>
                 )}
 
                 {/* Principal */}
                 {principal && (
-                  <ProofSection title="Principal">
-                    {(principal as Record<string, unknown>).provider ? <LedgerProofField label="Provider" value={String((principal as Record<string, unknown>).provider)} /> : null}
-                    {(principal as Record<string, unknown>).id ? <LedgerProofField label="ID" value={String((principal as Record<string, unknown>).id)} mono /> : null}
-                  </ProofSection>
+                  <LedgerDetailSection title="Principal">
+                    {(principal as Record<string, unknown>).provider ? <LedgerDetailField label="Provider" value={String((principal as Record<string, unknown>).provider)} /> : null}
+                    {(principal as Record<string, unknown>).id ? <LedgerDetailField label="ID" value={String((principal as Record<string, unknown>).id)} mono /> : null}
+                  </LedgerDetailSection>
                 )}
 
                 {/* Policy */}
                 {policy && (
-                  <ProofSection title="Policy">
-                    {policy.name ? <LedgerProofField label="Name" value={String(policy.name)} /> : null}
-                    {policy.digestB64 ? <LedgerProofField label="Digest" value={String(policy.digestB64)} mono /> : null}
-                  </ProofSection>
+                  <LedgerDetailSection title="Policy">
+                    {policy.name ? <LedgerDetailField label="Name" value={String(policy.name)} /> : null}
+                    {policy.digestB64 ? <LedgerDetailField label="Digest" value={String(policy.digestB64)} mono /> : null}
+                  </LedgerDetailSection>
                 )}
 
                 {/* Timestamps */}
                 {timestamps && (
-                  <ProofSection title="Timestamps">
+                  <LedgerDetailSection title="Timestamp">
                     {(timestamps as Record<string, unknown>).artifact ? (
                       <>
                         {((timestamps as Record<string, unknown>).artifact as Record<string, unknown>)?.authority
-                          ? <LedgerProofField label="Authority" value={String(((timestamps as Record<string, unknown>).artifact as Record<string, unknown>).authority)} />
-                          : null}
+                          && <LedgerDetailField label="Authority" value={String(((timestamps as Record<string, unknown>).artifact as Record<string, unknown>).authority)} />}
                         {((timestamps as Record<string, unknown>).artifact as Record<string, unknown>)?.time
-                          ? <LedgerProofField label="Time" value={String(((timestamps as Record<string, unknown>).artifact as Record<string, unknown>).time)} />
-                          : null}
+                          && <LedgerDetailField label="Time" value={String(((timestamps as Record<string, unknown>).artifact as Record<string, unknown>).time)} />}
                       </>
                     ) : null}
-                  </ProofSection>
+                  </LedgerDetailSection>
                 )}
 
                 {/* Attribution */}
-                {proof.attribution && (
-                  <ProofSection title="Attribution">
-                    {proof.attribution.name && <LedgerProofField label="Name" value={proof.attribution.name} />}
-                  </ProofSection>
+                {attribution && (
+                  <LedgerDetailSection title="Attribution">
+                    {attribution.name && <LedgerDetailField label="Name" value={attribution.name} />}
+                  </LedgerDetailSection>
                 )}
 
                 {/* Slot Allocation */}
-                {proof.slotAllocation && (
-                  <ProofSection title="Slot Allocation">
-                    <LedgerProofField label="Counter" value={`#${proof.slotAllocation.counter}`} />
-                    <LedgerProofField label="Time" value={new Date(proof.slotAllocation.time).toLocaleString()} />
-                    <LedgerProofField label="Public Key" value={proof.slotAllocation.publicKeyB64} mono />
-                    <LedgerProofField label="Signature" value={proof.slotAllocation.signatureB64} mono />
-                  </ProofSection>
+                {slotAllocation && (
+                  <LedgerDetailSection title="Causal Slot">
+                    {(slotAllocation as any).counter != null && <LedgerDetailField label="Slot #" value={String((slotAllocation as any).counter)} />}
+                    {(slotAllocation as any).time && <LedgerDetailField label="Time" value={new Date((slotAllocation as any).time).toLocaleString()} />}
+                  </LedgerDetailSection>
                 )}
               </div>
 
-              {/* Full JSON + Download */}
-              <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+              {/* JSON + Export */}
+              <div style={{ marginTop: 16, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
                 <LedgerCopyableJson data={proof} />
                 <button onClick={() => {
                   const json = JSON.stringify(proof, null, 2);
@@ -995,67 +981,46 @@ function LedgerRow({ entry, isLast, viewMode }: { entry: ProofEntry; isLast: boo
   );
 }
 
-/* ── Section wrapper — matches dashboard explorer-section exactly ── */
-function ProofSection({ title, children }: { title: string; children: React.ReactNode }) {
+/* ── Detail section for ledger expanded view ── */
+function LedgerDetailSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{
-      border: "1px solid var(--c-border-subtle)", borderRadius: 12,
-      overflow: "hidden", background: "var(--bg-elevated)",
-      transition: "border-color 0.2s",
+      border: "1px solid var(--c-border-subtle)", borderRadius: 8,
+      overflow: "hidden",
     }}>
       <div style={{
-        fontSize: 13, fontWeight: 600,
-        color: "var(--c-text-tertiary)", padding: "10px 16px",
-        borderBottom: "1px solid var(--c-border-subtle)",
+        fontSize: 12, fontWeight: 600,
+        color: "var(--c-text-tertiary)", padding: "8px 14px",
         background: "rgba(255,255,255,0.02)",
+        borderBottom: "1px solid var(--c-border-subtle)",
       }}>
         {title}
       </div>
-      <div style={{ padding: "8px 16px" }}>
-        {children}
-      </div>
+      {children}
     </div>
   );
 }
 
-/* ── Field with copy — matches dashboard ProofField exactly ── */
-function LedgerProofField({ label, value, mono, color, last }: { label: string; value: string; mono?: boolean; color?: string; last?: boolean }) {
+/* ── Detail field for ledger expanded view ── */
+function LedgerDetailField({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   const [copied, setCopied] = useState(false);
-  const isLong = mono && value.length > 24;
-  const displayValue = isLong ? value.slice(0, 24) + "..." : value;
   return (
     <div style={{
-      display: "flex", alignItems: "baseline", gap: 16,
-      padding: "10px 0", borderBottom: last ? "none" : "1px solid var(--c-border-subtle)",
-      lineHeight: 1.6,
+      display: "flex", justifyContent: "space-between", alignItems: "baseline",
+      padding: "8px 14px", borderBottom: "1px solid var(--c-border-subtle)",
+      fontSize: 13,
     }}>
-      <span style={{ color: "var(--c-text-secondary)", flexShrink: 0, minWidth: 100, fontSize: 14, fontWeight: 600 }}>{label}</span>
+      <span style={{ color: "var(--c-text-tertiary)", fontSize: 12 }}>{label}</span>
       <span style={{
-        color: color || (mono ? "#34d399" : "var(--c-text)"),
-        fontFamily: mono ? "var(--font-mono), 'SF Mono', Menlo, monospace" : "inherit",
-        fontSize: mono ? 13 : 14,
-        textAlign: "left", minWidth: 0,
-      }}>
-        {displayValue}
+        color: mono ? "#34d399" : "var(--c-text)",
+        fontFamily: mono ? "var(--font-mono), 'SF Mono', SFMono-Regular, monospace" : "inherit",
+        fontSize: mono ? 12 : 13,
+        textAlign: "right" as const, maxWidth: "60%",
+        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+        cursor: "pointer",
+      }} title={value} onClick={() => { navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 1500); }}>
+        {copied ? "Copied!" : value.length > 32 ? value.slice(0, 24) + "..." : value}
       </span>
-      {(isLong || value.length > 30) && (
-        <button onClick={() => { navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
-          style={{
-            border: "none", background: "transparent", cursor: "pointer", padding: 2,
-            color: copied ? "#34d399" : "var(--c-text-tertiary)", flexShrink: 0,
-            opacity: 0, transition: "opacity 0.15s",
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.6"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.opacity = "0"; }}
-          title="Copy full value"
-        >
-          {copied ? (
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 6L9 17l-5-5"/></svg>
-          ) : (
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-          )}
-        </button>
-      )}
     </div>
   );
 }
