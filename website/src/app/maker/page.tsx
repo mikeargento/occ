@@ -127,6 +127,7 @@ export default function MakerPage() {
   const [makeDigest, setMakeDigest] = useState("");
   const [makeProofs, setMakeProofs] = useState<OCCProof[]>([]);
   const [makeError, setMakeError] = useState("");
+  const [makeProgress, setMakeProgress] = useState({ current: 0, total: 0, fileName: "" });
   const [copied, setCopied] = useState(false);
   const [useBiometrics, setUseBiometrics] = useState(false);
   const [attribution, setAttribution] = useState("");
@@ -199,12 +200,15 @@ export default function MakerPage() {
       } else {
         // Batch mode
         const digests: Array<{ digestB64: string; hashAlg: "sha256" }> = [];
-        for (const f of files) {
+        for (let i = 0; i < files.length; i++) {
+          const f = files[i];
+          setMakeProgress({ current: i + 1, total: files.length, fileName: f.name });
           const d = await hashFile(f);
           digests.push({ digestB64: d, hashAlg: "sha256" });
         }
         setMakeDigest(digests[0].digestB64);
         setMakeStep("signing");
+        setMakeProgress({ current: 0, total: files.length, fileName: "" });
 
         let agency: AgencyEnvelope | undefined;
         if (useBiometrics) {
@@ -421,16 +425,33 @@ export default function MakerPage() {
 
             {makeStep === "hashing" && (
               <div style={{ ...cardStyle, textAlign: "center", padding: "48px 24px" }}>
-                <div style={{ fontSize: 14, color: "var(--c-text-secondary)" }}>
-                  Hashing {makeFiles.length} file{makeFiles.length !== 1 ? "s" : ""}...
+                <div style={{ fontSize: 14, color: "var(--c-text-secondary)", marginBottom: 12 }}>
+                  Hashing {makeFiles.length > 1 ? `${makeProgress.current} / ${makeProgress.total}` : ""} file{makeFiles.length !== 1 ? "s" : ""}...
                 </div>
+                {makeFiles.length > 1 && makeProgress.total > 0 && (
+                  <>
+                    <div style={{
+                      width: "100%", height: 4, borderRadius: 2,
+                      background: "var(--c-border)", overflow: "hidden", marginBottom: 8,
+                    }}>
+                      <div style={{
+                        width: `${(makeProgress.current / makeProgress.total) * 100}%`,
+                        height: "100%", borderRadius: 2,
+                        background: "#34d399", transition: "width 0.2s ease",
+                      }} />
+                    </div>
+                    <div style={{ fontSize: 12, color: "var(--c-text-tertiary)", fontFamily: "monospace" }}>
+                      {makeProgress.fileName}
+                    </div>
+                  </>
+                )}
               </div>
             )}
 
             {makeStep === "signing" && (
               <div style={{ ...cardStyle, textAlign: "center", padding: "48px 24px" }}>
                 <div style={{ fontSize: 14, color: "var(--c-text-secondary)", marginBottom: 8 }}>
-                  Signing in hardware enclave...
+                  Signing {makeFiles.length > 1 ? `${makeFiles.length} files` : ""} in hardware enclave...
                 </div>
                 <div style={{ fontSize: 12, color: "var(--c-text-tertiary)", fontFamily: "monospace" }}>
                   {makeDigest.slice(0, 32)}...
