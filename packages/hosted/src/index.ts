@@ -10,9 +10,17 @@ import { handleLlmProxy } from "./llm-proxy.js";
 import { handleSmsWebhook } from "./sms.js";
 import { handleChat } from "./chat.js";
 import { db } from "./db.js";
-import { startBitcoinAnchor, manualAnchor, getAnchorStatus } from "./bitcoin-anchor.js";
+import { startBitcoinAnchor, manualAnchor, getAnchorStatus, setAnchorInterval } from "./bitcoin-anchor.js";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
+
+function readBody(req: IncomingMessage): Promise<string> {
+  return new Promise((resolve) => {
+    let data = "";
+    req.on("data", (chunk: Buffer) => { data += chunk.toString(); });
+    req.on("end", () => resolve(data));
+  });
+}
 const DASHBOARD_DIR = resolve(__dirname, "../dashboard");
 const PORT = parseInt(process.env.PORT ?? "3100", 10);
 
@@ -162,6 +170,35 @@ async function handler(req: IncomingMessage, res: ServerResponse) {
         res.writeHead(500, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ error: "Anchor failed — TEE unavailable" }));
       }
+    } catch (err) {
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: (err as Error).message }));
+    }
+    return;
+  }
+  if (pathname === "/api/anchor/interval" && req.method === "POST") {
+    try {
+      const body = await readBody(req);
+      const { seconds } = JSON.parse(body);
+      if (typeof seconds !== "number") {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "seconds must be a number" }));
+        return;
+      }
+      const result = setAnchorInterval(seconds);
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify(result));
+    } catch (err) {
+      res.writeHead(400, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: (err as Error).message }));
+    }
+    return;
+  }
+  if (pathname === "/api/reset" && req.method === "POST") {
+    try {
+      await db.resetAll();
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ ok: true, message: "All occ_ tables truncated" }));
     } catch (err) {
       res.writeHead(500, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ error: (err as Error).message }));

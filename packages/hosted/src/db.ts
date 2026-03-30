@@ -941,4 +941,25 @@ export const db = {
     await p.query("DELETE FROM occ_v2_requests WHERE user_id = $1", [userId]);
     await p.query("DELETE FROM occ_proofs WHERE user_id = $1", [userId]);
   },
+
+  async resetAll() {
+    const p = getPool();
+    console.log("[db] TRUNCATING all occ_ tables — full reset");
+    await p.query(`
+      TRUNCATE TABLE
+        occ_v2_executions,
+        occ_v2_decisions,
+        occ_v2_requests,
+        occ_v2_runs,
+        occ_v2_risk_lanes,
+        occ_proofs,
+        occ_authorizations,
+        occ_permission_requests,
+        occ_policies,
+        occ_agents,
+        occ_users
+      CASCADE
+    `);
+    console.log("[db] All occ_ tables truncated");
+  },
 };

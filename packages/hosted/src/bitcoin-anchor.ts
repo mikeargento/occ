@@ -15,8 +15,8 @@ import { sha256 } from "@noble/hashes/sha256";
 import { db } from "./db.js";
 
 const TEE_URL = "https://nitro.occproof.com";
-const CHAIN_ID = "occ:main";
-const ANCHOR_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
+// No chainId — all proofs go on the TEE's single default chain
+let anchorIntervalMs = 10 * 60 * 1000; // 10 minutes default
 
 function toBase64(bytes: Uint8Array): string {
   return Buffer.from(bytes).toString("base64");
@@ -93,7 +93,6 @@ async function commitAnchor(block: EthBlock): Promise<{ proof: unknown; digestB6
       body: JSON.stringify({
         digests: [{ digestB64, hashAlg: "sha256" }],
         metadata,
-        chainId: CHAIN_ID,
         attribution: {
           name: `Ethereum #${block.number}`,
           message: block.hash,
@@ -166,12 +165,11 @@ async function checkAndAnchor(): Promise<void> {
 
 /**
  * Start the Ethereum anchor service.
- * Anchors every 10 minutes (~144 anchors/day).
  */
 export function startBitcoinAnchor(): void {
-  console.log(`[eth-anchor] Starting — anchoring every ${ANCHOR_INTERVAL_MS / 60000} minutes`);
+  console.log(`[eth-anchor] Starting — anchoring every ${anchorIntervalMs / 1000}s`);
   checkAndAnchor();
-  intervalId = setInterval(checkAndAnchor, ANCHOR_INTERVAL_MS);
+  intervalId = setInterval(checkAndAnchor, anchorIntervalMs);
 }
 
 /**
@@ -183,6 +181,24 @@ export function stopBitcoinAnchor(): void {
     intervalId = null;
     console.log("[eth-anchor] Stopped");
   }
+}
+
+/**
+ * Change the anchor interval at runtime.
+ * Restarts the interval timer immediately.
+ * Minimum: 12 seconds (one Ethereum block).
+ */
+export function setAnchorInterval(seconds: number): { ok: boolean; intervalSeconds: number } {
+  if (seconds < 12) throw new Error("Minimum interval is 12 seconds (one Ethereum block)");
+  if (seconds > 86400) throw new Error("Maximum interval is 86400 seconds (24 hours)");
+  anchorIntervalMs = seconds * 1000;
+  // Restart the timer with new interval
+  if (intervalId) {
+    clearInterval(intervalId);
+    intervalId = setInterval(checkAndAnchor, anchorIntervalMs);
+  }
+  console.log(`[eth-anchor] Interval changed to ${seconds}s`);
+  return { ok: true, intervalSeconds: seconds };
 }
 
 /**
@@ -201,11 +217,11 @@ export async function manualAnchor(): Promise<{ block: EthBlock; proof: unknown;
 /**
  * Get the current anchor status.
  */
-export function getAnchorStatus(): { running: boolean; lastAnchoredBlock: number; source: string; intervalMinutes: number } {
+export function getAnchorStatus(): { running: boolean; lastAnchoredBlock: number; source: string; intervalSeconds: number } {
   return {
     running: intervalId !== null,
     lastAnchoredBlock,
     source: "ethereum",
-    intervalMinutes: ANCHOR_INTERVAL_MS / 60000,
+    intervalSeconds: anchorIntervalMs / 1000,
   };
 }
