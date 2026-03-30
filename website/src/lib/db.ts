@@ -118,6 +118,14 @@ export async function listProofs(page = 1, limit = 20) {
   };
 }
 
+/* ── Reset ── */
+
+export async function resetProofs() {
+  const sql = getDb();
+  await sql`TRUNCATE TABLE proofs`;
+  return { ok: true };
+}
+
 /* ── Search ── */
 
 export async function searchProofs(query: string, limit = 20) {

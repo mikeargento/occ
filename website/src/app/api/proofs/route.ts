@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { insertProofs, listProofs } from "@/lib/db";
+import { insertProofs, listProofs, resetProofs } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +14,16 @@ export async function GET(req: NextRequest) {
   } catch (e) {
     console.error("GET /api/proofs error:", e);
     return NextResponse.json({ error: "Failed to list proofs" }, { status: 500 });
+  }
+}
+
+export async function DELETE() {
+  try {
+    await resetProofs();
+    return NextResponse.json({ ok: true, message: "All proofs cleared" });
+  } catch (e) {
+    console.error("DELETE /api/proofs error:", e);
+    return NextResponse.json({ error: "Failed to clear proofs" }, { status: 500 });
   }
 }
 
