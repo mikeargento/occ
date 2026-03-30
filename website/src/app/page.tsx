@@ -19,7 +19,7 @@ import {
 import { toUrlSafeB64, relativeTime } from "@/lib/explorer";
 import { zipSync } from "fflate";
 
-/* ── Types ── */
+/* ── Types ───────────────────────────────────────────────────────────── */
 
 type Mode = "make" | "verify";
 type MakeStep = "drop" | "hashing" | "signing" | "done" | "error";
@@ -35,7 +35,7 @@ interface ProofEntry {
   signer: string;
 }
 
-/* ── VERIFY.txt builder ── */
+/* ── VERIFY.txt builder ──────────────────────────────────────────────── */
 
 function buildVerifyTxt(filename: string, p: OCCProof): string {
   return `VERIFY.txt — OCC Proof Package
@@ -63,14 +63,16 @@ Learn more: https://occ.wtf/docs
 `;
 }
 
-/* ── WebAuthn / Biometric helpers ── */
+/* ── WebAuthn / Biometric helpers ────────────────────────────────────── */
 
-async function createBiometricAuthorization(digestB64: string): Promise<AgencyEnvelope | undefined> {
+async function createBiometricAuthorization(
+  digestB64: string
+): Promise<AgencyEnvelope | undefined> {
   if (!window.PublicKeyCredential) return undefined;
 
   try {
     const challenge = crypto.getRandomValues(new Uint8Array(32));
-    const credential = await navigator.credentials.get({
+    const credential = (await navigator.credentials.get({
       publicKey: {
         challenge,
         timeout: 60000,
@@ -78,7 +80,7 @@ async function createBiometricAuthorization(digestB64: string): Promise<AgencyEn
         rpId: window.location.hostname,
         allowCredentials: [],
       },
-    }) as PublicKeyCredential | null;
+    })) as PublicKeyCredential | null;
 
     if (!credential) return undefined;
 
@@ -92,7 +94,7 @@ async function createBiometricAuthorization(digestB64: string): Promise<AgencyEn
 
     const actor: ActorIdentity = {
       keyId: credential.id,
-      publicKeyB64: "", // would need stored key
+      publicKeyB64: "",
       algorithm: "ES256",
       provider: "webauthn",
     };
@@ -112,63 +114,128 @@ async function createBiometricAuthorization(digestB64: string): Promise<AgencyEn
       },
     };
   } catch {
-    return undefined; // biometrics declined or unavailable
+    return undefined;
   }
 }
 
-/* ── Main Page ── */
+/* ── Helpers ──────────────────────────────────────────────────────────── */
+
+function trunc(s: string, n = 24): string {
+  return s.length > n ? s.slice(0, n) + "..." : s;
+}
+
+function CopyButton({ value, label }: { value: string; label?: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      className="copy-btn"
+      onClick={(e) => {
+        e.stopPropagation();
+        navigator.clipboard.writeText(value);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      }}
+      style={s.copyBtn}
+    >
+      {copied ? "Copied!" : label || "\u{1F4CB}"}
+    </button>
+  );
+}
+
+function MonoValue({
+  value,
+  truncLen = 24,
+}: {
+  value: string;
+  truncLen?: number;
+}) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <span
+      className="mono-val"
+      title={value}
+      onClick={(e) => {
+        e.stopPropagation();
+        navigator.clipboard.writeText(value);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      }}
+      style={s.monoValue}
+    >
+      {copied ? "Copied!" : trunc(value, truncLen)}
+    </span>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   Main Page
+   ══════════════════════════════════════════════════════════════════════ */
 
 export default function MakerPage() {
   const [mode, setMode] = useState<Mode>("make");
 
-  // Make state
+  /* ── Make state ── */
   const [makeStep, setMakeStep] = useState<MakeStep>("drop");
   const [makeFiles, setMakeFiles] = useState<File[]>([]);
   const [makeDigest, setMakeDigest] = useState("");
   const [makeProofs, setMakeProofs] = useState<OCCProof[]>([]);
   const [makeError, setMakeError] = useState("");
-  const [makeProgress, setMakeProgress] = useState({ current: 0, total: 0, fileName: "" });
-  const [copied, setCopied] = useState(false);
+  const [makeProgress, setMakeProgress] = useState({
+    current: 0,
+    total: 0,
+    fileName: "",
+  });
   const [useBiometrics, setUseBiometrics] = useState(false);
   const [attribution, setAttribution] = useState("");
+  const [showRawJson, setShowRawJson] = useState(false);
+  const [jsonCopied, setJsonCopied] = useState(false);
 
-  // Verify state
+  /* ── Verify state ── */
   const [verifyStep, setVerifyStep] = useState<VerifyStep>("drop");
   const [verifyFile, setVerifyFile] = useState<File | null>(null);
   const [verifyProof, setVerifyProof] = useState<OCCProof | null>(null);
-  const [verifyResult, setVerifyResult] = useState<ProofVerifyResult | null>(null);
+  const [verifyResult, setVerifyResult] = useState<ProofVerifyResult | null>(
+    null
+  );
   const [fileDigestMatch, setFileDigestMatch] = useState<boolean | null>(null);
 
-  // Public ledger
+  /* ── Public ledger ── */
   const [ledger, setLedger] = useState<ProofEntry[]>([]);
   const [ledgerTotal, setLedgerTotal] = useState(0);
   const [ledgerPage, setLedgerPage] = useState(1);
-  const [ledgerViewMode, setLedgerViewMode] = useState<"normal" | "timeonly">("normal");
+  const [ledgerViewMode, setLedgerViewMode] = useState<"normal" | "timeonly">(
+    "normal"
+  );
 
-  // Fetch public ledger
   const fetchLedger = useCallback(async (page: number) => {
     try {
       const resp = await fetch(`/api/proofs?page=${page}&limit=15`);
       if (!resp.ok) return;
       const data = await resp.json();
-      const entries: ProofEntry[] = (data.proofs || []).map((p: Record<string, unknown>) => ({
-        globalId: (p.id as number) || 0,
-        digest: (p.digestB64 as string) || "—",
-        counter: (p.counter as string) || undefined,
-        enforcement: (p.enforcement as string) === "measured-tee" ? "Hardware Enclave" : "Software",
-        time: p.commitTime ? Number(p.commitTime) : undefined,
-        attribution: (p.attrName as string) || undefined,
-        signer: ((p.signerPub as string) || "").slice(0, 12) || "—",
-      }));
+      const entries: ProofEntry[] = (data.proofs || []).map(
+        (p: Record<string, unknown>) => ({
+          globalId: (p.id as number) || 0,
+          digest: (p.digestB64 as string) || "—",
+          counter: (p.counter as string) || undefined,
+          enforcement:
+            (p.enforcement as string) === "measured-tee"
+              ? "Hardware Enclave"
+              : "Software",
+          time: p.commitTime ? Number(p.commitTime) : undefined,
+          attribution: (p.attrName as string) || undefined,
+          signer: ((p.signerPub as string) || "").slice(0, 12) || "—",
+        })
+      );
       setLedger(entries);
       setLedgerTotal(data.total || 0);
       setLedgerPage(page);
-    } catch { /* silent */ }
+    } catch {
+      /* silent */
+    }
   }, []);
 
   useEffect(() => {
     fetchLedger(1);
-    // Auto-refresh ledger every 15 seconds
     const interval = setInterval(() => fetchLedger(1), 15000);
     return () => clearInterval(interval);
   }, [fetchLedger]);
@@ -191,19 +258,22 @@ export default function MakerPage() {
           agency = await createBiometricAuthorization(d);
         }
 
-        const attr = attribution.trim() ? { name: attribution.trim() } : undefined;
+        const attr = attribution.trim()
+          ? { name: attribution.trim() }
+          : undefined;
         const p = await commitDigest(d, undefined, agency, attr);
         setMakeProofs([p]);
         setMakeStep("done");
-
-        // Refresh ledger after short delay to ensure indexing is complete
         setTimeout(() => fetchLedger(1), 1500);
       } else {
-        // Batch mode
         const digests: Array<{ digestB64: string; hashAlg: "sha256" }> = [];
         for (let i = 0; i < files.length; i++) {
           const f = files[i];
-          setMakeProgress({ current: i + 1, total: files.length, fileName: f.name });
+          setMakeProgress({
+            current: i + 1,
+            total: files.length,
+            fileName: f.name,
+          });
           const d = await hashFile(f);
           digests.push({ digestB64: d, hashAlg: "sha256" });
         }
@@ -216,12 +286,12 @@ export default function MakerPage() {
           agency = await createBiometricAuthorization(digests[0].digestB64);
         }
 
-        const attr = attribution.trim() ? { name: attribution.trim() } : undefined;
+        const attr = attribution.trim()
+          ? { name: attribution.trim() }
+          : undefined;
         const proofs = await commitBatch(digests, undefined, agency, attr);
         setMakeProofs(proofs);
         setMakeStep("done");
-
-        // Refresh ledger after short delay to ensure indexing is complete
         setTimeout(() => fetchLedger(1), 1500);
       }
     } catch (err) {
@@ -236,15 +306,7 @@ export default function MakerPage() {
     setMakeDigest("");
     setMakeProofs([]);
     setMakeError("");
-  }
-
-  function copyProof() {
-    const json = makeProofs.length === 1
-      ? JSON.stringify(makeProofs[0], null, 2)
-      : JSON.stringify(makeProofs, null, 2);
-    navigator.clipboard.writeText(json);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setShowRawJson(false);
   }
 
   async function downloadZip() {
@@ -255,21 +317,29 @@ export default function MakerPage() {
       const f = makeFiles[i];
       const p = makeProofs[i] || makeProofs[0];
       zipFiles[f.name] = new Uint8Array(await f.arrayBuffer());
-      const proofName = makeFiles.length > 1 ? `proof-${i + 1}.json` : "proof.json";
-      zipFiles[proofName] = new TextEncoder().encode(JSON.stringify(p, null, 2));
+      const proofName =
+        makeFiles.length > 1 ? `proof-${i + 1}.json` : "proof.json";
+      zipFiles[proofName] = new TextEncoder().encode(
+        JSON.stringify(p, null, 2)
+      );
       if (i === 0) {
-        zipFiles["VERIFY.txt"] = new TextEncoder().encode(buildVerifyTxt(f.name, p));
+        zipFiles["VERIFY.txt"] = new TextEncoder().encode(
+          buildVerifyTxt(f.name, p)
+        );
       }
     }
 
     const zipped = zipSync(zipFiles);
-    const blob = new Blob([zipped.buffer as ArrayBuffer], { type: "application/zip" });
+    const blob = new Blob([zipped.buffer as ArrayBuffer], {
+      type: "application/zip",
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = makeFiles.length === 1
-      ? `${makeFiles[0].name.replace(/\.[^.]+$/, "")}-occ-proof.zip`
-      : "occ-proof-batch.zip";
+    a.download =
+      makeFiles.length === 1
+        ? `${makeFiles[0].name.replace(/\.[^.]+$/, "")}-occ-proof.zip`
+        : "occ-proof-batch.zip";
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -288,15 +358,15 @@ export default function MakerPage() {
       const proof = isOCCProof(text);
 
       if (proof) {
-        // User dropped a proof.json — verify the signature
         setVerifyProof(proof);
         const result = await verifyProofSignature(proof);
         setVerifyResult(result);
         setVerifyStep("result");
       } else {
-        // User dropped a regular file — hash it and check against the ledger
         const d = await hashFile(f);
-        const resp = await fetch(`/api/proofs/${encodeURIComponent(toUrlSafeB64(d))}`);
+        const resp = await fetch(
+          `/api/proofs/${encodeURIComponent(toUrlSafeB64(d))}`
+        );
         if (resp.ok) {
           const data = await resp.json();
           if (data.proofs?.length > 0) {
@@ -327,61 +397,56 @@ export default function MakerPage() {
     setFileDigestMatch(null);
   }
 
-  /* ── Styles ── */
+  /* ── Derived ── */
+  const firstProof = makeProofs[0];
+  const proofJson =
+    makeProofs.length === 1
+      ? JSON.stringify(makeProofs[0], null, 2)
+      : JSON.stringify(makeProofs, null, 2);
 
-  const cardStyle: React.CSSProperties = {
-    border: "1px solid var(--c-border-subtle)",
-    padding: "32px 24px",
-    background: "var(--bg-elevated)",
-    marginBottom: 16,
-  };
+  const totalPages = Math.ceil(ledgerTotal / 15);
 
-  const btnOutline: React.CSSProperties = {
-    height: 48, fontSize: 15, fontWeight: 500,
-    border: "1px solid var(--c-border)", borderRadius: 10,
-    background: "transparent", color: "var(--c-text)", cursor: "pointer",
-    flex: 1,
-  };
-
-  const btnSolid: React.CSSProperties = {
-    ...btnOutline,
-    border: "none", background: "var(--c-text)", color: "var(--bg)",
-  };
+  /* ══════════════════════════════════════════════════════════════════
+     RENDER
+     ══════════════════════════════════════════════════════════════════ */
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--c-text)" }}>
+    <div style={s.root}>
       <Nav />
 
-      <div style={{ maxWidth: 1120, margin: "0 auto", padding: "60px 36px" }}>
-        {/* Header */}
-        <h1 style={{ fontSize: 36, fontWeight: 700, letterSpacing: "-0.03em", marginBottom: 8 }}>
-          Maker
-        </h1>
-        <p style={{ fontSize: 16, color: "var(--c-text-secondary)", marginBottom: 32, lineHeight: 1.5 }}>
-          Create and verify cryptographic proofs signed inside a hardware enclave.
-        </p>
+      <main style={s.main}>
+        {/* ── Hero ── */}
+        <section style={s.hero}>
+          <h1 style={s.heroTitle}>Prove anything.</h1>
+          <p style={s.heroSubtitle}>
+            Cryptographic proofs signed inside a hardware enclave. Drop a file
+            — nothing leaves your browser.
+          </p>
 
-        {/* Mode toggle */}
-        <div style={{
-          display: "flex", gap: 0, marginBottom: 32,
-          border: "1px solid var(--c-border)", borderRadius: 10, overflow: "hidden",
-        }}>
-          {(["make", "verify"] as Mode[]).map((m) => (
-            <button key={m} onClick={() => setMode(m)} style={{
-              flex: 1, height: 44, fontSize: 14, fontWeight: 600,
-              border: "none", cursor: "pointer",
-              background: mode === m ? "var(--c-text)" : "transparent",
-              color: mode === m ? "var(--bg)" : "var(--c-text-secondary)",
-              textTransform: "capitalize", letterSpacing: "0.02em",
-            }}>
-              {m === "make" ? "Create proof" : "Verify proof"}
-            </button>
-          ))}
-        </div>
+          {/* Mode toggle */}
+          <div style={s.modeToggleWrap}>
+            {(["make", "verify"] as Mode[]).map((m) => (
+              <button
+                key={m}
+                onClick={() => {
+                  setMode(m);
+                  if (m === "make") resetMake();
+                  if (m === "verify") resetVerify();
+                }}
+                style={{
+                  ...s.modeToggleBtn,
+                  ...(mode === m ? s.modeToggleBtnActive : {}),
+                }}
+              >
+                {m === "make" ? "Create Proof" : "Verify Proof"}
+              </button>
+            ))}
+          </div>
+        </section>
 
-        {/* ═══ MAKE MODE ═══ */}
+        {/* ══════════ MAKE MODE ══════════ */}
         {mode === "make" && (
-          <>
+          <section style={s.section}>
             {makeStep === "drop" && (
               <>
                 <FileDrop
@@ -390,33 +455,20 @@ export default function MakerPage() {
                   onFiles={handleMakeFiles}
                   hint="Drop file(s). Hashed locally — nothing uploaded. Supports batch."
                 />
-                {/* Options below the drop zone */}
-                <div style={{
-                  display: "flex", alignItems: "center", gap: 20, marginTop: 16,
-                  padding: "12px 16px",
-                  border: "1px solid var(--c-border-subtle)", background: "var(--bg-elevated)",
-                }}>
+                <div style={s.optionsRow}>
                   <input
                     type="text"
                     value={attribution}
                     onChange={(e) => setAttribution(e.target.value)}
                     placeholder="Author name (optional)"
-                    style={{
-                      flex: 1, height: 32, padding: "0 10px",
-                      fontSize: 13, border: "1px solid var(--c-border)", borderRadius: 6,
-                      background: "transparent", color: "var(--c-text)",
-                    }}
+                    style={s.authorInput}
                   />
-                  <label style={{
-                    display: "flex", alignItems: "center", gap: 6,
-                    fontSize: 13, color: "var(--c-text-secondary)", cursor: "pointer",
-                    whiteSpace: "nowrap",
-                  }}>
+                  <label style={s.biometricLabel}>
                     <input
                       type="checkbox"
                       checked={useBiometrics}
                       onChange={(e) => setUseBiometrics(e.target.checked)}
-                      style={{ accentColor: "var(--accent)" }}
+                      style={{ accentColor: "var(--c-accent)" }}
                     />
                     Biometric authorship
                   </label>
@@ -425,116 +477,135 @@ export default function MakerPage() {
             )}
 
             {makeStep === "hashing" && (
-              <div style={{ ...cardStyle, textAlign: "center", padding: "48px 24px" }}>
-                <div style={{ fontSize: 14, color: "var(--c-text-secondary)", marginBottom: 12 }}>
-                  Hashing {makeFiles.length > 1 ? `${makeProgress.current} / ${makeProgress.total}` : ""} file{makeFiles.length !== 1 ? "s" : ""}...
-                </div>
+              <div style={s.statusCard}>
+                <p style={s.statusText}>
+                  Hashing{" "}
+                  {makeFiles.length > 1
+                    ? `${makeProgress.current} / ${makeProgress.total} `
+                    : ""}
+                  file{makeFiles.length !== 1 ? "s" : ""}...
+                </p>
                 {makeFiles.length > 1 && makeProgress.total > 0 && (
                   <>
-                    <div style={{
-                      width: "100%", height: 4, borderRadius: 2,
-                      background: "var(--c-border)", overflow: "hidden", marginBottom: 8,
-                    }}>
-                      <div style={{
-                        width: `${(makeProgress.current / makeProgress.total) * 100}%`,
-                        height: "100%", borderRadius: 2,
-                        background: "#34d399", transition: "width 0.2s ease",
-                      }} />
+                    <div style={s.progressTrack}>
+                      <div
+                        style={{
+                          ...s.progressBar,
+                          width: `${(makeProgress.current / makeProgress.total) * 100}%`,
+                        }}
+                      />
                     </div>
-                    <div style={{ fontSize: 12, color: "var(--c-text-tertiary)", fontFamily: "monospace" }}>
-                      {makeProgress.fileName}
-                    </div>
+                    <p style={s.progressFileName}>{makeProgress.fileName}</p>
                   </>
                 )}
               </div>
             )}
 
             {makeStep === "signing" && (
-              <div style={{ ...cardStyle, textAlign: "center", padding: "48px 24px" }}>
-                <div style={{ fontSize: 14, color: "var(--c-text-secondary)", marginBottom: 8 }}>
-                  Signing {makeFiles.length > 1 ? `${makeFiles.length} files` : ""} in hardware enclave...
-                </div>
-                <div style={{ fontSize: 12, color: "var(--c-text-tertiary)", fontFamily: "monospace" }}>
-                  {makeDigest.slice(0, 32)}...
-                </div>
+              <div style={s.statusCard}>
+                <p style={s.statusText}>
+                  Signing{" "}
+                  {makeFiles.length > 1 ? `${makeFiles.length} files ` : ""}
+                  in hardware enclave...
+                </p>
+                <p style={s.monoSmall}>{makeDigest.slice(0, 32)}...</p>
               </div>
             )}
 
             {makeStep === "error" && (
-              <div style={{ ...cardStyle, textAlign: "center", borderColor: "#ff453a" }}>
-                <div style={{ fontSize: 14, color: "#ff453a", marginBottom: 16 }}>{makeError}</div>
-                <button onClick={resetMake} style={btnOutline}>Try again</button>
+              <div style={{ ...s.card, borderColor: "#ef4444" }}>
+                <p style={{ ...s.statusText, color: "#ef4444" }}>
+                  {makeError}
+                </p>
+                <button onClick={resetMake} style={s.btnSecondary}>
+                  Try again
+                </button>
               </div>
             )}
 
-            {makeStep === "done" && makeProofs.length > 0 && (
-              <div>
-                <div style={cardStyle}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                    <span style={{ color: "#30d158", fontSize: 20 }}>●</span>
-                    <span style={{ fontSize: 16, fontWeight: 600 }}>
-                      {makeProofs.length === 1 ? "Proof created" : `${makeProofs.length} proofs created`}
-                    </span>
+            {makeStep === "done" && firstProof && (
+              <div style={s.resultWrap}>
+                {/* Success header */}
+                <div style={s.resultHeader}>
+                  <div style={s.successIcon}>
+                    <svg
+                      width="28"
+                      height="28"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="#22c55e"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M20 6L9 17l-5-5" />
+                    </svg>
                   </div>
-                  {makeFiles.map((f, i) => (
-                    <div key={f.name + i} style={{ marginBottom: i < makeFiles.length - 1 ? 12 : 0 }}>
-                      <div style={{ fontSize: 13, color: "var(--c-text-secondary)", marginBottom: 2 }}>
-                        {f.name} · {formatFileSize(f.size)}
-                      </div>
-                      <div style={{
-                        fontSize: 12, fontFamily: "monospace", color: "#30d158",
-                        wordBreak: "break-all", lineHeight: 1.5,
-                      }}>
-                        {makeProofs[i]?.artifact.digestB64}
-                      </div>
+                  <div>
+                    <h2 style={s.resultTitle}>
+                      Proof #{firstProof.commit.counter} created
+                    </h2>
+                    <p style={s.resultMeta}>
+                      {makeFiles.length === 1
+                        ? `${makeFiles[0].name} \u00b7 ${formatFileSize(makeFiles[0].size)}`
+                        : `${makeFiles.length} files`}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Digest */}
+                <div style={s.resultDigestRow}>
+                  <span style={s.resultDigestLabel}>Digest</span>
+                  <MonoValue
+                    value={firstProof.artifact.digestB64}
+                    truncLen={36}
+                  />
+                </div>
+
+                {/* Action buttons */}
+                <div style={s.resultActions}>
+                  <button onClick={downloadZip} style={s.btnPrimary}>
+                    Download .zip
+                  </button>
+                  <button onClick={resetMake} style={s.btnSecondary}>
+                    Create another
+                  </button>
+                </div>
+
+                {/* Raw JSON toggle */}
+                <button
+                  onClick={() => setShowRawJson(!showRawJson)}
+                  style={s.rawJsonToggle}
+                >
+                  {showRawJson ? "Hide raw proof" : "View raw proof"}
+                </button>
+
+                {showRawJson && (
+                  <div style={s.rawJsonWrap}>
+                    <div style={s.rawJsonHeader}>
+                      <span style={s.rawJsonLabel}>proof.json</span>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(proofJson);
+                          setJsonCopied(true);
+                          setTimeout(() => setJsonCopied(false), 1500);
+                        }}
+                        style={s.rawJsonCopyBtn}
+                      >
+                        {jsonCopied ? "Copied!" : "Copy"}
+                      </button>
                     </div>
-                  ))}
-                  <div style={{ display: "flex", gap: 12, fontSize: 12, color: "var(--c-text-tertiary)", marginTop: 16 }}>
-                    <span>Counter #{makeProofs[0].commit.counter}</span>
-                    <span>·</span>
-                    <span>{makeProofs[0].environment?.enforcement === "measured-tee" ? "Hardware Enclave" : "Software"}</span>
-                    <span>·</span>
-                    <span>{makeProofs[0].commit.time ? new Date(makeProofs[0].commit.time).toLocaleString() : ""}</span>
+                    <pre style={s.rawJsonPre}>{proofJson}</pre>
                   </div>
-                </div>
-
-                {/* Proof JSON */}
-                <div style={cardStyle}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-                    <span style={{ fontSize: 12, fontWeight: 600, color: "var(--c-text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                      Proof JSON
-                    </span>
-                    <button onClick={copyProof} style={{
-                      fontSize: 12, fontWeight: 500, padding: "4px 12px",
-                      border: "1px solid var(--c-border)", borderRadius: 6,
-                      background: "transparent", color: copied ? "#30d158" : "var(--c-text-secondary)", cursor: "pointer",
-                    }}>
-                      {copied ? "Copied" : "Copy"}
-                    </button>
-                  </div>
-                  <pre style={{
-                    fontSize: 11, fontFamily: "monospace", lineHeight: 1.5,
-                    color: "#30d158", background: "#0a0a0a",
-                    padding: 16, borderRadius: 6, overflow: "auto", maxHeight: 400,
-                  }}>
-                    {makeProofs.length === 1
-                      ? JSON.stringify(makeProofs[0], null, 2)
-                      : JSON.stringify(makeProofs, null, 2)}
-                  </pre>
-                </div>
-
-                <div style={{ display: "flex", gap: 12 }}>
-                  <button onClick={downloadZip} style={btnSolid}>Download .zip</button>
-                  <button onClick={resetMake} style={btnOutline}>Create another</button>
-                </div>
+                )}
               </div>
             )}
-          </>
+          </section>
         )}
 
-        {/* ═══ VERIFY MODE ═══ */}
+        {/* ══════════ VERIFY MODE ══════════ */}
         {mode === "verify" && (
-          <>
+          <section style={s.section}>
             {verifyStep === "drop" && (
               <FileDrop
                 onFile={handleVerifyFile}
@@ -543,176 +614,188 @@ export default function MakerPage() {
             )}
 
             {verifyStep === "checking" && (
-              <div style={{ ...cardStyle, textAlign: "center", padding: "48px 24px" }}>
-                <div style={{ fontSize: 14, color: "var(--c-text-secondary)" }}>
-                  Checking {verifyFile?.name}...
-                </div>
+              <div style={s.statusCard}>
+                <p style={s.statusText}>Checking {verifyFile?.name}...</p>
               </div>
             )}
 
             {verifyStep === "result" && (
               <div>
-                {/* Signature verification */}
                 {verifyResult && (
-                  <div style={cardStyle}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                      <span style={{ color: verifyResult.valid ? "#30d158" : "#ff453a", fontSize: 20 }}>●</span>
-                      <span style={{ fontSize: 16, fontWeight: 600 }}>
-                        {verifyResult.valid ? "Signature valid" : "Signature invalid"}
+                  <div style={s.card}>
+                    <div style={s.verifyHeader}>
+                      <span
+                        style={{
+                          color: verifyResult.valid ? "#22c55e" : "#ef4444",
+                          fontSize: 22,
+                          lineHeight: 1,
+                        }}
+                      >
+                        {verifyResult.valid ? "\u2713" : "\u2717"}
                       </span>
+                      <h3 style={s.verifyTitle}>
+                        {verifyResult.valid
+                          ? "Signature valid"
+                          : "Signature invalid"}
+                      </h3>
                     </div>
-                    {verifyResult.checks.map((c, i) => (
-                      <div key={i} style={{
-                        display: "flex", alignItems: "baseline", gap: 8,
-                        fontSize: 13, marginBottom: 6, color: "var(--c-text-secondary)",
-                      }}>
-                        <span style={{
-                          color: c.status === "pass" ? "#30d158" : c.status === "fail" ? "#ff453a" : "var(--c-text-tertiary)",
-                          fontFamily: "monospace", fontSize: 12,
-                        }}>
-                          {c.status === "pass" ? "✓" : c.status === "fail" ? "✗" : "—"}
-                        </span>
-                        <span>{c.label}</span>
-                        {c.detail && <span style={{ color: "var(--c-text-tertiary)", fontSize: 12 }}>{c.detail}</span>}
-                      </div>
-                    ))}
+                    <div style={s.verifyChecks}>
+                      {verifyResult.checks.map((c, i) => (
+                        <div key={i} style={s.verifyCheckRow}>
+                          <span
+                            style={{
+                              ...s.verifyCheckIcon,
+                              color:
+                                c.status === "pass"
+                                  ? "#22c55e"
+                                  : c.status === "fail"
+                                    ? "#ef4444"
+                                    : "var(--c-text-tertiary)",
+                            }}
+                          >
+                            {c.status === "pass"
+                              ? "\u2713"
+                              : c.status === "fail"
+                                ? "\u2717"
+                                : "\u2014"}
+                          </span>
+                          <span style={s.verifyCheckLabel}>{c.label}</span>
+                          {c.detail && (
+                            <span style={s.verifyCheckDetail}>
+                              {c.detail}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
 
-                {/* File digest match */}
                 {fileDigestMatch !== null && !verifyProof && (
-                  <div style={cardStyle}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span style={{ color: fileDigestMatch ? "#30d158" : "#ff6b35", fontSize: 20 }}>●</span>
-                      <span style={{ fontSize: 16, fontWeight: 600 }}>
-                        {fileDigestMatch ? "File found on ledger" : "No proof found for this file"}
+                  <div style={s.card}>
+                    <div style={s.verifyHeader}>
+                      <span
+                        style={{
+                          color: fileDigestMatch ? "#22c55e" : "#f97316",
+                          fontSize: 22,
+                          lineHeight: 1,
+                        }}
+                      >
+                        {fileDigestMatch ? "\u2713" : "\u2014"}
                       </span>
+                      <h3 style={s.verifyTitle}>
+                        {fileDigestMatch
+                          ? "File found on ledger"
+                          : "No proof found for this file"}
+                      </h3>
                     </div>
                   </div>
                 )}
 
-                {/* Show the proof if found */}
                 {verifyProof && (
-                  <div style={cardStyle}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: "var(--c-text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12 }}>
-                      Proof details
+                  <div style={{ ...s.card, marginTop: 8 }}>
+                    <h4 style={s.sectionLabel}>Proof details</h4>
+                    <div style={s.verifyProofDigest}>
+                      <MonoValue
+                        value={verifyProof.artifact.digestB64}
+                        truncLen={48}
+                      />
                     </div>
-                    <div style={{ fontSize: 12, fontFamily: "monospace", color: "#30d158", wordBreak: "break-all", lineHeight: 1.5, marginBottom: 8 }}>
-                      {verifyProof.artifact.digestB64}
-                    </div>
-                    <div style={{ display: "flex", gap: 12, fontSize: 12, color: "var(--c-text-tertiary)", flexWrap: "wrap" }}>
-                      {verifyProof.commit.counter && <span>Counter #{verifyProof.commit.counter}</span>}
-                      <span>{verifyProof.environment?.enforcement === "measured-tee" ? "Hardware Enclave" : "Software"}</span>
-                      {verifyProof.commit.time && <span>{new Date(verifyProof.commit.time).toLocaleString()}</span>}
-                      {verifyProof.attribution?.name && <span>By: {verifyProof.attribution.name}</span>}
+                    <div style={s.verifyProofMeta}>
+                      {verifyProof.commit.counter && (
+                        <span>Counter #{verifyProof.commit.counter}</span>
+                      )}
+                      <span>
+                        {verifyProof.environment?.enforcement === "measured-tee"
+                          ? "Hardware Enclave"
+                          : "Software"}
+                      </span>
+                      {verifyProof.commit.time && (
+                        <span>
+                          {new Date(
+                            verifyProof.commit.time
+                          ).toLocaleString()}
+                        </span>
+                      )}
+                      {verifyProof.attribution?.name && (
+                        <span>By: {verifyProof.attribution.name}</span>
+                      )}
                     </div>
                   </div>
                 )}
 
-                <button onClick={resetVerify} style={{ ...btnOutline, width: "100%" }}>
+                <button
+                  onClick={resetVerify}
+                  style={{ ...s.btnSecondary, width: "100%", marginTop: 12 }}
+                >
                   Verify another
                 </button>
               </div>
             )}
-          </>
+          </section>
         )}
 
-        {/* ═══ PUBLIC PROOF LEDGER ═══ */}
-        <div style={{ marginTop: 64 }}>
-          <div style={{
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-            marginBottom: 16,
-          }}>
-            <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.02em" }}>
-              Public proof ledger
-            </h2>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <span style={{ fontSize: 13, color: "var(--c-text-tertiary)" }}>
-                {ledgerTotal.toLocaleString()} total proofs
+        {/* ══════════ PROOF CHAIN (LEDGER) ══════════ */}
+        <section style={s.ledgerSection}>
+          <div style={s.ledgerHeader}>
+            <div style={s.ledgerTitleRow}>
+              <h2 style={s.ledgerTitle}>Proof Chain</h2>
+              <span style={s.ledgerCount}>
+                {ledgerTotal.toLocaleString()} proofs
               </span>
-              <div style={{
-                display: "flex", gap: 2, background: "var(--c-bg-secondary, #141416)", borderRadius: 8,
-                padding: 2, border: "1px solid var(--c-border-subtle)",
-              }}>
-                {(["normal", "timeonly"] as const).map(m => (
-                  <button key={m} onClick={() => setLedgerViewMode(m)} style={{
-                    fontSize: 12, fontWeight: 500, padding: "5px 12px", borderRadius: 6,
-                    border: "none", cursor: "pointer", fontFamily: "inherit", transition: "all 0.15s",
-                    background: ledgerViewMode === m ? "var(--bg-elevated, #1c1c1e)" : "transparent",
-                    color: ledgerViewMode === m ? "var(--c-text)" : "var(--c-text-tertiary)",
-                  }}>
-                    {m === "normal" ? "Normal" : "Time Only"}
-                  </button>
-                ))}
-              </div>
+            </div>
+            <div style={s.viewToggleWrap}>
+              {(["normal", "timeonly"] as const).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setLedgerViewMode(m)}
+                  style={{
+                    ...s.viewToggleBtn,
+                    ...(ledgerViewMode === m ? s.viewToggleBtnActive : {}),
+                  }}
+                >
+                  {m === "normal" ? "Normal" : "Time"}
+                </button>
+              ))}
             </div>
           </div>
 
           {ledger.length === 0 ? (
-            <div style={{ ...cardStyle, textAlign: "center", color: "var(--c-text-tertiary)", fontSize: 14 }}>
-              No proofs yet
-            </div>
+            <div style={s.emptyLedger}>No proofs yet</div>
           ) : (
             <>
-              <div style={{
-                border: "1px solid var(--c-border-subtle)",
-                borderRadius: 12,
-                background: "var(--bg-elevated)",
-                overflow: "hidden",
-              }}>
-                {/* Table header */}
-                <div style={{
-                  display: ledgerViewMode === "timeonly" ? "grid" : "grid",
-                  gridTemplateColumns: ledgerViewMode === "timeonly" ? "80px 1fr" : "60px 100px 1fr 120px 100px 120px",
-                  padding: "12px 20px",
-                  background: "rgba(255,255,255,0.02)",
-                  borderBottom: "1px solid var(--c-border-subtle)",
-                  fontSize: 12, fontWeight: 600, color: "var(--c-text-tertiary)",
-                  textTransform: "uppercase" as const, letterSpacing: "0.04em",
-                }}>
-                  {ledgerViewMode === "timeonly" ? (
-                    <>
-                      <span>#</span>
-                      <span>Time</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>#</span>
-                      <span>Type</span>
-                      <span>Digest</span>
-                      <span>Epoch</span>
-                      <span>Age</span>
-                      <span>Signer</span>
-                    </>
-                  )}
-                </div>
+              <div style={s.cardStack}>
                 {ledger.map((entry, i) => (
-                  <LedgerRow key={entry.digest + i} entry={entry} isLast={i === ledger.length - 1} viewMode={ledgerViewMode} />
+                  <ProofCard
+                    key={entry.digest + i}
+                    entry={entry}
+                    viewMode={ledgerViewMode}
+                    totalProofs={ledgerTotal}
+                  />
                 ))}
               </div>
 
-              {/* Pagination */}
-              {ledgerTotal > 15 && (
-                <div style={{ display: "flex", justifyContent: "center", gap: 12, marginTop: 16 }}>
+              {totalPages > 1 && (
+                <div style={s.pagination}>
                   <button
                     onClick={() => fetchLedger(ledgerPage - 1)}
                     disabled={ledgerPage <= 1}
                     style={{
-                      ...btnOutline, flex: "none", width: 80, height: 36, fontSize: 13,
+                      ...s.pageBtn,
                       opacity: ledgerPage <= 1 ? 0.3 : 1,
                     }}
                   >
                     Prev
                   </button>
-                  <span style={{ fontSize: 13, color: "var(--c-text-tertiary)", lineHeight: "36px" }}>
-                    Page {ledgerPage} of {Math.ceil(ledgerTotal / 15)}
+                  <span style={s.pageInfo}>
+                    {ledgerPage} / {totalPages}
                   </span>
                   <button
                     onClick={() => fetchLedger(ledgerPage + 1)}
-                    disabled={ledgerPage >= Math.ceil(ledgerTotal / 15)}
+                    disabled={ledgerPage >= totalPages}
                     style={{
-                      ...btnOutline, flex: "none", width: 80, height: 36, fontSize: 13,
-                      opacity: ledgerPage >= Math.ceil(ledgerTotal / 15) ? 0.3 : 1,
+                      ...s.pageBtn,
+                      opacity: ledgerPage >= totalPages ? 0.3 : 1,
                     }}
                   >
                     Next
@@ -721,259 +804,317 @@ export default function MakerPage() {
               )}
             </>
           )}
-        </div>
-      </div>
+        </section>
+      </main>
     </div>
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   Ledger Row — expandable, fetches full proof on first click
-   ═══════════════════════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════════════════
+   ProofCard — expandable card for the proof chain
+   ══════════════════════════════════════════════════════════════════════════ */
 
-function LedgerRow({ entry, isLast, viewMode }: { entry: ProofEntry; isLast: boolean; viewMode: "normal" | "timeonly" }) {
+function ProofCard({
+  entry,
+  viewMode,
+  totalProofs,
+}: {
+  entry: ProofEntry;
+  viewMode: "normal" | "timeonly";
+  totalProofs: number;
+}) {
   const [expanded, setExpanded] = useState(false);
   const [proof, setProof] = useState<OCCProof | null>(null);
   const [loading, setLoading] = useState(false);
-  const [copiedDigest, setCopiedDigest] = useState(false);
+  const [showCrypto, setShowCrypto] = useState(false);
+  const [hovered, setHovered] = useState(false);
+
+  const counter = entry.counter || String(entry.globalId);
+  const counterNum = parseInt(counter, 10) || entry.globalId;
+  const chainProgress = totalProofs > 0 ? (counterNum / totalProofs) * 100 : 0;
 
   async function toggle() {
     if (viewMode === "timeonly") return;
-    if (!expanded && !proof && entry.digest !== "—") {
+    if (!expanded && !proof && entry.digest !== "\u2014") {
       setLoading(true);
       try {
-        const resp = await fetch(`/api/proofs/${encodeURIComponent(toUrlSafeB64(entry.digest))}`);
+        const resp = await fetch(
+          `/api/proofs/${encodeURIComponent(toUrlSafeB64(entry.digest))}`
+        );
         if (resp.ok) {
           const data = await resp.json();
-          if (data.proofs?.[0]?.proof) setProof(data.proofs[0].proof as OCCProof);
+          if (data.proofs?.[0]?.proof)
+            setProof(data.proofs[0].proof as OCCProof);
         }
-      } catch { /* silent */ }
+      } catch {
+        /* silent */
+      }
       setLoading(false);
     }
-    setExpanded(e => !e);
+    setExpanded((e) => !e);
   }
 
-  const commit = proof?.commit;
-  const signer = proof?.signer;
-  const env = proof?.environment;
-  const proofAny = proof as unknown as Record<string, unknown> | undefined;
-  const policy = proofAny?.policy as Record<string, unknown> | undefined;
-  const principal = proofAny?.principal as Record<string, unknown> | undefined;
-  const timestamps = proof?.timestamps as Record<string, unknown> | undefined;
-  const slotAllocation = proofAny?.slotAllocation as Record<string, unknown> | undefined;
-  const attribution = proof?.attribution;
-
-  const counter = entry.counter || String(entry.globalId);
-  const trunc = (s: string, n: number) => s.length > n ? s.slice(0, n) + "..." : s;
-  const toolName = entry.attribution || "proof";
-  const epochId = commit?.epochId ? String(commit.epochId) : "";
-  const signerPub = entry.signer || "";
-
-  // Shared cell styles
-  const cellStyle: React.CSSProperties = { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" };
-  const monoFont = "var(--font-mono), 'SF Mono', SFMono-Regular, monospace";
-
+  /* ── Time-only mode: single-line card ── */
   if (viewMode === "timeonly") {
     return (
-      <div style={{
-        display: "grid", gridTemplateColumns: "80px 1fr",
-        padding: "14px 20px", alignItems: "center",
-        borderBottom: isLast ? "none" : "1px solid var(--c-border-subtle)",
-        fontSize: 14,
-      }}>
-        <span style={{ ...cellStyle, fontWeight: 600, color: "var(--accent, #0A84FF)", fontFamily: monoFont }}>{counter}</span>
-        <span style={{ ...cellStyle, fontFamily: monoFont, color: "var(--c-text-secondary)" }}>
-          {entry.time ? new Date(entry.time).toLocaleString() : "—"}
+      <div style={s.cardTimeOnly}>
+        <span style={s.cardCounter}>{counter}</span>
+        <span style={s.cardTimeOnlyTime}>
+          {entry.time
+            ? new Date(entry.time).toLocaleString(undefined, {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+                hour: "numeric",
+                minute: "2-digit",
+                second: "2-digit",
+              })
+            : "\u2014"}
         </span>
       </div>
     );
   }
 
+  /* ── Normal mode: collapsed card ── */
+  const commit = proof?.commit;
+  const signer = proof?.signer;
+  const env = proof?.environment;
+  const proofAny = proof as unknown as Record<string, unknown> | undefined;
+  const timestamps = proof?.timestamps as Record<string, unknown> | undefined;
+  const slotAllocation = proofAny?.slotAllocation as
+    | Record<string, unknown>
+    | undefined;
+  const proofAttribution = proof?.attribution;
+  const hasTSA = !!timestamps?.artifact;
+
   return (
-    <div style={{ borderBottom: isLast ? "none" : "1px solid var(--c-border-subtle)" }}>
-      {/* Table row */}
-      <div onClick={toggle} style={{
-        display: "grid", gridTemplateColumns: "60px 100px 1fr 120px 100px 120px",
-        padding: "14px 20px", alignItems: "center",
-        fontSize: 14, transition: "background 0.1s", cursor: "pointer",
+    <div
+      style={{
+        ...s.cardNormal,
+        ...(hovered && !expanded ? { borderColor: "#3a3a3a" } : {}),
       }}
-        onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.02)"; }}
-        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-      >
-        <span style={{ ...cellStyle, fontWeight: 600, color: "var(--accent, #0A84FF)", fontFamily: monoFont }}>{counter}</span>
-        <span style={cellStyle}>
-          <span style={{
-            display: "inline-block", fontSize: 11, fontWeight: 500, padding: "3px 8px",
-            borderRadius: 4, border: "1px solid var(--c-border-subtle)",
-            background: "rgba(255,255,255,0.02)", color: "var(--c-text-secondary)",
-            whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 90,
-          }} title={toolName}>{trunc(toolName, 12)}</span>
-        </span>
-        <span style={{
-          ...cellStyle, fontFamily: monoFont, fontSize: 13, color: "var(--c-text-secondary)",
-          display: "flex", alignItems: "center", gap: 6,
-        }} onClick={e => { e.stopPropagation(); navigator.clipboard.writeText(entry.digest); setCopiedDigest(true); setTimeout(() => setCopiedDigest(false), 1500); }}>
-          {trunc(entry.digest, 20)}
-          <button style={{
-            opacity: 0, transition: "opacity 0.15s", background: "none", border: "none",
-            color: "var(--c-text-tertiary)", cursor: "pointer", padding: 2,
-            display: "flex", alignItems: "center",
-          }}
-            onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.opacity = "0"; }}
-          >
-            {copiedDigest ? (
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2"><path d="M20 6L9 17l-5-5"/></svg>
-            ) : (
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      {/* Collapsed view */}
+      <div onClick={toggle} style={s.cardCollapsed}>
+        <div style={s.cardTopRow}>
+          <span style={s.cardCounter}>#{counter}</span>
+          <span style={s.cardAge}>
+            {entry.time ? relativeTime(entry.time) : "\u2014"}
+          </span>
+        </div>
+        <div style={s.cardNameRow}>
+          <span style={s.cardName}>
+            {entry.attribution || `Proof #${counter}`}
+          </span>
+        </div>
+        {/* Chain progress bar */}
+        <div style={s.chainProgressTrack}>
+          <div
+            style={{
+              ...s.chainProgressBar,
+              width: `${chainProgress}%`,
+            }}
+          />
+        </div>
+        <div style={s.cardBottomRow}>
+          <span style={s.cardDigest}>{trunc(entry.digest, 24)}</span>
+          <div style={s.cardBadges}>
+            {entry.enforcement === "Hardware Enclave" && (
+              <span style={s.badge}>Hardware Enclave</span>
             )}
-          </button>
-        </span>
-        <span style={{ ...cellStyle, color: "var(--c-text-secondary)", fontSize: 13 }} title={epochId}>{trunc(epochId, 12)}</span>
-        <span style={{ ...cellStyle, color: "var(--c-text-secondary)", fontSize: 13 }} title={entry.time ? new Date(entry.time).toLocaleString() : ""}>
-          {entry.time ? relativeTime(entry.time) : "—"}
-        </span>
-        <span style={{ ...cellStyle, fontFamily: monoFont, fontSize: 12, color: "var(--c-text-tertiary)" }} title={signerPub}>{trunc(signerPub, 12)}</span>
+            {hasTSA && <span style={s.badgeTsa}>TSA \u2713</span>}
+          </div>
+        </div>
       </div>
 
-      {/* Expanded detail */}
+      {/* Expanded view */}
       {expanded && (
-        <div style={{
-          padding: 20, background: "rgba(255,255,255,0.015)",
-          borderTop: "1px solid var(--c-border-subtle)",
-        }}>
-          {loading && (
-            <div style={{ fontSize: 13, color: "var(--c-text-tertiary)", padding: "8px 0" }}>Loading proof...</div>
-          )}
+        <div style={s.cardExpanded}>
+          {loading && <p style={s.loadingText}>Loading proof...</p>}
 
           {proof && (
             <>
-              {/* Ethereum anchor link */}
-              {(proof.commit && (proof.commit as Record<string, unknown>).chainId === "occ:ethereum-anchors") || (proof.attribution?.name?.startsWith("Ethereum #")) ? (
-                <div style={{
-                  padding: "10px 16px", marginBottom: 16, borderRadius: 8,
-                  border: "1px solid rgba(59,130,246,0.2)", background: "rgba(59,130,246,0.05)",
-                  display: "flex", alignItems: "center", gap: 12, fontSize: 13, flexWrap: "wrap",
-                }}>
-                  <span style={{ color: "var(--c-text-secondary)" }}>
-                    {proof.attribution?.name || "Ethereum anchor"}
-                  </span>
-                  {proof.attribution?.title ? (
-                    <a href={proof.attribution.title} target="_blank" rel="noopener"
-                      style={{ color: "#3b82f6", textDecoration: "none", fontWeight: 500 }}>
-                      View on Etherscan →
-                    </a>
-                  ) : null}
+              {/* ── Overview (always visible) ── */}
+              <div style={s.expandedSection}>
+                <h4 style={s.expandedSectionTitle}>Overview</h4>
+                <div style={s.fieldGrid}>
+                  <FieldRow
+                    label="Artifact"
+                    value={proof.artifact?.digestB64 || "\u2014"}
+                    mono
+                  />
+                  <FieldRow label="Counter" value={`#${counter}`} />
+                  <FieldRow
+                    label="Time"
+                    value={
+                      commit?.time
+                        ? new Date(commit.time).toLocaleString()
+                        : "\u2014"
+                    }
+                  />
+                  <FieldRow
+                    label="Hardware"
+                    value={
+                      env?.enforcement === "measured-tee"
+                        ? "AWS Nitro Enclave \u2713"
+                        : env?.enforcement === "hw-key"
+                          ? "Hardware Key"
+                          : "Software"
+                    }
+                  />
+                  {hasTSA && (
+                    <FieldRow
+                      label="TSA"
+                      value={
+                        String(
+                          (
+                            timestamps!.artifact as Record<string, unknown>
+                          )?.authority || ""
+                        ) + " \u2713"
+                      }
+                    />
+                  )}
                 </div>
-              ) : null}
+              </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-                {/* Artifact */}
-                <LedgerDetailSection title="Artifact">
-                  <LedgerDetailField label="Digest" value={proof.artifact?.digestB64 || "—"} mono />
-                  {proof.version && <LedgerDetailField label="Version" value={proof.version} />}
-                </LedgerDetailSection>
+              {/* ── Cryptography (collapsed by default) ── */}
+              <div style={s.expandedSection}>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowCrypto(!showCrypto);
+                  }}
+                  style={s.cryptoToggle}
+                >
+                  <h4 style={s.expandedSectionTitle}>Cryptography</h4>
+                  <span style={s.cryptoToggleHint}>
+                    {showCrypto ? "hide" : "show"}
+                  </span>
+                </button>
 
-                {/* Commit */}
-                {commit && (
-                  <LedgerDetailSection title="Commit">
-                    {commit.time != null && <LedgerDetailField label="Time" value={new Date(commit.time).toLocaleString()} />}
-                    <LedgerDetailField label="Counter" value={`#${counter}`} />
-                    {commit.epochId && <LedgerDetailField label="Epoch" value={commit.epochId} mono />}
-                    {commit.prevB64 && <LedgerDetailField label="Prev Hash" value={commit.prevB64} mono />}
-                    {commit.nonceB64 && <LedgerDetailField label="Nonce" value={commit.nonceB64} mono />}
-                    {commit.slotCounter != null && <LedgerDetailField label="Slot #" value={String(commit.slotCounter)} />}
-                    {commit.slotHashB64 && <LedgerDetailField label="Slot Hash" value={commit.slotHashB64} mono />}
-                  </LedgerDetailSection>
-                )}
-
-                {/* Signer */}
-                {signer && (
-                  <LedgerDetailSection title="Signer">
-                    <LedgerDetailField label="Public Key" value={signer.publicKeyB64} mono />
-                    <LedgerDetailField label="Signature" value={signer.signatureB64} mono />
-                  </LedgerDetailSection>
-                )}
-
-                {/* Environment */}
-                {env && (
-                  <LedgerDetailSection title="Environment">
-                    <LedgerDetailField label="Enforcement" value={env.enforcement === "measured-tee" ? "Hardware Enclave" : env.enforcement === "hw-key" ? "Hardware Key" : "Software"} />
-                    {env.measurement && <LedgerDetailField label="PCR0" value={env.measurement} mono />}
-                  </LedgerDetailSection>
-                )}
-
-                {/* Principal */}
-                {principal && (
-                  <LedgerDetailSection title="Principal">
-                    {(principal as Record<string, unknown>).provider ? <LedgerDetailField label="Provider" value={String((principal as Record<string, unknown>).provider)} /> : null}
-                    {(principal as Record<string, unknown>).id ? <LedgerDetailField label="ID" value={String((principal as Record<string, unknown>).id)} mono /> : null}
-                  </LedgerDetailSection>
-                )}
-
-                {/* Policy */}
-                {policy && (
-                  <LedgerDetailSection title="Policy">
-                    {policy.name ? <LedgerDetailField label="Name" value={String(policy.name)} /> : null}
-                    {policy.digestB64 ? <LedgerDetailField label="Digest" value={String(policy.digestB64)} mono /> : null}
-                  </LedgerDetailSection>
-                )}
-
-                {/* Timestamps */}
-                {timestamps && (
-                  <LedgerDetailSection title="Timestamp">
-                    {(timestamps as Record<string, unknown>).artifact ? (
-                      <>
-                        {((timestamps as Record<string, unknown>).artifact as Record<string, unknown>)?.authority
-                          && <LedgerDetailField label="Authority" value={String(((timestamps as Record<string, unknown>).artifact as Record<string, unknown>).authority)} />}
-                        {((timestamps as Record<string, unknown>).artifact as Record<string, unknown>)?.time
-                          && <LedgerDetailField label="Time" value={String(((timestamps as Record<string, unknown>).artifact as Record<string, unknown>).time)} />}
-                      </>
-                    ) : null}
-                  </LedgerDetailSection>
-                )}
-
-                {/* Attribution */}
-                {attribution && (
-                  <LedgerDetailSection title="Attribution">
-                    {attribution.name && <LedgerDetailField label="Name" value={attribution.name} />}
-                  </LedgerDetailSection>
-                )}
-
-                {/* Slot Allocation */}
-                {slotAllocation && (
-                  <LedgerDetailSection title="Causal Slot">
-                    {(slotAllocation as any).counter != null && <LedgerDetailField label="Slot #" value={String((slotAllocation as any).counter)} />}
-                    {(slotAllocation as any).time && <LedgerDetailField label="Time" value={new Date((slotAllocation as any).time).toLocaleString()} />}
-                  </LedgerDetailSection>
+                {showCrypto && (
+                  <div style={s.fieldGrid}>
+                    {commit?.epochId && (
+                      <FieldRow
+                        label="Epoch ID"
+                        value={String(commit.epochId)}
+                        mono
+                      />
+                    )}
+                    {commit?.prevB64 && (
+                      <FieldRow
+                        label="Prev Hash"
+                        value={commit.prevB64}
+                        mono
+                      />
+                    )}
+                    {commit?.nonceB64 && (
+                      <FieldRow
+                        label="Nonce"
+                        value={commit.nonceB64}
+                        mono
+                      />
+                    )}
+                    {signer?.signatureB64 && (
+                      <FieldRow
+                        label="Signature"
+                        value={signer.signatureB64}
+                        mono
+                      />
+                    )}
+                    {signer?.publicKeyB64 && (
+                      <FieldRow
+                        label="Public Key"
+                        value={signer.publicKeyB64}
+                        mono
+                      />
+                    )}
+                    {env?.measurement && (
+                      <FieldRow label="PCR0" value={env.measurement} mono />
+                    )}
+                    {commit?.slotCounter != null && (
+                      <FieldRow
+                        label="Slot #"
+                        value={String(commit.slotCounter)}
+                      />
+                    )}
+                    {commit?.slotHashB64 && (
+                      <FieldRow
+                        label="Slot Hash"
+                        value={commit.slotHashB64}
+                        mono
+                      />
+                    )}
+                    {slotAllocation &&
+                      (slotAllocation as any).counter != null && (
+                        <FieldRow
+                          label="Causal Slot"
+                          value={String((slotAllocation as any).counter)}
+                        />
+                      )}
+                  </div>
                 )}
               </div>
 
-              {/* JSON + Export */}
-              <div style={{ marginTop: 16, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                <LedgerCopyableJson data={proof} />
-                <button onClick={() => {
-                  const json = JSON.stringify(proof, null, 2);
-                  const blob = new Blob([json], { type: "application/json" });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  a.href = url;
-                  a.download = `occ-proof-${(proof.artifact?.digestB64 || "unknown").slice(0, 12)}.json`;
-                  a.click();
-                  URL.revokeObjectURL(url);
-                }} style={{
-                  fontSize: 12, fontWeight: 500, padding: "6px 14px", borderRadius: 6,
-                  border: "1px solid var(--c-border)", background: "transparent",
-                  color: "var(--c-text-secondary)", cursor: "pointer",
-                }}>
-                  Export .json
+              {/* ── Attribution ── */}
+              {(proofAttribution?.name ||
+                proof.attribution?.name?.startsWith("Ethereum #")) && (
+                <div style={s.expandedSection}>
+                  <h4 style={s.expandedSectionTitle}>Attribution</h4>
+                  <div style={s.fieldGrid}>
+                    {proofAttribution?.name && (
+                      <FieldRow
+                        label="Name"
+                        value={proofAttribution.name}
+                      />
+                    )}
+                    {proof.attribution?.title && (
+                      <div style={s.etherscanRow}>
+                        <a
+                          href={proof.attribution.title}
+                          target="_blank"
+                          rel="noopener"
+                          style={s.etherscanLink}
+                        >
+                          View on Etherscan &rarr;
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* ── Actions ── */}
+              <div style={s.expandedActions}>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const json = JSON.stringify(proof, null, 2);
+                    const blob = new Blob([json], {
+                      type: "application/json",
+                    });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = `occ-proof-${(proof.artifact?.digestB64 || "unknown").slice(0, 12)}.json`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  }}
+                  style={s.btnSmall}
+                >
+                  Download proof.json
                 </button>
+                <RawJsonToggle data={proof} />
               </div>
             </>
           )}
 
           {!loading && !proof && (
-            <div style={{ fontSize: 13, color: "var(--c-text-tertiary)" }}>Full proof not available for this entry.</div>
+            <p style={s.loadingText}>
+              Full proof not available for this entry.
+            </p>
           )}
         </div>
       )}
@@ -981,101 +1122,812 @@ function LedgerRow({ entry, isLast, viewMode }: { entry: ProofEntry; isLast: boo
   );
 }
 
-/* ── Detail section for ledger expanded view ── */
-function LedgerDetailSection({ title, children }: { title: string; children: React.ReactNode }) {
+/* ── FieldRow ── */
+
+function FieldRow({
+  label,
+  value,
+  mono,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+}) {
   return (
-    <div style={{
-      border: "1px solid var(--c-border-subtle)", borderRadius: 8,
-      overflow: "hidden",
-    }}>
-      <div style={{
-        fontSize: 12, fontWeight: 600,
-        color: "var(--c-text-tertiary)", padding: "8px 14px",
-        background: "rgba(255,255,255,0.02)",
-        borderBottom: "1px solid var(--c-border-subtle)",
-      }}>
-        {title}
-      </div>
-      {children}
+    <div style={s.fieldRow}>
+      <span style={s.fieldLabel}>{label}</span>
+      {mono ? (
+        <MonoValue value={value} />
+      ) : (
+        <span style={s.fieldValue}>{value}</span>
+      )}
     </div>
   );
 }
 
-/* ── Detail field for ledger expanded view ── */
-function LedgerDetailField({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
-  const [copied, setCopied] = useState(false);
-  return (
-    <div style={{
-      display: "flex", justifyContent: "space-between", alignItems: "baseline",
-      padding: "8px 14px", borderBottom: "1px solid var(--c-border-subtle)",
-      fontSize: 13,
-    }}>
-      <span style={{ color: "var(--c-text-tertiary)", fontSize: 12 }}>{label}</span>
-      <span style={{
-        color: mono ? "#34d399" : "var(--c-text)",
-        fontFamily: mono ? "var(--font-mono), 'SF Mono', SFMono-Regular, monospace" : "inherit",
-        fontSize: mono ? 12 : 13,
-        textAlign: "right" as const, maxWidth: "60%",
-        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-        cursor: "pointer",
-      }} title={value} onClick={() => { navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 1500); }}>
-        {copied ? "Copied!" : value.length > 32 ? value.slice(0, 24) + "..." : value}
-      </span>
-    </div>
-  );
-}
+/* ── RawJsonToggle ── */
 
-/* ── Copyable full JSON ── */
-function LedgerCopyableJson({ data }: { data: unknown }) {
-  const [copied, setCopied] = useState(false);
+function RawJsonToggle({ data }: { data: unknown }) {
   const [open, setOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
   const json = JSON.stringify(data, null, 2);
-  const sizeKb = (new TextEncoder().encode(json).length / 1024).toFixed(1);
 
   return (
-    <div>
-      <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: open ? 8 : 0 }}>
-        <button onClick={() => setOpen(!open)} style={{
-          fontSize: 12, fontWeight: 500, padding: "6px 14px", borderRadius: 6,
-          border: "1px solid var(--c-border)", background: "transparent",
-          color: "var(--c-text-secondary)", cursor: "pointer",
-        }}>
-          {open ? "Hide JSON" : "Show JSON"} ({sizeKb} KB)
-        </button>
-        {open && (
-          <button onClick={() => { navigator.clipboard.writeText(json); setCopied(true); setTimeout(() => setCopied(false), 1500); }} style={{
-            fontSize: 12, fontWeight: 500, padding: "6px 14px", borderRadius: 6,
-            border: "1px solid var(--c-border)", background: "transparent",
-            color: copied ? "#30d158" : "var(--c-text-secondary)", cursor: "pointer",
-          }}>
-            {copied ? "Copied!" : "Copy JSON"}
-          </button>
-        )}
-      </div>
+    <>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen(!open);
+        }}
+        style={s.btnSmall}
+      >
+        {open ? "Hide JSON" : "View raw JSON"}
+      </button>
       {open && (
-        <div style={{ position: "relative" }}>
-          <pre
-            onClick={() => { navigator.clipboard.writeText(json); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
-            style={{
-              fontSize: 11, fontFamily: "var(--font-mono), monospace", lineHeight: 1.5,
-              color: "#30d158", background: "#0a0a0a",
-              padding: 16, borderRadius: 6, overflow: "auto", maxHeight: 400,
-              cursor: "pointer", transition: "box-shadow 0.2s",
-            }}
-          >
-            {json}
-          </pre>
-          {copied && (
-            <span style={{
-              position: "absolute", top: 8, right: 12,
-              fontSize: 11, fontWeight: 600, color: "#30d158",
-              background: "#0a0a0a", padding: "2px 8px", borderRadius: 4,
-            }}>
-              Copied
-            </span>
-          )}
+        <div style={s.rawJsonWrap}>
+          <div style={s.rawJsonHeader}>
+            <span style={s.rawJsonLabel}>proof.json</span>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                navigator.clipboard.writeText(json);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 1500);
+              }}
+              style={s.rawJsonCopyBtn}
+            >
+              {copied ? "Copied!" : "Copy"}
+            </button>
+          </div>
+          <pre style={s.rawJsonPre}>{json}</pre>
         </div>
       )}
-    </div>
+    </>
   );
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   STYLES
+   ══════════════════════════════════════════════════════════════════════════ */
+
+const MONO =
+  "var(--font-mono, 'JetBrains Mono'), 'SF Mono', SFMono-Regular, ui-monospace, monospace";
+
+const s: Record<string, React.CSSProperties> = {
+  /* ── Layout ── */
+
+  root: {
+    minHeight: "100vh",
+    background: "var(--bg)",
+    color: "var(--c-text)",
+  },
+
+  main: {
+    maxWidth: 720,
+    margin: "0 auto",
+    padding: "48px 24px 96px",
+  },
+
+  section: {
+    marginBottom: 24,
+  },
+
+  /* ── Hero ── */
+
+  hero: {
+    marginBottom: 40,
+  },
+
+  heroTitle: {
+    fontSize: 36,
+    fontWeight: 700,
+    letterSpacing: "-0.03em",
+    lineHeight: 1.1,
+    color: "var(--c-text)",
+    marginBottom: 10,
+  },
+
+  heroSubtitle: {
+    fontSize: 16,
+    lineHeight: 1.6,
+    color: "var(--c-text-secondary)",
+    marginBottom: 24,
+    maxWidth: 560,
+  },
+
+  /* ── Mode toggle ── */
+
+  modeToggleWrap: {
+    display: "inline-flex",
+    gap: 0,
+    borderRadius: 8,
+    overflow: "hidden",
+    border: "1px solid var(--c-border)",
+  },
+
+  modeToggleBtn: {
+    padding: "8px 20px",
+    fontSize: 13,
+    fontWeight: 500,
+    fontFamily: "inherit",
+    border: "none",
+    cursor: "pointer",
+    background: "transparent",
+    color: "var(--c-text-tertiary)",
+    transition: "all 0.15s",
+  },
+
+  modeToggleBtnActive: {
+    background: "var(--c-text)",
+    color: "var(--bg)",
+  },
+
+  /* ── Options row (author + biometric) ── */
+
+  optionsRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: 16,
+    marginTop: 12,
+    padding: "10px 14px",
+    background: "var(--bg-elevated)",
+    border: "1px solid var(--c-border-subtle)",
+    borderRadius: 8,
+  },
+
+  authorInput: {
+    flex: 1,
+    height: 32,
+    padding: "0 10px",
+    fontSize: 13,
+    fontFamily: "inherit",
+    border: "1px solid var(--c-border)",
+    borderRadius: 6,
+    background: "transparent",
+    color: "var(--c-text)",
+    outline: "none",
+  },
+
+  biometricLabel: {
+    display: "flex",
+    alignItems: "center",
+    gap: 6,
+    fontSize: 13,
+    color: "var(--c-text-secondary)",
+    cursor: "pointer",
+    whiteSpace: "nowrap" as const,
+  },
+
+  /* ── Status / progress cards ── */
+
+  card: {
+    border: "1px solid var(--c-border-subtle)",
+    borderRadius: 10,
+    padding: "24px 20px",
+    background: "var(--bg-elevated)",
+    marginBottom: 12,
+  },
+
+  statusCard: {
+    border: "1px solid var(--c-border-subtle)",
+    borderRadius: 10,
+    padding: "48px 24px",
+    background: "var(--bg-elevated)",
+    textAlign: "center" as const,
+  },
+
+  statusText: {
+    fontSize: 14,
+    color: "var(--c-text-secondary)",
+    marginBottom: 12,
+  },
+
+  monoSmall: {
+    fontSize: 12,
+    fontFamily: MONO,
+    color: "var(--c-text-tertiary)",
+  },
+
+  progressTrack: {
+    width: "100%",
+    height: 3,
+    borderRadius: 2,
+    background: "var(--c-border)",
+    overflow: "hidden",
+    marginBottom: 8,
+    maxWidth: 320,
+    marginLeft: "auto",
+    marginRight: "auto",
+  },
+
+  progressBar: {
+    height: "100%",
+    borderRadius: 2,
+    background: "#22c55e",
+    transition: "width 0.2s ease",
+  },
+
+  progressFileName: {
+    fontSize: 12,
+    fontFamily: MONO,
+    color: "var(--c-text-tertiary)",
+  },
+
+  /* ── Result (after proof created) ── */
+
+  resultWrap: {
+    border: "1px solid var(--c-border-subtle)",
+    borderRadius: 10,
+    padding: "28px 24px",
+    background: "var(--bg-elevated)",
+  },
+
+  resultHeader: {
+    display: "flex",
+    alignItems: "flex-start",
+    gap: 14,
+    marginBottom: 20,
+  },
+
+  successIcon: {
+    flexShrink: 0,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    background: "rgba(34, 197, 94, 0.1)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  resultTitle: {
+    fontSize: 20,
+    fontWeight: 700,
+    letterSpacing: "-0.02em",
+    color: "var(--c-text)",
+    marginBottom: 2,
+  },
+
+  resultMeta: {
+    fontSize: 13,
+    color: "var(--c-text-secondary)",
+  },
+
+  resultDigestRow: {
+    display: "flex",
+    alignItems: "baseline",
+    gap: 12,
+    padding: "12px 0",
+    borderTop: "1px solid var(--c-border-subtle)",
+    borderBottom: "1px solid var(--c-border-subtle)",
+    marginBottom: 20,
+  },
+
+  resultDigestLabel: {
+    fontSize: 12,
+    fontWeight: 600,
+    color: "var(--c-text-tertiary)",
+    textTransform: "uppercase" as const,
+    letterSpacing: "0.04em",
+    flexShrink: 0,
+  },
+
+  resultActions: {
+    display: "flex",
+    gap: 10,
+    marginBottom: 16,
+  },
+
+  rawJsonToggle: {
+    fontSize: 13,
+    fontWeight: 500,
+    color: "var(--c-text-tertiary)",
+    background: "none",
+    border: "none",
+    cursor: "pointer",
+    padding: 0,
+    fontFamily: "inherit",
+    textDecoration: "underline",
+    textUnderlineOffset: "3px",
+  },
+
+  rawJsonWrap: {
+    marginTop: 12,
+    borderRadius: 8,
+    overflow: "hidden",
+    border: "1px solid var(--c-border-subtle)",
+  },
+
+  rawJsonHeader: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: "8px 14px",
+    background: "rgba(255,255,255,0.02)",
+    borderBottom: "1px solid var(--c-border-subtle)",
+  },
+
+  rawJsonLabel: {
+    fontSize: 12,
+    fontWeight: 600,
+    color: "var(--c-text-tertiary)",
+    fontFamily: MONO,
+  },
+
+  rawJsonCopyBtn: {
+    fontSize: 12,
+    fontWeight: 500,
+    padding: "3px 10px",
+    borderRadius: 4,
+    border: "1px solid var(--c-border)",
+    background: "transparent",
+    color: "var(--c-text-secondary)",
+    cursor: "pointer",
+    fontFamily: "inherit",
+  },
+
+  rawJsonPre: {
+    fontSize: 11,
+    fontFamily: MONO,
+    lineHeight: 1.6,
+    color: "#94a3b8",
+    background: "#0a0a0a",
+    padding: 16,
+    overflow: "auto",
+    maxHeight: 400,
+    margin: 0,
+  },
+
+  /* ── Buttons ── */
+
+  btnPrimary: {
+    flex: 1,
+    height: 44,
+    fontSize: 14,
+    fontWeight: 600,
+    fontFamily: "inherit",
+    border: "none",
+    borderRadius: 8,
+    background: "#3b82f6",
+    color: "#fff",
+    cursor: "pointer",
+    transition: "opacity 0.15s",
+  },
+
+  btnSecondary: {
+    flex: 1,
+    height: 44,
+    fontSize: 14,
+    fontWeight: 500,
+    fontFamily: "inherit",
+    border: "1px solid var(--c-border)",
+    borderRadius: 8,
+    background: "transparent",
+    color: "var(--c-text)",
+    cursor: "pointer",
+    transition: "all 0.15s",
+  },
+
+  btnSmall: {
+    fontSize: 12,
+    fontWeight: 500,
+    padding: "6px 14px",
+    borderRadius: 6,
+    border: "1px solid var(--c-border)",
+    background: "transparent",
+    color: "var(--c-text-secondary)",
+    cursor: "pointer",
+    fontFamily: "inherit",
+  },
+
+  /* ── Verify ── */
+
+  verifyHeader: {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 12,
+  },
+
+  verifyTitle: {
+    fontSize: 17,
+    fontWeight: 600,
+    color: "var(--c-text)",
+  },
+
+  verifyChecks: {
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: 6,
+  },
+
+  verifyCheckRow: {
+    display: "flex",
+    alignItems: "baseline",
+    gap: 8,
+    fontSize: 13,
+    color: "var(--c-text-secondary)",
+  },
+
+  verifyCheckIcon: {
+    fontFamily: MONO,
+    fontSize: 13,
+    fontWeight: 700,
+    flexShrink: 0,
+  },
+
+  verifyCheckLabel: {},
+
+  verifyCheckDetail: {
+    color: "var(--c-text-tertiary)",
+    fontSize: 12,
+  },
+
+  verifyProofDigest: {
+    marginBottom: 8,
+  },
+
+  verifyProofMeta: {
+    display: "flex",
+    flexWrap: "wrap" as const,
+    gap: 12,
+    fontSize: 12,
+    color: "var(--c-text-tertiary)",
+  },
+
+  sectionLabel: {
+    fontSize: 12,
+    fontWeight: 600,
+    color: "var(--c-text-tertiary)",
+    textTransform: "uppercase" as const,
+    letterSpacing: "0.04em",
+    marginBottom: 12,
+  },
+
+  /* ── Ledger ── */
+
+  ledgerSection: {
+    marginTop: 56,
+  },
+
+  ledgerHeader: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 16,
+    flexWrap: "wrap" as const,
+    gap: 12,
+  },
+
+  ledgerTitleRow: {
+    display: "flex",
+    alignItems: "baseline",
+    gap: 12,
+  },
+
+  ledgerTitle: {
+    fontSize: 20,
+    fontWeight: 700,
+    letterSpacing: "-0.02em",
+    color: "var(--c-text)",
+  },
+
+  ledgerCount: {
+    fontSize: 13,
+    color: "var(--c-text-tertiary)",
+    fontFamily: MONO,
+  },
+
+  viewToggleWrap: {
+    display: "inline-flex",
+    borderRadius: 6,
+    overflow: "hidden",
+    border: "1px solid var(--c-border-subtle)",
+    background: "var(--bg)",
+  },
+
+  viewToggleBtn: {
+    padding: "5px 14px",
+    fontSize: 12,
+    fontWeight: 500,
+    fontFamily: "inherit",
+    border: "none",
+    cursor: "pointer",
+    background: "transparent",
+    color: "var(--c-text-tertiary)",
+    transition: "all 0.15s",
+  },
+
+  viewToggleBtnActive: {
+    background: "var(--bg-elevated)",
+    color: "var(--c-text)",
+  },
+
+  cardStack: {
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: 8,
+  },
+
+  emptyLedger: {
+    textAlign: "center" as const,
+    padding: "48px 24px",
+    border: "1px solid var(--c-border-subtle)",
+    borderRadius: 10,
+    background: "var(--bg-elevated)",
+    color: "var(--c-text-tertiary)",
+    fontSize: 14,
+  },
+
+  /* ── Proof card (normal) ── */
+
+  cardNormal: {
+    border: "1px solid var(--c-border-subtle)",
+    borderRadius: 10,
+    background: "var(--bg-elevated)",
+    overflow: "hidden",
+    transition: "border-color 0.15s",
+  },
+
+  cardCollapsed: {
+    padding: "14px 18px",
+    cursor: "pointer",
+  },
+
+  cardTopRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+
+  cardCounter: {
+    fontSize: 15,
+    fontWeight: 700,
+    fontFamily: MONO,
+    color: "#3b82f6",
+  },
+
+  cardAge: {
+    fontSize: 13,
+    color: "var(--c-text-secondary)",
+  },
+
+  cardNameRow: {
+    marginBottom: 8,
+  },
+
+  cardName: {
+    fontSize: 14,
+    color: "var(--c-text)",
+    fontWeight: 500,
+  },
+
+  chainProgressTrack: {
+    width: "100%",
+    height: 2,
+    borderRadius: 1,
+    background: "var(--c-border-subtle)",
+    marginBottom: 8,
+    overflow: "hidden",
+  },
+
+  chainProgressBar: {
+    height: "100%",
+    borderRadius: 1,
+    background:
+      "linear-gradient(90deg, #3b82f6 0%, #60a5fa 100%)",
+    transition: "width 0.3s ease",
+  },
+
+  cardBottomRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 12,
+  },
+
+  cardDigest: {
+    fontSize: 13,
+    fontFamily: MONO,
+    color: "#94a3b8",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap" as const,
+    minWidth: 0,
+  },
+
+  cardBadges: {
+    display: "flex",
+    gap: 6,
+    flexShrink: 0,
+  },
+
+  badge: {
+    fontSize: 11,
+    fontWeight: 500,
+    padding: "2px 8px",
+    borderRadius: 4,
+    background: "rgba(34, 197, 94, 0.1)",
+    color: "#22c55e",
+    whiteSpace: "nowrap" as const,
+  },
+
+  badgeTsa: {
+    fontSize: 11,
+    fontWeight: 500,
+    padding: "2px 8px",
+    borderRadius: 4,
+    background: "rgba(59, 130, 246, 0.1)",
+    color: "#60a5fa",
+    whiteSpace: "nowrap" as const,
+  },
+
+  /* ── Proof card (time-only) ── */
+
+  cardTimeOnly: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    padding: "10px 18px",
+    border: "1px solid var(--c-border-subtle)",
+    borderRadius: 10,
+    background: "var(--bg-elevated)",
+  },
+
+  cardTimeOnlyTime: {
+    fontSize: 13,
+    fontFamily: MONO,
+    color: "var(--c-text-secondary)",
+    textAlign: "right" as const,
+  },
+
+  /* ── Expanded card ── */
+
+  cardExpanded: {
+    padding: "4px 18px 18px",
+    borderTop: "1px solid var(--c-border-subtle)",
+  },
+
+  expandedSection: {
+    paddingTop: 16,
+    paddingBottom: 4,
+    borderBottom: "1px solid var(--c-border-subtle)",
+  },
+
+  expandedSectionTitle: {
+    fontSize: 12,
+    fontWeight: 600,
+    color: "var(--c-text-tertiary)",
+    textTransform: "uppercase" as const,
+    letterSpacing: "0.05em",
+    marginBottom: 8,
+  },
+
+  fieldGrid: {
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: 0,
+  },
+
+  fieldRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "baseline",
+    padding: "6px 0",
+    fontSize: 13,
+    gap: 12,
+  },
+
+  fieldLabel: {
+    fontSize: 12,
+    color: "var(--c-text-tertiary)",
+    flexShrink: 0,
+  },
+
+  fieldValue: {
+    fontSize: 13,
+    color: "var(--c-text)",
+    textAlign: "right" as const,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap" as const,
+    minWidth: 0,
+  },
+
+  cryptoToggle: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
+    background: "none",
+    border: "none",
+    cursor: "pointer",
+    padding: 0,
+    marginBottom: 4,
+  },
+
+  cryptoToggleHint: {
+    fontSize: 12,
+    color: "var(--c-text-tertiary)",
+    fontFamily: "inherit",
+  },
+
+  etherscanRow: {
+    padding: "6px 0",
+  },
+
+  etherscanLink: {
+    fontSize: 13,
+    fontWeight: 500,
+    color: "#3b82f6",
+    textDecoration: "none",
+  },
+
+  expandedActions: {
+    display: "flex",
+    flexWrap: "wrap" as const,
+    gap: 8,
+    paddingTop: 16,
+  },
+
+  loadingText: {
+    fontSize: 13,
+    color: "var(--c-text-tertiary)",
+    padding: "12px 0",
+  },
+
+  /* ── Mono value (click to copy) ── */
+
+  monoValue: {
+    fontFamily: MONO,
+    fontSize: 13,
+    color: "#94a3b8",
+    cursor: "pointer",
+    textAlign: "right" as const,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap" as const,
+    minWidth: 0,
+  },
+
+  copyBtn: {
+    fontSize: 12,
+    background: "none",
+    border: "none",
+    color: "var(--c-text-tertiary)",
+    cursor: "pointer",
+    padding: "2px 4px",
+    fontFamily: "inherit",
+  },
+
+  /* ── Pagination ── */
+
+  pagination: {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 16,
+    marginTop: 20,
+  },
+
+  pageBtn: {
+    height: 34,
+    padding: "0 16px",
+    fontSize: 13,
+    fontWeight: 500,
+    fontFamily: "inherit",
+    border: "1px solid var(--c-border)",
+    borderRadius: 6,
+    background: "transparent",
+    color: "var(--c-text-secondary)",
+    cursor: "pointer",
+  },
+
+  pageInfo: {
+    fontSize: 13,
+    color: "var(--c-text-tertiary)",
+    fontFamily: MONO,
+  },
+};
