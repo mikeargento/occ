@@ -94,6 +94,11 @@ async function commitAnchor(block: EthBlock): Promise<{ proof: unknown; digestB6
         digests: [{ digestB64, hashAlg: "sha256" }],
         metadata,
         chainId: CHAIN_ID,
+        attribution: {
+          name: `Ethereum #${block.number}`,
+          message: block.hash,
+          title: `https://etherscan.io/block/${block.number}`,
+        },
       }),
     });
 

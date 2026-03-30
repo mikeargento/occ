@@ -784,26 +784,29 @@ function LedgerRow({ entry, isLast }: { entry: ProofEntry; isLast: boolean }) {
 
           {proof && (
             <>
-              {/* Ethereum anchor link */}
-              {proof.metadata && (proof.metadata as Record<string, unknown>).type === "ethereum-anchor" && (() => {
-                const anchor = (proof.metadata as Record<string, unknown>).anchor as Record<string, unknown> | undefined;
-                if (!anchor) return null;
-                return (
-                  <div style={{
-                    padding: "10px 16px", marginBottom: 12, borderRadius: 8,
-                    border: "1px solid rgba(59,130,246,0.2)", background: "rgba(59,130,246,0.05)",
-                    display: "flex", alignItems: "center", gap: 12, fontSize: 13,
-                  }}>
-                    <span style={{ color: "var(--c-text-secondary)" }}>
-                      Ethereum block #{String(anchor.blockNumber)}
-                    </span>
-                    <a href={String(anchor.verify)} target="_blank" rel="noopener"
+              {/* Ethereum anchor link — detect by chainId or attribution */}
+              {(proof.commit && (proof.commit as Record<string, unknown>).chainId === "occ:ethereum-anchors") || (proof.attribution?.name?.startsWith("Ethereum #")) ? (
+                <div style={{
+                  padding: "10px 16px", marginBottom: 12, borderRadius: 8,
+                  border: "1px solid rgba(59,130,246,0.2)", background: "rgba(59,130,246,0.05)",
+                  display: "flex", alignItems: "center", gap: 12, fontSize: 13, flexWrap: "wrap",
+                }}>
+                  <span style={{ color: "var(--c-text-secondary)" }}>
+                    {proof.attribution?.name || "Ethereum anchor"}
+                  </span>
+                  {proof.attribution?.title ? (
+                    <a href={proof.attribution.title} target="_blank" rel="noopener"
                       style={{ color: "#3b82f6", textDecoration: "none", fontWeight: 500 }}>
                       View on Etherscan →
                     </a>
-                  </div>
-                );
-              })()}
+                  ) : null}
+                  {proof.attribution?.message ? (
+                    <span style={{ fontSize: 11, fontFamily: "var(--font-mono), monospace", color: "var(--c-text-tertiary)", wordBreak: "break-all" }}>
+                      {proof.attribution.message}
+                    </span>
+                  ) : null}
+                </div>
+              ) : null}
 
               <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
 
