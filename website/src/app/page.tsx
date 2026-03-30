@@ -174,7 +174,7 @@ export default function HomePage() {
                     }}>
                       <span style={{ fontWeight: 600, color: "#3b82f6", fontFamily: "monospace" }}>{p.counter || "—"}</span>
                       <span style={{ color: "#737373", fontFamily: "monospace", fontSize: 13 }}>
-                        {p.commitTime ? new Date(p.commitTime).toLocaleString() : "—"}
+                        {p.commitTime ? new Date(Number(p.commitTime)).toLocaleString() : "—"}
                       </span>
                     </div>
                   ) : (
@@ -199,7 +199,7 @@ export default function HomePage() {
                         {trunc(p.digestB64, 24)}
                       </span>
                       <span style={{ fontSize: 13, color: "#525252" }}>
-                        {p.commitTime ? relativeTime(p.commitTime) : "—"}
+                        {p.commitTime ? relativeTime(Number(p.commitTime)) : "—"}
                       </span>
                       <span style={{ fontFamily: "monospace", fontSize: 12, color: "#525252", textAlign: "right", overflow: "hidden", textOverflow: "ellipsis" }}>
                         {trunc(p.signerPub, 8)}
@@ -221,7 +221,7 @@ export default function HomePage() {
                         <div style={{ display: "flex", flexDirection: "column", gap: 0, border: "1px solid #1e1e1e", borderRadius: 8, overflow: "hidden" }}>
                           <DetailRow label="Artifact Hash" value={p.digestB64} mono />
                           <DetailRow label="Counter" value={`#${p.counter || "—"}`} />
-                          <DetailRow label="Timestamp" value={p.commitTime ? new Date(p.commitTime).toLocaleString() : "—"} />
+                          <DetailRow label="Timestamp" value={p.commitTime ? new Date(Number(p.commitTime)).toLocaleString() : "—"} />
                           <DetailRow label="Enforcement" value={p.enforcement === "measured-tee" ? "Hardware Enclave (AWS Nitro)" : p.enforcement} valueColor="#22c55e" />
                           <DetailRow label="Signer" value={p.signerPub} mono />
                           {p.hasTsa && <DetailRow label="RFC 3161 TSA" value="Yes — freetsa.org" valueColor="#22c55e" />}
