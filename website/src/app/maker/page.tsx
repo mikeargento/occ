@@ -162,7 +162,12 @@ export default function MakerPage() {
     } catch { /* silent */ }
   }, []);
 
-  useEffect(() => { fetchLedger(1); }, [fetchLedger]);
+  useEffect(() => {
+    fetchLedger(1);
+    // Auto-refresh ledger every 15 seconds
+    const interval = setInterval(() => fetchLedger(1), 15000);
+    return () => clearInterval(interval);
+  }, [fetchLedger]);
 
   /* ── Make handlers ── */
 
@@ -187,8 +192,8 @@ export default function MakerPage() {
         setMakeProofs([p]);
         setMakeStep("done");
 
-        // Refresh ledger (proof already indexed by commitDigest)
-        fetchLedger(1);
+        // Refresh ledger after short delay to ensure indexing is complete
+        setTimeout(() => fetchLedger(1), 1500);
       } else {
         // Batch mode
         const digests: Array<{ digestB64: string; hashAlg: "sha256" }> = [];
@@ -209,8 +214,8 @@ export default function MakerPage() {
         setMakeProofs(proofs);
         setMakeStep("done");
 
-        // Refresh ledger (proofs already indexed by commitBatch)
-        fetchLedger(1);
+        // Refresh ledger after short delay to ensure indexing is complete
+        setTimeout(() => fetchLedger(1), 1500);
       }
     } catch (err) {
       setMakeError(err instanceof Error ? err.message : "Something went wrong");
