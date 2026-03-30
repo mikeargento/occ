@@ -10,6 +10,7 @@ import { handleLlmProxy } from "./llm-proxy.js";
 import { handleSmsWebhook } from "./sms.js";
 import { handleChat } from "./chat.js";
 import { db } from "./db.js";
+import { startBitcoinAnchor, manualAnchor, getAnchorStatus } from "./bitcoin-anchor.js";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const DASHBOARD_DIR = resolve(__dirname, "../dashboard");
@@ -144,6 +145,30 @@ async function handler(req: IncomingMessage, res: ServerResponse) {
     return;
   }
 
+  // Bitcoin anchor API
+  if (pathname === "/api/anchor/status" && req.method === "GET") {
+    const status = getAnchorStatus();
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify(status));
+    return;
+  }
+  if (pathname === "/api/anchor/now" && req.method === "POST") {
+    try {
+      const result = await manualAnchor();
+      if (result) {
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ ok: true, block: result.block, digestB64: result.digestB64 }));
+      } else {
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Anchor failed — TEE unavailable" }));
+      }
+    } catch (err) {
+      res.writeHead(500, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: (err as Error).message }));
+    }
+    return;
+  }
+
   // V2 API endpoints
   if (pathname.startsWith("/api/v2/")) {
     await handleApiV2(req, res, url);
@@ -200,7 +225,11 @@ async function main() {
     console.log(`  API:        http://localhost:${PORT}/api`);
     console.log(`  MCP:        http://localhost:${PORT}/mcp/:token`);
     console.log(`  LLM Proxy:  http://localhost:${PORT}/v1/:token`);
+    console.log(`  BTC Anchor: every new block → TEE`);
     console.log("");
+
+    // Start Bitcoin anchor service — runs in background
+    startBitcoinAnchor();
   });
 }
 
