@@ -79,22 +79,22 @@ export default function HomePage() {
   const trunc = (s: string, n: number) => s && s.length > n ? s.slice(0, n) + "…" : s || "—";
 
   return (
-    <div style={{ background: "#0a0a0a", minHeight: "100vh", color: "#e5e5e5" }}>
+    <div style={{ background: "var(--bg)", minHeight: "100vh", color: "var(--c-text)" }}>
       {/* Nav */}
       <nav style={{
-        position: "sticky", top: 0, zIndex: 50, background: "#0a0a0a",
+        position: "sticky", top: 0, zIndex: 50, background: "var(--bg)",
         borderBottom: "1px solid #1e1e1e", padding: "0 24px", height: 56,
         display: "flex", alignItems: "center", justifyContent: "space-between",
         maxWidth: 1200, margin: "0 auto", width: "100%",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 32 }}>
-          <a href="/" style={{ fontSize: 18, fontWeight: 700, color: "#e5e5e5", textDecoration: "none", letterSpacing: "-0.02em" }}>OCC</a>
+          <a href="/" style={{ fontSize: 18, fontWeight: 700, color: "var(--c-text)", textDecoration: "none", letterSpacing: "-0.02em" }}>OCC</a>
           <div style={{ display: "flex", gap: 4 }}>
             {(["explorer", "make", "verify"] as Tab[]).map(t => (
               <button key={t} onClick={() => setTab(t)} style={{
                 padding: "6px 14px", borderRadius: 6, border: "none",
-                background: tab === t ? "#1e1e1e" : "transparent",
-                color: tab === t ? "#e5e5e5" : "#737373",
+                background: tab === t ? "var(--c-border)" : "transparent",
+                color: tab === t ? "var(--c-text)" : "var(--c-text-secondary)",
                 fontSize: 13, fontWeight: 500, cursor: "pointer",
                 transition: "all 0.15s", textTransform: "capitalize",
               }}>{t === "make" ? "Prove" : t === "verify" ? "Verify" : "Explorer"}</button>
@@ -102,8 +102,8 @@ export default function HomePage() {
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <a href="/docs" style={{ fontSize: 13, color: "#737373", textDecoration: "none" }}>Docs</a>
-          <a href="https://github.com/mikeargento/occ" target="_blank" style={{ fontSize: 13, color: "#737373", textDecoration: "none" }}>GitHub</a>
+          <a href="/docs" style={{ fontSize: 13, color: "var(--c-text-secondary)", textDecoration: "none" }}>Docs</a>
+          <a href="https://github.com/mikeargento/occ" target="_blank" style={{ fontSize: 13, color: "var(--c-text-secondary)", textDecoration: "none" }}>GitHub</a>
           <a href="https://agent.occ.wtf" style={{
             fontSize: 13, fontWeight: 500, color: "#3b82f6", textDecoration: "none",
             padding: "6px 14px", borderRadius: 6, border: "1px solid #3b82f6",
@@ -117,15 +117,15 @@ export default function HomePage() {
             {/* Header */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <div>
-                <h1 style={{ fontSize: 20, fontWeight: 600, margin: 0, color: "#e5e5e5" }}>Proof Explorer</h1>
-                <p style={{ fontSize: 13, color: "#737373", margin: "4px 0 0" }}>{total.toLocaleString()} proofs on chain</p>
+                <h1 style={{ fontSize: 20, fontWeight: 600, margin: 0, color: "var(--c-text)" }}>Proof Explorer</h1>
+                <p style={{ fontSize: 13, color: "var(--c-text-secondary)", margin: "4px 0 0" }}>{total.toLocaleString()} proofs on chain</p>
               </div>
-              <div style={{ display: "flex", gap: 2, background: "#141414", borderRadius: 6, padding: 2, border: "1px solid #1e1e1e" }}>
+              <div style={{ display: "flex", gap: 2, background: "var(--bg-elevated)", borderRadius: 6, padding: 2, border: "1px solid #1e1e1e" }}>
                 {(["normal", "timeonly"] as ViewMode[]).map(v => (
                   <button key={v} onClick={() => setViewMode(v)} style={{
                     padding: "5px 12px", borderRadius: 4, border: "none",
-                    background: viewMode === v ? "#1e1e1e" : "transparent",
-                    color: viewMode === v ? "#e5e5e5" : "#737373",
+                    background: viewMode === v ? "var(--c-border)" : "transparent",
+                    color: viewMode === v ? "var(--c-text)" : "var(--c-text-secondary)",
                     fontSize: 12, fontWeight: 500, cursor: "pointer",
                   }}>{v === "normal" ? "Normal" : "Time"}</button>
                 ))}
@@ -133,13 +133,13 @@ export default function HomePage() {
             </div>
 
             {/* Table */}
-            <div style={{ border: "1px solid #1e1e1e", borderRadius: 12, overflow: "hidden", background: "#141414" }}>
+            <div style={{ border: "1px solid #1e1e1e", borderRadius: 12, overflow: "hidden", background: "var(--bg-elevated)" }}>
               {/* Header row */}
               {viewMode === "normal" && (
                 <div style={{
                   display: "grid", gridTemplateColumns: "70px 120px 1fr 100px 100px",
                   padding: "10px 20px", borderBottom: "1px solid #1e1e1e",
-                  fontSize: 11, fontWeight: 600, color: "#525252", textTransform: "uppercase", letterSpacing: "0.05em",
+                  fontSize: 11, fontWeight: 600, color: "var(--c-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.05em",
                 }}>
                   <span>Proof</span>
                   <span>Type</span>
@@ -152,7 +152,7 @@ export default function HomePage() {
                 <div style={{
                   display: "grid", gridTemplateColumns: "80px 1fr",
                   padding: "10px 20px", borderBottom: "1px solid #1e1e1e",
-                  fontSize: 11, fontWeight: 600, color: "#525252", textTransform: "uppercase", letterSpacing: "0.05em",
+                  fontSize: 11, fontWeight: 600, color: "var(--c-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.05em",
                 }}>
                   <span>Proof</span>
                   <span>Time</span>
@@ -161,9 +161,9 @@ export default function HomePage() {
 
               {/* Rows */}
               {loading ? (
-                <div style={{ padding: "40px 20px", textAlign: "center", color: "#525252" }}>Loading...</div>
+                <div style={{ padding: "40px 20px", textAlign: "center", color: "var(--c-text-tertiary)" }}>Loading...</div>
               ) : proofs.length === 0 ? (
-                <div style={{ padding: "40px 20px", textAlign: "center", color: "#525252" }}>No proofs yet.</div>
+                <div style={{ padding: "40px 20px", textAlign: "center", color: "var(--c-text-tertiary)" }}>No proofs yet.</div>
               ) : proofs.map(p => (
                 <div key={p.id}>
                   {viewMode === "timeonly" ? (
@@ -173,7 +173,7 @@ export default function HomePage() {
                       fontSize: 14, alignItems: "center",
                     }}>
                       <span style={{ fontWeight: 600, color: "#3b82f6", fontFamily: "monospace" }}>{p.counter || "—"}</span>
-                      <span style={{ color: "#737373", fontFamily: "monospace", fontSize: 13 }}>
+                      <span style={{ color: "var(--c-text-secondary)", fontFamily: "monospace", fontSize: 13 }}>
                         {p.commitTime ? new Date(Number(p.commitTime)).toLocaleString() : "—"}
                       </span>
                     </div>
@@ -182,7 +182,7 @@ export default function HomePage() {
                       display: "grid", gridTemplateColumns: "70px 120px 1fr 100px 100px",
                       padding: "12px 20px", borderBottom: "1px solid #1a1a1a",
                       fontSize: 14, alignItems: "center", cursor: "pointer",
-                      background: expandedId === p.id ? "#1a1a1a" : "transparent",
+                      background: expandedId === p.id ? "var(--bg-subtle)" : "transparent",
                       transition: "background 0.1s",
                     }}>
                       <span style={{ fontWeight: 600, color: "#3b82f6", fontFamily: "monospace" }}>{p.counter || "—"}</span>
@@ -190,18 +190,18 @@ export default function HomePage() {
                         <span style={{
                           display: "inline-block", fontSize: 11, fontWeight: 500,
                           padding: "2px 8px", borderRadius: 4,
-                          border: "1px solid #1e1e1e", background: "#0a0a0a",
-                          color: "#737373", maxWidth: 110, overflow: "hidden",
+                          border: "1px solid #1e1e1e", background: "var(--bg)",
+                          color: "var(--c-text-secondary)", maxWidth: 110, overflow: "hidden",
                           textOverflow: "ellipsis", whiteSpace: "nowrap",
                         }}>{p.attrName || "proof"}</span>
                       </span>
                       <span style={{ fontFamily: "monospace", fontSize: 13, color: "#94a3b8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {trunc(p.digestB64, 24)}
                       </span>
-                      <span style={{ fontSize: 13, color: "#525252" }}>
+                      <span style={{ fontSize: 13, color: "var(--c-text-tertiary)" }}>
                         {p.commitTime ? relativeTime(Number(p.commitTime)) : "—"}
                       </span>
-                      <span style={{ fontFamily: "monospace", fontSize: 12, color: "#525252", textAlign: "right", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      <span style={{ fontFamily: "monospace", fontSize: 12, color: "var(--c-text-tertiary)", textAlign: "right", overflow: "hidden", textOverflow: "ellipsis" }}>
                         {trunc(p.signerPub, 8)}
                       </span>
                     </div>
@@ -209,12 +209,12 @@ export default function HomePage() {
 
                   {/* Expanded Detail — Etherscan style */}
                   {expandedId === p.id && viewMode === "normal" && (
-                    <div style={{ padding: "20px", background: "#0f0f0f", borderBottom: "1px solid #1e1e1e" }}>
+                    <div style={{ padding: "20px", background: "var(--bg)", borderBottom: "1px solid #1e1e1e" }}>
                       {/* Summary Card */}
                       <div style={{ marginBottom: 16 }}>
                         <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>
                           Proof #{p.counter}
-                          {p.attrName && <span style={{ fontWeight: 400, color: "#737373", marginLeft: 8 }}>— {p.attrName}</span>}
+                          {p.attrName && <span style={{ fontWeight: 400, color: "var(--c-text-secondary)", marginLeft: 8 }}>— {p.attrName}</span>}
                         </div>
 
                         {/* Key fields — Etherscan transaction overview style */}
@@ -230,7 +230,7 @@ export default function HomePage() {
 
                       {/* More Details (full proof) */}
                       {expandedProof && <FullProofDetail proof={expandedProof} />}
-                      {!expandedProof && <div style={{ fontSize: 12, color: "#525252" }}>Loading full proof...</div>}
+                      {!expandedProof && <div style={{ fontSize: 12, color: "var(--c-text-tertiary)" }}>Loading full proof...</div>}
                     </div>
                   )}
                 </div>
@@ -242,13 +242,13 @@ export default function HomePage() {
               <div style={{ display: "flex", justifyContent: "center", gap: 8, marginTop: 16 }}>
                 <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} style={{
                   padding: "6px 14px", borderRadius: 6, border: "1px solid #1e1e1e",
-                  background: "#141414", color: page <= 1 ? "#333" : "#737373",
+                  background: "var(--bg-elevated)", color: page <= 1 ? "#333" : "var(--c-text-secondary)",
                   cursor: page <= 1 ? "default" : "pointer", fontSize: 13,
                 }}>← Prev</button>
-                <span style={{ padding: "6px 14px", fontSize: 13, color: "#525252" }}>Page {page} of {totalPages}</span>
+                <span style={{ padding: "6px 14px", fontSize: 13, color: "var(--c-text-tertiary)" }}>Page {page} of {totalPages}</span>
                 <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} style={{
                   padding: "6px 14px", borderRadius: 6, border: "1px solid #1e1e1e",
-                  background: "#141414", color: page >= totalPages ? "#333" : "#737373",
+                  background: "var(--bg-elevated)", color: page >= totalPages ? "#333" : "var(--c-text-secondary)",
                   cursor: page >= totalPages ? "default" : "pointer", fontSize: 13,
                 }}>Next →</button>
               </div>
@@ -260,9 +260,9 @@ export default function HomePage() {
         {tab === "make" && (
           <div>
             <h1 style={{ fontSize: 20, fontWeight: 600, marginBottom: 8 }}>Create a Proof</h1>
-            <p style={{ fontSize: 13, color: "#737373", marginBottom: 24 }}>Drop a file to hash it locally and commit to the OCC chain. Nothing is uploaded.</p>
+            <p style={{ fontSize: 13, color: "var(--c-text-secondary)", marginBottom: 24 }}>Drop a file to hash it locally and commit to the OCC chain. Nothing is uploaded.</p>
             {/* Reuse the existing FileDrop + make flow from maker/page.tsx */}
-            <div style={{ border: "1px solid #1e1e1e", borderRadius: 12, padding: "48px 24px", textAlign: "center", color: "#525252" }}>
+            <div style={{ border: "1px solid #1e1e1e", borderRadius: 12, padding: "48px 24px", textAlign: "center", color: "var(--c-text-tertiary)" }}>
               <p>File drop and proof creation — coming soon in unified view.</p>
               <p style={{ marginTop: 8 }}>For now, use <a href="/maker" style={{ color: "#3b82f6" }}>the maker page</a>.</p>
             </div>
@@ -272,8 +272,8 @@ export default function HomePage() {
         {tab === "verify" && (
           <div>
             <h1 style={{ fontSize: 20, fontWeight: 600, marginBottom: 8 }}>Verify a Proof</h1>
-            <p style={{ fontSize: 13, color: "#737373", marginBottom: 24 }}>Drop a proof.json or any file to verify its signature or check if it exists on the chain.</p>
-            <div style={{ border: "1px solid #1e1e1e", borderRadius: 12, padding: "48px 24px", textAlign: "center", color: "#525252" }}>
+            <p style={{ fontSize: 13, color: "var(--c-text-secondary)", marginBottom: 24 }}>Drop a proof.json or any file to verify its signature or check if it exists on the chain.</p>
+            <div style={{ border: "1px solid #1e1e1e", borderRadius: 12, padding: "48px 24px", textAlign: "center", color: "var(--c-text-tertiary)" }}>
               <p>Verification — coming soon in unified view.</p>
               <p style={{ marginTop: 8 }}>For now, use <a href="/maker" style={{ color: "#3b82f6" }}>the maker page</a>.</p>
             </div>
@@ -293,11 +293,11 @@ function DetailRow({ label, value, mono, valueColor }: { label: string; value: s
       padding: "10px 16px", borderBottom: "1px solid #1e1e1e", fontSize: 13,
       gap: 16,
     }}>
-      <span style={{ color: "#525252", flexShrink: 0, minWidth: 120 }}>{label}</span>
+      <span style={{ color: "var(--c-text-tertiary)", flexShrink: 0, minWidth: 120 }}>{label}</span>
       <span
         onClick={() => { navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
         style={{
-          color: copied ? "#22c55e" : (valueColor || (mono ? "#94a3b8" : "#e5e5e5")),
+          color: copied ? "#22c55e" : (valueColor || (mono ? "#94a3b8" : "var(--c-text)")),
           fontFamily: mono ? "'SF Mono', SFMono-Regular, monospace" : "inherit",
           fontSize: mono ? 12 : 13,
           textAlign: "right", cursor: "pointer",
@@ -326,8 +326,8 @@ function FullProofDetail({ proof: p }: { proof: OCCProof }) {
     <div>
       <button onClick={() => setShowRaw(!showRaw)} style={{
         fontSize: 12, fontWeight: 500, padding: "6px 14px", borderRadius: 6,
-        border: "1px solid #1e1e1e", background: "#141414",
-        color: "#737373", cursor: "pointer", marginBottom: showRaw ? 12 : 0,
+        border: "1px solid #1e1e1e", background: "var(--bg-elevated)",
+        color: "var(--c-text-secondary)", cursor: "pointer", marginBottom: showRaw ? 12 : 0,
       }}>
         {showRaw ? "Hide Details" : "More Details"}
       </button>
@@ -394,8 +394,8 @@ function FullProofDetail({ proof: p }: { proof: OCCProof }) {
               URL.revokeObjectURL(url);
             }} style={{
               fontSize: 12, fontWeight: 500, padding: "6px 14px", borderRadius: 6,
-              border: "1px solid #1e1e1e", background: "#141414",
-              color: "#737373", cursor: "pointer",
+              border: "1px solid #1e1e1e", background: "var(--bg-elevated)",
+              color: "var(--c-text-secondary)", cursor: "pointer",
             }}>
               Download proof.json
             </button>
@@ -409,7 +409,7 @@ function FullProofDetail({ proof: p }: { proof: OCCProof }) {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{ border: "1px solid #1e1e1e", borderRadius: 8, overflow: "hidden" }}>
-      <div style={{ fontSize: 11, fontWeight: 600, color: "#525252", padding: "8px 14px", background: "#0a0a0a", borderBottom: "1px solid #1e1e1e", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+      <div style={{ fontSize: 11, fontWeight: 600, color: "var(--c-text-tertiary)", padding: "8px 14px", background: "var(--bg)", borderBottom: "1px solid #1e1e1e", textTransform: "uppercase", letterSpacing: "0.04em" }}>
         {title}
       </div>
       {children}
@@ -421,7 +421,7 @@ function SField({ label, value, mono }: { label: string; value: string; mono?: b
   const [copied, setCopied] = useState(false);
   return (
     <div style={{ display: "flex", justifyContent: "space-between", padding: "7px 14px", borderBottom: "1px solid #1a1a1a", fontSize: 12, gap: 12 }}>
-      <span style={{ color: "#525252", flexShrink: 0 }}>{label}</span>
+      <span style={{ color: "var(--c-text-tertiary)", flexShrink: 0 }}>{label}</span>
       <span
         onClick={() => { navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
         style={{

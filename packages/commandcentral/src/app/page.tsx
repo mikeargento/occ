@@ -2,27 +2,17 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import Markdown from "react-markdown";
-import { getMe, getFeed, getProofs, approve, deny, revokeAuth, type FeedItem, type V2Proof } from "@/lib/api";
+import { getMe, getFeed, approve, deny, revokeAuth, type FeedItem } from "@/lib/api";
 
 export default function App() {
   const [user, setUser] = useState<{ id: string; name: string; email: string; avatar: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [feed, setFeed] = useState<FeedItem[]>([]);
-  const [proofs, setProofs] = useState<V2Proof[]>([]);
-  const [proofTotal, setProofTotal] = useState(0);
-  const [proofSearch, setProofSearch] = useState("");
-  const [proofSearchInput, setProofSearchInput] = useState("");
-  const [showFullChain, setShowFullChain] = useState(false);
-  const [viewMode, setViewMode] = useState<"normal" | "timeonly">("normal");
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
   const [view, setView] = useState<"main" | "settings">("main");
   const [chatOpen, setChatOpen] = useState(false);
   const [autoLanes, setAutoLanes] = useState<{ key: string; label: string }[]>([]);
   const pollingRef = useRef<ReturnType<typeof setInterval>>(undefined);
   const refreshingRef = useRef(false);
-  const observerRef = useRef<HTMLDivElement>(null);
-  const PAGE_SIZE = 20;
 
   useEffect(() => { getMe().then(d => setUser(d.user)).catch(() => {}).finally(() => setLoading(false)); }, []);
 
@@ -30,54 +20,18 @@ export default function App() {
     if (!user || refreshingRef.current) return;
     refreshingRef.current = true;
     try {
-      const [feedData, proofData, lanesData] = await Promise.all([
+      const [feedData, lanesData] = await Promise.all([
         getFeed(),
-        getProofs(PAGE_SIZE, 0, proofSearch),
         fetch("/api/v2/policy/lanes").then(r => r.ok ? r.json() : null).catch(() => null),
       ]);
       if (lanesData?.lanes) {
         setAutoLanes(lanesData.lanes.filter((l: any) => l.mode === "auto_approve").map((l: any) => ({ key: l.lane, label: l.label || l.lane })));
       }
       setFeed(feedData.requests ?? []);
-      // Deduplicate by id and only update if data changed
-      const seen = new Set<number>();
-      const newProofs = (proofData.proofs ?? []).filter(p => {
-        if (seen.has(p.id)) return false;
-        seen.add(p.id);
-        return true;
-      });
-      setProofs(prev => {
-        if (prev.length !== newProofs.length) return newProofs;
-        const changed = newProofs.some((p, i) => p.id !== prev[i]?.id);
-        return changed ? newProofs : prev;
-      });
-      setProofTotal(proofData.total ?? 0);
-      setHasMore((proofData.proofs?.length ?? 0) < (proofData.total ?? 0));
     } catch {} finally {
       refreshingRef.current = false;
     }
-  }, [user, proofSearch, showFullChain]);
-
-  const loadMore = useCallback(async () => {
-    if (!user || loadingMore || !hasMore) return;
-    setLoadingMore(true);
-    try {
-      const data = await getProofs(PAGE_SIZE, proofs.length, proofSearch);
-      setProofs(prev => [...prev, ...(data.proofs ?? [])]);
-      setHasMore(proofs.length + (data.proofs?.length ?? 0) < (data.total ?? 0));
-    } catch {}
-    setLoadingMore(false);
-  }, [user, proofs.length, loadingMore, hasMore, proofSearch, showFullChain]);
-
-  // Infinite scroll observer
-  useEffect(() => {
-    if (!observerRef.current) return;
-    const observer = new IntersectionObserver(entries => {
-      if (entries[0]?.isIntersecting) loadMore();
-    }, { threshold: 0.1 });
-    observer.observe(observerRef.current);
-    return () => observer.disconnect();
-  }, [loadMore]);
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -187,85 +141,21 @@ export default function App() {
             </div>
           )}
 
-          {/* Proof chain */}
-          <div className="section-header" style={pending.length === 0 && autoLanes.length === 0 ? { marginTop: 0 } : undefined}>
-            <span className="section-label">Explorer</span>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              {proofTotal > 0 && <span className="section-count">{proofTotal.toLocaleString()} proofs</span>}
-              {proofs.length > 0 && (
-                <button onClick={async () => {
-                  const all = await getProofs(1000, 0, "");
-                  const json = JSON.stringify(all.proofs, null, 2);
-                  const blob = new Blob([json], { type: "application/json" });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  a.href = url; a.download = "occ-proofs.json"; a.click();
-                  URL.revokeObjectURL(url);
-                }} style={{
-                  fontSize: 12, fontWeight: 500, padding: "4px 10px", borderRadius: 6,
-                  border: "1px solid var(--border-light)", background: "transparent",
-                  color: "var(--text-secondary)", cursor: "pointer", fontFamily: "inherit",
-                  transition: "all 0.2s",
-                }}>
-                  Export all
-                </button>
-              )}
-              <div className="view-toggle">
-                <button className={viewMode === "normal" ? "active" : ""} onClick={() => setViewMode("normal")}>Normal</button>
-                <button className={viewMode === "timeonly" ? "active" : ""} onClick={() => setViewMode("timeonly")}>Time Only</button>
+          {/* Proof Explorer Link */}
+          <div style={{ marginTop: pending.length === 0 && autoLanes.length === 0 ? 0 : undefined }}>
+            <a href="https://occ.wtf" target="_blank" rel="noopener" style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "16px 20px", borderRadius: 10,
+              border: "1px solid var(--border-light)", background: "var(--surface)",
+              textDecoration: "none", color: "var(--text)", transition: "background 0.15s",
+            }}>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 2 }}>Proof Explorer</div>
+                <div style={{ fontSize: 13, color: "var(--text-tertiary)" }}>View the live proof chain on occ.wtf</div>
               </div>
-            </div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" strokeWidth="2" strokeLinecap="round"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+            </a>
           </div>
-
-          {/* Search */}
-          <div className="explorer-search">
-            <input
-              className="explorer-search-input"
-              type="text"
-              placeholder="Search by tool, agent, digest..."
-              value={proofSearchInput}
-              onChange={e => setProofSearchInput(e.target.value)}
-              onKeyDown={e => { if (e.key === "Enter") { setProofSearch(proofSearchInput); } }}
-            />
-            {proofSearch && (
-              <button className="explorer-search-clear" onClick={() => { setProofSearch(""); setProofSearchInput(""); }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </button>
-            )}
-          </div>
-
-          {proofs.length === 0 ? (
-            <div className="section-empty">
-              <div>{proofSearch ? "No proofs match your search." : "No proofs yet."}</div>
-              <div className="section-empty-sub">{proofSearch ? "Try a different search term." : "When you authorize an action, the proof appears here."}</div>
-            </div>
-          ) : (
-            <div className="proof-table">
-              <div className={`proof-table-header ${viewMode === "timeonly" ? "timeonly" : ""}`}>
-                {viewMode === "timeonly" ? (
-                  <>
-                    <span>#</span>
-                    <span>Time</span>
-                  </>
-                ) : (
-                  <>
-                    <span>#</span>
-                    <span>Type</span>
-                    <span>Digest</span>
-                    <span>Epoch</span>
-                    <span>Age</span>
-                    <span>Signer</span>
-                  </>
-                )}
-              </div>
-              {proofs.map(p => <ProofTableRow key={p.id} proof={p} viewMode={viewMode} />)}
-            </div>
-          )}
-
-          {/* Infinite scroll trigger */}
-          {hasMore && <div ref={observerRef} style={{ height: 40, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            {loadingMore && <div className="loader" style={{ width: 18, height: 18 }} />}
-          </div>}
         </div>
       ) : (
         <SettingsView user={user} />
@@ -462,252 +352,6 @@ function extractTarget(args: Record<string, unknown>): string | null {
     if (args[key] && typeof args[key] === "string") return String(args[key]);
   }
   return null;
-}
-
-/* ── Proof Table Row (Etherscan-style) ── */
-function ProofTableRow({ proof: p, viewMode }: { proof: V2Proof; viewMode: "normal" | "timeonly" }) {
-  const [expanded, setExpanded] = useState(false);
-  const [copiedDigest, setCopiedDigest] = useState(false);
-  const receipt = p.receipt as Record<string, unknown> | undefined;
-  const commit = receipt?.commit as Record<string, unknown> | undefined;
-  const env = receipt?.environment as Record<string, unknown> | undefined;
-  const signer = receipt?.signer as Record<string, unknown> | undefined;
-  const timestamps = receipt?.timestamps as Record<string, unknown> | undefined;
-  const enforcement = (env?.enforcement as string) || "stub";
-  const commitTime = (commit?.time as number) || null;
-  const policy = receipt?.policy as Record<string, unknown> | undefined;
-  const principal = receipt?.principal as Record<string, unknown> | undefined;
-  const attribution = receipt?.attribution as Record<string, unknown> | undefined;
-  const slotAllocation = receipt?.slotAllocation as Record<string, unknown> | undefined;
-  const counter = commit?.counter != null ? String(commit.counter) : String(p.id);
-  const digest = p.proofDigest || ((receipt?.artifact as any)?.digestB64) || "";
-  const epochId = (commit?.epochId as string) || "";
-  const signerPub = (signer as any)?.publicKeyB64 || "";
-  const toolName = attribution?.name ? String(attribution.name) : p.tool;
-  const trunc = (s: string, n: number) => s.length > n ? s.slice(0, n) + "..." : s;
-
-  if (viewMode === "timeonly") {
-    return (
-      <div className="proof-table-row timeonly">
-        <span className="proof-cell proof-cell-counter">{counter}</span>
-        <span className="proof-cell" style={{ fontFamily: "'SF Mono', SFMono-Regular, monospace", color: "var(--text-secondary)" }}>
-          {commitTime ? new Date(commitTime).toLocaleString() : "—"}
-        </span>
-      </div>
-    );
-  }
-
-  return (
-    <>
-      <div className="proof-table-row" onClick={() => setExpanded(e => !e)}>
-        <span className="proof-cell proof-cell-counter">{counter}</span>
-        <span className="proof-cell proof-cell-type">
-          <span className="proof-type-badge" title={toolName}>{trunc(toolName, 12)}</span>
-        </span>
-        <span className="proof-cell proof-cell-digest" onClick={e => { e.stopPropagation(); navigator.clipboard.writeText(digest); setCopiedDigest(true); setTimeout(() => setCopiedDigest(false), 1500); }}>
-          {trunc(digest, 20)}
-          <button className="proof-copy-btn">
-            {copiedDigest ? (
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2"><path d="M20 6L9 17l-5-5"/></svg>
-            ) : (
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-            )}
-          </button>
-        </span>
-        <span className="proof-cell proof-cell-age" title={trunc(epochId, 16)}>{trunc(epochId, 12)}</span>
-        <span className="proof-cell proof-cell-age" title={commitTime ? new Date(commitTime).toLocaleString() : ""}>
-          {commitTime ? relativeTime(commitTime) : "—"}
-        </span>
-        <span className="proof-cell proof-cell-signer" title={signerPub}>{trunc(signerPub, 12)}</span>
-      </div>
-      {expanded && (
-        <div className="proof-detail" style={{ display: "contents" }}>
-          <div style={{ gridColumn: "1 / -1", padding: "20px", background: "var(--bg-secondary)", borderBottom: "1px solid var(--border-light)" }}>
-            {/* Ethereum anchor link */}
-            {p.tool === "ethereum-anchor" && (p.args as Record<string, unknown>)?.anchor ? (
-              <div style={{
-                padding: "10px 16px", marginBottom: 16, borderRadius: 8,
-                border: "1px solid rgba(59,130,246,0.2)", background: "rgba(59,130,246,0.05)",
-                display: "flex", alignItems: "center", gap: 12, fontSize: 13,
-              }}>
-                <span style={{ color: "var(--text-secondary)" }}>
-                  Block #{String(((p.args as Record<string, unknown>).anchor as Record<string, unknown>).blockNumber)}
-                </span>
-                <a href={String(((p.args as Record<string, unknown>).anchor as Record<string, unknown>).verify)} target="_blank" rel="noopener"
-                  style={{ color: "#3b82f6", textDecoration: "none", fontWeight: 500 }}>
-                  View on Etherscan →
-                </a>
-              </div>
-            ) : null}
-
-            <div className="proof-detail-grid">
-              {/* Artifact */}
-              <div className="proof-detail-section">
-                <div className="proof-detail-section-title">Artifact</div>
-                <DetailField label="Digest" value={digest} mono />
-                {receipt?.version ? <DetailField label="Version" value={String(receipt.version)} /> : null}
-              </div>
-
-              {/* Commit */}
-              {commit && (
-                <div className="proof-detail-section">
-                  <div className="proof-detail-section-title">Commit</div>
-                  {commitTime != null ? <DetailField label="Time" value={new Date(commitTime).toLocaleString()} /> : null}
-                  <DetailField label="Counter" value={`#${counter}`} />
-                  {commit.epochId ? <DetailField label="Epoch" value={String(commit.epochId)} mono /> : null}
-                  {commit.prevB64 ? <DetailField label="Prev Hash" value={String(commit.prevB64)} mono /> : null}
-                  {commit.nonceB64 ? <DetailField label="Nonce" value={String(commit.nonceB64)} mono /> : null}
-                  {commit.slotCounter != null ? <DetailField label="Slot #" value={String(commit.slotCounter)} /> : null}
-                  {commit.slotHashB64 ? <DetailField label="Slot Hash" value={String(commit.slotHashB64)} mono /> : null}
-                </div>
-              )}
-
-              {/* Signer */}
-              {signer && (
-                <div className="proof-detail-section">
-                  <div className="proof-detail-section-title">Signer</div>
-                  {signerPub && <DetailField label="Public Key" value={signerPub} mono />}
-                  {(signer as any).signatureB64 && <DetailField label="Signature" value={String((signer as any).signatureB64)} mono />}
-                </div>
-              )}
-
-              {/* Environment */}
-              {env && (
-                <div className="proof-detail-section">
-                  <div className="proof-detail-section-title">Environment</div>
-                  <DetailField label="Enforcement" value={enforcement === "measured-tee" ? "Hardware Enclave" : enforcement === "hw-key" ? "Hardware Key" : "Software"} />
-                  {(env as any).measurement && <DetailField label="PCR0" value={String((env as any).measurement)} mono />}
-                </div>
-              )}
-
-              {/* Principal */}
-              {principal && (
-                <div className="proof-detail-section">
-                  <div className="proof-detail-section-title">Principal</div>
-                  <DetailField label="Provider" value={String((principal as any).provider || "unknown")} />
-                  <DetailField label="ID" value={String((principal as any).id || "—")} mono />
-                </div>
-              )}
-
-              {/* Policy */}
-              {policy && (
-                <div className="proof-detail-section">
-                  <div className="proof-detail-section-title">Policy</div>
-                  {(policy as any).name && <DetailField label="Name" value={String((policy as any).name)} />}
-                  {(policy as any).digestB64 && <DetailField label="Digest" value={String((policy as any).digestB64)} mono />}
-                </div>
-              )}
-
-              {/* Timestamps */}
-              {timestamps && (
-                <div className="proof-detail-section">
-                  <div className="proof-detail-section-title">Timestamp</div>
-                  {(timestamps as any)?.artifact?.authority && <DetailField label="Authority" value={String((timestamps as any).artifact.authority)} />}
-                  {(timestamps as any)?.artifact?.time && <DetailField label="Time" value={String((timestamps as any).artifact.time)} />}
-                </div>
-              )}
-
-              {/* Attribution */}
-              {attribution && (
-                <div className="proof-detail-section">
-                  <div className="proof-detail-section-title">Attribution</div>
-                  {(attribution as any).name && <DetailField label="Name" value={String((attribution as any).name)} />}
-                </div>
-              )}
-
-              {/* Slot Allocation */}
-              {slotAllocation && (
-                <div className="proof-detail-section">
-                  <div className="proof-detail-section-title">Causal Slot</div>
-                  {(slotAllocation as any).counter != null && <DetailField label="Slot #" value={String((slotAllocation as any).counter)} />}
-                  {(slotAllocation as any).time && <DetailField label="Time" value={new Date((slotAllocation as any).time).toLocaleString()} />}
-                </div>
-              )}
-            </div>
-
-            {/* JSON + Export */}
-            {receipt && (
-              <div style={{ marginTop: 16 }}>
-                <CopyableJson data={receipt} />
-                <button onClick={() => {
-                  const json = JSON.stringify(receipt, null, 2);
-                  const blob = new Blob([json], { type: "application/json" });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  a.href = url; a.download = `occ-proof-${digest.slice(0, 12) || p.id}.json`; a.click();
-                  URL.revokeObjectURL(url);
-                }} style={{
-                  marginTop: 8, fontSize: 12, fontWeight: 500, padding: "6px 14px", borderRadius: 6,
-                  border: "1px solid var(--border-light)", background: "transparent",
-                  color: "var(--text-secondary)", cursor: "pointer", fontFamily: "inherit",
-                }}>
-                  Export .json
-                </button>
-              </div>
-            )}
-
-            {!receipt && p.reason && (
-              <div style={{ padding: "8px 0", fontSize: 13 }}>
-                <span style={{ color: "var(--text-tertiary)", fontSize: 12 }}>Reason</span>{" "}
-                <span style={{ color: "var(--red)" }}>{p.reason}</span>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-    </>
-  );
-}
-
-/* ── Detail Field (for expanded proof panel) ── */
-function DetailField({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
-  const [copied, setCopied] = useState(false);
-  return (
-    <div className="proof-detail-field">
-      <span className="proof-detail-label">{label}</span>
-      <span className={`proof-detail-value ${mono ? "mono" : ""}`} title={value} onClick={() => { navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 1500); }} style={{ cursor: "pointer" }}>
-        {copied ? "Copied!" : value.length > 32 ? value.slice(0, 24) + "..." : value}
-      </span>
-    </div>
-  );
-}
-
-/* ── Copyable JSON ── */
-function CopyableJson({ data }: { data: Record<string, unknown> }) {
-  const [open, setOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const json = JSON.stringify(data, null, 2);
-  const sizeKb = (new TextEncoder().encode(json).length / 1024).toFixed(1);
-  function handleCopy() {
-    navigator.clipboard.writeText(json).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); });
-  }
-  return (
-    <div style={{ marginTop: 12 }}>
-      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-        <button onClick={() => setOpen(!open)} style={{
-          fontSize: 12, fontWeight: 500, padding: "6px 14px", borderRadius: 6,
-          border: "1px solid var(--border-light)", background: "transparent",
-          color: "var(--text-secondary)", cursor: "pointer", fontFamily: "inherit",
-        }}>
-          {open ? "Hide JSON" : "Show JSON"} ({sizeKb} KB)
-        </button>
-        {open && (
-          <button onClick={handleCopy} style={{
-            fontSize: 12, fontWeight: 500, padding: "6px 14px", borderRadius: 6,
-            border: "1px solid var(--border-light)", background: "transparent",
-            color: copied ? "#30d158" : "var(--text-secondary)", cursor: "pointer", fontFamily: "inherit",
-          }}>
-            {copied ? "Copied!" : "Copy JSON"}
-          </button>
-        )}
-      </div>
-      {open && (
-        <div style={{ position: "relative", marginTop: 8 }}>
-          <pre className="explorer-json">{json}</pre>
-        </div>
-      )}
-    </div>
-  );
 }
 
 /* ── Settings View ── */
