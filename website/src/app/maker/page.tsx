@@ -26,6 +26,7 @@ type MakeStep = "drop" | "hashing" | "signing" | "done" | "error";
 type VerifyStep = "drop" | "checking" | "result";
 
 interface ProofEntry {
+  globalId: number;
   digest: string;
   counter?: string;
   enforcement: string;
@@ -149,6 +150,7 @@ export default function MakerPage() {
       if (!resp.ok) return;
       const data = await resp.json();
       const entries: ProofEntry[] = (data.proofs || []).map((p: Record<string, unknown>) => ({
+        globalId: (p.id as number) || 0,
         digest: (p.digestB64 as string) || "—",
         counter: (p.counter as string) || undefined,
         enforcement: (p.enforcement as string) === "measured-tee" ? "Hardware Enclave" : "Software",
@@ -603,7 +605,7 @@ export default function MakerPage() {
               Public proof ledger
             </h2>
             <span style={{ fontSize: 13, color: "var(--c-text-tertiary)" }}>
-              {ledgerTotal.toLocaleString()} proofs
+              {ledgerTotal.toLocaleString()} total proofs
             </span>
           </div>
 
@@ -719,7 +721,7 @@ function LedgerRow({ entry, isLast }: { entry: ProofEntry; isLast: boolean }) {
             {entry.attribution || entry.digest.slice(0, 24) + "..."}
           </span>
           <span style={{ fontSize: 13, color: "var(--c-text-tertiary)" }}>
-            {entry.counter ? `#${entry.counter}` : ""}
+            {entry.globalId ? `#${entry.globalId}` : ""}
           </span>
         </div>
         {/* Badge */}
