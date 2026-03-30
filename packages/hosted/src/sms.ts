@@ -189,7 +189,7 @@ async function handleReply(userId: string, text: string, res: ServerResponse) {
 
   // Process the decision
   const decision = isYes ? "approved" : "denied";
-  const chainId = "occ:main";
+  const chainId = undefined;
   const principal = { id: userId };
 
   let digestB64 = "";

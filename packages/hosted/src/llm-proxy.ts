@@ -473,7 +473,7 @@ async function governToolCall(
   allowedTools: Set<string>,
   blockedTools: Set<string>
 ): Promise<{ action: "allow" | "deny" | "ask"; requestId?: number }> {
-  const chainId = "occ:main";
+  const chainId = undefined;
   const principal = { id: userId, provider: agent.provider };
 
   // 1. ALLOWED — tool is in the allow list
