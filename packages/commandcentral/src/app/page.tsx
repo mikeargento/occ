@@ -19,13 +19,15 @@ export default function App() {
   const [chatOpen, setChatOpen] = useState(false);
   const [autoLanes, setAutoLanes] = useState<{ key: string; label: string }[]>([]);
   const pollingRef = useRef<ReturnType<typeof setInterval>>(undefined);
+  const refreshingRef = useRef(false);
   const observerRef = useRef<HTMLDivElement>(null);
   const PAGE_SIZE = 20;
 
   useEffect(() => { getMe().then(d => setUser(d.user)).catch(() => {}).finally(() => setLoading(false)); }, []);
 
   const refresh = useCallback(async () => {
-    if (!user) return;
+    if (!user || refreshingRef.current) return;
+    refreshingRef.current = true;
     try {
       const [feedData, proofData, lanesData] = await Promise.all([
         getFeed(),
@@ -36,8 +38,13 @@ export default function App() {
         setAutoLanes(lanesData.lanes.filter((l: any) => l.mode === "auto_approve").map((l: any) => ({ key: l.lane, label: l.label || l.lane })));
       }
       setFeed(feedData.requests ?? []);
-      // Only update proofs if data changed (prevents resetting expanded state)
-      const newProofs = proofData.proofs ?? [];
+      // Deduplicate by id and only update if data changed
+      const seen = new Set<number>();
+      const newProofs = (proofData.proofs ?? []).filter(p => {
+        if (seen.has(p.id)) return false;
+        seen.add(p.id);
+        return true;
+      });
       setProofs(prev => {
         if (prev.length !== newProofs.length) return newProofs;
         const changed = newProofs.some((p, i) => p.id !== prev[i]?.id);
@@ -45,7 +52,9 @@ export default function App() {
       });
       setProofTotal(proofData.total ?? 0);
       setHasMore((proofData.proofs?.length ?? 0) < (proofData.total ?? 0));
-    } catch {}
+    } catch {} finally {
+      refreshingRef.current = false;
+    }
   }, [user, proofSearch, showFullChain]);
 
   const loadMore = useCallback(async () => {
