@@ -187,12 +187,8 @@ export default function MakerPage() {
         setMakeProofs([p]);
         setMakeStep("done");
 
-        // Index in public ledger
-        fetch("/api/proofs", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ proof: p }),
-        }).then(() => fetchLedger(1)).catch(() => {});
+        // Refresh ledger (proof already indexed by commitDigest)
+        fetchLedger(1);
       } else {
         // Batch mode
         const digests: Array<{ digestB64: string; hashAlg: "sha256" }> = [];
@@ -213,12 +209,8 @@ export default function MakerPage() {
         setMakeProofs(proofs);
         setMakeStep("done");
 
-        // Index all in public ledger
-        fetch("/api/proofs", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ proofs }),
-        }).then(() => fetchLedger(1)).catch(() => {});
+        // Refresh ledger (proofs already indexed by commitBatch)
+        fetchLedger(1);
       }
     } catch (err) {
       setMakeError(err instanceof Error ? err.message : "Something went wrong");

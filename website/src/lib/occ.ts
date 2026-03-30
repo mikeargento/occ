@@ -326,6 +326,15 @@ export async function commitDigest(
     proof.timestamps = { artifact: raw.metadata.tsa };
   }
 
+  // Auto-index in explorer
+  try {
+    await fetch(`${typeof window !== "undefined" ? "" : "https://www.occ.wtf"}/api/proofs`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ proof }),
+    });
+  } catch { /* non-critical — proof still valid even if indexing fails */ }
+
   return proof;
 }
 
@@ -358,7 +367,7 @@ export async function commitBatch(
   const raw = await resp.json();
   const rawProofs = Array.isArray(raw) ? raw : [raw];
 
-  return rawProofs.map((r: Record<string, unknown>) => {
+  const results = rawProofs.map((r: Record<string, unknown>) => {
     const proof: OCCProof = {
       version: (r.version as string) || "occ/1",
       artifact: r.artifact as OCCProof["artifact"],
@@ -382,6 +391,17 @@ export async function commitBatch(
 
     return proof;
   });
+
+  // Auto-index all proofs in explorer
+  try {
+    await fetch(`${typeof window !== "undefined" ? "" : "https://www.occ.wtf"}/api/proofs`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ proofs: results }),
+    });
+  } catch { /* non-critical */ }
+
+  return results;
 }
 
 export async function getEnclaveInfo(): Promise<{
