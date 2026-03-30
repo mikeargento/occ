@@ -490,6 +490,23 @@ function ExplorerRow({ proof: p }: { proof: V2Proof }) {
             </button>
           </div>
 
+          {/* Ethereum anchor link */}
+          {p.tool === "ethereum-anchor" && (p.args as Record<string, unknown>)?.anchor ? (
+            <div style={{
+              padding: "10px 16px", marginBottom: 12, borderRadius: 8,
+              border: "1px solid rgba(59,130,246,0.2)", background: "rgba(59,130,246,0.05)",
+              display: "flex", alignItems: "center", gap: 12, fontSize: 13,
+            }}>
+              <span style={{ color: "var(--text-secondary)" }}>
+                Ethereum block #{String(((p.args as Record<string, unknown>).anchor as Record<string, unknown>).blockNumber)}
+              </span>
+              <a href={String(((p.args as Record<string, unknown>).anchor as Record<string, unknown>).verify)} target="_blank" rel="noopener"
+                style={{ color: "#3b82f6", textDecoration: "none", fontWeight: 500 }}>
+                View on Etherscan →
+              </a>
+            </div>
+          ) : null}
+
           <div className="explorer-sections">
 
             {/* Arguments (only if present) */}
@@ -618,15 +635,38 @@ function ExplorerRow({ proof: p }: { proof: V2Proof }) {
 
 /* ── Copyable JSON ── */
 function CopyableJson({ data }: { data: Record<string, unknown> }) {
+  const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const json = JSON.stringify(data, null, 2);
-  function handleClick() {
+  const sizeKb = (new TextEncoder().encode(json).length / 1024).toFixed(1);
+  function handleCopy() {
     navigator.clipboard.writeText(json).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); });
   }
   return (
-    <div style={{ position: "relative", marginTop: 12 }}>
-      <pre className="explorer-json" onClick={handleClick}>{json}</pre>
-      <span className={`copy-badge ${copied ? "copy-badge-show" : ""}`}>{copied ? "Copied!" : "Click to copy"}</span>
+    <div style={{ marginTop: 12 }}>
+      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <button onClick={() => setOpen(!open)} style={{
+          fontSize: 12, fontWeight: 500, padding: "6px 14px", borderRadius: 6,
+          border: "1px solid var(--border-light)", background: "transparent",
+          color: "var(--text-secondary)", cursor: "pointer", fontFamily: "inherit",
+        }}>
+          {open ? "Hide JSON" : "Show JSON"} ({sizeKb} KB)
+        </button>
+        {open && (
+          <button onClick={handleCopy} style={{
+            fontSize: 12, fontWeight: 500, padding: "6px 14px", borderRadius: 6,
+            border: "1px solid var(--border-light)", background: "transparent",
+            color: copied ? "#30d158" : "var(--text-secondary)", cursor: "pointer", fontFamily: "inherit",
+          }}>
+            {copied ? "Copied!" : "Copy JSON"}
+          </button>
+        )}
+      </div>
+      {open && (
+        <div style={{ position: "relative", marginTop: 8 }}>
+          <pre className="explorer-json">{json}</pre>
+        </div>
+      )}
     </div>
   );
 }

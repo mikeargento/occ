@@ -12,6 +12,7 @@
  */
 
 import { sha256 } from "@noble/hashes/sha256";
+import { db } from "./db.js";
 
 const TEE_URL = "https://nitro.occproof.com";
 const CHAIN_ID = "occ:ethereum-anchors";
@@ -100,6 +101,19 @@ async function commitAnchor(block: EthBlock): Promise<{ proof: unknown; digestB6
 
     const data = await res.json();
     const proof = Array.isArray(data) ? data[0] : data.proofs?.[0] ?? data;
+
+    // Store in local DB so it shows in signed-in explorer
+    try {
+      await db.addProof("system", {
+        agentId: "system",
+        tool: "ethereum-anchor",
+        allowed: true,
+        args: { anchor: metadata.anchor },
+        reason: `Ethereum block #${block.number}`,
+        proofDigest: proof?.artifact?.digestB64 ?? digestB64,
+        receipt: proof,
+      });
+    } catch { /* non-critical */ }
 
     // Forward to public explorer
     try {

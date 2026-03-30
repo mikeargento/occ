@@ -784,6 +784,27 @@ function LedgerRow({ entry, isLast }: { entry: ProofEntry; isLast: boolean }) {
 
           {proof && (
             <>
+              {/* Ethereum anchor link */}
+              {proof.metadata && (proof.metadata as Record<string, unknown>).type === "ethereum-anchor" && (() => {
+                const anchor = (proof.metadata as Record<string, unknown>).anchor as Record<string, unknown> | undefined;
+                if (!anchor) return null;
+                return (
+                  <div style={{
+                    padding: "10px 16px", marginBottom: 12, borderRadius: 8,
+                    border: "1px solid rgba(59,130,246,0.2)", background: "rgba(59,130,246,0.05)",
+                    display: "flex", alignItems: "center", gap: 12, fontSize: 13,
+                  }}>
+                    <span style={{ color: "var(--c-text-secondary)" }}>
+                      Ethereum block #{String(anchor.blockNumber)}
+                    </span>
+                    <a href={String(anchor.verify)} target="_blank" rel="noopener"
+                      style={{ color: "#3b82f6", textDecoration: "none", fontWeight: 500 }}>
+                      View on Etherscan →
+                    </a>
+                  </div>
+                );
+              })()}
+
               <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 16 }}>
 
                 {/* Artifact */}
@@ -980,13 +1001,24 @@ function LedgerCopyableJson({ data }: { data: unknown }) {
 
   return (
     <div>
-      <button onClick={() => setOpen(!open)} style={{
-        fontSize: 12, fontWeight: 500, padding: "6px 14px", borderRadius: 6,
-        border: "1px solid var(--c-border)", background: "transparent",
-        color: "var(--c-text-secondary)", cursor: "pointer", marginBottom: open ? 8 : 0,
-      }}>
-        {open ? "Hide" : "Raw JSON"} ({sizeKb} KB)
-      </button>
+      <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: open ? 8 : 0 }}>
+        <button onClick={() => setOpen(!open)} style={{
+          fontSize: 12, fontWeight: 500, padding: "6px 14px", borderRadius: 6,
+          border: "1px solid var(--c-border)", background: "transparent",
+          color: "var(--c-text-secondary)", cursor: "pointer",
+        }}>
+          {open ? "Hide JSON" : "Show JSON"} ({sizeKb} KB)
+        </button>
+        {open && (
+          <button onClick={() => { navigator.clipboard.writeText(json); setCopied(true); setTimeout(() => setCopied(false), 1500); }} style={{
+            fontSize: 12, fontWeight: 500, padding: "6px 14px", borderRadius: 6,
+            border: "1px solid var(--c-border)", background: "transparent",
+            color: copied ? "#30d158" : "var(--c-text-secondary)", cursor: "pointer",
+          }}>
+            {copied ? "Copied!" : "Copy JSON"}
+          </button>
+        )}
+      </div>
       {open && (
         <div style={{ position: "relative" }}>
           <pre

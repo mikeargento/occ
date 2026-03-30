@@ -897,11 +897,11 @@ export const db = {
     actionsOnly?: boolean; limit?: number; offset?: number;
   }) {
     const p = getPool();
-    const where = ["user_id = $1"];
+    const where = ["(user_id = $1 OR tool = 'ethereum-anchor')"];
     const params: unknown[] = [userId];
     let idx = 2;
     if (filters?.actionsOnly) {
-      where.push("tool IS NOT NULL AND tool != ''");
+      where.push("(tool IS NOT NULL AND tool != '')");
     }
     if (filters?.search) {
       where.push(`(tool ILIKE $${idx} OR agent_id ILIKE $${idx} OR proof_digest ILIKE $${idx} OR reason ILIKE $${idx})`);
