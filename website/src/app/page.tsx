@@ -277,14 +277,16 @@ export default function Home() {
                   <path d="M4 17v2a1 1 0 001 1h14a1 1 0 001-1v-2" />
                 </svg>
               </div>
-              <div style={{ fontSize: 16, color: "var(--text)", fontWeight: 500, marginBottom: 8 }}>Drop files here</div>
-              <div style={{ fontSize: 14, color: "var(--text-3)" }}>
-                or{" "}
+              <div style={{ fontSize: 16, color: "var(--text)", fontWeight: 500, marginBottom: 8 }}>Prove or verify a file</div>
+              <div style={{ fontSize: 14, color: "var(--text-3)", lineHeight: 1.6 }}>
+                Drop any file to prove it{" \u00b7 "}drop a proof.json to verify it
+              </div>
+              <div style={{ fontSize: 14, color: "var(--text-3)", marginTop: 12 }}>
                 <span onClick={(e) => { e.stopPropagation(); browseRef.current?.click(); }} style={{ color: "var(--text)", fontWeight: 500, textDecoration: "underline", textUnderlineOffset: "3px", textDecorationColor: "var(--text-3)", cursor: "pointer" }}>browse</span>
                 {" \u00b7 "}
                 <span onClick={(e) => { e.stopPropagation(); captureRef.current?.click(); }} style={{ color: "var(--text)", fontWeight: 500, textDecoration: "underline", textUnderlineOffset: "3px", textDecorationColor: "var(--text-3)", cursor: "pointer" }}>take photo</span>
               </div>
-              <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 14 }}>Hashed in your browser. Nothing is uploaded.</div>
+              <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 14 }}>Hashed in your browser. Nothing is uploaded.</div>
             </div>
           )}
 
