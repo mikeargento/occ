@@ -2,39 +2,60 @@
 // Copyright 2024-2026 Mike Argento
 
 /**
- * Nitro Enclave application
+ * OCC Nitro Enclave — Origin Controlled Computing
  *
- * Runs INSIDE the Nitro Enclave. On boot:
- *   1. Generate Ed25519 keypair in memory (private key never leaves enclave)
+ * This enclave controls how objects come into existence and proves
+ * their causal ordering. It does NOT prove time. It proves origin
+ * and forward-only existence using hardware entropy.
+ *
+ * On boot:
+ *   1. Generate Ed25519 keypair in memory (never leaves enclave)
  *   2. Generate boot nonce (32 bytes from NSM GetRandom)
  *   3. Compute epochId = SHA-256(publicKeyB64 + ":" + bootNonceB64)
- *   4. Initialize Constructor with NitroHost
- *   5. Listen on vsock port 5000 for length-prefixed JSON requests
+ *   4. Listen on vsock port 5000 for length-prefixed JSON requests
  *
- * Epoch semantics:
- *   - epochId uniquely identifies this enclave lifecycle
- *   - Changes on every enclave restart (new keypair + new boot nonce)
- *   - Included in every proof's commit field (signed, tamper-evident)
- *   - Verifiers use it to detect epoch boundaries
+ * Origin slot protocol (2-RTT):
+ *   1. allocateSlot() → TEE generates hardware nonce, signs slot record
+ *      The slot is a controlled origin opportunity. It exists first.
+ *   2. commit(slotId, digest) → TEE consumes slot, binds artifact hash
+ *      The commit is the moment something becomes causally real.
  *
- * Proof chaining:
- *   - Each proof records prevB64 = BASE64(SHA-256(canonicalize(previousProof)))
- *   - First proof of an epoch has no prevB64
- *   - Chain is forward-only, signed, and fork-detectable
+ *   Slot → Commit → Next Slot → Next Commit
  *
- * Vsock wire format: [4 bytes big-endian length][JSON payload]
+ *   Each commit depends on entropy generated AFTER the previous commit.
+ *   This creates forward-only existence — no reordering, no backfilling.
  *
- * OCC causal commit protocol (2-RTT):
- *   1. Client calls allocateSlot() → enclave returns signed slot record
- *   2. Client calls commit(slotId, digests) → enclave consumes slot, returns proof
- *   The slot record is embedded in the proof for self-contained verification.
+ * Ethereum front anchors:
+ *   External service commits unpredictable Ethereum block hashes into
+ *   the same chain. These are front anchors — they seal backward.
+ *   Everything before an anchor must already exist. The anchor proves
+ *   prior existence before public entropy, not creation time.
  *
- * Supported request types:
- *   { type: "allocateSlot" }  — pre-allocate a causal slot (nonce-first)
- *   { type: "commit", slotId, digests: [{ digestB64, hashAlg }], metadata?, agency? }
- *   { type: "challenge" }  — issue a fresh nonce for agency signing
- *   { type: "key" }
- *   { type: "convertBW", imageB64: "<base64 JPEG>" }  — grayscale conversion + proof
+ * Epochs:
+ *   Each enclave boot is a new epoch. Counter resets. New keypair.
+ *   Cross-epoch ordering relies on Ethereum anchors — if epoch A's
+ *   last anchor references block N and epoch B's first anchor
+ *   references block M > N, epoch A came first.
+ *
+ * Trust model:
+ *   - TEE attestation (NSM)
+ *   - Hardware entropy (NSM GetRandom)
+ *   - Public entropy (Ethereum block hashes)
+ *   - NO clocks. NO timestamps. NO centralized authority.
+ *
+ * Signing flow (attestation-correct):
+ *   1. Build complete signed body including attestationFormat
+ *   2. Canonicalize deterministically
+ *   3. SHA-256 hash the canonical bytes
+ *   4. Request NSM attestation with hash as user_data
+ *   5. Ed25519 sign the SAME canonical bytes
+ *   Result: attestation.user_data == SHA-256(signedBody) == signed hash
+ *
+ * Counter gaps:
+ *   Slots that expire without being consumed leave counter gaps.
+ *   This is correct — prevB64 links proofs, not counters. Gaps do
+ *   not break the causal chain. Slots are single-use and must never
+ *   be reused.
  */
 
 import { createServer, type Socket } from "node:net";
@@ -230,16 +251,12 @@ async function handleAllocateSlot(chainId?: string): Promise<{ slotId: string; s
   const nonceBytes = await nitroHost.getFreshNonce();
   const nonceB64 = Buffer.from(nonceBytes).toString("base64");
 
-  // 3. Capture advisory time
-  const time = Date.now();
-
-  // 4. Build slot body — deliberately NO artifact hash
+  // 4. Build slot body — deliberately NO artifact hash, NO clock
   const resolvedChainId = chainId ?? DEFAULT_CHAIN;
   const slotBody = {
     version: "occ/slot/1" as const,
     nonceB64,
     counter: String(chain.counter),
-    time,
     epochId,
     publicKeyB64,
     ...(resolvedChainId !== DEFAULT_CHAIN ? { chainId: resolvedChainId } : {}),
@@ -520,9 +537,6 @@ async function handleCommit(req: {
   // Step 2: Nonce — use the slot's nonce (causal binding)
   // No new nonce generated here. The nonce was pre-allocated in the slot.
 
-  // Step 3: Time (advisory)
-  const time = Date.now();
-
   // Compute slotHashB64: SHA-256 of canonical slot body.
   // This hash is included in the signed commit body, so the Ed25519
   // signature cryptographically binds this commit to the exact slot.
@@ -530,7 +544,6 @@ async function handleCommit(req: {
     version: slotRecord.version,
     nonceB64: slotRecord.nonceB64,
     counter: slotRecord.counter,
-    time: slotRecord.time,
     epochId: slotRecord.epochId,
     publicKeyB64: slotRecord.publicKeyB64,
   };
@@ -542,7 +555,6 @@ async function handleCommit(req: {
     counter: counterStr,
     slotCounter: slotRecord.counter, // proves slot preceded commit
     slotHashB64,                     // signed binding to exact slot record
-    time,
     epochId,
   };
 
@@ -601,20 +613,23 @@ async function handleCommit(req: {
     (signedBody as unknown as Record<string, unknown>).principal = req.principal;
   }
 
-  // Step 7: Canonicalize
-  const canonicalBytes = canonicalize(signedBody);
+  // ── OCC signing flow (attestation-correct) ──
+  // 1. Add attestation format to signed body BEFORE hashing.
+  //    AWS Nitro always uses "aws-nitro" — this is a known constant.
+  // 2. Canonicalize the FINAL body (including attestationFormat).
+  // 3. Compute SHA-256 of the final canonical bytes.
+  // 4. Request NSM attestation with that hash as user_data.
+  // 5. Sign the same final canonical bytes with Ed25519.
+  //
+  // Result: attestation.user_data == SHA-256(signedBody) == hash that
+  // Ed25519 signature covers. All three bind to identical bytes.
 
-  // Step 8: Sign
-  const signatureBytes = await signAsync(canonicalBytes, privateKey);
+  signedBody.attestationFormat = "aws-nitro";
+  const finalCanonicalBytes = canonicalize(signedBody);
+  const finalBodyHash = sha256(finalCanonicalBytes);
 
-  // Step 9: Attestation
-  const bodyHash = sha256(canonicalBytes);
-  const attestation = await nitroHost.getAttestation(bodyHash);
-
-  // Re-sign with attestationFormat included
-  signedBody.attestationFormat = attestation.format;
-  const canonicalBytesWithAttest = canonicalize(signedBody);
-  const signatureBytesWithAttest = await signAsync(canonicalBytesWithAttest, privateKey);
+  const attestation = await nitroHost.getAttestation(finalBodyHash);
+  const signatureBytes = await signAsync(finalCanonicalBytes, privateKey);
 
   // Step 10: Assemble proof
   const proof: OCCProof = {
@@ -623,7 +638,7 @@ async function handleCommit(req: {
     commit: signedBody.commit,
     signer: {
       publicKeyB64,
-      signatureB64: Buffer.from(signatureBytesWithAttest).toString("base64"),
+      signatureB64: Buffer.from(signatureBytes).toString("base64"),
     },
     environment: {
       enforcement: "measured-tee",

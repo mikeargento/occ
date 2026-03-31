@@ -701,8 +701,8 @@ export interface SlotAllocation {
   nonceB64: string;
   /** Monotonic counter at allocation time. Must be < commit counter. */
   counter: string;
-  /** Advisory timestamp (Unix epoch ms) at allocation time. */
-  time: number;
+  /** Advisory timestamp (Unix epoch ms) at allocation time. Optional — OCC is causal, not temporal. */
+  time?: number;
   /** Enclave lifecycle identifier. Must match commit.epochId. */
   epochId: string;
   /** Enclave Ed25519 public key. Must match signer.publicKeyB64. */
