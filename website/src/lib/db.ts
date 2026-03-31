@@ -62,7 +62,7 @@ export async function insertProofs(proofs: OCCProof[]) {
 
 export async function getProofsByDigest(digestB64: string) {
   const sql = getDb();
-  const rows = await sql`SELECT proof_json, indexed_at FROM proofs WHERE digest_b64 = ${digestB64} ORDER BY commit_time DESC`;
+  const rows = await sql`SELECT proof_json, indexed_at FROM proofs WHERE digest_b64 = ${digestB64} ORDER BY CAST(counter AS INTEGER) DESC`;
   return rows.map((r) => ({
     proof: canonicalizeProof(r.proof_json as unknown as OCCProof),
     indexedAt: r.indexed_at as string,
@@ -95,7 +95,7 @@ export async function listProofs(page = 1, limit = 20) {
 
   const [rows, countResult] = await Promise.all([
     sql`SELECT id, digest_b64, counter, commit_time, enforcement, signer_pub, has_agency, has_tsa, attr_name, indexed_at
-      FROM proofs ORDER BY commit_time DESC NULLS LAST LIMIT ${limit} OFFSET ${offset}`,
+      FROM proofs ORDER BY CAST(counter AS INTEGER) DESC NULLS LAST LIMIT ${limit} OFFSET ${offset}`,
     sql`SELECT COUNT(*) as total FROM proofs`,
   ]);
 
@@ -135,7 +135,7 @@ export async function searchProofs(query: string, limit = 20) {
   const rows = await sql`SELECT id, digest_b64, counter, commit_time, enforcement, signer_pub, has_agency, has_tsa, attr_name, indexed_at
     FROM proofs
     WHERE digest_b64 ILIKE ${pattern} OR attr_name ILIKE ${pattern} OR signer_pub ILIKE ${pattern} OR counter = ${query}
-    ORDER BY commit_time DESC NULLS LAST
+    ORDER BY CAST(counter AS INTEGER) DESC NULLS LAST
     LIMIT ${limit}`;
 
   return rows.map((r) => ({
