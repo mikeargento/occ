@@ -12,7 +12,6 @@
  */
 
 import { sha256 } from "@noble/hashes/sha256";
-import { db } from "./db.js";
 
 /**
  * Persist an anchor proof to the S3 immutable ledger.
@@ -186,19 +185,6 @@ async function commitAnchor(block: EthBlock): Promise<{ proof: unknown; digestB6
 
     const data = await res.json();
     const proof = Array.isArray(data) ? data[0] : data.proofs?.[0] ?? data;
-
-    // Store in local DB so it shows in signed-in explorer
-    try {
-      await db.addProof("system", {
-        agentId: "system",
-        tool: "ethereum-anchor",
-        allowed: true,
-        args: { anchor: metadata.anchor },
-        reason: `Ethereum block #${block.number}`,
-        proofDigest: proof?.artifact?.digestB64 ?? digestB64,
-        receipt: proof,
-      });
-    } catch { /* non-critical */ }
 
     // Persist to immutable S3 ledger (anchor + proof)
     void persistAnchor(proof, { blockNumber: block.number, blockHash: block.hash });

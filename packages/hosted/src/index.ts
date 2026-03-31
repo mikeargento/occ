@@ -2,17 +2,11 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { join, extname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { handleApi } from "./api.js";
-import { handleApiV2 } from "./api-v2.js";
-import { handleMcp } from "./mcp.js";
-import { handleAuth } from "./auth.js";
-import { handleLlmProxy } from "./llm-proxy.js";
-import { handleSmsWebhook } from "./sms.js";
-import { handleChat } from "./chat.js";
-import { db } from "./db.js";
 import { startBitcoinAnchor, manualAnchor, getAnchorStatus, setAnchorInterval } from "./bitcoin-anchor.js";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
+const DASHBOARD_DIR = resolve(__dirname, "../dashboard");
+const PORT = parseInt(process.env.PORT ?? "3100", 10);
 
 function readBody(req: IncomingMessage): Promise<string> {
   return new Promise((resolve) => {
@@ -21,8 +15,6 @@ function readBody(req: IncomingMessage): Promise<string> {
     req.on("end", () => resolve(data));
   });
 }
-const DASHBOARD_DIR = resolve(__dirname, "../dashboard");
-const PORT = parseInt(process.env.PORT ?? "3100", 10);
 
 const MIME_TYPES: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
@@ -41,8 +33,6 @@ const MIME_TYPES: Record<string, string> = {
 
 function serveDashboard(pathname: string, res: ServerResponse): boolean {
   if (!existsSync(DASHBOARD_DIR)) return false;
-
-  // Exact file match
   const exactPath = join(DASHBOARD_DIR, pathname);
   if (existsSync(exactPath) && statSync(exactPath).isFile()) {
     const ext = extname(exactPath);
@@ -57,8 +47,6 @@ function serveDashboard(pathname: string, res: ServerResponse): boolean {
     res.end(content);
     return true;
   }
-
-  // Try .html extension (/agents → agents.html)
   if (!extname(pathname)) {
     const htmlPath = exactPath + ".html";
     if (existsSync(htmlPath)) {
@@ -68,20 +56,13 @@ function serveDashboard(pathname: string, res: ServerResponse): boolean {
       return true;
     }
   }
-
-  // Dynamic route fallback: /section/anything → /section/__.html
-  const parts = pathname.split("/").filter(Boolean);
-  if (parts.length >= 2) {
-    const fallbackPath = join(DASHBOARD_DIR, parts[0]!, "__.html");
-    if (existsSync(fallbackPath)) {
-      const content = readFileSync(fallbackPath);
-      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Content-Length": content.length, "Cache-Control": "no-cache" });
-      res.end(content);
-      return true;
-    }
-  }
-
   return false;
+}
+
+function json(res: ServerResponse, status: number, body: unknown): void {
+  const str = JSON.stringify(body);
+  res.writeHead(status, { "Content-Type": "application/json", "Content-Length": Buffer.byteLength(str) });
+  res.end(str);
 }
 
 async function handler(req: IncomingMessage, res: ServerResponse) {
@@ -90,89 +71,31 @@ async function handler(req: IncomingMessage, res: ServerResponse) {
 
   // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  if (req.method === "OPTIONS") {
-    res.writeHead(204);
-    res.end();
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  if (req.method === "OPTIONS") { res.writeHead(204); res.end(); return; }
+
+  // Health
+  if (pathname === "/api/health" && req.method === "GET") {
+    json(res, 200, { ok: true });
     return;
   }
 
-  // SMS webhook from Twilio
-  if (pathname === "/sms/webhook" && req.method === "POST") {
-    await handleSmsWebhook(req, res);
-    return;
-  }
-
-  // Hook files: /hooks/occ-check.sh, /install
-  if (pathname === "/install" || pathname === "/hooks/install.sh") {
-    const installPath = resolve(__dirname, "../hooks/install.sh");
-    if (existsSync(installPath)) {
-      const content = readFileSync(installPath);
-      res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8", "Content-Length": content.length });
-      res.end(content);
-      return;
-    }
-  }
-  if (pathname === "/hooks/occ-check.sh") {
-    const hookPath = resolve(__dirname, "../hooks/occ-check.sh");
-    if (existsSync(hookPath)) {
-      const content = readFileSync(hookPath);
-      res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8", "Content-Length": content.length });
-      res.end(content);
-      return;
-    }
-  }
-
-  // LLM API Proxy: /v1/{proxyToken}/v1/...
-  // Agent sets base_url to https://agent.occ.wtf/v1/{token}
-  // SDK appends /v1/messages, so full path is /v1/{token}/v1/messages
-  const proxyMatch = pathname.match(/^\/v1\/([a-f0-9]+)(\/.*)?$/);
-  if (proxyMatch) {
-    const proxyToken = proxyMatch[1]!;
-    const apiPath = proxyMatch[2] ?? "/v1/messages";
-    await handleLlmProxy(req, res, proxyToken, apiPath);
-    return;
-  }
-
-  // MCP endpoint: /mcp/:token
-  if (pathname.startsWith("/mcp/")) {
-    await handleMcp(req, res, pathname);
-    return;
-  }
-
-  // Auth endpoints
-  if (pathname.startsWith("/auth/")) {
-    await handleAuth(req, res, pathname);
-    return;
-  }
-
-  // Chat endpoint
-  if (pathname === "/api/chat" && req.method === "POST") {
-    await handleChat(req, res);
-    return;
-  }
-
-  // Bitcoin anchor API
+  // Anchor API
   if (pathname === "/api/anchor/status" && req.method === "GET") {
-    const status = getAnchorStatus();
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify(status));
+    json(res, 200, getAnchorStatus());
     return;
   }
   if (pathname === "/api/anchor/now" && req.method === "POST") {
     try {
       const result = await manualAnchor();
       if (result) {
-        res.writeHead(200, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ ok: true, block: result.block, digestB64: result.digestB64 }));
+        json(res, 200, { ok: true, block: result.block, digestB64: result.digestB64 });
       } else {
-        res.writeHead(500, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ error: "Anchor failed — TEE unavailable" }));
+        json(res, 500, { error: "Anchor failed — TEE unavailable" });
       }
     } catch (err) {
-      res.writeHead(500, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: (err as Error).message }));
+      json(res, 500, { error: (err as Error).message });
     }
     return;
   }
@@ -181,46 +104,18 @@ async function handler(req: IncomingMessage, res: ServerResponse) {
       const body = await readBody(req);
       const { seconds } = JSON.parse(body);
       if (typeof seconds !== "number") {
-        res.writeHead(400, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ error: "seconds must be a number" }));
+        json(res, 400, { error: "seconds must be a number" });
         return;
       }
-      const result = setAnchorInterval(seconds);
-      res.writeHead(200, { "Content-Type": "application/json" });
-      res.end(JSON.stringify(result));
+      json(res, 200, setAnchorInterval(seconds));
     } catch (err) {
-      res.writeHead(400, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: (err as Error).message }));
+      json(res, 400, { error: (err as Error).message });
     }
-    return;
-  }
-  if (pathname === "/api/reset" && req.method === "POST") {
-    try {
-      await db.resetAll();
-      res.writeHead(200, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ ok: true, message: "All occ_ tables truncated" }));
-    } catch (err) {
-      res.writeHead(500, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ error: (err as Error).message }));
-    }
-    return;
-  }
-
-  // V2 API endpoints
-  if (pathname.startsWith("/api/v2/")) {
-    await handleApiV2(req, res, url);
-    return;
-  }
-
-  // API endpoints (v1 — legacy)
-  if (pathname.startsWith("/api/")) {
-    await handleApi(req, res, url);
     return;
   }
 
   // Dashboard static files
   if (pathname === "/" || pathname === "") {
-    // Serve index.html
     const indexPath = join(DASHBOARD_DIR, "index.html");
     if (existsSync(indexPath)) {
       const content = readFileSync(indexPath);
@@ -232,7 +127,7 @@ async function handler(req: IncomingMessage, res: ServerResponse) {
 
   if (serveDashboard(pathname, res)) return;
 
-  // Fallback to index.html for SPA routing
+  // SPA fallback
   const indexPath = join(DASHBOARD_DIR, "index.html");
   if (existsSync(indexPath)) {
     const content = readFileSync(indexPath);
@@ -245,32 +140,17 @@ async function handler(req: IncomingMessage, res: ServerResponse) {
   res.end("Not Found");
 }
 
-// Auth is now in auth.ts
+const server = createServer(handler);
+server.listen(PORT, "0.0.0.0", () => {
+  console.log("");
+  console.log("  ┌─────────────────────────────────┐");
+  console.log("  │     OCC Ethereum Anchor Service   │");
+  console.log("  └─────────────────────────────────┘");
+  console.log("");
+  console.log(`  Dashboard:  http://localhost:${PORT}`);
+  console.log(`  Anchor API: http://localhost:${PORT}/api/anchor/status`);
+  console.log(`  ETH Anchor: every 10 min → TEE → S3`);
+  console.log("");
 
-async function main() {
-  await db.init();
-
-  const server = createServer(handler);
-  server.listen(PORT, "0.0.0.0", () => {
-    console.log("");
-    console.log("  ┌─────────────────────────────────┐");
-    console.log("  │         OCC Control Plane        │");
-    console.log("  │   Control wtf your AI agents do  │");
-    console.log("  └─────────────────────────────────┘");
-    console.log("");
-    console.log(`  Dashboard:  http://localhost:${PORT}`);
-    console.log(`  API:        http://localhost:${PORT}/api`);
-    console.log(`  MCP:        http://localhost:${PORT}/mcp/:token`);
-    console.log(`  LLM Proxy:  http://localhost:${PORT}/v1/:token`);
-    console.log(`  ETH Anchor: every 10 min → TEE`);
-    console.log("");
-
-    // Start Bitcoin anchor service — runs in background
-    startBitcoinAnchor();
-  });
-}
-
-main().catch((err) => {
-  console.error("Fatal:", err);
-  process.exit(1);
+  startBitcoinAnchor();
 });
