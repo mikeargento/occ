@@ -13,6 +13,7 @@
 
 import { sha256 } from "@noble/hashes/sha256";
 import { db } from "./db.js";
+import { persistAnchor } from "@occ/ledger/src/client.js";
 
 const TEE_URL = "https://nitro.occproof.com";
 // No chainId — all proofs go on the TEE's single default chain
@@ -118,6 +119,9 @@ async function commitAnchor(block: EthBlock): Promise<{ proof: unknown; digestB6
         receipt: proof,
       });
     } catch { /* non-critical */ }
+
+    // Persist to immutable S3 ledger (anchor + proof)
+    void persistAnchor(proof, { blockNumber: block.number, blockHash: block.hash });
 
     // Forward to public explorer
     try {

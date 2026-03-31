@@ -118,6 +118,64 @@ export async function listProofs(page = 1, limit = 20) {
   };
 }
 
+/* ── Causal Window — find bounding Ethereum anchors ── */
+
+export interface BoundingAnchor {
+  counter: string;
+  attrName: string;
+  blockNumber: number | null;
+  blockHash: string | null;
+  etherscanUrl: string | null;
+}
+
+export interface CausalWindow {
+  anchorBefore: BoundingAnchor | null;
+  anchorAfter: BoundingAnchor | null;
+}
+
+export async function getCausalWindow(epochId: string, counter: string): Promise<CausalWindow> {
+  const sql = getDb();
+
+  const [afterRows, beforeRows] = await Promise.all([
+    // First anchor AFTER this proof (seals it forward)
+    sql`SELECT counter, attr_name, proof_json
+      FROM proofs
+      WHERE epoch_id = ${epochId}
+        AND attr_name LIKE 'Ethereum%'
+        AND CAST(counter AS BIGINT) > ${BigInt(counter)}
+      ORDER BY CAST(counter AS BIGINT) ASC
+      LIMIT 1`,
+    // Last anchor BEFORE this proof
+    sql`SELECT counter, attr_name, proof_json
+      FROM proofs
+      WHERE epoch_id = ${epochId}
+        AND attr_name LIKE 'Ethereum%'
+        AND CAST(counter AS BIGINT) < ${BigInt(counter)}
+      ORDER BY CAST(counter AS BIGINT) DESC
+      LIMIT 1`,
+  ]);
+
+  function toAnchor(row: Record<string, unknown>): BoundingAnchor {
+    const pj = row.proof_json as Record<string, unknown>;
+    const attr = pj?.attribution as Record<string, unknown> | undefined;
+    const attrName = row.attr_name as string;
+    // Parse block number from attr_name like "Ethereum #24779629"
+    const blockMatch = attrName.match(/#(\d+)/);
+    return {
+      counter: row.counter as string,
+      attrName,
+      blockNumber: blockMatch ? Number(blockMatch[1]) : null,
+      blockHash: (attr?.message as string) ?? null,
+      etherscanUrl: (attr?.title as string) ?? null,
+    };
+  }
+
+  return {
+    anchorBefore: beforeRows.length > 0 ? toAnchor(beforeRows[0]) : null,
+    anchorAfter: afterRows.length > 0 ? toAnchor(afterRows[0]) : null,
+  };
+}
+
 /* ── Reset ── */
 
 export async function resetProofs() {

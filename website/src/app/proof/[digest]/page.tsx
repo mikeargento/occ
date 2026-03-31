@@ -8,6 +8,10 @@ export default function ProofPage() {
   const params = useParams();
   const digestParam = params.digest as string;
   const [proof, setProof] = useState<OCCProof | null>(null);
+  const [causalWindow, setCausalWindow] = useState<{
+    anchorBefore: { counter: string; attrName: string; blockNumber: number | null; blockHash: string | null; etherscanUrl: string | null } | null;
+    anchorAfter: { counter: string; attrName: string; blockNumber: number | null; blockHash: string | null; etherscanUrl: string | null } | null;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -19,6 +23,7 @@ export default function ProofPage() {
         const data = await resp.json();
         if (data.proofs?.[0]?.proof) {
           setProof(data.proofs[0].proof as OCCProof);
+          if (data.causalWindow) setCausalWindow(data.causalWindow);
         } else {
           setError("Proof not found");
         }
@@ -103,6 +108,93 @@ export default function ProofPage() {
             <span>{attr.name}</span>
             <span>View on Etherscan &rarr;</span>
           </a>
+        )}
+
+        {/* Causal Window */}
+        {causalWindow && (causalWindow.anchorBefore || causalWindow.anchorAfter) && (
+          <div style={{
+            marginBottom: 20, padding: "16px 20px", borderRadius: 12,
+            background: "rgba(52,211,153,.04)", border: "1px solid rgba(52,211,153,.15)",
+          }}>
+            <div style={{
+              fontSize: 12, fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: ".06em",
+              color: "#34d399", marginBottom: 14, display: "flex", alignItems: "center", gap: 6,
+            }}>
+              <span style={{ width: 3, height: 12, borderRadius: 1, background: "#34d399" }} />
+              Causal Window
+            </div>
+            <div style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.7 }}>
+              {causalWindow.anchorBefore && causalWindow.anchorAfter ? (
+                <>
+                  This proof exists between{" "}
+                  <a href={causalWindow.anchorBefore.etherscanUrl || "#"} target="_blank" rel="noopener"
+                    style={{ color: "#34d399", textDecoration: "none", fontWeight: 600 }}>
+                    Ethereum #{causalWindow.anchorBefore.blockNumber}
+                  </a>
+                  {" "}(proof #{causalWindow.anchorBefore.counter}) and{" "}
+                  <a href={causalWindow.anchorAfter.etherscanUrl || "#"} target="_blank" rel="noopener"
+                    style={{ color: "#34d399", textDecoration: "none", fontWeight: 600 }}>
+                    Ethereum #{causalWindow.anchorAfter.blockNumber}
+                  </a>
+                  {" "}(proof #{causalWindow.anchorAfter.counter}).
+                  <span style={{ display: "block", marginTop: 6, fontSize: 12, color: "var(--text3)" }}>
+                    Everything in this window provably existed before block #{causalWindow.anchorAfter.blockNumber} was mined.
+                  </span>
+                </>
+              ) : causalWindow.anchorBefore && !causalWindow.anchorAfter ? (
+                <>
+                  This proof was created after{" "}
+                  <a href={causalWindow.anchorBefore.etherscanUrl || "#"} target="_blank" rel="noopener"
+                    style={{ color: "#34d399", textDecoration: "none", fontWeight: 600 }}>
+                    Ethereum #{causalWindow.anchorBefore.blockNumber}
+                  </a>
+                  {" "}(proof #{causalWindow.anchorBefore.counter}).
+                  <span style={{ display: "block", marginTop: 6, fontSize: 12, color: "var(--text3)" }}>
+                    Awaiting next Ethereum anchor to seal the forward boundary.
+                  </span>
+                </>
+              ) : causalWindow.anchorAfter ? (
+                <>
+                  This proof is sealed by{" "}
+                  <a href={causalWindow.anchorAfter.etherscanUrl || "#"} target="_blank" rel="noopener"
+                    style={{ color: "#34d399", textDecoration: "none", fontWeight: 600 }}>
+                    Ethereum #{causalWindow.anchorAfter.blockNumber}
+                  </a>
+                  {" "}(proof #{causalWindow.anchorAfter.counter}).
+                  <span style={{ display: "block", marginTop: 6, fontSize: 12, color: "var(--text3)" }}>
+                    This proof provably existed before block #{causalWindow.anchorAfter.blockNumber} was mined.
+                  </span>
+                </>
+              ) : null}
+            </div>
+
+            {/* Visual timeline */}
+            <div style={{ marginTop: 16, display: "flex", alignItems: "center", gap: 0, fontSize: 11, fontFamily: "var(--mono)" }}>
+              {causalWindow.anchorBefore && (
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#34d399", flexShrink: 0 }} />
+                  <span style={{ color: "var(--text3)" }}>#{causalWindow.anchorBefore.counter}</span>
+                </div>
+              )}
+              <div style={{ flex: 1, height: 1, background: "rgba(52,211,153,.25)", margin: "0 8px", position: "relative" }}>
+                <div style={{
+                  position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
+                  width: 10, height: 10, borderRadius: "50%", background: "var(--blue)", border: "2px solid var(--surface)",
+                }} />
+              </div>
+              {causalWindow.anchorAfter ? (
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{ color: "var(--text3)" }}>#{causalWindow.anchorAfter.counter}</span>
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#34d399", flexShrink: 0 }} />
+                </div>
+              ) : (
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{ color: "var(--text3)" }}>pending</span>
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--text3)", flexShrink: 0, opacity: 0.4 }} />
+                </div>
+              )}
+            </div>
+          </div>
         )}
 
         {/* Cards grid */}

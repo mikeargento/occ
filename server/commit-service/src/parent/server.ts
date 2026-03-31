@@ -36,6 +36,75 @@ const PORT = Number(
 // ---------------------------------------------------------------------------
 
 const INDEX_URL = process.env["PROOF_INDEX_URL"] ?? "https://www.occ.wtf/api/proofs";
+const LEDGER_BUCKET = process.env["LEDGER_BUCKET"];
+
+if (LEDGER_BUCKET) {
+  console.log(`[parent] S3 ledger enabled: ${LEDGER_BUCKET}`);
+} else {
+  console.log("[parent] S3 ledger disabled (no LEDGER_BUCKET)");
+}
+
+/**
+ * Persist proofs to immutable S3 ledger.
+ * No-op if LEDGER_BUCKET is not configured.
+ * Uses AWS SDK dynamically to avoid import issues when not needed.
+ */
+async function persistToLedger(proofs: OCCProof[]): Promise<void> {
+  if (!LEDGER_BUCKET) return;
+  try {
+    // Dynamic imports — these are only loaded when LEDGER_BUCKET is set
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { S3Client, PutObjectCommand } = await import("@aws-sdk/client-s3" as string) as {
+      S3Client: new (config: { region: string }) => { send: (cmd: unknown) => Promise<void> };
+      PutObjectCommand: new (params: Record<string, unknown>) => unknown;
+    };
+    const { sha256: hashFn } = await import("@noble/hashes/sha256");
+    const { canonicalize: canon } = await import("occproof");
+
+    const s3 = new S3Client({ region: process.env["LEDGER_REGION"] || "us-east-2" });
+
+    for (const proof of proofs) {
+      // Compute proof hash from signed body
+      const signedBody: Record<string, unknown> = {
+        version: proof.version,
+        artifact: proof.artifact,
+        commit: proof.commit,
+        publicKeyB64: proof.signer.publicKeyB64,
+        enforcement: proof.environment.enforcement,
+        measurement: proof.environment.measurement,
+      };
+      if (proof.attribution) signedBody.attribution = proof.attribution;
+      if (proof.environment.attestation) {
+        signedBody.attestationFormat = proof.environment.attestation.format;
+      }
+
+      const hashBytes = hashFn(canon(signedBody));
+      const proofHashB64 = Buffer.from(hashBytes).toString("base64");
+      const safeEpoch = (proof.commit.epochId ?? "unknown").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+      const safeHash = proofHashB64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+      const counter = (proof.commit.counter || "0").padStart(12, "0");
+      const key = `proofs/${safeEpoch}/${counter}-${safeHash}.json`;
+
+      const stored = { ...proof, proofHashB64 };
+
+      const retention = new Date();
+      retention.setDate(retention.getDate() + 3650); // 10 years
+
+      await s3.send(new PutObjectCommand({
+        Bucket: LEDGER_BUCKET,
+        Key: key,
+        Body: JSON.stringify(stored, null, 2),
+        ContentType: "application/json",
+        ObjectLockMode: "COMPLIANCE",
+        ObjectLockRetainUntilDate: retention,
+      }));
+
+      console.log(`[parent] ledger: stored ${key}`);
+    }
+  } catch (err) {
+    console.warn(`[parent] ledger persist failed: ${err instanceof Error ? err.message : String(err)}`);
+  }
+}
 
 async function indexProofs(proofs: OCCProof[]): Promise<void> {
   if (!INDEX_URL) return;
@@ -265,6 +334,9 @@ async function handleCommit(req: IncomingMessage, res: ServerResponse): Promise<
 
   // Fire-and-forget: index proofs in explorer database
   void indexProofs(proofs);
+
+  // Fire-and-forget: persist to immutable S3 ledger
+  void persistToLedger(proofs);
 
   sendJson(res, 200, proofs);
 }
