@@ -191,7 +191,7 @@ async function commitAnchor(block: EthBlock): Promise<{ proof: unknown; digestB6
 
     // Forward to public explorer
     try {
-      await fetch("https://www.occ.wtf/api/proofs", {
+      await fetch("https://occ.wtf/api/proofs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ proof }),

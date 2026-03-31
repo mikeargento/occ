@@ -35,7 +35,7 @@ const PORT = Number(
 // Proof indexing — fire-and-forget POST to explorer database
 // ---------------------------------------------------------------------------
 
-const INDEX_URL = process.env["PROOF_INDEX_URL"] ?? "https://www.occ.wtf/api/proofs";
+const INDEX_URL = process.env["PROOF_INDEX_URL"] ?? "https://occ.wtf/api/proofs";
 const LEDGER_BUCKET = process.env["LEDGER_BUCKET"];
 
 if (LEDGER_BUCKET) {
