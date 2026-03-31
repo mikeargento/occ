@@ -20,8 +20,6 @@
  */
 
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { readFileSync, writeFileSync, mkdirSync, readdirSync } from "node:fs";
-import { join, dirname } from "node:path";
 import { verify } from "occproof";
 import type { OCCProof, VerificationPolicy, AgencyEnvelope, PolicyBinding } from "occproof";
 import { VsockClient, type EnclaveClient } from "./vsock-client.js";
@@ -94,95 +92,22 @@ async function getKeyInfo(): Promise<{ publicKeyB64: string; measurement: string
 }
 
 // ---------------------------------------------------------------------------
-// Last proof persistence — epoch lineage transport
-//
-// The parent persists the last proof to disk so it can be passed to the
-// enclave on reboot. This is ONLY a transport mechanism — the enclave
-// fully verifies the proof cryptographically before trusting it.
-// ---------------------------------------------------------------------------
-
-const LAST_PROOF_DIR = join(process.cwd(), ".occ", "last-proofs");
-const LAST_PROOF_PATH = join(process.cwd(), ".occ", "last-proof.json"); // legacy global
-
-function loadLastProof(): OCCProof | null {
-  try {
-    const raw = readFileSync(LAST_PROOF_PATH, "utf8");
-    return JSON.parse(raw) as OCCProof;
-  } catch {
-    return null; // No previous epoch — genesis
-  }
-}
-
-/** Load all per-chain last proofs for epoch lineage */
-function loadPerChainLastProofs(): Record<string, OCCProof> {
-  const result: Record<string, OCCProof> = {};
-  try {
-    mkdirSync(LAST_PROOF_DIR, { recursive: true });
-    const files = readdirSync(LAST_PROOF_DIR);
-    for (const file of files) {
-      if (!file.endsWith(".json")) continue;
-      try {
-        const raw = readFileSync(join(LAST_PROOF_DIR, file), "utf8");
-        const chainId = file.replace(".json", "");
-        result[chainId] = JSON.parse(raw) as OCCProof;
-      } catch { /* skip corrupt files */ }
-    }
-  } catch { /* dir doesn't exist yet */ }
-  return result;
-}
-
-function persistLastProof(proof: OCCProof, chainId?: string): void {
-  try {
-    if (chainId && chainId !== "global") {
-      // Per-chain proof persistence
-      mkdirSync(LAST_PROOF_DIR, { recursive: true });
-      // Sanitize chainId for filesystem (replace non-alphanumeric with _)
-      const safeId = chainId.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 128);
-      writeFileSync(join(LAST_PROOF_DIR, `${safeId}.json`), JSON.stringify(proof, null, 2));
-    } else {
-      // Global/legacy proof persistence
-      mkdirSync(dirname(LAST_PROOF_PATH), { recursive: true });
-      writeFileSync(LAST_PROOF_PATH, JSON.stringify(proof, null, 2));
-    }
-  } catch (err) {
-    console.warn(`[parent] failed to persist last proof: ${err instanceof Error ? err.message : String(err)}`);
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Enclave initialization — pass previous epoch's last proof for lineage
+// Enclave initialization — always fresh genesis.
+// Each epoch starts at counter 1. Ethereum anchors prove temporal
+// ordering across epochs — no need to chain proofs between them.
 // ---------------------------------------------------------------------------
 
 async function initEnclave(): Promise<void> {
-  const lastProof = loadLastProof();
-  const perChainProofs = loadPerChainLastProofs();
-  const chainCount = Object.keys(perChainProofs).length;
-
-  if (lastProof || chainCount > 0) {
-    console.log(`[parent] passing epoch lineage to enclave: global=${!!lastProof}, chains=${chainCount}`);
-    const result = await enclaveClient.send({
-      type: "init",
-      ...(lastProof ? { lastProof } : { allowGenesis: true }),
-      ...(chainCount > 0 ? { lastProofsPerChain: perChainProofs } : {}),
-    });
-    if (!result.ok) {
-      throw new Error(`Enclave rejected predecessor proof: ${result.error ?? "unknown"}`);
-    }
-    const data = result.data as { counter: string; epochId: string; chains: number };
-    console.log(`[parent] enclave initialized: epochId=${data.epochId} chains=${data.chains}`);
-  } else {
-    // No previous proofs on disk — explicit genesis.
-    console.log(`[parent] no previous proofs found — requesting genesis epoch`);
-    const result = await enclaveClient.send({
-      type: "init",
-      allowGenesis: true,
-    });
-    if (!result.ok) {
-      throw new Error(`Enclave rejected genesis start: ${result.error ?? "unknown"}`);
-    }
-    const data = result.data as { counter: string; epochId: string };
-    console.log(`[parent] enclave initialized as GENESIS: epochId=${data.epochId}`);
+  console.log(`[parent] starting fresh genesis epoch`);
+  const result = await enclaveClient.send({
+    type: "init",
+    allowGenesis: true,
+  });
+  if (!result.ok) {
+    throw new Error(`Enclave rejected genesis: ${result.error ?? "unknown"}`);
   }
+  const data = result.data as { counter: string; epochId: string };
+  console.log(`[parent] genesis epoch started: epochId=${data.epochId}`);
 }
 
 // ---------------------------------------------------------------------------
@@ -337,12 +262,6 @@ async function handleCommit(req: IncomingMessage, res: ServerResponse): Promise<
       }
     })
   );
-
-  // Persist the last proof for epoch lineage (transport only — enclave verifies)
-  const lastProof = proofs[proofs.length - 1];
-  if (lastProof) {
-    persistLastProof(lastProof, body.chainId);
-  }
 
   // Fire-and-forget: index proofs in explorer database
   void indexProofs(proofs);
