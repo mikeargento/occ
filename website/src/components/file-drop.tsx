@@ -16,6 +16,12 @@ interface FileDropProps {
   disabled?: boolean;
   accept?: string;
   hint?: string;
+  /** Render a "take photo" link that opens the camera on mobile */
+  showCapture?: boolean;
+  /** Label for the browse link */
+  browseLabel?: string;
+  /** Label for the capture link */
+  captureLabel?: string;
 }
 
 export function FileDrop({
@@ -30,9 +36,13 @@ export function FileDrop({
   disabled,
   accept,
   hint,
+  showCapture,
+  browseLabel = "browse",
+  captureLabel = "take photo",
 }: FileDropProps) {
   const [dragover, setDragover] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const captureRef = useRef<HTMLInputElement>(null);
 
   const hasFiles = multiple ? (files && files.length > 0) : !!file;
 
@@ -65,6 +75,16 @@ export function FileDrop({
     [onFile, onFiles, multiple]
   );
 
+  const triggerBrowse = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    inputRef.current?.click();
+  };
+
+  const triggerCapture = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    captureRef.current?.click();
+  };
+
   return (
     <div
       onDragOver={(e) => {
@@ -85,15 +105,29 @@ export function FileDrop({
         }
       `}
     >
+      {/* Standard file input */}
       <input
         ref={inputRef}
         type="file"
-        accept={accept}
+        accept={accept || "*/*"}
         multiple={multiple}
         className="hidden"
         onChange={handleInputChange}
         disabled={disabled}
       />
+
+      {/* Camera capture input (mobile) */}
+      {showCapture && (
+        <input
+          ref={captureRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="hidden"
+          onChange={handleInputChange}
+          disabled={disabled}
+        />
+      )}
 
       {/* ── Multi-file mode: file list ── */}
       {multiple && files && files.length > 0 ? (
@@ -171,9 +205,15 @@ export function FileDrop({
           </div>
           <div className="text-[15px] text-text-secondary">
             {multiple
-              ? <>Drop files here or <span className="text-text font-medium">browse</span></>
-              : <>Drop a file here or <span className="text-text font-medium">browse</span></>
+              ? <>Drop files here or <span className="text-text font-medium" onClick={triggerBrowse}>{browseLabel}</span></>
+              : <>Drop a file here or <span className="text-text font-medium" onClick={triggerBrowse}>{browseLabel}</span></>
             }
+            {showCapture && (
+              <>
+                {" "}&middot;{" "}
+                <span className="text-text font-medium" onClick={triggerCapture}>{captureLabel}</span>
+              </>
+            )}
           </div>
           <div className="text-xs text-text-tertiary mt-1">
             {hint || "Any file type. Hashed locally in your browser"}

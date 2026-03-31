@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Nav } from "@/components/nav";
+import { Footer } from "@/components/footer";
 
 const sections = [
   { href: "/docs", label: "Overview" },
@@ -25,6 +27,8 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
   const pathname = usePathname();
 
   return (
+    <>
+    <Nav />
     <div style={{ maxWidth: 1120, margin: "0 auto", padding: "32px 24px 64px" }}>
       <div style={{ display: "flex", gap: 48 }}>
         {/* Sidebar — desktop only */}
@@ -75,5 +79,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
         <div style={{ minWidth: 0, flex: 1 }}>{children}</div>
       </div>
     </div>
+    <Footer />
+    </>
   );
 }
