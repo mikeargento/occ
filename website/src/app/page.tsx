@@ -200,40 +200,30 @@ export default function Home() {
           <input ref={captureRef} type="file" accept="image/*" capture="environment" style={{ display: "none" }} onChange={(e) => { if (e.target.files?.length) { handleFiles(Array.from(e.target.files)); e.target.value = ""; } }} />
 
           {step === "idle" && (
-            <>
-              {/* Primary: Camera button (mobile-first) */}
-              <button
-                onClick={() => captureRef.current?.click()}
-                style={{
-                  width: "100%", padding: "18px 0", fontSize: 15, fontWeight: 600,
-                  color: "#fff", background: "var(--anchor)", border: "none", borderRadius: 10,
-                  cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-                  marginBottom: 10,
-                }}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
-                  <circle cx="12" cy="13" r="4" />
+            <div
+              onClick={() => browseRef.current?.click()}
+              style={{
+                border: `2px dashed ${dragover ? "var(--anchor)" : "var(--border)"}`,
+                borderRadius: 12, padding: "48px 24px", textAlign: "center", cursor: "pointer",
+                transition: "all .2s",
+                background: dragover ? "rgba(59,130,246,.04)" : "var(--surface)",
+              }}
+            >
+              <div style={{ width: 52, height: 52, borderRadius: 12, background: "var(--surface-2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" strokeWidth="1.5">
+                  <path d="M12 4v12M8 8l4-4 4 4" />
+                  <path d="M4 17v2a1 1 0 001 1h14a1 1 0 001-1v-2" />
                 </svg>
-                Take Photo
-              </button>
-
-              {/* Secondary: Drop / Browse */}
-              <div
-                onClick={() => browseRef.current?.click()}
-                style={{
-                  border: `1px dashed ${dragover ? "var(--slot)" : "var(--border)"}`,
-                  borderRadius: 10, padding: "20px 16px", textAlign: "center", cursor: "pointer",
-                  transition: "all .2s",
-                  background: dragover ? "rgba(6,182,212,.04)" : "transparent",
-                }}
-              >
-                <div style={{ fontSize: 13, color: "var(--text-2)" }}>
-                  Drop files or <span style={{ color: "var(--text)", fontWeight: 500, textDecoration: "underline", textUnderlineOffset: "3px", textDecorationColor: "var(--text-3)" }}>browse</span>
-                </div>
-                <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 6 }}>Hashed locally. Nothing uploaded.</div>
               </div>
-            </>
+              <div style={{ fontSize: 16, color: "var(--text)", fontWeight: 500, marginBottom: 8 }}>Drop files here</div>
+              <div style={{ fontSize: 14, color: "var(--text-3)" }}>
+                or{" "}
+                <span onClick={(e) => { e.stopPropagation(); browseRef.current?.click(); }} style={{ color: "var(--text)", fontWeight: 500, textDecoration: "underline", textUnderlineOffset: "3px", textDecorationColor: "var(--text-3)", cursor: "pointer" }}>browse</span>
+                {" \u00b7 "}
+                <span onClick={(e) => { e.stopPropagation(); captureRef.current?.click(); }} style={{ color: "var(--text)", fontWeight: 500, textDecoration: "underline", textUnderlineOffset: "3px", textDecorationColor: "var(--text-3)", cursor: "pointer" }}>take photo</span>
+              </div>
+              <div style={{ fontSize: 12, color: "var(--text-3)", marginTop: 14 }}>Hashed in your browser. Nothing is uploaded.</div>
+            </div>
           )}
 
           {step === "hashing" && progress && (
@@ -411,98 +401,115 @@ export default function Home() {
   );
 }
 
-/* ── Proof Detail (expanded row) ── */
+/* ══════════════════════════════════════════════════════════════════════
+   Proof Flowchart — each proof is a visual story of what happened
+   ══════════════════════════════════════════════════════════════════════ */
 
 function ProofDetail({ proof }: { proof: OCCProof }) {
   const commit = proof.commit;
   const attr = proof.attribution as { name?: string; title?: string; message?: string } | undefined;
   const slot = (proof as unknown as Record<string, unknown>).slotAllocation as Record<string, unknown> | undefined;
   const isEth = attr?.name?.startsWith("Ethereum");
+  const isTee = proof.environment?.enforcement === "measured-tee";
+
+  // Build the causal flow steps
+  const steps: Array<{ label: string; detail: string; color: string; sub?: string; link?: string }> = [];
+
+  // Step 1: Slot allocated (if present)
+  if (slot) {
+    steps.push({
+      label: "Slot Allocated",
+      detail: `Counter #${slot.counter}`,
+      color: "var(--slot)",
+      sub: slot.nonceB64 ? `Nonce: ${String(slot.nonceB64).slice(0, 20)}...` : undefined,
+    });
+  }
+
+  // Step 2: Artifact hashed
+  steps.push({
+    label: "Artifact Hashed",
+    detail: proof.artifact.hashAlg.toUpperCase(),
+    color: "var(--text-2)",
+    sub: proof.artifact.digestB64,
+  });
+
+  // Step 3: Committed to chain
+  steps.push({
+    label: "Committed",
+    detail: `Counter #${commit.counter}`,
+    color: "var(--commit)",
+    sub: commit.time ? new Date(Number(commit.time)).toLocaleString() : undefined,
+  });
+
+  // Step 4: Signed by TEE
+  steps.push({
+    label: isTee ? "Signed by Hardware Enclave" : "Signed",
+    detail: `Key: ${proof.signer.publicKeyB64.slice(0, 16)}...`,
+    color: "var(--verified)",
+  });
+
+  // Step 5: ETH anchor (if applicable)
+  if (isEth && attr) {
+    steps.push({
+      label: attr.name || "Ethereum Anchor",
+      detail: attr.message ? `Tx: ${attr.message.slice(0, 18)}...` : "Anchored",
+      color: "var(--anchor)",
+      link: attr.title,
+    });
+  }
 
   return (
-    <div className="detail-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, fontSize: 11 }}>
-      {/* Ethereum link */}
-      {isEth && attr?.title && (
-        <div style={{ gridColumn: "1 / -1", padding: "8px 10px", borderRadius: 6, border: "1px solid rgba(59,130,246,.15)", background: "rgba(59,130,246,.04)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <span style={{ color: "var(--anchor)", fontWeight: 600, fontSize: 11 }}>{attr.name}</span>
-          <a href={attr.title} target="_blank" rel="noopener" style={{ color: "var(--anchor)", textDecoration: "none", fontSize: 11 }}>Etherscan &rarr;</a>
+    <div style={{ padding: "4px 0" }}>
+      {steps.map((step, i) => (
+        <div key={i} style={{ display: "flex", gap: 12, minHeight: 48 }}>
+          {/* Timeline line + dot */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 20, flexShrink: 0 }}>
+            <div style={{
+              width: 10, height: 10, borderRadius: "50%", flexShrink: 0,
+              background: step.color, boxShadow: `0 0 8px ${step.color}40`,
+            }} />
+            {i < steps.length - 1 && (
+              <div style={{ width: 1, flex: 1, background: "var(--border)", marginTop: 2 }} />
+            )}
+          </div>
+
+          {/* Content */}
+          <div style={{ paddingBottom: i < steps.length - 1 ? 12 : 0, flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: step.color, lineHeight: 1.2 }}>
+              {step.label}
+              {step.link ? (
+                <a href={step.link} target="_blank" rel="noopener" style={{ marginLeft: 8, fontSize: 11, color: "var(--anchor)", textDecoration: "none", fontWeight: 400 }}>View &rarr;</a>
+              ) : null}
+            </div>
+            <CopyableText text={step.detail} style={{ fontSize: 12, color: "var(--text-2)", marginTop: 2, fontFamily: "var(--mono)" }} />
+            {step.sub ? (
+              <CopyableText text={step.sub} style={{ fontSize: 10, color: "var(--text-3)", marginTop: 2, fontFamily: "var(--mono)", wordBreak: "break-all" as const }} />
+            ) : null}
+          </div>
         </div>
-      )}
+      ))}
 
-      {/* Artifact */}
-      <DetailSection title="Artifact">
-        <DField label="Digest" value={proof.artifact.digestB64} mono />
-        <DField label="Alg" value={proof.artifact.hashAlg.toUpperCase()} />
-      </DetailSection>
-
-      {/* Commit */}
-      <DetailSection title="Commit">
-        {commit.time != null && <DField label="Time" value={new Date(Number(commit.time)).toLocaleString()} />}
-        <DField label="Counter" value={`#${commit.counter}`} accent />
-        {commit.prevB64 ? <DField label="Prev" value={commit.prevB64} mono /> : null}
-        {commit.nonceB64 ? <DField label="Nonce" value={commit.nonceB64} mono /> : null}
-      </DetailSection>
-
-      {/* Causal Slot */}
-      {slot && (
-        <DetailSection title="Causal Slot" color="var(--slot)">
-          <DField label="Slot #" value={String(slot.counter || "")} accent />
-          {slot.nonceB64 ? <DField label="Nonce" value={String(slot.nonceB64)} mono /> : null}
-          {slot.signatureB64 ? <DField label="Sig" value={String(slot.signatureB64)} mono /> : null}
-        </DetailSection>
-      )}
-
-      {/* Signer */}
-      <DetailSection title="Signer">
-        <DField label="Key" value={proof.signer.publicKeyB64} mono />
-        <DField label="Sig" value={proof.signer.signatureB64} mono />
-      </DetailSection>
-
-      {/* Environment */}
-      <DetailSection title="Environment" color="var(--verified)">
-        <DField label="TEE" value={proof.environment?.enforcement === "measured-tee" ? "Hardware Enclave" : "Software"} />
-        {proof.environment?.measurement ? <DField label="PCR0" value={proof.environment.measurement} mono /> : null}
-      </DetailSection>
-
-      {/* Attribution (non-ETH) */}
-      {attr && !isEth && (
-        <DetailSection title="Attribution">
-          {attr.name ? <DField label="Name" value={attr.name} /> : null}
-          {attr.message ? <DField label="Data" value={attr.message} mono /> : null}
-        </DetailSection>
-      )}
+      {/* Chain link (prevB64) */}
+      {commit.prevB64 ? (
+        <div style={{ marginTop: 8, padding: "6px 10px", background: "rgba(255,255,255,.02)", borderRadius: 6, border: "1px solid var(--border-subtle)", display: "flex", alignItems: "center", gap: 8 }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" strokeWidth="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+          <CopyableText text={commit.prevB64} style={{ fontSize: 10, color: "var(--text-3)", fontFamily: "var(--mono)", wordBreak: "break-all" as const }} />
+        </div>
+      ) : null}
     </div>
   );
 }
 
-function DetailSection({ title, color, children }: { title: string; color?: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <div style={{ fontSize: 10, fontWeight: 700, color: color || "var(--text-3)", textTransform: "uppercase" as const, letterSpacing: ".06em", marginBottom: 6, display: "flex", alignItems: "center", gap: 4 }}>
-        <span style={{ width: 3, height: 10, borderRadius: 1, background: color || "var(--text-3)", display: "inline-block" }} />
-        {title}
-      </div>
-      {children}
-    </div>
-  );
-}
-
-function DField({ label, value, mono, accent }: { label: string; value: string; mono?: boolean; accent?: boolean }) {
+/* Clickable text that copies on click */
+function CopyableText({ text, style }: { text: string; style?: React.CSSProperties }) {
   const [copied, setCopied] = useState(false);
   return (
     <div
-      style={{ display: "flex", justifyContent: "space-between", gap: 8, padding: "3px 0", lineHeight: 1.5, cursor: "pointer" }}
-      onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
+      onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
+      style={{ ...style, cursor: "pointer", transition: "color .2s", color: copied ? "var(--verified)" : style?.color }}
+      title="Click to copy"
     >
-      <span style={{ fontSize: 10, color: "var(--text-3)", flexShrink: 0 }}>{label}</span>
-      <span style={{
-        fontSize: mono ? 10 : 11,
-        color: copied ? "var(--verified)" : accent ? "var(--slot)" : "var(--text-2)",
-        fontFamily: mono ? "var(--mono)" : "inherit",
-        fontWeight: accent ? 600 : 400,
-        wordBreak: "break-all" as const, textAlign: "right" as const,
-        transition: "color .2s",
-      }}>{value}</span>
+      {text}
     </div>
   );
 }
