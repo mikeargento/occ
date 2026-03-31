@@ -159,8 +159,8 @@ export default function Home() {
           --text: #e8e8ed; --text-2: #8f8f9d; --text-3: #5a5a6a;
           --commit: #e8e8ed; --slot: #06b6d4; --anchor: #3b82f6;
           --epoch: #f59e0b; --verified: #22c55e; --error: #ef4444;
-          --mono: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
-          --sans: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
+          --mono: var(--font-mono), 'SF Mono', 'Cascadia Code', 'JetBrains Mono', Consolas, monospace;
+          --sans: acumin-pro, -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
         }
         html, body { background: var(--bg); color: var(--text); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
         @keyframes spin { to { transform: rotate(360deg); } }
