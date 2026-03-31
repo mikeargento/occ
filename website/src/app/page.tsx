@@ -292,41 +292,40 @@ export default function Home() {
                 >Verify</button>
               </div>
 
-              {/* Drop zone */}
+              {/* Take Photo — primary action */}
+              <button
+                onClick={() => captureRef.current?.click()}
+                style={{
+                  width: "100%", padding: "16px 0", fontSize: 15, fontWeight: 600,
+                  color: "#fff", background: mode === "verify" ? "var(--verified)" : "var(--anchor)",
+                  border: "none", borderRadius: 10, cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+                  marginBottom: 10, transition: "background .15s",
+                }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
+                  <circle cx="12" cy="13" r="4" />
+                </svg>
+                {mode === "prove" ? "Take Photo" : "Check Photo"}
+              </button>
+
+              {/* Drop zone — secondary */}
               <div
                 onClick={() => browseRef.current?.click()}
                 style={{
                   border: `2px dashed ${dragover ? (mode === "verify" ? "var(--verified)" : "var(--anchor)") : "var(--border)"}`,
-                  borderRadius: 12, padding: "48px 24px", textAlign: "center", cursor: "pointer",
+                  borderRadius: 12, padding: "36px 24px", textAlign: "center", cursor: "pointer",
                   transition: "all .2s",
                   background: dragover ? (mode === "verify" ? "rgba(34,197,94,.04)" : "rgba(59,130,246,.04)") : "var(--surface)",
                 }}
               >
-                <div style={{ width: 52, height: 52, borderRadius: 12, background: "var(--surface-2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
-                  {mode === "prove" ? (
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" strokeWidth="1.5">
-                      <path d="M12 4v12M8 8l4-4 4 4" />
-                      <path d="M4 17v2a1 1 0 001 1h14a1 1 0 001-1v-2" />
-                    </svg>
-                  ) : (
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" strokeWidth="1.5">
-                      <path d="M9 12l2 2 4-4" />
-                      <circle cx="12" cy="12" r="9" />
-                    </svg>
-                  )}
-                </div>
-                <div style={{ fontSize: 16, color: "var(--text)", fontWeight: 500, marginBottom: 8 }}>
-                  {mode === "prove" ? "Drop a file to prove it" : "Drop a file to check it"}
+                <div style={{ fontSize: 15, color: "var(--text)", fontWeight: 500, marginBottom: 6 }}>
+                  {mode === "prove" ? "Drop a photo or file" : "Drop a photo or file to check"}
                 </div>
                 <div style={{ fontSize: 13, color: "var(--text-3)" }}>
-                  {mode === "prove"
-                    ? "Creates a cryptographic proof signed by a hardware enclave"
-                    : "Checks if this file has already been proven on chain"}
-                </div>
-                <div style={{ fontSize: 14, color: "var(--text-3)", marginTop: 14 }}>
+                  or{" "}
                   <span onClick={(e) => { e.stopPropagation(); browseRef.current?.click(); }} style={{ color: "var(--text)", fontWeight: 500, textDecoration: "underline", textUnderlineOffset: "3px", textDecorationColor: "var(--text-3)", cursor: "pointer" }}>browse</span>
-                  {" \u00b7 "}
-                  <span onClick={(e) => { e.stopPropagation(); captureRef.current?.click(); }} style={{ color: "var(--text)", fontWeight: 500, textDecoration: "underline", textUnderlineOffset: "3px", textDecorationColor: "var(--text-3)", cursor: "pointer" }}>take photo</span>
                 </div>
                 <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 12 }}>Hashed in your browser. Nothing is uploaded.</div>
               </div>
