@@ -13,7 +13,87 @@
 
 import { sha256 } from "@noble/hashes/sha256";
 import { db } from "./db.js";
-import { persistAnchor } from "@occ/ledger/src/client.js";
+
+/**
+ * Persist an anchor proof to the S3 immutable ledger.
+ * No-op if LEDGER_BUCKET is not set. Uses dynamic imports to avoid
+ * requiring @aws-sdk/client-s3 at build time.
+ */
+async function persistAnchor(
+  proof: Record<string, unknown>,
+  ethereum: { blockNumber: number; blockHash: string }
+): Promise<void> {
+  const bucket = process.env.LEDGER_BUCKET;
+  if (!bucket) return;
+
+  try {
+    const { S3Client, PutObjectCommand } = await import("@aws-sdk/client-s3" as string) as {
+      S3Client: new (config: { region: string }) => { send: (cmd: unknown) => Promise<void> };
+      PutObjectCommand: new (params: Record<string, unknown>) => unknown;
+    };
+    const { sha256: hash } = await import("@noble/hashes/sha256");
+
+    const s3 = new S3Client({ region: process.env.LEDGER_REGION || "us-east-2" });
+
+    // Compute proof hash
+    const signer = proof.signer as { publicKeyB64: string };
+    const env = proof.environment as { enforcement: string; measurement: string; attestation?: { format: string } };
+    const commit = proof.commit as { counter: string; epochId: string };
+
+    const signedBody: Record<string, unknown> = {
+      version: proof.version,
+      artifact: proof.artifact,
+      commit: proof.commit,
+      publicKeyB64: signer.publicKeyB64,
+      enforcement: env.enforcement,
+      measurement: env.measurement,
+    };
+    if (proof.attribution) signedBody.attribution = proof.attribution;
+    if (env.attestation) signedBody.attestationFormat = env.attestation.format;
+
+    const bodyStr = JSON.stringify(signedBody, Object.keys(signedBody).sort());
+    const hashBytes = hash(new TextEncoder().encode(bodyStr));
+    const proofHashB64 = Buffer.from(hashBytes).toString("base64");
+
+    const safeEpoch = commit.epochId.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+    const safeHash = proofHashB64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+    const counter = (commit.counter || "0").padStart(12, "0");
+
+    // Store proof
+    const proofKey = `proofs/${safeEpoch}/${counter}-${safeHash}.json`;
+    const retention = new Date();
+    retention.setDate(retention.getDate() + 3650);
+
+    await s3.send(new PutObjectCommand({
+      Bucket: bucket,
+      Key: proofKey,
+      Body: JSON.stringify({ ...proof, proofHashB64 }, null, 2),
+      ContentType: "application/json",
+      ObjectLockMode: "COMPLIANCE",
+      ObjectLockRetainUntilDate: retention,
+    }));
+
+    // Store anchor record
+    const anchorBody = { proofHashB64, epochId: commit.epochId, counter: commit.counter, ...ethereum };
+    const anchorHashBytes = hash(new TextEncoder().encode(JSON.stringify(anchorBody, Object.keys(anchorBody).sort())));
+    const anchorHashB64 = Buffer.from(anchorHashBytes).toString("base64");
+    const safeAnchorHash = anchorHashB64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+    const anchorKey = `anchors/${safeEpoch}/${counter}-${safeAnchorHash}.json`;
+
+    await s3.send(new PutObjectCommand({
+      Bucket: bucket,
+      Key: anchorKey,
+      Body: JSON.stringify({ proof: { ...proof, proofHashB64 }, ethereum, epochId: commit.epochId, counter: commit.counter, anchorHashB64 }, null, 2),
+      ContentType: "application/json",
+      ObjectLockMode: "COMPLIANCE",
+      ObjectLockRetainUntilDate: retention,
+    }));
+
+    console.log(`[ledger] anchor stored: block=${ethereum.blockNumber} key=${anchorKey}`);
+  } catch (err) {
+    console.error("[ledger] persist anchor failed:", (err as Error).message);
+  }
+}
 
 const TEE_URL = "https://nitro.occproof.com";
 // No chainId — all proofs go on the TEE's single default chain
