@@ -40,6 +40,7 @@ export default function Home() {
   const [progress, setProgress] = useState<{ current: number; total: number; fileName: string } | null>(null);
   const [copied, setCopied] = useState(false);
   const [dragover, setDragover] = useState(false);
+  const [mode, setMode] = useState<"prove" | "verify">("prove");
   const [verifyResult, setVerifyResult] = useState<ProofVerifyResult | null>(null);
   const [verifiedProof, setVerifiedProof] = useState<OCCProof | null>(null);
   const [chainMatch, setChainMatch] = useState<OCCProof | null>(null);
@@ -80,7 +81,8 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [fetchLedger]);
 
-  const handleFiles = useCallback(async (incoming: File[]) => {
+  const handleFiles = useCallback(async (incoming: File[], forceMode?: "prove" | "verify") => {
+    const activeMode = forceMode || mode;
     setFiles(incoming);
     setError("");
     setProofs([]);
@@ -90,14 +92,14 @@ export default function Home() {
     setChainMatch(null);
 
     try {
-      // Single file — check if it's a proof JSON to verify
       if (incoming.length === 1) {
         const f = incoming[0];
+
+        // Auto-detect proof.json regardless of mode
         if (f.name.endsWith(".json") && f.size < 500_000) {
           const text = await f.text();
           const proof = isOCCProof(text);
           if (proof) {
-            // It's a proof — verify the signature
             setStep("verifying");
             setVerifiedProof(proof);
             const result = await verifyProofSignature(proof);
@@ -108,31 +110,35 @@ export default function Home() {
           }
         }
 
-        // Regular file — hash it and check if it exists on chain
+        // Hash the file
         setStep("hashing");
         setProgress({ current: 1, total: 1, fileName: f.name });
         const d = await hashFile(f);
         setDigest(d);
 
-        // Check if this digest exists on chain
-        setStep("checking");
-        try {
-          const resp = await fetch(`/api/proofs/digest/${encodeURIComponent(toUrlSafeB64(d))}`);
-          if (resp.ok) {
-            const data = await resp.json();
-            if (data.proofs?.length > 0 && data.proofs[0].proof) {
-              setChainMatch(data.proofs[0].proof as OCCProof);
-              setStep("found");
-              return;
+        if (activeMode === "verify") {
+          // Verify mode: just check the chain, never create a proof
+          setStep("checking");
+          try {
+            const resp = await fetch(`/api/proofs/digest/${encodeURIComponent(toUrlSafeB64(d))}`);
+            if (resp.ok) {
+              const data = await resp.json();
+              if (data.proofs?.length > 0 && data.proofs[0].proof) {
+                setChainMatch(data.proofs[0].proof as OCCProof);
+                setStep("found");
+                return;
+              }
             }
-          }
-        } catch { /* not found, continue to prove */ }
-
-        // Not on chain — create a new proof
-        setStep("signing");
-        const p = await commitDigest(d);
-        setProofs([p]);
-        setStep("done");
+          } catch { /* not found */ }
+          setStep("notfound");
+        } else {
+          // Prove mode: create a new proof
+          setStep("signing");
+          const p = await commitDigest(d);
+          setProofs([p]);
+          setStep("done");
+          setTimeout(() => fetchLedger(1), 1500);
+        }
       } else {
         // Batch — always prove
         setStep("hashing");
@@ -146,18 +152,18 @@ export default function Home() {
         const ps = await commitBatch(digests);
         setProofs(ps);
         setStep("done");
+        setTimeout(() => fetchLedger(1), 1500);
       }
-      setTimeout(() => fetchLedger(1), 1500);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setStep("error");
     }
-  }, [fetchLedger]);
+  }, [fetchLedger, mode]);
 
   function reset() {
     setFiles([]); setStep("idle"); setDigest(""); setProofs([]);
     setError(""); setProgress(null); setCopied(false);
-    setVerifyResult(null); setVerifiedProof(null); setChainMatch(null);
+    setVerifyResult(null); setVerifiedProof(null); setChainMatch(null); setMode("prove");
   }
 
   async function proveAnyway() {
@@ -262,32 +268,69 @@ export default function Home() {
           <input ref={captureRef} type="file" accept="image/*" capture="environment" style={{ display: "none" }} onChange={(e) => { if (e.target.files?.length) { handleFiles(Array.from(e.target.files)); e.target.value = ""; } }} />
 
           {step === "idle" && (
-            <div
-              onClick={() => browseRef.current?.click()}
-              style={{
-                border: `2px dashed ${dragover ? "var(--anchor)" : "var(--border)"}`,
-                borderRadius: 12, padding: "48px 24px", textAlign: "center", cursor: "pointer",
-                transition: "all .2s",
-                background: dragover ? "rgba(59,130,246,.04)" : "var(--surface)",
-              }}
-            >
-              <div style={{ width: 52, height: 52, borderRadius: 12, background: "var(--surface-2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" strokeWidth="1.5">
-                  <path d="M12 4v12M8 8l4-4 4 4" />
-                  <path d="M4 17v2a1 1 0 001 1h14a1 1 0 001-1v-2" />
-                </svg>
+            <>
+              {/* Prove / Verify toggle */}
+              <div style={{ display: "flex", marginBottom: 12, border: "1px solid var(--border)", borderRadius: 8, overflow: "hidden" }}>
+                <button
+                  onClick={() => setMode("prove")}
+                  style={{
+                    flex: 1, padding: "10px 0", fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer",
+                    background: mode === "prove" ? "var(--anchor)" : "transparent",
+                    color: mode === "prove" ? "#fff" : "var(--text-3)",
+                    transition: "all .15s",
+                  }}
+                >Prove</button>
+                <button
+                  onClick={() => setMode("verify")}
+                  style={{
+                    flex: 1, padding: "10px 0", fontSize: 13, fontWeight: 600, border: "none", cursor: "pointer",
+                    borderLeft: "1px solid var(--border)",
+                    background: mode === "verify" ? "var(--verified)" : "transparent",
+                    color: mode === "verify" ? "#fff" : "var(--text-3)",
+                    transition: "all .15s",
+                  }}
+                >Verify</button>
               </div>
-              <div style={{ fontSize: 16, color: "var(--text)", fontWeight: 500, marginBottom: 8 }}>Prove or verify a file</div>
-              <div style={{ fontSize: 14, color: "var(--text-3)", lineHeight: 1.6 }}>
-                Drop any file to prove it{" \u00b7 "}drop a proof.json to verify it
+
+              {/* Drop zone */}
+              <div
+                onClick={() => browseRef.current?.click()}
+                style={{
+                  border: `2px dashed ${dragover ? (mode === "verify" ? "var(--verified)" : "var(--anchor)") : "var(--border)"}`,
+                  borderRadius: 12, padding: "48px 24px", textAlign: "center", cursor: "pointer",
+                  transition: "all .2s",
+                  background: dragover ? (mode === "verify" ? "rgba(34,197,94,.04)" : "rgba(59,130,246,.04)") : "var(--surface)",
+                }}
+              >
+                <div style={{ width: 52, height: 52, borderRadius: 12, background: "var(--surface-2)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+                  {mode === "prove" ? (
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" strokeWidth="1.5">
+                      <path d="M12 4v12M8 8l4-4 4 4" />
+                      <path d="M4 17v2a1 1 0 001 1h14a1 1 0 001-1v-2" />
+                    </svg>
+                  ) : (
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" strokeWidth="1.5">
+                      <path d="M9 12l2 2 4-4" />
+                      <circle cx="12" cy="12" r="9" />
+                    </svg>
+                  )}
+                </div>
+                <div style={{ fontSize: 16, color: "var(--text)", fontWeight: 500, marginBottom: 8 }}>
+                  {mode === "prove" ? "Drop a file to prove it" : "Drop a file to check it"}
+                </div>
+                <div style={{ fontSize: 13, color: "var(--text-3)" }}>
+                  {mode === "prove"
+                    ? "Creates a cryptographic proof signed by a hardware enclave"
+                    : "Checks if this file has already been proven on chain"}
+                </div>
+                <div style={{ fontSize: 14, color: "var(--text-3)", marginTop: 14 }}>
+                  <span onClick={(e) => { e.stopPropagation(); browseRef.current?.click(); }} style={{ color: "var(--text)", fontWeight: 500, textDecoration: "underline", textUnderlineOffset: "3px", textDecorationColor: "var(--text-3)", cursor: "pointer" }}>browse</span>
+                  {" \u00b7 "}
+                  <span onClick={(e) => { e.stopPropagation(); captureRef.current?.click(); }} style={{ color: "var(--text)", fontWeight: 500, textDecoration: "underline", textUnderlineOffset: "3px", textDecorationColor: "var(--text-3)", cursor: "pointer" }}>take photo</span>
+                </div>
+                <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 12 }}>Hashed in your browser. Nothing is uploaded.</div>
               </div>
-              <div style={{ fontSize: 14, color: "var(--text-3)", marginTop: 12 }}>
-                <span onClick={(e) => { e.stopPropagation(); browseRef.current?.click(); }} style={{ color: "var(--text)", fontWeight: 500, textDecoration: "underline", textUnderlineOffset: "3px", textDecorationColor: "var(--text-3)", cursor: "pointer" }}>browse</span>
-                {" \u00b7 "}
-                <span onClick={(e) => { e.stopPropagation(); captureRef.current?.click(); }} style={{ color: "var(--text)", fontWeight: 500, textDecoration: "underline", textUnderlineOffset: "3px", textDecorationColor: "var(--text-3)", cursor: "pointer" }}>take photo</span>
-              </div>
-              <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 14 }}>Hashed in your browser. Nothing is uploaded.</div>
-            </div>
+            </>
           )}
 
           {step === "hashing" && progress && (
@@ -429,6 +472,26 @@ export default function Home() {
               <CopyableText text={digest} style={{ width: "100%", fontSize: 10, fontFamily: "var(--mono)", color: "var(--text-3)", wordBreak: "break-all" as const, padding: "6px 10px", background: "rgba(255,255,255,.02)", border: "1px solid var(--border)", borderRadius: 6, marginBottom: 12 }} />
               <div style={{ display: "flex", gap: 8, width: "100%" }}>
                 <button onClick={proveAnyway} style={{ flex: 1, padding: "10px 0", fontSize: 13, fontWeight: 600, color: "#fff", background: "var(--anchor)", border: "none", borderRadius: 6, cursor: "pointer" }}>Prove again</button>
+                <button onClick={reset} style={{ flex: 1, padding: "10px 0", fontSize: 13, fontWeight: 600, color: "var(--text-2)", background: "transparent", border: "1px solid var(--border)", borderRadius: 6, cursor: "pointer" }}>Done</button>
+              </div>
+            </div>
+          )}
+
+          {/* File not found on chain */}
+          {step === "notfound" && (
+            <div style={{ ...card, animation: "fadeUp .3s ease-out" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <div style={{ width: 24, height: 24, borderRadius: "50%", background: "rgba(113,113,122,.12)", border: "1.5px solid var(--text-3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                </div>
+                <span style={{ fontSize: 16, fontWeight: 600, color: "var(--text-2)" }}>Not on chain</span>
+              </div>
+              <div style={{ fontSize: 12, color: "var(--text-3)", marginBottom: 10 }}>
+                {files[0]?.name} has not been proven yet.
+              </div>
+              <CopyableText text={digest} style={{ width: "100%", fontSize: 10, fontFamily: "var(--mono)", color: "var(--text-3)", wordBreak: "break-all" as const, padding: "6px 10px", background: "rgba(255,255,255,.02)", border: "1px solid var(--border)", borderRadius: 6, marginBottom: 12 }} />
+              <div style={{ display: "flex", gap: 8, width: "100%" }}>
+                <button onClick={() => { setChainMatch(null); handleFiles(files, "prove"); }} style={{ flex: 1, padding: "10px 0", fontSize: 13, fontWeight: 600, color: "#fff", background: "var(--anchor)", border: "none", borderRadius: 6, cursor: "pointer" }}>Prove it now</button>
                 <button onClick={reset} style={{ flex: 1, padding: "10px 0", fontSize: 13, fontWeight: 600, color: "var(--text-2)", background: "transparent", border: "1px solid var(--border)", borderRadius: 6, cursor: "pointer" }}>Done</button>
               </div>
             </div>
