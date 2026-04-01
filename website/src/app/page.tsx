@@ -14,286 +14,264 @@ type VerifyStep = "drop" | "checking" | "result";
 interface ProofEntry { globalId: number; digest: string; counter?: string; enforcement: string; time?: number; attribution?: string; signer: string; }
 
 function buildVerifyTxt(fn: string, p: OCCProof): string {
-  return `VERIFY.txt — OCC Proof\n\nFILE: ${fn}\nDIGEST: ${p.artifact.digestB64}\nCOUNTER: #${p.commit.counter ?? "—"}\nSIGNER: ${p.signer.publicKeyB64}\n\nhttps://occ.wtf/docs\n`;
+  return `OCC Proof — ${fn}\nDigest: ${p.artifact.digestB64}\nCounter: #${p.commit.counter ?? "—"}\nSigner: ${p.signer.publicKeyB64}\nhttps://occ.wtf/docs\n`;
 }
 
-async function createBiometricAuth(digestB64: string): Promise<AgencyEnvelope | undefined> {
+async function createBiometricAuth(d: string): Promise<AgencyEnvelope | undefined> {
   if (!window.PublicKeyCredential) return undefined;
   try {
-    const challenge = crypto.getRandomValues(new Uint8Array(32));
-    const cred = await navigator.credentials.get({ publicKey: { challenge, timeout: 60000, userVerification: "required", rpId: window.location.hostname, allowCredentials: [] } }) as PublicKeyCredential | null;
-    if (!cred) return undefined;
-    const r = cred.response as AuthenticatorAssertionResponse;
-    return {
-      actor: { keyId: cred.id, publicKeyB64: "", algorithm: "ES256", provider: "webauthn" } as ActorIdentity,
-      authorization: { format: "webauthn.get", purpose: "occ/commit-authorize/v1", actorKeyId: cred.id, artifactHash: digestB64, challenge: btoa(String.fromCharCode(...challenge)), timestamp: Date.now(), signatureB64: btoa(String.fromCharCode(...new Uint8Array(r.signature))), clientDataJSON: new TextDecoder().decode(r.clientDataJSON), authenticatorDataB64: btoa(String.fromCharCode(...new Uint8Array(r.authenticatorData))) },
-    };
+    const ch = crypto.getRandomValues(new Uint8Array(32));
+    const c = await navigator.credentials.get({ publicKey: { challenge: ch, timeout: 60000, userVerification: "required", rpId: window.location.hostname, allowCredentials: [] } }) as PublicKeyCredential | null;
+    if (!c) return undefined;
+    const r = c.response as AuthenticatorAssertionResponse;
+    return { actor: { keyId: c.id, publicKeyB64: "", algorithm: "ES256", provider: "webauthn" } as ActorIdentity, authorization: { format: "webauthn.get", purpose: "occ/commit-authorize/v1", actorKeyId: c.id, artifactHash: d, challenge: btoa(String.fromCharCode(...ch)), timestamp: Date.now(), signatureB64: btoa(String.fromCharCode(...new Uint8Array(r.signature))), clientDataJSON: new TextDecoder().decode(r.clientDataJSON), authenticatorDataB64: btoa(String.fromCharCode(...new Uint8Array(r.authenticatorData))) } };
   } catch { return undefined; }
 }
 
-/* ── Colors ── */
-const C = {
-  bg: "#F8FAFC", surface: "#FFFFFF", border: "#E2E8F0", borderLight: "#F1F5F9",
-  text: "#0F172A", textSec: "#475569", textTri: "#94A3B8",
-  accent: "#2563EB", accentHover: "#1D4ED8", accentSoft: "#DBEAFE",
-  green: "#16A34A", red: "#DC2626", blue: "#2563EB",
-};
+const font = "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Helvetica, Arial, sans-serif";
+const mono = "'SF Mono', SFMono-Regular, ui-monospace, Menlo, monospace";
 
 export default function OCCPage() {
   const [mode, setMode] = useState<Mode>("create");
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [createStep, setCreateStep] = useState<CreateStep>("drop");
-  const [createFiles, setCreateFiles] = useState<File[]>([]);
-  const [createDigest, setCreateDigest] = useState("");
-  const [createProofs, setCreateProofs] = useState<OCCProof[]>([]);
-  const [createError, setCreateError] = useState("");
-  const [createProgress, setCreateProgress] = useState({ current: 0, total: 0, fileName: "" });
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [step, setStep] = useState<CreateStep>("drop");
+  const [files, setFiles] = useState<File[]>([]);
+  const [digest, setDigest] = useState("");
+  const [proofs, setProofs] = useState<OCCProof[]>([]);
+  const [err, setErr] = useState("");
+  const [progress, setProgress] = useState({ c: 0, t: 0, n: "" });
   const [copied, setCopied] = useState(false);
-  const [attribution, setAttribution] = useState("");
-  const [verifyStep, setVerifyStep] = useState<VerifyStep>("drop");
-  const [verifyFile, setVerifyFile] = useState<File | null>(null);
-  const [verifyProof, setVerifyProof] = useState<OCCProof | null>(null);
-  const [verifyResult, setVerifyResult] = useState<ProofVerifyResult | null>(null);
-  const [fileDigestMatch, setFileDigestMatch] = useState<boolean | null>(null);
+  const [author, setAuthor] = useState("");
+  const [vStep, setVStep] = useState<VerifyStep>("drop");
+  const [vFile, setVFile] = useState<File | null>(null);
+  const [vProof, setVProof] = useState<OCCProof | null>(null);
+  const [vResult, setVResult] = useState<ProofVerifyResult | null>(null);
+  const [vMatch, setVMatch] = useState<boolean | null>(null);
   const [ledger, setLedger] = useState<ProofEntry[]>([]);
-  const [ledgerTotal, setLedgerTotal] = useState(0);
-  const [ledgerPage, setLedgerPage] = useState(1);
-  const [dragover, setDragover] = useState(false);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [drag, setDrag] = useState(false);
 
-  const fetchLedger = useCallback(async (page: number) => {
+  const fetchL = useCallback(async (p: number) => {
     try {
-      const resp = await fetch(`/api/proofs?page=${page}&limit=15`);
-      if (!resp.ok) return;
-      const data = await resp.json();
-      setLedger((data.proofs || []).map((p: Record<string, unknown>) => ({
-        globalId: (p.id as number) || 0, digest: (p.digestB64 as string) || "—",
-        counter: (p.counter as string) || undefined,
-        enforcement: (p.enforcement as string) === "measured-tee" ? "Hardware Enclave" : "Software",
-        time: p.commitTime ? Number(p.commitTime) : undefined,
-        attribution: (p.attrName as string) || undefined,
-        signer: ((p.signerPub as string) || "").slice(0, 12) || "—",
-      })));
-      setLedgerTotal(data.total || 0); setLedgerPage(page);
+      const r = await fetch(`/api/proofs?page=${p}&limit=15`); if (!r.ok) return;
+      const d = await r.json();
+      setLedger((d.proofs || []).map((x: Record<string, unknown>) => ({ globalId: (x.id as number) || 0, digest: (x.digestB64 as string) || "—", counter: (x.counter as string) || undefined, enforcement: (x.enforcement as string) === "measured-tee" ? "Enclave" : "Software", time: x.commitTime ? Number(x.commitTime) : undefined, attribution: (x.attrName as string) || undefined, signer: ((x.signerPub as string) || "").slice(0, 12) || "—" })));
+      setTotal(d.total || 0); setPage(p);
     } catch {}
   }, []);
 
-  useEffect(() => { fetchLedger(1); const i = setInterval(() => fetchLedger(1), 15000); return () => clearInterval(i); }, [fetchLedger]);
+  useEffect(() => { fetchL(1); const i = setInterval(() => fetchL(1), 15000); return () => clearInterval(i); }, [fetchL]);
 
-  function handleFiles(files: File[]) { if (mode === "create") handleCreate(files); else if (files.length === 1) handleVerify(files[0]); }
+  function handleF(f: File[]) { if (mode === "create") doCreate(f); else if (f.length === 1) doVerify(f[0]); }
 
-  async function handleCreate(files: File[]) {
-    setCreateFiles(files); setCreateStep("hashing"); setCreateError("");
+  async function doCreate(fs: File[]) {
+    setFiles(fs); setStep("hashing"); setErr("");
     try {
-      if (files.length === 1) {
-        const d = await hashFile(files[0]); setCreateDigest(d); setCreateStep("signing");
-        const attr = attribution.trim() ? { name: attribution.trim() } : undefined;
-        setCreateProofs([await commitDigest(d, undefined, undefined, attr)]); setCreateStep("done");
-        setTimeout(() => fetchLedger(1), 1500);
+      if (fs.length === 1) {
+        const d = await hashFile(fs[0]); setDigest(d); setStep("signing");
+        const a = author.trim() ? { name: author.trim() } : undefined;
+        setProofs([await commitDigest(d, undefined, undefined, a)]); setStep("done"); setTimeout(() => fetchL(1), 1500);
       } else {
-        const digests: Array<{ digestB64: string; hashAlg: "sha256" }> = [];
-        for (let i = 0; i < files.length; i++) { setCreateProgress({ current: i+1, total: files.length, fileName: files[i].name }); digests.push({ digestB64: await hashFile(files[i]), hashAlg: "sha256" }); }
-        setCreateDigest(digests[0].digestB64); setCreateStep("signing");
-        const attr = attribution.trim() ? { name: attribution.trim() } : undefined;
-        setCreateProofs(await commitBatch(digests, undefined, undefined, attr)); setCreateStep("done");
-        setTimeout(() => fetchLedger(1), 1500);
+        const ds: Array<{ digestB64: string; hashAlg: "sha256" }> = [];
+        for (let i = 0; i < fs.length; i++) { setProgress({ c: i + 1, t: fs.length, n: fs[i].name }); ds.push({ digestB64: await hashFile(fs[i]), hashAlg: "sha256" }); }
+        setDigest(ds[0].digestB64); setStep("signing");
+        const a = author.trim() ? { name: author.trim() } : undefined;
+        setProofs(await commitBatch(ds, undefined, undefined, a)); setStep("done"); setTimeout(() => fetchL(1), 1500);
       }
-    } catch (err) { setCreateError(err instanceof Error ? err.message : "Something went wrong"); setCreateStep("error"); }
+    } catch (e) { setErr(e instanceof Error ? e.message : "Failed"); setStep("error"); }
   }
 
-  async function handleVerify(f: File) {
-    setVerifyFile(f); setVerifyStep("checking"); setFileDigestMatch(null); setVerifyResult(null); setVerifyProof(null);
+  async function doVerify(f: File) {
+    setVFile(f); setVStep("checking"); setVMatch(null); setVResult(null); setVProof(null);
     try {
-      const text = await f.text(); const proof = isOCCProof(text);
-      if (proof) { setVerifyProof(proof); setVerifyResult(await verifyProofSignature(proof)); setVerifyStep("result"); }
+      const t = await f.text(); const p = isOCCProof(t);
+      if (p) { setVProof(p); setVResult(await verifyProofSignature(p)); setVStep("result"); }
       else {
-        const d = await hashFile(f); const resp = await fetch(`/api/proofs/${encodeURIComponent(toUrlSafeB64(d))}`);
-        if (resp.ok) { const data = await resp.json(); if (data.proofs?.length > 0) { const p = data.proofs[0].proof as OCCProof; setVerifyProof(p); setFileDigestMatch(true); setVerifyResult(await verifyProofSignature(p)); } else setFileDigestMatch(false); } else setFileDigestMatch(false);
-        setVerifyStep("result");
+        const d = await hashFile(f); const r = await fetch(`/api/proofs/${encodeURIComponent(toUrlSafeB64(d))}`);
+        if (r.ok) { const j = await r.json(); if (j.proofs?.length > 0) { const x = j.proofs[0].proof as OCCProof; setVProof(x); setVMatch(true); setVResult(await verifyProofSignature(x)); } else setVMatch(false); } else setVMatch(false);
+        setVStep("result");
       }
-    } catch { setVerifyStep("result"); setFileDigestMatch(false); }
+    } catch { setVStep("result"); setVMatch(false); }
   }
 
-  function resetCreate() { setCreateFiles([]); setCreateStep("drop"); setCreateDigest(""); setCreateProofs([]); setCreateError(""); }
-  function resetVerify() { setVerifyFile(null); setVerifyStep("drop"); setVerifyProof(null); setVerifyResult(null); setFileDigestMatch(null); }
-  function copyProof() { navigator.clipboard.writeText(createProofs.length === 1 ? JSON.stringify(createProofs[0], null, 2) : JSON.stringify(createProofs, null, 2)); setCopied(true); setTimeout(() => setCopied(false), 2000); }
-
-  async function downloadZip() {
-    if (!createProofs.length || !createFiles.length) return;
+  function reset() { setFiles([]); setStep("drop"); setDigest(""); setProofs([]); setErr(""); }
+  function resetV() { setVFile(null); setVStep("drop"); setVProof(null); setVResult(null); setVMatch(null); }
+  function copy() { navigator.clipboard.writeText(proofs.length === 1 ? JSON.stringify(proofs[0], null, 2) : JSON.stringify(proofs, null, 2)); setCopied(true); setTimeout(() => setCopied(false), 2000); }
+  async function dl() {
+    if (!proofs.length || !files.length) return;
     const z: Record<string, Uint8Array> = {};
-    for (let i = 0; i < createFiles.length; i++) { const f = createFiles[i], p = createProofs[i] || createProofs[0]; z[f.name] = new Uint8Array(await f.arrayBuffer()); z[createFiles.length > 1 ? `proof-${i+1}.json` : "proof.json"] = new TextEncoder().encode(JSON.stringify(p, null, 2)); if (i === 0) z["VERIFY.txt"] = new TextEncoder().encode(buildVerifyTxt(f.name, p)); }
-    const blob = new Blob([zipSync(z).buffer as ArrayBuffer], { type: "application/zip" }); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = createFiles.length === 1 ? `${createFiles[0].name.replace(/\.[^.]+$/, "")}-occ.zip` : "occ-batch.zip"; a.click(); URL.revokeObjectURL(url);
+    for (let i = 0; i < files.length; i++) { const f = files[i], p = proofs[i] || proofs[0]; z[f.name] = new Uint8Array(await f.arrayBuffer()); z[files.length > 1 ? `proof-${i + 1}.json` : "proof.json"] = new TextEncoder().encode(JSON.stringify(p, null, 2)); if (i === 0) z["VERIFY.txt"] = new TextEncoder().encode(buildVerifyTxt(f.name, p)); }
+    const b = new Blob([zipSync(z).buffer as ArrayBuffer], { type: "application/zip" }); const u = URL.createObjectURL(b); const a = document.createElement("a"); a.href = u; a.download = files.length === 1 ? `${files[0].name.replace(/\.[^.]+$/, "")}-occ.zip` : "occ-batch.zip"; a.click(); URL.revokeObjectURL(u);
   }
 
-  const showDrop = (mode === "create" && createStep === "drop") || (mode === "verify" && verifyStep === "drop");
-  const mono = "'SF Mono', SFMono-Regular, 'JetBrains Mono', Consolas, monospace";
+  const showDrop = (mode === "create" && step === "drop") || (mode === "verify" && vStep === "drop");
 
   return (
-    <div style={{ minHeight: "100vh", background: C.bg, color: C.text, fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Amazon Ember', system-ui, sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: "#fff", color: "#1d1d1f", fontFamily: font, WebkitFontSmoothing: "antialiased" }}>
       <style>{`
         @keyframes spin { to { transform: rotate(360deg) } }
-        @keyframes fadeUp { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
-        .occ-layout { display: flex; flex-direction: column; max-width: 560px; margin: 0 auto; padding: 0 20px 80px; }
-        .occ-head { max-width: 560px; }
-        @media (min-width: 900px) {
-          .occ-layout { max-width: 1100px; flex-direction: row; gap: 48px; align-items: flex-start; }
-          .occ-head { max-width: 1100px; }
-          .occ-action { flex: 0 0 480px; }
-          .occ-ledger { flex: 1; min-width: 0; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(12px) } to { opacity:1; transform:translateY(0) } }
+        .occ-wrap { max-width: 580px; margin: 0 auto; padding: 0 24px 100px; }
+        .occ-head-w { max-width: 980px; }
+        @media (min-width: 980px) {
+          .occ-wrap { max-width: 980px; display: flex; gap: 80px; align-items: flex-start; }
+          .occ-left { flex: 0 0 420px; }
+          .occ-right { flex: 1; min-width: 0; }
         }
       `}</style>
 
-      {/* ── Header bar ── */}
-      <div style={{ background: "#0F172A", padding: "0 24px" }}>
-        <div className="occ-head" style={{ margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: 48 }}>
-          <span style={{ fontSize: 18, fontWeight: 700, color: "#fff", letterSpacing: "-0.02em" }}>OCC</span>
-          <div style={{ display: "flex", gap: 20 }}>
-            <a href="/docs" style={{ fontSize: 14, color: "rgba(255,255,255,0.7)", textDecoration: "none" }}>Docs</a>
-            <a href="https://github.com/mikeargento/occ" target="_blank" rel="noopener" style={{ fontSize: 14, color: "rgba(255,255,255,0.7)", textDecoration: "none" }}>GitHub</a>
+      {/* ── Nav ── */}
+      <nav style={{ background: "rgba(251,251,253,0.8)", backdropFilter: "saturate(180%) blur(20px)", borderBottom: "1px solid #d2d2d7", position: "sticky", top: 0, zIndex: 50 }}>
+        <div className="occ-head-w" style={{ maxWidth: 980, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: 44, padding: "0 22px" }}>
+          <a href="/" style={{ fontSize: 21, fontWeight: 600, color: "#1d1d1f", textDecoration: "none", letterSpacing: "-0.02em" }}>OCC</a>
+          <div style={{ display: "flex", gap: 28 }}>
+            <a href="/docs" style={{ fontSize: 12, color: "#1d1d1f", textDecoration: "none", fontWeight: 400, opacity: 0.8 }}>Docs</a>
+            <a href="https://github.com/mikeargento/occ" target="_blank" rel="noopener" style={{ fontSize: 12, color: "#1d1d1f", textDecoration: "none", fontWeight: 400, opacity: 0.8 }}>GitHub</a>
           </div>
         </div>
-      </div>
+      </nav>
 
-      <div className="occ-layout" style={{ paddingTop: 32 }}>
-      <div className="occ-action">
+      <div className="occ-wrap" style={{ paddingTop: 48 }}>
+      <div className="occ-left">
 
-        {/* ── Segmented Control ── */}
-        <div style={{ display: "flex", padding: 3, borderRadius: 8, background: C.borderLight, marginBottom: 24 }}>
+        {/* ── Toggle ── */}
+        <div style={{ display: "flex", gap: 0, marginBottom: 32 }}>
           {(["create", "verify"] as Mode[]).map((m) => (
-            <button key={m} onClick={() => { setMode(m); if (m === "create") resetCreate(); else resetVerify(); }} style={{
-              flex: 1, height: 34, fontSize: 14, fontWeight: 600, border: "none", cursor: "pointer", borderRadius: 6,
-              background: mode === m ? C.surface : "transparent",
-              color: mode === m ? C.text : C.textSec,
-              boxShadow: mode === m ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
-              transition: "all 0.15s ease",
+            <button key={m} onClick={() => { setMode(m); if (m === "create") reset(); else resetV(); }} style={{
+              flex: 1, height: 36, fontSize: 14, fontWeight: 400, border: "none", cursor: "pointer",
+              borderBottom: mode === m ? "2px solid #1d1d1f" : "2px solid transparent",
+              background: "transparent", color: mode === m ? "#1d1d1f" : "#86868b",
+              transition: "all 0.2s",
             }}>
               {m === "create" ? "Create" : "Verify"}
             </button>
           ))}
         </div>
 
-        {/* ── Drop Zone (label wraps input for Brave compat) ── */}
+        {/* ── Drop zone ── */}
         {showDrop && (
-          <div style={{ animation: "fadeUp 0.2s ease-out" }}>
+          <div style={{ animation: "fadeIn 0.3s ease-out" }}>
             <label
-              onDragOver={(e) => { e.preventDefault(); setDragover(true); }}
-              onDragLeave={() => setDragover(false)}
-              onDrop={(e) => { e.preventDefault(); setDragover(false); const f = Array.from(e.dataTransfer.files); if (f.length) handleFiles(f); }}
+              onDragOver={(e) => { e.preventDefault(); setDrag(true); }}
+              onDragLeave={() => setDrag(false)}
+              onDrop={(e) => { e.preventDefault(); setDrag(false); const f = Array.from(e.dataTransfer.files); if (f.length) handleF(f); }}
               style={{
-                display: "block", borderRadius: 12, padding: "48px 24px", textAlign: "center", cursor: "pointer",
-                border: dragover ? `2px solid ${C.accent}` : `2px dashed ${C.border}`,
-                background: dragover ? "rgba(255,153,0,0.04)" : C.surface,
-                transition: "all 0.2s ease", marginBottom: 16,
+                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                minHeight: 240, borderRadius: 18, cursor: "pointer", marginBottom: 20,
+                border: drag ? "2px solid #0071e3" : "2px dashed #d2d2d7",
+                background: drag ? "rgba(0,113,227,0.02)" : "#fbfbfd",
+                transition: "all 0.2s",
               }}
             >
-              <input ref={fileInputRef} type="file" multiple={mode === "create"} accept="*/*"
-                style={{ position: "absolute", width: 1, height: 1, opacity: 0, overflow: "hidden", top: -9999 }}
-                onChange={(e) => { if (!e.target.files?.length) return; handleFiles(Array.from(e.target.files)); e.target.value = ""; }}
+              <input ref={fileRef} type="file" multiple={mode === "create"} accept="*/*"
+                style={{ position: "absolute", width: 1, height: 1, opacity: 0, top: -9999 }}
+                onChange={(e) => { if (!e.target.files?.length) return; handleF(Array.from(e.target.files)); e.target.value = ""; }}
               />
-              <div style={{
-                width: 52, height: 52, borderRadius: 12, margin: "0 auto 16px",
-                background: C.accentSoft, display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 5v12M7 10l5-5 5 5" /><path d="M4 17v2a1 1 0 001 1h14a1 1 0 001-1v-2" />
-                </svg>
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={drag ? "#0071e3" : "#86868b"} strokeWidth="1" strokeLinecap="round" style={{ marginBottom: 16 }}>
+                <path d="M12 5v12M7 10l5-5 5 5" /><path d="M4 17v2a1 1 0 001 1h14a1 1 0 001-1v-2" />
+              </svg>
+              <div style={{ fontSize: 17, fontWeight: 600, color: "#1d1d1f", marginBottom: 4 }}>
+                {mode === "create" ? "Drop files to prove" : "Drop a file to verify"}
               </div>
-              <div style={{ fontSize: 16, fontWeight: 600, color: C.text, marginBottom: 4 }}>
-                {mode === "create" ? "Drop files to prove" : "Drop file to verify"}
-              </div>
-              <div style={{ fontSize: 14, color: C.textTri }}>
-                {mode === "create" ? "Hashed locally, signed in hardware enclave" : "Proof.json or any file to check the ledger"}
+              <div style={{ fontSize: 14, color: "#86868b" }}>
+                {mode === "create" ? "Hashed locally. Signed in hardware enclave." : "Drop proof.json or any file to check the ledger."}
               </div>
             </label>
 
             {mode === "create" && (
-              <input type="text" value={attribution} onChange={(e) => setAttribution(e.target.value)} placeholder="Author name (optional)"
-                style={{
-                  width: "100%", height: 40, padding: "0 14px", fontSize: 14, borderRadius: 8,
-                  border: `1px solid ${C.border}`, background: C.surface, color: C.text, outline: "none",
-                  boxSizing: "border-box",
-                }} />
+              <input type="text" value={author} onChange={(e) => setAuthor(e.target.value)} placeholder="Author (optional)"
+                style={{ width: "100%", height: 44, padding: "0 16px", fontSize: 14, borderRadius: 12, border: "1px solid #d2d2d7", background: "#fff", color: "#1d1d1f", outline: "none", boxSizing: "border-box" }}
+                onFocus={(e) => { e.currentTarget.style.borderColor = "#0071e3"; }}
+                onBlur={(e) => { e.currentTarget.style.borderColor = "#d2d2d7"; }}
+              />
             )}
           </div>
         )}
 
-        {/* ── Create: Processing ── */}
-        {mode === "create" && (createStep === "hashing" || createStep === "signing") && (
-          <div style={{ textAlign: "center", padding: "56px 0", animation: "fadeUp 0.2s ease-out" }}>
-            <div style={{ width: 28, height: 28, border: `2.5px solid ${C.border}`, borderTopColor: C.accent, borderRadius: "50%", margin: "0 auto", animation: "spin 0.7s linear infinite" }} />
-            <div style={{ fontSize: 16, fontWeight: 600, color: C.text, marginTop: 20 }}>
-              {createStep === "hashing" ? (createFiles.length > 1 ? `Hashing ${createProgress.current}/${createProgress.total}` : "Hashing") : "Signing in enclave"}
+        {/* ── Processing ── */}
+        {mode === "create" && (step === "hashing" || step === "signing") && (
+          <div style={{ textAlign: "center", padding: "72px 0", animation: "fadeIn 0.3s ease-out" }}>
+            <div style={{ width: 32, height: 32, border: "3px solid #d2d2d7", borderTopColor: "#0071e3", borderRadius: "50%", margin: "0 auto", animation: "spin 0.8s linear infinite" }} />
+            <div style={{ fontSize: 17, fontWeight: 600, color: "#1d1d1f", marginTop: 24 }}>
+              {step === "hashing" ? (files.length > 1 ? `Hashing ${progress.c}/${progress.t}` : "Hashing") : "Signing"}
+            </div>
+            <div style={{ fontSize: 14, color: "#86868b", marginTop: 4 }}>
+              {step === "signing" ? "Hardware enclave" : ""}
             </div>
           </div>
         )}
 
-        {mode === "create" && createStep === "error" && (
-          <div style={{ textAlign: "center", padding: "40px 0", animation: "fadeUp 0.2s ease-out" }}>
-            <div style={{ fontSize: 15, color: C.red, marginBottom: 20 }}>{createError}</div>
-            <Btn onClick={resetCreate} c={C}>Try again</Btn>
+        {mode === "create" && step === "error" && (
+          <div style={{ textAlign: "center", padding: "48px 0", animation: "fadeIn 0.3s ease-out" }}>
+            <div style={{ fontSize: 17, color: "#ff3b30", marginBottom: 24 }}>{err}</div>
+            <button onClick={reset} style={linkBtn}>Try again</button>
           </div>
         )}
 
-        {/* ── Create: Done ── */}
-        {mode === "create" && createStep === "done" && createProofs.length > 0 && (
-          <div style={{ animation: "fadeUp 0.25s ease-out" }}>
-            <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: 20, marginBottom: 12 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill={C.green}/><path d="M8 12l3 3 5-5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                <span style={{ fontSize: 16, fontWeight: 700 }}>
-                  {createProofs.length === 1 ? "Proved" : `${createProofs.length} proved`}
-                </span>
-                <span style={{ fontSize: 14, color: C.textTri, marginLeft: "auto" }}>#{createProofs[0].commit.counter}</span>
+        {/* ── Done ── */}
+        {mode === "create" && step === "done" && proofs.length > 0 && (
+          <div style={{ animation: "fadeIn 0.4s ease-out" }}>
+            <div style={{ textAlign: "center", marginBottom: 32 }}>
+              <div style={{ width: 56, height: 56, borderRadius: "50%", background: "#e8f5e8", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#34c759" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
               </div>
-              {createFiles.map((f, i) => (
-                <div key={f.name + i} style={{ padding: "8px 0", borderTop: i > 0 ? `1px solid ${C.borderLight}` : "none" }}>
-                  <div style={{ fontSize: 14, fontWeight: 500 }}>{f.name} <span style={{ color: C.textTri, fontWeight: 400 }}>{formatFileSize(f.size)}</span></div>
-                  <div style={{ fontSize: 12, fontFamily: mono, color: C.green, marginTop: 2, wordBreak: "break-all" }}>{createProofs[i]?.artifact.digestB64}</div>
-                </div>
-              ))}
+              <div style={{ fontSize: 28, fontWeight: 600, letterSpacing: "-0.02em" }}>Proved</div>
+              <div style={{ fontSize: 17, color: "#86868b", marginTop: 2 }}>#{proofs[0].commit.counter}</div>
             </div>
 
-            <details style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, marginBottom: 12 }}>
-              <summary style={{ padding: "12px 16px", fontSize: 14, fontWeight: 600, color: C.textSec, cursor: "pointer", listStyle: "none", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            {files.map((f, i) => (
+              <div key={f.name + i} style={{ padding: "12px 0", borderTop: i > 0 ? "1px solid #f5f5f7" : "none" }}>
+                <div style={{ fontSize: 14, fontWeight: 500 }}>{f.name} <span style={{ color: "#86868b", fontWeight: 400 }}>{formatFileSize(f.size)}</span></div>
+                <div style={{ fontSize: 12, fontFamily: mono, color: "#34c759", marginTop: 4, wordBreak: "break-all", lineHeight: 1.5 }}>{proofs[i]?.artifact.digestB64}</div>
+              </div>
+            ))}
+
+            <details style={{ marginTop: 20, borderTop: "1px solid #f5f5f7", paddingTop: 16 }}>
+              <summary style={{ fontSize: 14, color: "#0071e3", cursor: "pointer", fontWeight: 500, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span>Proof JSON</span>
-                <button onClick={(e) => { e.preventDefault(); copyProof(); }} style={{ fontSize: 13, fontWeight: 500, color: copied ? C.green : C.blue, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+                <button onClick={(e) => { e.preventDefault(); copy(); }} style={{ fontSize: 12, color: copied ? "#34c759" : "#0071e3", background: "none", border: "none", cursor: "pointer" }}>
                   {copied ? "Copied" : "Copy"}
                 </button>
               </summary>
-              <pre style={{ fontSize: 11, fontFamily: mono, lineHeight: 1.5, color: C.green, background: "#fafafa", padding: 16, margin: 0, overflow: "auto", maxHeight: 280, borderTop: `1px solid ${C.borderLight}` }}>
-                {createProofs.length === 1 ? JSON.stringify(createProofs[0], null, 2) : JSON.stringify(createProofs, null, 2)}
+              <pre style={{ fontSize: 11, fontFamily: mono, lineHeight: 1.6, color: "#1d1d1f", background: "#f5f5f7", padding: 16, borderRadius: 12, overflow: "auto", maxHeight: 240, marginTop: 12 }}>
+                {proofs.length === 1 ? JSON.stringify(proofs[0], null, 2) : JSON.stringify(proofs, null, 2)}
               </pre>
             </details>
 
-            <div style={{ display: "flex", gap: 10 }}>
-              <Btn fill onClick={downloadZip} c={C}>Download</Btn>
-              <Btn onClick={resetCreate} c={C}>New</Btn>
+            <div style={{ display: "flex", gap: 12, marginTop: 24 }}>
+              <button onClick={dl} style={{ ...pillBtn, background: "#0071e3", color: "#fff" }}>Download</button>
+              <button onClick={reset} style={pillBtn}>New proof</button>
             </div>
           </div>
         )}
 
-        {/* ── Verify: Processing ── */}
-        {mode === "verify" && verifyStep === "checking" && (
-          <div style={{ textAlign: "center", padding: "56px 0", animation: "fadeUp 0.2s ease-out" }}>
-            <div style={{ width: 28, height: 28, border: `2.5px solid ${C.border}`, borderTopColor: C.blue, borderRadius: "50%", margin: "0 auto", animation: "spin 0.7s linear infinite" }} />
-            <div style={{ fontSize: 16, fontWeight: 600, color: C.text, marginTop: 20 }}>Checking {verifyFile?.name}</div>
+        {/* ── Verify processing ── */}
+        {mode === "verify" && vStep === "checking" && (
+          <div style={{ textAlign: "center", padding: "72px 0", animation: "fadeIn 0.3s ease-out" }}>
+            <div style={{ width: 32, height: 32, border: "3px solid #d2d2d7", borderTopColor: "#0071e3", borderRadius: "50%", margin: "0 auto", animation: "spin 0.8s linear infinite" }} />
+            <div style={{ fontSize: 17, fontWeight: 600, color: "#1d1d1f", marginTop: 24 }}>Checking</div>
+            <div style={{ fontSize: 14, color: "#86868b", marginTop: 4 }}>{vFile?.name}</div>
           </div>
         )}
 
-        {/* ── Verify: Result ── */}
-        {mode === "verify" && verifyStep === "result" && (
-          <div style={{ animation: "fadeUp 0.25s ease-out" }}>
-            {verifyResult && (
-              <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: 20, marginBottom: 12 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill={verifyResult.valid ? C.green : C.red}/>
-                    {verifyResult.valid ? <path d="M8 12l3 3 5-5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/> : <path d="M15 9l-6 6M9 9l6 6" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>}
-                  </svg>
-                  <span style={{ fontSize: 16, fontWeight: 700 }}>{verifyResult.valid ? "Valid" : "Invalid"}</span>
+        {/* ── Verify result ── */}
+        {mode === "verify" && vStep === "result" && (
+          <div style={{ animation: "fadeIn 0.4s ease-out" }}>
+            {vResult && (
+              <div style={{ marginBottom: 24 }}>
+                <div style={{ textAlign: "center", marginBottom: 24 }}>
+                  <div style={{ width: 56, height: 56, borderRadius: "50%", background: vResult.valid ? "#e8f5e8" : "#ffeaea", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px" }}>
+                    {vResult.valid
+                      ? <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#34c759" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+                      : <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ff3b30" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>}
+                  </div>
+                  <div style={{ fontSize: 28, fontWeight: 600, letterSpacing: "-0.02em" }}>{vResult.valid ? "Valid" : "Invalid"}</div>
                 </div>
-                {verifyResult.checks.map((c, i) => (
-                  <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderTop: i > 0 ? `1px solid ${C.borderLight}` : "none", fontSize: 14 }}>
-                    <span style={{ color: C.textSec }}>{c.label}</span>
-                    <span style={{ fontWeight: 600, color: c.status === "pass" ? C.green : c.status === "fail" ? C.red : C.textTri }}>
+                {vResult.checks.map((c, i) => (
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderTop: i > 0 ? "1px solid #f5f5f7" : "none", fontSize: 14 }}>
+                    <span style={{ color: "#86868b" }}>{c.label}</span>
+                    <span style={{ fontWeight: 500, color: c.status === "pass" ? "#34c759" : c.status === "fail" ? "#ff3b30" : "#86868b" }}>
                       {c.status === "pass" ? "Pass" : c.status === "fail" ? "Fail" : "—"}
                     </span>
                   </div>
@@ -301,103 +279,77 @@ export default function OCCPage() {
               </div>
             )}
 
-            {fileDigestMatch !== null && !verifyProof && (
-              <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: 20, marginBottom: 12, textAlign: "center" }}>
-                <div style={{ fontSize: 16, fontWeight: 700, color: fileDigestMatch ? C.green : C.textTri }}>{fileDigestMatch ? "Found on ledger" : "Not found"}</div>
+            {vMatch !== null && !vProof && (
+              <div style={{ textAlign: "center", padding: "32px 0" }}>
+                <div style={{ fontSize: 28, fontWeight: 600, color: vMatch ? "#34c759" : "#86868b" }}>{vMatch ? "Found" : "Not found"}</div>
+                <div style={{ fontSize: 14, color: "#86868b", marginTop: 4 }}>{vMatch ? "This file has a proof on the ledger" : "No proof exists for this file"}</div>
               </div>
             )}
 
-            {verifyProof && (
-              <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, padding: "12px 16px", marginBottom: 12 }}>
-                {[
-                  ["Counter", `#${verifyProof.commit.counter}`],
-                  ["Enforcement", verifyProof.environment?.enforcement === "measured-tee" ? "Hardware Enclave" : "Software"],
-                  ...(verifyProof.attribution?.name ? [["Author", verifyProof.attribution.name]] : []),
-                ].map(([k, v], i) => (
-                  <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderTop: i > 0 ? `1px solid ${C.borderLight}` : "none", fontSize: 14 }}>
-                    <span style={{ color: C.textTri }}>{k}</span><span style={{ fontWeight: 500 }}>{v}</span>
+            {vProof && (
+              <div style={{ padding: "16px 0", borderTop: "1px solid #f5f5f7" }}>
+                {[["Counter", `#${vProof.commit.counter}`], ["Enforcement", vProof.environment?.enforcement === "measured-tee" ? "Hardware Enclave" : "Software"], ...(vProof.attribution?.name ? [["Author", vProof.attribution.name]] : [])].map(([k, v], i) => (
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", fontSize: 14 }}>
+                    <span style={{ color: "#86868b" }}>{k}</span><span style={{ fontWeight: 500 }}>{v}</span>
                   </div>
                 ))}
               </div>
             )}
 
-            <Btn onClick={resetVerify} c={C} style={{ width: "100%" }}>Done</Btn>
+            <button onClick={resetV} style={{ ...linkBtn, marginTop: 16 }}>Done</button>
           </div>
         )}
 
-      </div>{/* end occ-action */}
+      </div>{/* end left */}
 
-        {/* ── Proof Ledger ── */}
-        <div className="occ-ledger">
-          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 8, padding: "0 4px" }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: C.textTri, textTransform: "uppercase", letterSpacing: "0.06em" }}>Proof Ledger</span>
-            <span style={{ fontSize: 13, color: C.textTri }}>{ledgerTotal.toLocaleString()}</span>
-          </div>
-
-          {ledger.length > 0 && (
-            <div style={{ background: C.surface, borderRadius: 12, border: `1px solid ${C.border}`, overflow: "hidden" }}>
-              {ledger.map((entry, i) => (
-                <LedgerItem key={entry.digest + i} entry={entry} last={i === ledger.length - 1} mono={mono} c={C} />
-              ))}
-            </div>
-          )}
-
-          {ledgerTotal > 15 && (
-            <div style={{ display: "flex", justifyContent: "center", gap: 12, marginTop: 14 }}>
-              <button onClick={() => fetchLedger(ledgerPage - 1)} disabled={ledgerPage <= 1}
-                style={{ fontSize: 14, fontWeight: 500, color: ledgerPage <= 1 ? C.textTri : C.blue, background: "none", border: "none", cursor: "pointer" }}>
-                Previous
-              </button>
-              <span style={{ fontSize: 14, color: C.textTri }}>{ledgerPage} of {Math.ceil(ledgerTotal / 15)}</span>
-              <button onClick={() => fetchLedger(ledgerPage + 1)} disabled={ledgerPage >= Math.ceil(ledgerTotal / 15)}
-                style={{ fontSize: 14, fontWeight: 500, color: ledgerPage >= Math.ceil(ledgerTotal / 15) ? C.textTri : C.blue, background: "none", border: "none", cursor: "pointer" }}>
-                Next
-              </button>
-            </div>
-          )}
+      {/* ── Ledger ── */}
+      <div className="occ-right">
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
+          <span style={{ fontSize: 12, fontWeight: 600, color: "#86868b", textTransform: "uppercase", letterSpacing: "0.08em" }}>Proof Ledger</span>
+          <span style={{ fontSize: 12, color: "#86868b" }}>{total.toLocaleString()}</span>
         </div>
+
+        {ledger.length > 0 && (
+          <div>
+            {ledger.map((e, i) => {
+              const c = e.counter || String(e.globalId);
+              const isEth = e.attribution?.startsWith("Ethereum");
+              return (
+                <a key={e.digest + i} href={`/proof/${encodeURIComponent(toUrlSafeB64(e.digest))}`}
+                  style={{ display: "flex", alignItems: "center", padding: "14px 0", borderTop: i > 0 ? "1px solid #f5f5f7" : "none", textDecoration: "none", color: "inherit" }}
+                >
+                  <span style={{ width: 48, fontSize: 17, fontWeight: 600, color: "#0071e3", fontFamily: mono }}>{c}</span>
+                  <div style={{ flex: 1, minWidth: 0, marginLeft: 12 }}>
+                    <div style={{ fontSize: 14, fontWeight: 500, color: "#1d1d1f", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {e.attribution || "Proof"}
+                    </div>
+                    <div style={{ fontSize: 11, fontFamily: mono, color: "#86868b", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {e.digest.slice(0, 28)}...
+                    </div>
+                  </div>
+                  {isEth && <span style={{ fontSize: 10, fontWeight: 600, color: "#0071e3", background: "rgba(0,113,227,0.06)", padding: "3px 8px", borderRadius: 4, marginLeft: 8 }}>ETH</span>}
+                  <svg width="7" height="12" viewBox="0 0 7 12" fill="none" stroke="#86868b" strokeWidth="1.5" strokeLinecap="round" style={{ marginLeft: 12, flexShrink: 0 }}>
+                    <path d="M1 1l5 5-5 5" />
+                  </svg>
+                </a>
+              );
+            })}
+          </div>
+        )}
+
+        {total > 15 && (
+          <div style={{ display: "flex", justifyContent: "center", gap: 20, marginTop: 20 }}>
+            <button onClick={() => fetchL(page - 1)} disabled={page <= 1} style={{ ...linkBtn, opacity: page <= 1 ? 0.3 : 1 }}>Previous</button>
+            <span style={{ fontSize: 14, color: "#86868b" }}>{page} of {Math.ceil(total / 15)}</span>
+            <button onClick={() => fetchL(page + 1)} disabled={page >= Math.ceil(total / 15)} style={{ ...linkBtn, opacity: page >= Math.ceil(total / 15) ? 0.3 : 1 }}>Next</button>
+          </div>
+        )}
       </div>
+
+      </div>{/* end wrap */}
     </div>
   );
 }
 
-/* ═══ Components ═══ */
-
-function Btn({ children, onClick, fill, style, c }: { children: React.ReactNode; onClick?: () => void; fill?: boolean; style?: React.CSSProperties; c: typeof C }) {
-  return (
-    <button onClick={onClick} style={{
-      height: 44, fontSize: 15, fontWeight: 600, borderRadius: 8, border: "none", cursor: "pointer", flex: 1,
-      background: fill ? c.accent : c.borderLight, color: fill ? "#fff" : c.text,
-      transition: "all 0.15s", ...style,
-    }}>{children}</button>
-  );
-}
-
-function LedgerItem({ entry, last, mono, c }: { entry: ProofEntry; last: boolean; mono: string; c: typeof C }) {
-  const counter = entry.counter || String(entry.globalId);
-  const isEth = entry.attribution?.startsWith("Ethereum");
-  const href = `/proof/${encodeURIComponent(toUrlSafeB64(entry.digest))}`;
-
-  return (
-    <div style={{ borderBottom: last ? "none" : `1px solid ${c.borderLight}` }}>
-      <a href={href} style={{ display: "flex", alignItems: "center", padding: "11px 16px", cursor: "pointer", transition: "background 0.1s", textDecoration: "none", color: "inherit" }}
-        onMouseEnter={(e) => { e.currentTarget.style.background = "#fafafa"; }}
-        onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
-      >
-        <span style={{ width: 44, fontSize: 14, fontWeight: 700, color: c.accent, fontFamily: mono }}>{counter}</span>
-        <div style={{ flex: 1, marginLeft: 10, minWidth: 0 }}>
-          <div style={{ fontSize: 14, fontWeight: 500, color: c.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {entry.attribution || "Proof"}
-          </div>
-          <div style={{ fontSize: 11, fontFamily: mono, color: c.textTri, marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {entry.digest.slice(0, 28)}...
-          </div>
-        </div>
-        {isEth && <span style={{ fontSize: 11, fontWeight: 700, color: c.blue, background: "rgba(0,115,187,0.08)", padding: "2px 7px", borderRadius: 4, marginLeft: 8, flexShrink: 0 }}>ETH</span>}
-        <svg width="7" height="12" viewBox="0 0 7 12" fill="none" stroke={c.textTri} strokeWidth="1.5" strokeLinecap="round" style={{ marginLeft: 10, flexShrink: 0 }}>
-          <path d="M1 1l5 5-5 5" />
-        </svg>
-      </a>
-    </div>
-  );
-}
+const linkBtn: React.CSSProperties = { fontSize: 14, fontWeight: 400, color: "#0071e3", background: "none", border: "none", cursor: "pointer", padding: 0 };
+const pillBtn: React.CSSProperties = { flex: 1, height: 44, fontSize: 14, fontWeight: 400, borderRadius: 980, border: "none", cursor: "pointer", background: "#f5f5f7", color: "#1d1d1f" };
