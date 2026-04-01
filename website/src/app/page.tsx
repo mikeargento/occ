@@ -317,8 +317,8 @@ export default function OCCPage() {
                   {item.proof && (
                     <a href={`/proof/${encodeURIComponent(toUrlSafeB64(item.digestB64))}`} target="_blank" rel="noopener"
                       style={{
-                        fontSize: 13, fontWeight: 500, color: "#000", textDecoration: "none",
-                        flexShrink: 0, padding: "6px 18px", borderRadius: 980,
+                        fontSize: 15, fontWeight: 600, color: "#000", textDecoration: "none",
+                        flexShrink: 0, padding: "8px 24px", borderRadius: 980,
                         background: "#34d399",
                       }}>
                       View
