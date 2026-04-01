@@ -133,7 +133,7 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
           onClick={() => { setOpen(true); onOpenChange?.(true); }}
           style={{
             background: "none",
-            border: "1px solid var(--c-border)",
+            border: "1px solid rgba(52,211,153,0.30)",
             borderRadius: 980,
             padding: "12px 28px",
             color: "var(--c-text-secondary)",
@@ -149,7 +149,7 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
             e.currentTarget.style.color = "#34d399";
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = "var(--c-border)";
+            e.currentTarget.style.borderColor = "rgba(52,211,153,0.30)";
             e.currentTarget.style.color = "var(--c-text-secondary)";
           }}
         >
