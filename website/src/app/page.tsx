@@ -348,8 +348,8 @@ export default function OCCPage() {
                   <span style={{
                     fontSize: 22, marginTop: -2, flexShrink: 0, width: 28, textAlign: "center",
                     color: item.status === "found" || item.status === "proved" ? "#34d399"
-                      : item.status === "proving" ? "#fbbf24"
-                      : item.status === "error" ? "#ff453a"
+                      : item.status === "proving" ? "#f0c060"
+                      : item.status === "error" ? "#f87171"
                       : "var(--c-text-tertiary)",
                     fontWeight: 700,
                   }}>

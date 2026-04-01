@@ -37,7 +37,7 @@ export default function ProofPage() {
   if (error || !proof) return (
     <Shell>
       <div style={{ padding: "80px 20px", textAlign: "center" }}>
-        <div style={{ fontSize: 16, color: "#ff453a", marginBottom: 12 }}>{error || "Proof not found"}</div>
+        <div style={{ fontSize: 16, color: "#f87171", marginBottom: 12 }}>{error || "Proof not found"}</div>
         <a href="/" style={{ fontSize: 14, color: "var(--c-accent)" }}>OCC</a>
       </div>
     </Shell>
@@ -83,7 +83,7 @@ export default function ProofPage() {
           <a href={attr.title} target="_blank" rel="noopener" style={{
             display: "flex", alignItems: "center", justifyContent: "space-between",
             padding: "14px 16px", marginBottom: 20, borderRadius: 12,
-            background: "rgba(59,130,246,.05)", border: "1px solid rgba(59,130,246,.15)",
+            background: "rgba(108,180,240,.05)", border: "1px solid rgba(108,180,240,.15)",
             textDecoration: "none", color: "var(--c-accent)", fontSize: 14, fontWeight: 500,
           }}>
             <span>{attr.name}</span>
@@ -285,7 +285,7 @@ function JsonToggle({ proof }: { proof: OCCProof }) {
           </div>
         </div>
         <pre style={{
-          fontSize: 12, lineHeight: 1.6, color: "#34d399", padding: 18, margin: 0,
+          fontSize: 12, lineHeight: 1.6, color: "#7edcb5", padding: 18, margin: 0,
           overflow: "auto", flex: 1, whiteSpace: "pre-wrap", wordBreak: "break-all",
         }}>
           {json}

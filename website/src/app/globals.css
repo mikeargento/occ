@@ -28,19 +28,19 @@
 
 /* ── Design Tokens — dark only ── */
 :root {
-  --bg: #000000;
-  --bg-elevated: #0a0a0a;
-  --bg-subtle: #111111;
-  --c-border: #1a1a1a;
-  --c-border-subtle: #141414;
-  --c-text: #ffffff;
-  --c-text-secondary: #999999;
-  --c-text-tertiary: #555555;
+  --bg: #050505;
+  --bg-elevated: #0c0d0c;
+  --bg-subtle: #121312;
+  --c-border: #1c1e1c;
+  --c-border-subtle: #161816;
+  --c-text: #e8ece8;
+  --c-text-secondary: #8a9a8e;
+  --c-text-tertiary: #4a5a4e;
   --c-accent: #34d399;
   --c-accent-dim: #059669;
-  --c-syntax-key: #60a5fa;
+  --c-syntax-key: #6cb4f0;
   --c-syntax-string: #34d399;
-  --c-syntax-number: #fbbf24;
+  --c-syntax-number: #f0c060;
   color-scheme: dark;
 }
 
@@ -64,7 +64,7 @@ h1 {
 }
 
 ::selection {
-  background: rgba(128, 128, 128, 0.2);
+  background: rgba(52, 211, 153, 0.15);
 }
 
 /* ── Scrollbar ── */
