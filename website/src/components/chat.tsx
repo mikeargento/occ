@@ -237,7 +237,7 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
                   borderRadius: 20,
                   padding: "8px 14px",
                   color: "rgba(255,255,255,0.7)",
-                  fontSize: 13,
+                  fontSize: 14,
                   cursor: "pointer",
                   textAlign: "left",
                   transition: "all 0.15s",
@@ -279,7 +279,7 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
                     ? "16px 16px 4px 16px"
                     : "16px 16px 16px 4px",
                 padding: "10px 14px",
-                fontSize: 14,
+                fontSize: 15,
                 lineHeight: 1.5,
                 wordBreak: "break-word",
               }}
@@ -343,7 +343,7 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
             borderRadius: 10,
             padding: "10px 14px",
             color: input.trim() && !streaming ? "#000" : "rgba(255,255,255,0.3)",
-            fontSize: 14,
+            fontSize: 15,
             fontWeight: 600,
             cursor: input.trim() && !streaming ? "pointer" : "default",
           }}
