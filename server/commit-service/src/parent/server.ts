@@ -320,6 +320,14 @@ async function handleCommit(req: IncomingMessage, res: ServerResponse): Promise<
   // and TSA services rate-limit at scale. The ETH block hash in the causal
   // chain is an unforgeable timestamp that doesn't depend on third parties.
 
+  // Add proofHash to each proof before responding
+  try {
+    const { computeProofHash } = await import("occproof");
+    for (const p of proofs) {
+      (p as OCCProof & { proofHash: string }).proofHash = computeProofHash(p);
+    }
+  } catch (_) { /* non-critical — proofHash is a convenience field */ }
+
   // Fire-and-forget: persist to immutable S3 ledger (includes by-digest index)
   void persistToLedger(proofs);
 

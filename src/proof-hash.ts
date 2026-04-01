@@ -37,7 +37,10 @@ import type { OCCProof } from "./types.js";
  * @returns Base64-standard encoded SHA-256 hash
  */
 export function computeProofHash(proof: OCCProof): string {
-  const bytes = canonicalize(proof);
+  // Strip proofHash from input so the hash is self-consistent
+  // (proofHash cannot be part of its own computation)
+  const { proofHash: _, ...proofWithoutHash } = proof as OCCProof & { proofHash?: string };
+  const bytes = canonicalize(proofWithoutHash as OCCProof);
   const hash = sha256(bytes);
 
   // Base64 encode (works in both Node.js and browser)

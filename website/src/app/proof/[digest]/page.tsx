@@ -184,6 +184,9 @@ export default function ProofPage() {
           <Card title="Artifact">
             <Field label="Digest" value={proof.artifact.digestB64} mono />
             <Field label="Algorithm" value={proof.artifact.hashAlg.toUpperCase()} />
+            {(proof as OCCProof & { proofHash?: string }).proofHash && (
+              <Field label="Proof Hash" value={(proof as OCCProof & { proofHash?: string }).proofHash!} mono highlight />
+            )}
           </Card>
 
           <Card title="Commit">
