@@ -176,10 +176,23 @@ export default function OCCPage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#000", color: "#fff", fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif" }}>
-      <style>{`@keyframes spin { to { transform: rotate(360deg) } } @keyframes fadeUp { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }`}</style>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg) } }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
+        .occ-layout { display: flex; flex-direction: column; max-width: 500px; margin: 0 auto; padding: 0 20px 80px; }
+        .occ-header { max-width: 500px; }
+        .occ-main { }
+        .occ-ledger-section { margin-top: 40px; }
+        @media (min-width: 900px) {
+          .occ-layout { max-width: 1100px; flex-direction: row; gap: 40px; align-items: flex-start; }
+          .occ-header { max-width: 1100px; }
+          .occ-main { flex: 1; min-width: 0; max-width: 500px; }
+          .occ-ledger-section { flex: 1; min-width: 0; margin-top: 0; }
+        }
+      `}</style>
 
-      {/* ── Floating header ── */}
-      <div style={{ padding: "20px 20px 0", maxWidth: 500, margin: "0 auto" }}>
+      {/* ── Header ── */}
+      <div className="occ-header" style={{ padding: "20px 20px 0", margin: "0 auto" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32 }}>
           <span style={{ fontSize: 22, fontWeight: 800, letterSpacing: "-0.03em" }}>OCC</span>
           <div style={{ display: "flex", gap: 16 }}>
@@ -189,7 +202,8 @@ export default function OCCPage() {
         </div>
       </div>
 
-      <div style={{ maxWidth: 500, margin: "0 auto", padding: "0 20px 80px" }}>
+      <div className="occ-layout">
+      <div className="occ-main">
 
         {/* ── Segmented Control (iOS style) ── */}
         <div style={{
@@ -403,8 +417,10 @@ export default function OCCPage() {
           </div>
         )}
 
+      </div>{/* end occ-main */}
+
         {/* ── Proof Ledger ── */}
-        <div style={{ marginTop: 40 }}>
+        <div className="occ-ledger-section">
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 8, padding: "0 4px" }}>
             <span style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.04em" }}>Proof Ledger</span>
             <span style={{ fontSize: 13, color: "rgba(255,255,255,0.25)" }}>{ledgerTotal.toLocaleString()}</span>
