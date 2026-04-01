@@ -51,7 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body style={{ fontFamily: "var(--font-inter), -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif" }}>
         <SiteNav />
-        <main style={{ minHeight: "100vh", paddingBottom: 56 }}>{children}</main>
+        <main style={{ paddingBottom: 48 }}>{children}</main>
         <Footer />
       </body>
     </html>
