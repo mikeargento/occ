@@ -219,6 +219,7 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
           display: "flex",
           flexDirection: "column",
           gap: 12,
+          justifyContent: messages.length === 0 ? "flex-start" : undefined,
         }}
       >
         {messages.length === 0 && (
@@ -253,20 +254,6 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
                 {q}
               </button>
             ))}
-          </div>
-        )}
-
-        {messages.length > 0 && !streaming && (
-          <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: 4 }}>
-            <button
-              onClick={() => setMessages(prev => prev.length <= 2 ? [] : prev.slice(0, -2))}
-              style={{
-                background: "none", border: "none", color: "#1A73E8", fontSize: 13,
-                fontWeight: 500, cursor: "pointer", padding: "2px 0",
-              }}
-            >
-              ← {messages.length <= 2 ? "Back to questions" : "Remove last"}
-            </button>
           </div>
         )}
 
@@ -314,6 +301,19 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
             </div>
           </div>
         ))}
+        {messages.length > 0 && !streaming && (
+          <div style={{ display: "flex", justifyContent: "flex-start", marginTop: 4 }}>
+            <button
+              onClick={() => setMessages(prev => prev.length <= 2 ? [] : prev.slice(0, -2))}
+              style={{
+                background: "none", border: "none", color: "#1A73E8", fontSize: 13,
+                fontWeight: 500, cursor: "pointer", padding: "2px 0",
+              }}
+            >
+              ← {messages.length <= 2 ? "Back to questions" : "Remove last"}
+            </button>
+          </div>
+        )}
         <div ref={endRef} />
       </div>
 
