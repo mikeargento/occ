@@ -86,14 +86,13 @@ export function FileDrop({
   };
 
   return (
-    <div
+    <label
       onDragOver={(e) => {
         e.preventDefault();
         if (!disabled) setDragover(true);
       }}
       onDragLeave={() => setDragover(false)}
       onDrop={handleDrop}
-      onClick={() => !disabled && !hasFiles && inputRef.current?.click()}
       className={`
         h-full relative border transition-all duration-300 cursor-pointer min-h-[180px] flex items-center
         ${disabled ? "opacity-50 cursor-not-allowed" : ""}
@@ -221,6 +220,6 @@ export function FileDrop({
           </div>
         </div>
       )}
-    </div>
+    </label>
   );
 }
