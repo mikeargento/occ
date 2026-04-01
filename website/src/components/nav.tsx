@@ -4,7 +4,7 @@ export function Nav() {
   return (
     <div style={{ textAlign: "center", paddingTop: 32, paddingBottom: 8 }}>
       <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--c-text)" }}>
-        Prethereum
+        OCC.WTF
       </span>
     </div>
   );

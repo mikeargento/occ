@@ -11,7 +11,7 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Prethereum",
+    default: "OCC.WTF",
     template: "%s | OCC",
   },
   description:
@@ -21,14 +21,14 @@ export const metadata: Metadata = {
     "cryptographic policy", "AI governance", "default deny", "proof explorer",
   ],
   openGraph: {
-    title: "Prethereum",
+    title: "OCC.WTF",
     description: "Live cryptographic proof chain. Create, verify, and explore OCC proofs.",
     type: "website",
     siteName: "OCC",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Prethereum",
+    title: "OCC.WTF",
     description: "Live cryptographic proof chain. Create, verify, and explore OCC proofs.",
   },
   robots: { index: true, follow: true },
