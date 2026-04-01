@@ -105,13 +105,14 @@ export function FileDrop({
         }
       `}
     >
-      {/* Standard file input */}
+      {/* Standard file input — sr-only (not display:none) for Safari compat */}
       <input
         ref={inputRef}
+        id="occ-file-input"
         type="file"
         accept={accept || "*/*"}
         multiple={multiple}
-        className="hidden"
+        className="sr-only"
         onChange={handleInputChange}
         disabled={disabled}
       />
@@ -123,7 +124,7 @@ export function FileDrop({
           type="file"
           accept="image/*"
           capture="environment"
-          className="hidden"
+          className="sr-only"
           onChange={handleInputChange}
           disabled={disabled}
         />
@@ -205,8 +206,8 @@ export function FileDrop({
           </div>
           <div className="text-[15px] text-text-secondary">
             {multiple
-              ? <>Drop files here or <span className="text-text font-medium" onClick={triggerBrowse}>{browseLabel}</span></>
-              : <>Drop a file here or <span className="text-text font-medium" onClick={triggerBrowse}>{browseLabel}</span></>
+              ? <>Drop files here or <label htmlFor="occ-file-input" className="text-text font-medium cursor-pointer" onClick={(e) => e.stopPropagation()}>{browseLabel}</label></>
+              : <>Drop a file here or <label htmlFor="occ-file-input" className="text-text font-medium cursor-pointer" onClick={(e) => e.stopPropagation()}>{browseLabel}</label></>
             }
             {showCapture && (
               <>
