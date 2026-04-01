@@ -88,6 +88,25 @@ async function persistAnchor(
       ObjectLockRetainUntilDate: retention,
     }));
 
+    // Also write a by-digest index and a time-ordered anchor index
+    const artifact = (proof as Record<string, unknown>).artifact as { digestB64: string };
+    const safeDigest = artifact.digestB64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+    await s3.send(new PutObjectCommand({
+      Bucket: bucket,
+      Key: `by-digest/${safeDigest}.json`,
+      Body: JSON.stringify({ ...proof, proofHashB64 }, null, 2),
+      ContentType: "application/json",
+    }));
+
+    // Time-ordered anchor for chronological listing
+    const ts = new Date().toISOString().replace(/[:.]/g, "-");
+    await s3.send(new PutObjectCommand({
+      Bucket: bucket,
+      Key: `anchors-by-time/${ts}-${ethereum.blockNumber}.json`,
+      Body: JSON.stringify({ ...proof, proofHashB64, ethereum }, null, 2),
+      ContentType: "application/json",
+    }));
+
     console.log(`[ledger] anchor stored: block=${ethereum.blockNumber} key=${anchorKey}`);
   } catch (err) {
     console.error("[ledger] persist anchor failed:", (err as Error).message);
@@ -186,17 +205,8 @@ async function commitAnchor(block: EthBlock): Promise<{ proof: unknown; digestB6
     const data = await res.json();
     const proof = Array.isArray(data) ? data[0] : data.proofs?.[0] ?? data;
 
-    // Persist to immutable S3 ledger (anchor + proof)
+    // Persist to immutable S3 ledger (anchor + proof + by-digest index)
     void persistAnchor(proof, { blockNumber: block.number, blockHash: block.hash });
-
-    // Forward to public explorer
-    try {
-      await fetch("https://occ.wtf/api/proofs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ proof }),
-      });
-    } catch { /* non-critical */ }
 
     return { proof, digestB64 };
   } catch (err) {

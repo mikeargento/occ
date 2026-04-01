@@ -100,6 +100,16 @@ async function persistToLedger(proofs: OCCProof[]): Promise<void> {
       }));
 
       console.log(`[parent] ledger: stored ${key}`);
+
+      // Also write a by-digest index for fast lookups by artifact hash
+      const safeDigest = proof.artifact.digestB64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+      const digestKey = `by-digest/${safeDigest}.json`;
+      await s3.send(new PutObjectCommand({
+        Bucket: LEDGER_BUCKET,
+        Key: digestKey,
+        Body: JSON.stringify(stored, null, 2),
+        ContentType: "application/json",
+      }));
     }
   } catch (err) {
     console.warn(`[parent] ledger persist failed: ${err instanceof Error ? err.message : String(err)}`);
@@ -332,10 +342,7 @@ async function handleCommit(req: IncomingMessage, res: ServerResponse): Promise<
     })
   );
 
-  // Fire-and-forget: index proofs in explorer database
-  void indexProofs(proofs);
-
-  // Fire-and-forget: persist to immutable S3 ledger
+  // Fire-and-forget: persist to immutable S3 ledger (includes by-digest index)
   void persistToLedger(proofs);
 
   sendJson(res, 200, proofs);
