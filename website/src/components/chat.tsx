@@ -10,6 +10,8 @@ interface Message {
 interface ChatProps {
   proofContext?: Record<string, unknown>;
   preloadedQuestions?: string[];
+  onOpenChange?: (open: boolean) => void;
+  defaultOpen?: boolean;
 }
 
 const DEFAULT_QUESTIONS = [
@@ -25,11 +27,11 @@ const DEFAULT_QUESTIONS = [
   "What is OCC NOT?",
 ];
 
-export function Chat({ proofContext, preloadedQuestions }: ChatProps) {
+export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOpen }: ChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen ?? false);
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -118,7 +120,7 @@ export function Chat({ proofContext, preloadedQuestions }: ChatProps) {
     return (
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", flex: 1 }}>
         <button
-          onClick={() => setOpen(true)}
+          onClick={() => { setOpen(true); onOpenChange?.(true); }}
           style={{
             background: "none",
             border: "1px solid rgba(255,255,255,0.15)",
@@ -162,21 +164,14 @@ export function Chat({ proofContext, preloadedQuestions }: ChatProps) {
   return (
     <div className="occ-chat-panel"
       style={{
-        position: "fixed",
-        bottom: 24,
-        right: 24,
-        width: 380,
-        maxWidth: "calc(100vw - 48px)",
-        height: 520,
-        maxHeight: "calc(100vh - 100px)",
+        width: "100%",
+        aspectRatio: "1",
         background: "#111",
-        borderRadius: 16,
+        borderRadius: 12,
         border: "1px solid rgba(255,255,255,0.1)",
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
-        zIndex: 1000,
-        boxShadow: "0 8px 40px rgba(0,0,0,0.5)",
       }}
     >
       {/* Header */}
@@ -193,7 +188,7 @@ export function Chat({ proofContext, preloadedQuestions }: ChatProps) {
           Ask about OCC
         </span>
         <button
-          onClick={() => setOpen(false)}
+          onClick={() => { setOpen(false); onOpenChange?.(false); }}
           style={{
             background: "none",
             border: "none",
@@ -359,17 +354,6 @@ export function Chat({ proofContext, preloadedQuestions }: ChatProps) {
         .occ-chat-md li { margin-bottom: 4px; }
         .occ-chat-md code { background: rgba(255,255,255,0.1); padding: 1px 5px; border-radius: 4px; font-size: 13px; }
         .occ-chat-md h1, .occ-chat-md h2, .occ-chat-md h3 { font-size: 14px; font-weight: 600; color: #fff; margin: 8px 0 4px; }
-        @media (max-width: 500px) {
-          .occ-chat-panel {
-            inset: 0 !important;
-            width: 100% !important;
-            max-width: 100% !important;
-            height: 100% !important;
-            max-height: 100% !important;
-            border-radius: 0 !important;
-            border: none !important;
-          }
-        }
       `}</style>
     </div>
   );

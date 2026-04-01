@@ -33,6 +33,7 @@ export default function OCCPage() {
   const [scanProgress, setScanProgress] = useState({ current: 0, total: 0 });
   const [exportProgress, setExportProgress] = useState({ current: 0, total: 0 });
   const [animCount, setAnimCount] = useState(0);
+  const [chatOpen, setChatOpen] = useState(false);
 
   const found = items.filter(i => i.status === "found" || i.status === "proved");
   const unproven = items.filter(i => i.status === "new");
@@ -208,8 +209,8 @@ export default function OCCPage() {
 
       <div className="occ-wrap">
 
-        {/* ── Drop zone ── */}
-        {step === "drop" && (
+        {/* ── Drop zone or Chat ── */}
+        {step === "drop" && !chatOpen && (
           <div style={{ animation: "slideIn 0.3s ease-out" }}>
             <FileDrop
               multiple
@@ -218,6 +219,9 @@ export default function OCCPage() {
               hint=""
             />
           </div>
+        )}
+        {step === "drop" && chatOpen && (
+          <Chat defaultOpen onOpenChange={setChatOpen} />
         )}
 
         {/* ── Scanning ── */}
@@ -347,7 +351,7 @@ export default function OCCPage() {
             </div>
           </div>
         )}
-        <Chat />
+        {!chatOpen && <Chat onOpenChange={setChatOpen} />}
         <Footer />
       </div>
     </div>
