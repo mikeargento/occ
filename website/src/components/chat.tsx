@@ -137,7 +137,7 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
             borderRadius: 980,
             padding: "12px 28px",
             color: "var(--c-text-secondary)",
-            fontSize: 15,
+            fontSize: 16,
             cursor: "pointer",
             display: "flex",
             alignItems: "center",
@@ -195,7 +195,7 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
           justifyContent: "space-between",
         }}
       >
-        <span style={{ fontWeight: 600, fontSize: 15, color: "#fff" }}>Ask about OCC</span>
+        <span style={{ fontWeight: 600, fontSize: 16, color: "#fff" }}>Ask about OCC</span>
         <button
           onClick={() => { setOpen(false); onOpenChange?.(false); }}
           style={{
@@ -236,7 +236,7 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
                   borderRadius: 20,
                   padding: "8px 14px",
                   color: "var(--c-text-secondary)",
-                  fontSize: 14,
+                  fontSize: 15,
                   cursor: "pointer",
                   textAlign: "left",
                   transition: "all 0.15s",
@@ -278,7 +278,7 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
                     ? "16px 16px 4px 16px"
                     : "16px 16px 16px 4px",
                 padding: "10px 14px",
-                fontSize: 15,
+                fontSize: 16,
                 lineHeight: 1.5,
                 wordBreak: "break-word",
               }}
@@ -342,7 +342,7 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
             borderRadius: 10,
             padding: "10px 14px",
             color: input.trim() && !streaming ? "var(--bg)" : "var(--c-text-tertiary)",
-            fontSize: 15,
+            fontSize: 16,
             fontWeight: 600,
             cursor: input.trim() && !streaming ? "pointer" : "default",
           }}
