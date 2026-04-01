@@ -28,16 +28,16 @@
 
 /* ── Design Tokens — dark only ── */
 :root {
-  --bg: #0f0f0f;
-  --bg-elevated: #191919;
-  --bg-subtle: #1f1f1f;
-  --c-border: #2e2e2e;
-  --c-border-subtle: #262626;
-  --c-text: #efefef;
-  --c-text-secondary: #a3a3a3;
-  --c-text-tertiary: #737373;
-  --c-accent: #3b82f6;
-  --c-accent-dim: #1e40af;
+  --bg: #000000;
+  --bg-elevated: #0a0a0a;
+  --bg-subtle: #111111;
+  --c-border: #1a1a1a;
+  --c-border-subtle: #141414;
+  --c-text: #ffffff;
+  --c-text-secondary: #999999;
+  --c-text-tertiary: #555555;
+  --c-accent: #34d399;
+  --c-accent-dim: #059669;
   --c-syntax-key: #60a5fa;
   --c-syntax-string: #34d399;
   --c-syntax-number: #fbbf24;
