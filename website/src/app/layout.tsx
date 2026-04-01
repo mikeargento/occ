@@ -40,6 +40,8 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
+import { SiteNav } from "@/components/site-nav";
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`}>
@@ -47,6 +49,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="stylesheet" href="https://use.typekit.net/svq0oqy.css" />
       </head>
       <body style={{ fontFamily: "var(--font-inter), -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif" }}>
+        <SiteNav />
         <main style={{ minHeight: "100vh" }}>{children}</main>
       </body>
     </html>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { FileDrop } from "@/components/file-drop";
-import { Nav, Footer } from "@/components/nav";
+import { Footer } from "@/components/nav";
 import { Chat } from "@/components/chat";
 import {
   hashFile,
@@ -241,7 +241,7 @@ export default function OCCPage() {
         @keyframes pulse { 0%, 100% { opacity: 1 } 50% { opacity: 0.4 } }
         @keyframes glow { 0%, 100% { box-shadow: none } 50% { box-shadow: none } }
       `}</style>
-      <Nav />
+      {/* Nav is in root layout */}
 
       <div className="occ-wrap">
 
