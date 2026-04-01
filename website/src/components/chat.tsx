@@ -132,11 +132,11 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
         <button
           onClick={() => { setOpen(true); onOpenChange?.(true); }}
           style={{
-            background: "none",
-            border: "1px solid rgba(26,115,232,0.30)",
+            background: "#1A73E8",
+            border: "1px solid #1A73E8",
             borderRadius: 980,
             padding: "12px 28px",
-            color: "var(--c-text-secondary)",
+            color: "#ffffff",
             fontSize: 16,
             cursor: "pointer",
             display: "flex",
@@ -145,12 +145,10 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
             transition: "all 0.2s",
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = "rgba(26,115,232,0.4)";
-            e.currentTarget.style.color = "#1A73E8";
+            e.currentTarget.style.background = "#1557b0";
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = "rgba(26,115,232,0.30)";
-            e.currentTarget.style.color = "var(--c-text-secondary)";
+            e.currentTarget.style.background = "#1A73E8";
           }}
         >
           <svg
@@ -177,9 +175,9 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
       style={{
         width: "100%",
         aspectRatio: "1",
-        background: "var(--bg-subtle)",
+        background: "#ffffff",
         borderRadius: 12,
-        border: "1px solid var(--c-border)",
+        border: "1px solid #d0d5dd",
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
@@ -189,13 +187,13 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
       <div
         style={{
           padding: "14px 16px",
-          borderBottom: "1px solid var(--c-border-subtle)",
+          borderBottom: "1px solid #e2e5e9",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
         }}
       >
-        <span style={{ fontWeight: 600, fontSize: 16, color: "#fff" }}>Ask about OCC</span>
+        <span style={{ fontWeight: 600, fontSize: 16, color: "#111827" }}>Ask about OCC</span>
         <button
           onClick={() => { setOpen(false); onOpenChange?.(false); }}
           style={{
@@ -231,11 +229,11 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
                 onClick={() => sendMessage(q)}
                 disabled={streaming}
                 style={{
-                  background: "var(--bg-elevated)",
-                  border: "1px solid var(--c-border)",
+                  background: "#f9fafb",
+                  border: "1px solid #d0d5dd",
                   borderRadius: 20,
                   padding: "8px 14px",
-                  color: "var(--c-text-secondary)",
+                  color: "#374151",
                   fontSize: 15,
                   cursor: "pointer",
                   textAlign: "left",
@@ -247,9 +245,9 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
                   e.currentTarget.style.color = "#1A73E8";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "var(--bg-elevated)";
-                  e.currentTarget.style.borderColor = "var(--c-border)";
-                  e.currentTarget.style.color = "var(--c-text-secondary)";
+                  e.currentTarget.style.background = "#f9fafb";
+                  e.currentTarget.style.borderColor = "#d0d5dd";
+                  e.currentTarget.style.color = "#374151";
                 }}
               >
                 {q}
@@ -271,8 +269,8 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
                 background:
                   msg.role === "user"
                     ? "#1A73E8"
-                    : "var(--bg-elevated)",
-                color: msg.role === "user" ? "var(--bg)" : "var(--c-text)",
+                    : "#f3f4f6",
+                color: msg.role === "user" ? "#ffffff" : "#1f2937",
                 borderRadius:
                   msg.role === "user"
                     ? "16px 16px 4px 16px"
@@ -310,7 +308,7 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
         onSubmit={handleSubmit}
         style={{
           padding: "12px 16px",
-          borderTop: "1px solid var(--c-border-subtle)",
+          borderTop: "1px solid #e2e5e9",
           display: "flex",
           gap: 8,
         }}
@@ -324,11 +322,11 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
           disabled={streaming}
           style={{
             flex: 1,
-            background: "var(--bg-elevated)",
-            border: "1px solid var(--c-border)",
+            background: "#f9fafb",
+            border: "1px solid #d0d5dd",
             borderRadius: 10,
             padding: "10px 14px",
-            color: "var(--c-text)",
+            color: "#1f2937",
             fontSize: 16,
             outline: "none",
           }}
@@ -337,11 +335,11 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
           type="submit"
           disabled={!input.trim() || streaming}
           style={{
-            background: input.trim() && !streaming ? "var(--c-accent)" : "var(--bg-elevated)",
+            background: input.trim() && !streaming ? "#1A73E8" : "#e5e7eb",
             border: "none",
             borderRadius: 10,
             padding: "10px 14px",
-            color: input.trim() && !streaming ? "var(--bg)" : "var(--c-text-tertiary)",
+            color: input.trim() && !streaming ? "#ffffff" : "#9ca3af",
             fontSize: 16,
             fontWeight: 600,
             cursor: input.trim() && !streaming ? "pointer" : "default",
@@ -358,11 +356,11 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
         }
         .occ-chat-md p { margin: 0 0 8px; }
         .occ-chat-md p:last-child { margin-bottom: 0; }
-        .occ-chat-md strong { color: #fff; font-weight: 600; }
+        .occ-chat-md strong { color: #111827; font-weight: 600; }
         .occ-chat-md ul, .occ-chat-md ol { margin: 4px 0 8px; padding-left: 18px; }
         .occ-chat-md li { margin-bottom: 4px; }
-        .occ-chat-md code { background: var(--bg-elevated); padding: 1px 5px; border-radius: 4px; font-size: 13px; }
-        .occ-chat-md h1, .occ-chat-md h2, .occ-chat-md h3 { font-size: 14px; font-weight: 600; color: #fff; margin: 8px 0 4px; }
+        .occ-chat-md code { background: #e5e7eb; padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+        .occ-chat-md h1, .occ-chat-md h2, .occ-chat-md h3 { font-size: 14px; font-weight: 600; color: #111827; margin: 8px 0 4px; }
         @media (max-width: 640px) {
           .occ-chat-panel { aspect-ratio: 3/4 !important; }
         }
