@@ -66,18 +66,10 @@ export default function ProofPage() {
 
         {/* Title bar */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={{ fontSize: 28, fontWeight: 700, fontFamily: mono, color: "var(--c-accent)" }}>#{commit.counter}</span>
-              {isEth && (
-                <span style={{ fontSize: 12, fontWeight: 600, color: "var(--c-accent)", background: "rgba(59,130,246,.1)", border: "1px solid rgba(59,130,246,.2)", padding: "3px 10px", borderRadius: 20 }}>
-                  ETH Anchor
-                </span>
-              )}
-            </div>
-            <div style={{ fontSize: 14, color: "var(--c-text-tertiary)", marginTop: 4 }}>
-              {attr?.name || "Proof"}
-            </div>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+            <span style={{ fontSize: 28, fontWeight: 700, color: "var(--c-accent)" }}>
+              {isEth ? "Anchor" : (attr?.name || "Proof")} #{commit.counter}
+            </span>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
             <button onClick={downloadJson} style={btnStyle}>Export .json</button>
