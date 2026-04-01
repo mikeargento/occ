@@ -72,7 +72,7 @@ export default function ProofPage() {
             </span>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={downloadJson} style={btnStyle}>Export .json</button>
+            <button onClick={downloadJson} style={btnStyle}>Export Proof</button>
             <JsonToggle proof={proof} />
           </div>
         </div>
