@@ -228,7 +228,7 @@ export default function OCCPage() {
   function reset() { setStep("drop"); setItems([]); setAnimCount(0); }
 
   /* ── Styles ── */
-  const card: React.CSSProperties = { border: "1px solid #e5e7eb", padding: "24px 20px", background: "#fff", borderRadius: 16, marginBottom: 16 };
+  const card: React.CSSProperties = { border: "1px solid #d0d5dd", padding: "24px 20px", background: "#fff", borderRadius: 16, marginBottom: 16 };
   const btnFill: React.CSSProperties = { height: 52, fontSize: 15, fontWeight: 600, border: "none", borderRadius: 12, background: "#1A73E8", color: "#ffffff", cursor: "pointer", flex: 1, letterSpacing: "-0.01em" };
   const btnOut: React.CSSProperties = { height: 52, fontSize: 15, fontWeight: 500, borderRadius: 12, cursor: "pointer", flex: 1, border: "1px solid #d1d5db", background: "#fff", color: "#111827" };
 
@@ -341,7 +341,7 @@ export default function OCCPage() {
             <div style={card}>
               {items.map((item, i) => (
                 <div key={item.file.name + i} style={{
-                  padding: "12px 0", borderTop: i > 0 ? "1px solid #e5e7eb" : "none",
+                  padding: "12px 0", borderTop: i > 0 ? "1px solid #d0d5dd" : "none",
                   display: "flex", alignItems: "flex-start", gap: 10,
                   animation: `slideIn 0.2s ease-out ${i * 0.05}s both`,
                 }}>
