@@ -196,9 +196,9 @@ export default function OCCPage() {
   const btnOut: React.CSSProperties = { height: 52, fontSize: 15, fontWeight: 500, borderRadius: 12, cursor: "pointer", flex: 1, border: "1px solid rgba(255,255,255,0.1)", background: "transparent", color: "#fff" };
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--c-text)" }}>
+    <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--c-text)", display: "flex", flexDirection: "column" }}>
       <style>{`
-        .occ-wrap { width: 90%; max-width: 640px; margin: 0 auto; padding: 48px 0 80px; }
+        .occ-wrap { width: 90%; max-width: 640px; margin: 0 auto; padding: 48px 0 0; flex: 1; display: flex; flex-direction: column; }
         @keyframes countPop { 0% { transform: scale(0.5); opacity: 0 } 50% { transform: scale(1.15) } 100% { transform: scale(1); opacity: 1 } }
         @keyframes slideIn { from { opacity: 0; transform: translateY(12px) } to { opacity: 1; transform: translateY(0) } }
         @keyframes pulse { 0%, 100% { opacity: 1 } 50% { opacity: 0.4 } }
@@ -347,8 +347,8 @@ export default function OCCPage() {
             </div>
           </div>
         )}
-        <Footer />
         <Chat />
+        <Footer />
       </div>
     </div>
   );

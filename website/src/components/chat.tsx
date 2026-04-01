@@ -115,7 +115,7 @@ export function Chat({ proofContext, preloadedQuestions }: ChatProps) {
 
   if (!open) {
     return (
-      <div style={{ display: "flex", justifyContent: "center", padding: "32px 0" }}>
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", flex: 1 }}>
         <button
           onClick={() => setOpen(true)}
           style={{
