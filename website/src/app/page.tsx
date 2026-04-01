@@ -317,8 +317,12 @@ export default function OCCPage() {
                   </div>
                   {item.proof && (
                     <a href={`/proof/${encodeURIComponent(toUrlSafeB64(item.digestB64))}`}
-                      style={{ fontSize: 11, color: "var(--c-accent)", textDecoration: "none", flexShrink: 0, marginTop: 2 }}>
-                      View →
+                      style={{
+                        fontSize: 13, fontWeight: 500, color: "var(--c-accent)", textDecoration: "none",
+                        flexShrink: 0, padding: "6px 14px", borderRadius: 6,
+                        border: "1px solid var(--c-accent)", marginTop: 0,
+                      }}>
+                      View
                     </a>
                   )}
                 </div>
