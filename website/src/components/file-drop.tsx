@@ -203,15 +203,15 @@ export function FileDrop({
       ) : (
         <div className="flex flex-col items-center py-20 px-6 w-full">
           <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6" style={{ background: "#f3f4f6", border: "1px solid #e5e7eb" }}>
-            <svg width="28" height="28" viewBox="0 0 20 20" fill="none" stroke="#9ca3af" strokeWidth="1.2">
+            <svg width="28" height="28" viewBox="0 0 20 20" fill="none" stroke="#1A73E8" strokeWidth="1.2">
               <path d="M10 3v10M6 7l4-4 4 4" />
               <path d="M3 14v2a1 1 0 001 1h12a1 1 0 001-1v-2" />
             </svg>
           </div>
           <div className="text-[22px] font-semibold tracking-tight" style={{ color: "#111827" }}>
             {multiple
-              ? <>Drop files or <label htmlFor="occ-file-input" className="cursor-pointer" style={{ color: "#1A73E8" }} onClick={(e) => e.stopPropagation()}>{browseLabel}</label></>
-              : <>Drop a file or <label htmlFor="occ-file-input" className="cursor-pointer" style={{ color: "#1A73E8" }} onClick={(e) => e.stopPropagation()}>{browseLabel}</label></>
+              ? <>Drop files or <label htmlFor="occ-file-input" className="cursor-pointer" onClick={(e) => e.stopPropagation()}>{browseLabel}</label></>
+              : <>Drop a file or <label htmlFor="occ-file-input" className="cursor-pointer" onClick={(e) => e.stopPropagation()}>{browseLabel}</label></>
             }
           </div>
           <div className="text-xs mt-2 text-center" style={{ whiteSpace: "pre-line", color: "#6b7280" }}>
