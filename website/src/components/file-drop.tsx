@@ -115,9 +115,9 @@ export function FileDrop({
         disabled={disabled}
         style={!hasFiles ? {
           position: "absolute", inset: 0, width: "100%", height: "100%",
-          opacity: 0, cursor: "pointer", zIndex: 1,
+          opacity: 0, cursor: "pointer", zIndex: 1, fontSize: 0,
         } : {
-          position: "absolute", width: 1, height: 1, opacity: 0, top: -9999,
+          position: "absolute", width: 1, height: 1, opacity: 0, top: -9999, fontSize: 0,
         }}
       />
 

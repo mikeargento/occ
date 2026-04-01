@@ -283,12 +283,12 @@ export default function OCCPage() {
                   animation: `slideIn 0.2s ease-out ${i * 0.05}s both`,
                 }}>
                   <span style={{
-                    fontSize: 16, marginTop: 1, flexShrink: 0, width: 20, textAlign: "center",
-                    color: item.status === "found" || item.status === "proved" ? "#30d158"
+                    fontSize: 22, marginTop: -2, flexShrink: 0, width: 28, textAlign: "center",
+                    color: item.status === "found" || item.status === "proved" ? "#34d399"
                       : item.status === "proving" ? "#fbbf24"
                       : item.status === "error" ? "#ff453a"
                       : "var(--c-text-tertiary)",
-                    fontFamily: "monospace",
+                    fontWeight: 700,
                   }}>
                     {item.status === "found" || item.status === "proved" ? "✓"
                       : item.status === "proving" ? "~"
