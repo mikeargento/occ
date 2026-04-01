@@ -228,7 +228,7 @@ export default function OCCPage() {
   function reset() { setStep("drop"); setItems([]); setAnimCount(0); }
 
   /* ── Styles ── */
-  const card: React.CSSProperties = { border: "1px solid rgba(52,211,153,0.08)", padding: "24px 20px", background: "rgba(52,211,153,0.02)", borderRadius: 16, marginBottom: 16 };
+  const card: React.CSSProperties = { border: "1px solid rgba(52,211,153,0.25)", padding: "24px 20px", background: "rgba(52,211,153,0.02)", borderRadius: 16, marginBottom: 16 };
   const btnFill: React.CSSProperties = { height: 52, fontSize: 15, fontWeight: 600, border: "none", borderRadius: 12, background: "var(--c-accent)", color: "var(--bg)", cursor: "pointer", flex: 1, letterSpacing: "-0.01em" };
   const btnOut: React.CSSProperties = { height: 52, fontSize: 15, fontWeight: 500, borderRadius: 12, cursor: "pointer", flex: 1, border: "1px solid var(--c-border)", background: "transparent", color: "var(--c-text)" };
 
