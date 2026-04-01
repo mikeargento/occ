@@ -72,6 +72,7 @@ export default function ProofPage() {
   const ts = (proof.timestamps as Record<string, Record<string, unknown>> | undefined)?.artifact;
 
   async function exportZip() {
+    try {
     const files: Record<string, Uint8Array> = {
       "proof.json": strToU8(JSON.stringify(proof, null, 2)),
     };
@@ -99,6 +100,7 @@ export default function ProofPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = `occ-proof-${commit.counter}.zip`; a.click();
     URL.revokeObjectURL(url);
+    } catch (e) { console.error("[occ] export error:", e); alert("Export failed: " + e); }
   }
 
   return (
