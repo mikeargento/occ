@@ -133,10 +133,10 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
           onClick={() => { setOpen(true); onOpenChange?.(true); }}
           style={{
             background: "none",
-            border: "1px solid rgba(255,255,255,0.15)",
+            border: "1px solid var(--c-border)",
             borderRadius: 980,
             padding: "12px 28px",
-            color: "rgba(255,255,255,0.6)",
+            color: "var(--c-text-secondary)",
             fontSize: 15,
             cursor: "pointer",
             display: "flex",
@@ -149,8 +149,8 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
             e.currentTarget.style.color = "#34d399";
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)";
-            e.currentTarget.style.color = "rgba(255,255,255,0.6)";
+            e.currentTarget.style.borderColor = "var(--c-border)";
+            e.currentTarget.style.color = "var(--c-text-secondary)";
           }}
         >
           <svg
@@ -177,9 +177,9 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
       style={{
         width: "100%",
         aspectRatio: "1",
-        background: "#111",
+        background: "var(--bg-subtle)",
         borderRadius: 12,
-        border: "1px solid rgba(255,255,255,0.1)",
+        border: "1px solid var(--c-border)",
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
@@ -189,7 +189,7 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
       <div
         style={{
           padding: "14px 16px",
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
+          borderBottom: "1px solid var(--c-border-subtle)",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -201,7 +201,7 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
           style={{
             background: "none",
             border: "none",
-            color: "rgba(255,255,255,0.5)",
+            color: "var(--c-text-secondary)",
             cursor: "pointer",
             fontSize: 28,
             lineHeight: 1,
@@ -231,11 +231,11 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
                 onClick={() => sendMessage(q)}
                 disabled={streaming}
                 style={{
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.1)",
+                  background: "var(--bg-elevated)",
+                  border: "1px solid var(--c-border)",
                   borderRadius: 20,
                   padding: "8px 14px",
-                  color: "rgba(255,255,255,0.7)",
+                  color: "var(--c-text-secondary)",
                   fontSize: 14,
                   cursor: "pointer",
                   textAlign: "left",
@@ -247,9 +247,9 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
                   e.currentTarget.style.color = "#34d399";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "rgba(255,255,255,0.06)";
-                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.1)";
-                  e.currentTarget.style.color = "rgba(255,255,255,0.7)";
+                  e.currentTarget.style.background = "var(--bg-elevated)";
+                  e.currentTarget.style.borderColor = "var(--c-border)";
+                  e.currentTarget.style.color = "var(--c-text-secondary)";
                 }}
               >
                 {q}
@@ -271,8 +271,8 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
                 background:
                   msg.role === "user"
                     ? "#34d399"
-                    : "rgba(255,255,255,0.06)",
-                color: msg.role === "user" ? "#000" : "rgba(255,255,255,0.85)",
+                    : "var(--bg-elevated)",
+                color: msg.role === "user" ? "var(--bg)" : "var(--c-text)",
                 borderRadius:
                   msg.role === "user"
                     ? "16px 16px 4px 16px"
@@ -310,7 +310,7 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
         onSubmit={handleSubmit}
         style={{
           padding: "12px 16px",
-          borderTop: "1px solid rgba(255,255,255,0.08)",
+          borderTop: "1px solid var(--c-border-subtle)",
           display: "flex",
           gap: 8,
         }}
@@ -324,11 +324,11 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
           disabled={streaming}
           style={{
             flex: 1,
-            background: "rgba(255,255,255,0.06)",
-            border: "1px solid rgba(255,255,255,0.1)",
+            background: "var(--bg-elevated)",
+            border: "1px solid var(--c-border)",
             borderRadius: 10,
             padding: "10px 14px",
-            color: "#fff",
+            color: "var(--c-text)",
             fontSize: 16,
             outline: "none",
           }}
@@ -337,11 +337,11 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
           type="submit"
           disabled={!input.trim() || streaming}
           style={{
-            background: input.trim() && !streaming ? "#34d399" : "rgba(255,255,255,0.06)",
+            background: input.trim() && !streaming ? "var(--c-accent)" : "var(--bg-elevated)",
             border: "none",
             borderRadius: 10,
             padding: "10px 14px",
-            color: input.trim() && !streaming ? "#000" : "rgba(255,255,255,0.3)",
+            color: input.trim() && !streaming ? "var(--bg)" : "var(--c-text-tertiary)",
             fontSize: 15,
             fontWeight: 600,
             cursor: input.trim() && !streaming ? "pointer" : "default",
@@ -361,7 +361,7 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
         .occ-chat-md strong { color: #fff; font-weight: 600; }
         .occ-chat-md ul, .occ-chat-md ol { margin: 4px 0 8px; padding-left: 18px; }
         .occ-chat-md li { margin-bottom: 4px; }
-        .occ-chat-md code { background: rgba(255,255,255,0.1); padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+        .occ-chat-md code { background: var(--bg-elevated); padding: 1px 5px; border-radius: 4px; font-size: 13px; }
         .occ-chat-md h1, .occ-chat-md h2, .occ-chat-md h3 { font-size: 14px; font-weight: 600; color: #fff; margin: 8px 0 4px; }
         @media (max-width: 640px) {
           .occ-chat-panel { aspect-ratio: 3/4 !important; }

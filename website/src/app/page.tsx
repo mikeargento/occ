@@ -229,8 +229,8 @@ export default function OCCPage() {
 
   /* ── Styles ── */
   const card: React.CSSProperties = { border: "1px solid rgba(52,211,153,0.08)", padding: "24px 20px", background: "rgba(52,211,153,0.02)", borderRadius: 16, marginBottom: 16 };
-  const btnFill: React.CSSProperties = { height: 52, fontSize: 15, fontWeight: 600, border: "none", borderRadius: 12, background: "#34d399", color: "#000", cursor: "pointer", flex: 1, letterSpacing: "-0.01em" };
-  const btnOut: React.CSSProperties = { height: 52, fontSize: 15, fontWeight: 500, borderRadius: 12, cursor: "pointer", flex: 1, border: "1px solid rgba(255,255,255,0.1)", background: "transparent", color: "#fff" };
+  const btnFill: React.CSSProperties = { height: 52, fontSize: 15, fontWeight: 600, border: "none", borderRadius: 12, background: "var(--c-accent)", color: "var(--bg)", cursor: "pointer", flex: 1, letterSpacing: "-0.01em" };
+  const btnOut: React.CSSProperties = { height: 52, fontSize: 15, fontWeight: 500, borderRadius: 12, cursor: "pointer", flex: 1, border: "1px solid var(--c-border)", background: "transparent", color: "var(--c-text)" };
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--c-text)", display: "flex", flexDirection: "column" }}>
@@ -264,11 +264,11 @@ export default function OCCPage() {
         {/* ── Scanning ── */}
         {step === "scanning" && (
           <div style={{ textAlign: "center", padding: "80px 24px", animation: "slideIn 0.3s ease-out" }}>
-            <div style={{ fontSize: 64, fontWeight: 800, color: "#fff", marginBottom: 8, fontFamily: "monospace", animation: "pulse 1s ease-in-out infinite", letterSpacing: "-0.04em" }}>
-              {scanProgress.current}<span style={{ color: "rgba(255,255,255,0.2)" }}>/{scanProgress.total}</span>
+            <div style={{ fontSize: 64, fontWeight: 800, color: "var(--c-text)", marginBottom: 8, fontFamily: "monospace", animation: "pulse 1s ease-in-out infinite", letterSpacing: "-0.04em" }}>
+              {scanProgress.current}<span style={{ color: "var(--c-text-tertiary)" }}>/{scanProgress.total}</span>
             </div>
-            <div style={{ fontSize: 15, color: "rgba(255,255,255,0.4)", fontWeight: 500 }}>Scanning</div>
-            <div style={{ width: "40%", height: 2, borderRadius: 1, background: "rgba(255,255,255,0.06)", overflow: "hidden", margin: "20px auto 0" }}>
+            <div style={{ fontSize: 15, color: "var(--c-text-tertiary)", fontWeight: 500 }}>Scanning</div>
+            <div style={{ width: "40%", height: 2, borderRadius: 1, background: "var(--c-border-subtle)", overflow: "hidden", margin: "20px auto 0" }}>
               <div style={{ width: `${(scanProgress.current / scanProgress.total) * 100}%`, height: "100%", background: "#34d399", transition: "width 0.2s", boxShadow: "0 0 12px rgba(52,211,153,0.5)" }} />
             </div>
           </div>
@@ -280,15 +280,15 @@ export default function OCCPage() {
             <div style={{ fontSize: 64, fontWeight: 800, color: "#34d399", marginBottom: 8, fontFamily: "monospace", animation: "pulse 1s ease-in-out infinite", textShadow: "0 0 40px rgba(52,211,153,0.4)", letterSpacing: "-0.04em" }}>
               {unproven.length}
             </div>
-            <div style={{ fontSize: 15, color: "rgba(255,255,255,0.4)", fontWeight: 500 }}>Signing in enclave</div>
+            <div style={{ fontSize: 15, color: "var(--c-text-tertiary)", fontWeight: 500 }}>Signing in enclave</div>
           </div>
         )}
 
         {/* ── Exporting ── */}
         {step === "exporting" && (
           <div style={{ textAlign: "center", padding: "80px 24px", animation: "slideIn 0.3s ease-out" }}>
-            <div style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", marginBottom: 16, fontWeight: 500 }}>Packaging</div>
-            <div style={{ width: "40%", height: 2, borderRadius: 1, background: "rgba(255,255,255,0.06)", overflow: "hidden", margin: "0 auto" }}>
+            <div style={{ fontSize: 15, color: "var(--c-text-secondary)", marginBottom: 16, fontWeight: 500 }}>Packaging</div>
+            <div style={{ width: "40%", height: 2, borderRadius: 1, background: "var(--c-border-subtle)", overflow: "hidden", margin: "0 auto" }}>
               <div style={{ width: `${(exportProgress.current / exportProgress.total) * 100}%`, height: "100%", background: "#34d399", transition: "width 0.15s", boxShadow: "0 0 12px rgba(52,211,153,0.5)" }} />
             </div>
           </div>
@@ -308,7 +308,7 @@ export default function OCCPage() {
               }}>
                 {animCount}
               </div>
-              <div style={{ fontSize: 16, color: "rgba(255,255,255,0.35)", marginTop: 12, fontWeight: 500, letterSpacing: "0.02em" }}>
+              <div style={{ fontSize: 16, color: "var(--c-text-tertiary)", marginTop: 12, fontWeight: 500, letterSpacing: "0.02em" }}>
                 {allDone
                   ? `of ${items.length} proven`
                   : `of ${items.length} found`}
@@ -359,7 +359,7 @@ export default function OCCPage() {
                   {item.proof && (
                     <a href={`/proof/${encodeURIComponent(toUrlSafeB64(item.digestB64))}`} target="_blank" rel="noopener"
                       style={{
-                        fontSize: 15, fontWeight: 600, color: "#000", textDecoration: "none",
+                        fontSize: 15, fontWeight: 600, color: "var(--bg)", textDecoration: "none",
                         flexShrink: 0, padding: "8px 24px", borderRadius: 980,
                         background: "#34d399",
                       }}>
@@ -373,7 +373,7 @@ export default function OCCPage() {
             {/* Actions */}
             <div style={{ display: "flex", gap: 12 }}>
               {unproven.length > 0 && (
-                <button onClick={proveRemaining} style={{ ...btnFill, background: "#34d399", color: "#000" }}>
+                <button onClick={proveRemaining} style={{ ...btnFill, background: "#34d399", color: "var(--bg)" }}>
                   Prove {unproven.length} remaining
                 </button>
               )}
