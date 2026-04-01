@@ -400,19 +400,6 @@ export default function MakerPage() {
                       background: "transparent", color: "var(--c-text)",
                     }}
                   />
-                  <label style={{
-                    display: "flex", alignItems: "center", gap: 6,
-                    fontSize: 13, color: "var(--c-text-secondary)", cursor: "pointer",
-                    whiteSpace: "nowrap",
-                  }}>
-                    <input
-                      type="checkbox"
-                      checked={useBiometrics}
-                      onChange={(e) => setUseBiometrics(e.target.checked)}
-                      style={{ accentColor: "var(--accent)" }}
-                    />
-                    Biometric authorship
-                  </label>
                 </div>
               </>
             )}

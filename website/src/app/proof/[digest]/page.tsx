@@ -2,14 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
+import { Nav } from "@/components/nav";
 import type { OCCProof } from "@/lib/occ";
 
-const C = {
-  bg: "#F8FAFC", surface: "#FFFFFF", border: "#E2E8F0", borderLight: "#F1F5F9",
-  text: "#0F172A", textSec: "#475569", textTri: "#94A3B8",
-  accent: "#2563EB", green: "#16A34A", red: "#DC2626", blue: "#2563EB",
-};
-const mono = "'SF Mono', SFMono-Regular, 'JetBrains Mono', Consolas, monospace";
+const mono = "var(--font-mono), 'SF Mono', SFMono-Regular, monospace";
 
 export default function ProofPage() {
   const params = useParams();
@@ -37,8 +33,15 @@ export default function ProofPage() {
     })();
   }, [digestParam]);
 
-  if (loading) return <Shell><div style={{ padding: "80px 20px", textAlign: "center", color: C.textTri }}>Loading proof...</div></Shell>;
-  if (error || !proof) return <Shell><div style={{ padding: "80px 20px", textAlign: "center" }}><div style={{ fontSize: 16, color: C.red, marginBottom: 12 }}>{error || "Proof not found"}</div><a href="/" style={{ fontSize: 14, color: C.blue }}>Back to explorer</a></div></Shell>;
+  if (loading) return <Shell><div style={{ padding: "80px 20px", textAlign: "center", color: "var(--c-text-tertiary)" }}>Loading proof...</div></Shell>;
+  if (error || !proof) return (
+    <Shell>
+      <div style={{ padding: "80px 20px", textAlign: "center" }}>
+        <div style={{ fontSize: 16, color: "#ff453a", marginBottom: 12 }}>{error || "Proof not found"}</div>
+        <a href="/" style={{ fontSize: 14, color: "var(--c-accent)" }}>Back to explorer</a>
+      </div>
+    </Shell>
+  );
 
   const commit = proof.commit;
   const attr = proof.attribution as { name?: string; title?: string; message?: string } | undefined;
@@ -56,27 +59,39 @@ export default function ProofPage() {
 
   return (
     <Shell>
-      <div style={{ maxWidth: 700, margin: "0 auto", padding: "24px 20px 60px" }}>
+      <style>{`@keyframes fadeIn { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:translateY(0) } }`}</style>
 
-        {/* Back link */}
-        <a href="/" style={{ fontSize: 14, color: C.blue, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 24 }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15 18 9 12 15 6" /></svg>
-          Back to explorer
+      <div style={{ width: "90%", maxWidth: 800, margin: "0 auto", padding: "24px 0 60px", animation: "fadeIn .3s ease-out" }}>
+
+        {/* Back */}
+        <a href="/" style={{ fontSize: 14, color: "var(--c-text-tertiary)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 24 }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15 18 9 12 15 6" /></svg>
+          Back
         </a>
 
-        {/* Header */}
+        {/* Title bar */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={{ fontSize: 28, fontWeight: 800, fontFamily: mono, color: C.accent }}>#{commit.counter}</span>
-              {isTee && <span style={{ fontSize: 12, fontWeight: 600, color: C.green, background: "rgba(27,137,1,0.08)", padding: "3px 10px", borderRadius: 20 }}>Hardware Enclave</span>}
-              {isEth && <span style={{ fontSize: 12, fontWeight: 600, color: C.blue, background: "rgba(0,115,187,0.08)", padding: "3px 10px", borderRadius: 20 }}>ETH Anchor</span>}
+              <span style={{ fontSize: 28, fontWeight: 700, fontFamily: mono, color: "var(--c-accent)" }}>#{commit.counter}</span>
+              {isTee && (
+                <span style={{ fontSize: 12, fontWeight: 600, color: "#34d399", background: "rgba(52,211,153,.1)", border: "1px solid rgba(52,211,153,.2)", padding: "3px 10px", borderRadius: 20 }}>
+                  Hardware Enclave
+                </span>
+              )}
+              {isEth && (
+                <span style={{ fontSize: 12, fontWeight: 600, color: "var(--c-accent)", background: "rgba(59,130,246,.1)", border: "1px solid rgba(59,130,246,.2)", padding: "3px 10px", borderRadius: 20 }}>
+                  ETH Anchor
+                </span>
+              )}
             </div>
-            <div style={{ fontSize: 14, color: C.textTri, marginTop: 4 }}>{attr?.name || "Proof"}</div>
+            <div style={{ fontSize: 14, color: "var(--c-text-tertiary)", marginTop: 4 }}>
+              {attr?.name || "Proof"}
+            </div>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={downloadJson} style={btnStyle}>Export</button>
-            <button onClick={() => navigator.clipboard.writeText(JSON.stringify(proof, null, 2))} style={btnStyle}>Copy</button>
+            <button onClick={downloadJson} style={btnStyle}>Export .json</button>
+            <button onClick={() => navigator.clipboard.writeText(JSON.stringify(proof, null, 2))} style={btnStyle}>Copy JSON</button>
           </div>
         </div>
 
@@ -84,130 +99,150 @@ export default function ProofPage() {
         {isEth && attr?.title && (
           <a href={attr.title} target="_blank" rel="noopener" style={{
             display: "flex", alignItems: "center", justifyContent: "space-between",
-            padding: "12px 16px", marginBottom: 16, borderRadius: 10,
-            background: "rgba(0,115,187,0.04)", border: `1px solid rgba(0,115,187,0.12)`,
-            textDecoration: "none", color: C.blue, fontSize: 14, fontWeight: 500,
+            padding: "14px 16px", marginBottom: 20, borderRadius: 12,
+            background: "rgba(59,130,246,.05)", border: "1px solid rgba(59,130,246,.15)",
+            textDecoration: "none", color: "var(--c-accent)", fontSize: 14, fontWeight: 500,
           }}>
             <span>{attr.name}</span>
-            <span>Etherscan &rarr;</span>
+            <span>View on Etherscan &rarr;</span>
           </a>
         )}
 
         {/* Causal Window */}
         {causalWindow && (causalWindow.anchorBefore || causalWindow.anchorAfter) && (
-          <div style={{ marginBottom: 16, padding: "14px 18px", borderRadius: 10, background: "rgba(27,137,1,0.04)", border: "1px solid rgba(27,137,1,0.12)" }}>
-            <div style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em", color: C.green, marginBottom: 10 }}>Causal Window</div>
-            <div style={{ fontSize: 13, color: C.textSec, lineHeight: 1.6 }}>
+          <div style={{
+            marginBottom: 20, padding: "16px 20px", borderRadius: 12,
+            background: "rgba(52,211,153,.04)", border: "1px solid rgba(52,211,153,.15)",
+          }}>
+            <div style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em", color: "#34d399", marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ width: 3, height: 12, borderRadius: 1, background: "#34d399" }} />
+              Causal Window
+            </div>
+            <div style={{ fontSize: 13, color: "var(--c-text-secondary)", lineHeight: 1.7 }}>
               {causalWindow.anchorBefore && causalWindow.anchorAfter ? (
-                <>Between <a href={causalWindow.anchorBefore.etherscanUrl || "#"} target="_blank" rel="noopener" style={{ color: C.green, fontWeight: 600, textDecoration: "none" }}>Ethereum #{causalWindow.anchorBefore.blockNumber}</a> and <a href={causalWindow.anchorAfter.etherscanUrl || "#"} target="_blank" rel="noopener" style={{ color: C.green, fontWeight: 600, textDecoration: "none" }}>Ethereum #{causalWindow.anchorAfter.blockNumber}</a></>
+                <>Between <a href={causalWindow.anchorBefore.etherscanUrl || "#"} target="_blank" rel="noopener" style={{ color: "#34d399", textDecoration: "none", fontWeight: 600 }}>Ethereum #{causalWindow.anchorBefore.blockNumber}</a> and <a href={causalWindow.anchorAfter.etherscanUrl || "#"} target="_blank" rel="noopener" style={{ color: "#34d399", textDecoration: "none", fontWeight: 600 }}>Ethereum #{causalWindow.anchorAfter.blockNumber}</a></>
               ) : causalWindow.anchorAfter ? (
-                <>Sealed by <a href={causalWindow.anchorAfter.etherscanUrl || "#"} target="_blank" rel="noopener" style={{ color: C.green, fontWeight: 600, textDecoration: "none" }}>Ethereum #{causalWindow.anchorAfter.blockNumber}</a></>
+                <>Sealed by <a href={causalWindow.anchorAfter.etherscanUrl || "#"} target="_blank" rel="noopener" style={{ color: "#34d399", textDecoration: "none", fontWeight: 600 }}>Ethereum #{causalWindow.anchorAfter.blockNumber}</a></>
               ) : causalWindow.anchorBefore ? (
-                <>After <a href={causalWindow.anchorBefore.etherscanUrl || "#"} target="_blank" rel="noopener" style={{ color: C.green, fontWeight: 600, textDecoration: "none" }}>Ethereum #{causalWindow.anchorBefore.blockNumber}</a> — awaiting next anchor</>
+                <>After <a href={causalWindow.anchorBefore.etherscanUrl || "#"} target="_blank" rel="noopener" style={{ color: "#34d399", textDecoration: "none", fontWeight: 600 }}>Ethereum #{causalWindow.anchorBefore.blockNumber}</a> — awaiting next anchor</>
               ) : null}
             </div>
-            {/* Timeline */}
-            <div style={{ marginTop: 12, display: "flex", alignItems: "center", fontSize: 11, fontFamily: mono, color: C.textTri }}>
-              {causalWindow.anchorBefore && <><span style={{ width: 8, height: 8, borderRadius: "50%", background: C.green, flexShrink: 0 }} /><span style={{ marginLeft: 4 }}>#{causalWindow.anchorBefore.counter}</span></>}
-              <div style={{ flex: 1, height: 1, background: "rgba(27,137,1,0.2)", margin: "0 8px", position: "relative" }}>
-                <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 10, height: 10, borderRadius: "50%", background: C.accent, border: `2px solid ${C.surface}` }} />
+            <div style={{ marginTop: 12, display: "flex", alignItems: "center", fontSize: 11, fontFamily: mono }}>
+              {causalWindow.anchorBefore && (
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#34d399", flexShrink: 0 }} />
+                  <span style={{ color: "var(--c-text-tertiary)" }}>#{causalWindow.anchorBefore.counter}</span>
+                </div>
+              )}
+              <div style={{ flex: 1, height: 1, background: "rgba(52,211,153,.25)", margin: "0 8px", position: "relative" }}>
+                <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 10, height: 10, borderRadius: "50%", background: "var(--c-accent)", border: "2px solid var(--bg-elevated)" }} />
               </div>
-              {causalWindow.anchorAfter ? <><span>#{causalWindow.anchorAfter.counter}</span><span style={{ width: 8, height: 8, borderRadius: "50%", background: C.green, flexShrink: 0, marginLeft: 4 }} /></> : <span style={{ color: C.textTri }}>pending</span>}
+              {causalWindow.anchorAfter ? (
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{ color: "var(--c-text-tertiary)" }}>#{causalWindow.anchorAfter.counter}</span>
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#34d399", flexShrink: 0 }} />
+                </div>
+              ) : (
+                <span style={{ color: "var(--c-text-tertiary)" }}>pending</span>
+              )}
             </div>
           </div>
         )}
 
-        {/* Proof sections */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
+        {/* Cards grid */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
 
-          <Section title="Artifact">
-            <Row label="Digest" value={proof.artifact.digestB64} mono />
-            <Row label="Algorithm" value={proof.artifact.hashAlg.toUpperCase()} last />
-          </Section>
+          <Card title="Artifact">
+            <Field label="Digest" value={proof.artifact.digestB64} mono />
+            <Field label="Algorithm" value={proof.artifact.hashAlg.toUpperCase()} />
+          </Card>
 
-          <Section title="Commit">
-            <Row label="Counter" value={`#${commit.counter}`} accent />
-            {commit.epochId && <Row label="Epoch" value={String(commit.epochId)} mono />}
-            {commit.prevB64 && <Row label="Previous" value={commit.prevB64} mono />}
-            {commit.nonceB64 && <Row label="Nonce" value={commit.nonceB64} mono />}
-            {commit.slotCounter != null && <Row label="Slot Counter" value={`#${commit.slotCounter}`} />}
-            {commit.slotHashB64 && <Row label="Slot Hash" value={commit.slotHashB64} mono last />}
-          </Section>
+          <Card title="Commit">
+            <Field label="Counter" value={`#${commit.counter}`} highlight />
+            {commit.epochId && <Field label="Epoch ID" value={String(commit.epochId)} mono />}
+            {commit.prevB64 && <Field label="Previous Hash" value={commit.prevB64} mono />}
+            {commit.nonceB64 && <Field label="Nonce" value={commit.nonceB64} mono />}
+            {commit.slotCounter != null && <Field label="Slot Counter" value={`#${commit.slotCounter}`} />}
+            {commit.slotHashB64 && <Field label="Slot Hash" value={commit.slotHashB64} mono />}
+          </Card>
 
           {slot && (
-            <Section title="Causal Slot" color={C.blue}>
-              <Row label="Counter" value={`#${slot.counter}`} accent />
-              {slot.nonceB64 ? <Row label="Nonce" value={String(slot.nonceB64)} mono /> : null}
-              {slot.signatureB64 ? <Row label="Signature" value={String(slot.signatureB64)} mono /> : null}
-              {slot.epochId ? <Row label="Epoch" value={String(slot.epochId)} mono last /> : null}
-            </Section>
+            <Card title="Causal Slot" accent="#06b6d4">
+              <Field label="Counter" value={`#${slot.counter}`} highlight />
+              {slot.nonceB64 ? <Field label="Nonce" value={String(slot.nonceB64)} mono /> : null}
+              {slot.signatureB64 ? <Field label="Signature" value={String(slot.signatureB64)} mono /> : null}
+              {slot.epochId ? <Field label="Epoch ID" value={String(slot.epochId)} mono /> : null}
+            </Card>
           )}
 
-          <Section title="Signer">
-            <Row label="Public Key" value={proof.signer.publicKeyB64} mono />
-            <Row label="Signature" value={proof.signer.signatureB64} mono last />
-          </Section>
+          <Card title="Signer">
+            <Field label="Public Key" value={proof.signer.publicKeyB64} mono />
+            <Field label="Signature" value={proof.signer.signatureB64} mono />
+          </Card>
 
-          <Section title="Environment" color={C.green}>
-            <Row label="Enforcement" value={isTee ? "Hardware Enclave (AWS Nitro)" : "Software"} />
-            {proof.environment?.measurement && <Row label="PCR0" value={proof.environment.measurement} mono />}
-            {proof.environment?.attestation?.format && <Row label="Attestation" value={proof.environment.attestation.format} last />}
-          </Section>
+          <Card title="Environment" accent="#34d399">
+            <Field label="Enforcement" value={isTee ? "Hardware Enclave (AWS Nitro)" : "Software"} />
+            {proof.environment?.measurement && <Field label="PCR0 Measurement" value={proof.environment.measurement} mono />}
+            {proof.environment?.attestation?.format && <Field label="Attestation Format" value={proof.environment.attestation.format} />}
+          </Card>
 
           {attr && (
-            <Section title="Attribution">
-              {attr.name && <Row label="Name" value={attr.name} />}
-              {attr.message && <Row label="Data" value={attr.message} mono />}
-              {attr.title && <Row label="Link" value={attr.title} link last />}
-            </Section>
+            <Card title="Attribution">
+              {attr.name && <Field label="Name" value={attr.name} />}
+              {attr.message && <Field label="Data" value={attr.message} mono />}
+              {attr.title && <Field label="Link" value={attr.title} link />}
+            </Card>
           )}
 
           {ts && (
-            <Section title="Timestamp">
-              {ts.authority ? <Row label="Authority" value={String(ts.authority)} /> : null}
-              {ts.time ? <Row label="TSA Time" value={String(ts.time)} /> : null}
-              {ts.digestAlg ? <Row label="Algorithm" value={String(ts.digestAlg)} last /> : null}
-            </Section>
+            <Card title="Timestamps">
+              {ts.authority ? <Field label="Authority" value={String(ts.authority)} /> : null}
+              {ts.time ? <Field label="TSA Time" value={String(ts.time)} /> : null}
+              {ts.digestAlg ? <Field label="Digest Algorithm" value={String(ts.digestAlg)} /> : null}
+            </Card>
           )}
         </div>
 
         {/* Raw JSON */}
-        <details style={{ marginTop: 16, background: C.surface, borderRadius: 10, border: `1px solid ${C.border}` }}>
-          <summary style={{ padding: "12px 16px", fontSize: 14, fontWeight: 600, color: C.textSec, cursor: "pointer" }}>Raw JSON</summary>
-          <pre style={{ fontSize: 11, fontFamily: mono, lineHeight: 1.5, color: C.green, background: "#fafafa", padding: 16, margin: 0, overflow: "auto", maxHeight: 400, borderTop: `1px solid ${C.borderLight}`, whiteSpace: "pre-wrap", wordBreak: "break-all" }}>
-            {JSON.stringify(proof, null, 2)}
-          </pre>
-        </details>
+        <div style={{ marginTop: 24 }}>
+          <details>
+            <summary style={{ fontSize: 14, color: "var(--c-text-tertiary)", cursor: "pointer", padding: "8px 0", fontWeight: 500 }}>Raw JSON</summary>
+            <div style={{
+              marginTop: 8, padding: 16, background: "var(--bg-elevated)", border: "1px solid var(--c-border)",
+              borderRadius: 12, fontSize: 11, fontFamily: mono, color: "var(--c-text-tertiary)",
+              whiteSpace: "pre-wrap", wordBreak: "break-all", maxHeight: 500, overflow: "auto", lineHeight: 1.6,
+            }}>
+              {JSON.stringify(proof, null, 2)}
+            </div>
+          </details>
+        </div>
       </div>
     </Shell>
   );
 }
 
-/* ═══ Shell ═══ */
+/* ── Shell — uses same theme as maker page ── */
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ minHeight: "100vh", background: C.bg, color: C.text, fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Amazon Ember', system-ui, sans-serif" }}>
-      <div style={{ background: "#0F172A", padding: "0 24px" }}>
-        <div style={{ maxWidth: 700, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: 48 }}>
-          <a href="/" style={{ fontSize: 18, fontWeight: 700, color: "#fff", textDecoration: "none" }}>OCC</a>
-          <div style={{ display: "flex", gap: 20 }}>
-            <a href="/docs" style={{ fontSize: 14, color: "rgba(255,255,255,0.7)", textDecoration: "none" }}>Docs</a>
-            <a href="https://github.com/mikeargento/occ" target="_blank" rel="noopener" style={{ fontSize: 14, color: "rgba(255,255,255,0.7)", textDecoration: "none" }}>GitHub</a>
-          </div>
-        </div>
-      </div>
+    <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--c-text)" }}>
+      <Nav />
       {children}
     </div>
   );
 }
 
-/* ═══ Section ═══ */
+/* ── Card ── */
 
-function Section({ title, color, children }: { title: string; color?: string; children: React.ReactNode }) {
+function Card({ title, accent, children }: { title: string; accent?: string; children: React.ReactNode }) {
   return (
-    <div style={{ background: C.surface, borderRadius: 10, border: `1px solid ${C.border}`, overflow: "hidden" }}>
-      <div style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em", color: color || C.textTri, padding: "10px 16px", background: "#fafafa", borderBottom: `1px solid ${C.borderLight}` }}>
+    <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--c-border-subtle)", borderRadius: 12, padding: 16, overflow: "hidden" }}>
+      <div style={{
+        fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em",
+        color: accent || "var(--c-text-tertiary)", marginBottom: 12,
+        display: "flex", alignItems: "center", gap: 6,
+      }}>
+        <span style={{ width: 3, height: 12, borderRadius: 1, background: accent || "var(--c-text-tertiary)" }} />
         {title}
       </div>
       {children}
@@ -215,25 +250,34 @@ function Section({ title, color, children }: { title: string; color?: string; ch
   );
 }
 
-/* ═══ Row ═══ */
+/* ── Field with copy ── */
 
-function Row({ label, value, mono: isMono, accent, link, last }: { label: string; value: string; mono?: boolean; accent?: boolean; link?: boolean; last?: boolean }) {
+function Field({ label, value, mono: isMono, highlight, link }: { label: string; value: string; mono?: boolean; highlight?: boolean; link?: boolean }) {
   const [copied, setCopied] = useState(false);
+
   return (
-    <div onClick={() => { navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 1500); }} style={{
-      display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12,
-      padding: "9px 16px", borderBottom: last ? "none" : `1px solid ${C.borderLight}`, cursor: "pointer",
-    }}>
-      <span style={{ fontSize: 13, color: C.textTri, flexShrink: 0 }}>{label}</span>
+    <div
+      onClick={() => { navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
+      style={{
+        display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12,
+        padding: "6px 0", borderBottom: "1px solid var(--c-border-subtle)", cursor: "pointer",
+      }}
+    >
+      <span style={{ fontSize: 12, color: "var(--c-text-tertiary)", flexShrink: 0, minWidth: 80 }}>{label}</span>
       {link ? (
-        <a href={value} target="_blank" rel="noopener" onClick={e => e.stopPropagation()} style={{ fontSize: 12, color: C.blue, textDecoration: "none", wordBreak: "break-all", textAlign: "right" }}>{value}</a>
+        <a href={value} target="_blank" rel="noopener" onClick={(e) => e.stopPropagation()} style={{
+          fontSize: 12, color: "var(--c-accent)", textDecoration: "none", wordBreak: "break-all", textAlign: "right",
+        }}>{value}</a>
       ) : (
         <span style={{
-          fontSize: isMono ? 11 : 13, fontFamily: isMono ? mono : "inherit",
-          color: copied ? C.green : accent ? C.accent : C.text,
-          fontWeight: accent ? 700 : 400, wordBreak: "break-all", textAlign: "right", lineHeight: 1.4, transition: "color 0.2s",
+          fontSize: isMono ? 11 : 13,
+          fontFamily: isMono ? mono : "inherit",
+          color: copied ? "#34d399" : highlight ? "var(--c-accent)" : "var(--c-text-secondary)",
+          fontWeight: highlight ? 700 : 400,
+          wordBreak: "break-all", textAlign: "right",
+          transition: "color .2s", lineHeight: 1.4,
         }}>
-          {copied ? "Copied!" : value.length > 44 ? value.slice(0, 36) + "..." : value}
+          {copied ? "Copied!" : value}
         </span>
       )}
     </div>
@@ -241,6 +285,6 @@ function Row({ label, value, mono: isMono, accent, link, last }: { label: string
 }
 
 const btnStyle: React.CSSProperties = {
-  padding: "8px 16px", fontSize: 13, fontWeight: 600, color: C.textSec,
-  background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, cursor: "pointer",
+  padding: "8px 16px", fontSize: 13, fontWeight: 600, color: "var(--c-text-secondary)",
+  background: "transparent", border: "1px solid var(--c-border)", borderRadius: 10, cursor: "pointer",
 };
