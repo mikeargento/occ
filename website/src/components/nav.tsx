@@ -13,7 +13,7 @@ export function Nav() {
 export function Footer() {
   return (
     <div style={{ textAlign: "center", padding: "48px 0 32px", display: "flex", justifyContent: "center", gap: 24 }}>
-      <a href="/docs" style={{ fontSize: 13, color: "var(--c-text-tertiary)", textDecoration: "none" }}>Docs</a>
+      <a href="/docs" target="_blank" rel="noopener" style={{ fontSize: 13, color: "var(--c-text-tertiary)", textDecoration: "none" }}>Docs</a>
       <a href="https://github.com/mikeargento/occ" target="_blank" rel="noopener" style={{ fontSize: 13, color: "var(--c-text-tertiary)", textDecoration: "none" }}>GitHub</a>
     </div>
   );
