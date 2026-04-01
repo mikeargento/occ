@@ -319,7 +319,7 @@ export default function OCCPage() {
             <div style={card}>
               {items.map((item, i) => (
                 <div key={item.file.name + i} style={{
-                  padding: "12px 0", borderTop: i > 0 ? "1px solid var(--c-border-subtle)" : "none",
+                  padding: "12px 0", borderTop: i > 0 ? "1px solid var(--c-border)" : "none",
                   display: "flex", alignItems: "flex-start", gap: 10,
                   animation: `slideIn 0.2s ease-out ${i * 0.05}s both`,
                 }}>
