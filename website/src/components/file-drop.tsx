@@ -108,6 +108,7 @@ export function FileDrop({
       <input
         ref={inputRef}
         type="file"
+        title=""
         accept={accept || "*/*"}
         multiple={multiple}
         onChange={handleInputChange}
@@ -207,10 +208,10 @@ export function FileDrop({
               <path d="M3 14v2a1 1 0 001 1h12a1 1 0 001-1v-2" />
             </svg>
           </div>
-          <div className="text-[22px] font-semibold text-text tracking-tight">
+          <div className="text-[22px] font-semibold tracking-tight" style={{ color: "#34d399" }}>
             {multiple
-              ? <>Drop files or <label htmlFor="occ-file-input" className="text-accent cursor-pointer" onClick={(e) => e.stopPropagation()}>{browseLabel}</label></>
-              : <>Drop a file or <label htmlFor="occ-file-input" className="text-accent cursor-pointer" onClick={(e) => e.stopPropagation()}>{browseLabel}</label></>
+              ? <>Drop files or <label htmlFor="occ-file-input" className="cursor-pointer underline underline-offset-4" onClick={(e) => e.stopPropagation()}>{browseLabel}</label></>
+              : <>Drop a file or <label htmlFor="occ-file-input" className="cursor-pointer underline underline-offset-4" onClick={(e) => e.stopPropagation()}>{browseLabel}</label></>
             }
           </div>
           <div className="text-sm text-text-tertiary mt-2">

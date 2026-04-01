@@ -162,7 +162,7 @@ export default function ProofPage() {
           </Card>
 
           {slot && (
-            <Card title="Causal Slot" accent="#06b6d4">
+            <Card title="Causal Slot">
               <Field label="Counter" value={`#${slot.counter}`} highlight />
               {slot.nonceB64 ? <Field label="Nonce" value={String(slot.nonceB64)} mono /> : null}
               {slot.signatureB64 ? <Field label="Signature" value={String(slot.signatureB64)} mono /> : null}
@@ -175,7 +175,7 @@ export default function ProofPage() {
             <Field label="Signature" value={proof.signer.signatureB64} mono />
           </Card>
 
-          <Card title="Environment" accent="#34d399">
+          <Card title="Environment">
             <Field label="Enforcement" value={isTee ? "Hardware Enclave (AWS Nitro)" : "Software"} />
             {proof.environment?.measurement && <Field label="PCR0 Measurement" value={proof.environment.measurement} mono />}
             {proof.environment?.attestation?.format && <Field label="Attestation Format" value={proof.environment.attestation.format} />}
@@ -229,18 +229,20 @@ function Shell({ children }: { children: React.ReactNode }) {
 
 /* ── Card ── */
 
-function Card({ title, accent, children }: { title: string; accent?: string; children: React.ReactNode }) {
+function Card({ title, children }: { title: string; accent?: string; children: React.ReactNode }) {
   return (
-    <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--c-border-subtle)", borderRadius: 12, padding: 16, overflow: "hidden" }}>
+    <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14, overflow: "hidden" }}>
       <div style={{
-        fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em",
-        color: accent || "var(--c-text-tertiary)", marginBottom: 12,
-        display: "flex", alignItems: "center", gap: 6,
+        fontSize: 14, fontWeight: 700, letterSpacing: "0.04em",
+        color: "#34d399", padding: "14px 18px",
+        background: "rgba(52,211,153,0.04)",
+        borderBottom: "1px solid rgba(255,255,255,0.04)",
       }}>
-        <span style={{ width: 3, height: 12, borderRadius: 1, background: accent || "var(--c-text-tertiary)" }} />
         {title}
       </div>
-      {children}
+      <div style={{ padding: "4px 0" }}>
+        {children}
+      </div>
     </div>
   );
 }
@@ -255,10 +257,10 @@ function Field({ label, value, mono: isMono, highlight, link }: { label: string;
       onClick={() => { navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
       style={{
         display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12,
-        padding: "6px 0", borderBottom: "1px solid var(--c-border-subtle)", cursor: "pointer",
+        padding: "10px 18px", borderBottom: "1px solid rgba(255,255,255,0.03)", cursor: "pointer",
       }}
     >
-      <span style={{ fontSize: 12, color: "var(--c-text-tertiary)", flexShrink: 0, minWidth: 80 }}>{label}</span>
+      <span style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", flexShrink: 0, minWidth: 80 }}>{label}</span>
       {link ? (
         <a href={value} target="_blank" rel="noopener" onClick={(e) => e.stopPropagation()} style={{
           fontSize: 12, color: "var(--c-accent)", textDecoration: "none", wordBreak: "break-all", textAlign: "right",
