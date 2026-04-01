@@ -316,16 +316,19 @@ async function handleCommit(req: IncomingMessage, res: ServerResponse): Promise<
     proofs.push(proof);
   }
 
-  // Best-effort TSA timestamps — all in parallel to minimize latency
-  await Promise.all(
-    proofs.map(async (proof, i) => {
-      const d = body.digests[i]!;
-      const tsa = await requestTimestamp(d.digestB64).catch(() => null);
-      if (tsa) {
-        proof.timestamps = { artifact: tsa };
-      }
-    })
-  );
+  // Best-effort TSA timestamps — skip for ETH anchors (the block IS the timestamp)
+  const isAnchor = body.attribution?.name === "Ethereum Anchor";
+  if (!isAnchor) {
+    await Promise.all(
+      proofs.map(async (proof, i) => {
+        const d = body.digests[i]!;
+        const tsa = await requestTimestamp(d.digestB64).catch(() => null);
+        if (tsa) {
+          proof.timestamps = { artifact: tsa };
+        }
+      })
+    );
+  }
 
   // Fire-and-forget: persist to immutable S3 ledger (includes by-digest index)
   void persistToLedger(proofs);
