@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { Nav } from "@/components/nav";
 import type { OCCProof } from "@/lib/occ";
+import { zipSync, strToU8 } from "fflate";
 
 const mono = "var(--font-mono), 'SF Mono', SFMono-Regular, monospace";
 
@@ -50,10 +51,28 @@ export default function ProofPage() {
   const isTee = proof.environment?.enforcement === "measured-tee";
   const ts = (proof.timestamps as Record<string, Record<string, unknown>> | undefined)?.artifact;
 
-  function downloadJson() {
-    const blob = new Blob([JSON.stringify(proof, null, 2)], { type: "application/json" });
+  async function exportZip() {
+    const files: Record<string, Uint8Array> = {
+      "proof.json": strToU8(JSON.stringify(proof, null, 2)),
+    };
+    // Fetch bounding ETH anchors
+    try {
+      const counter = commit.counter;
+      const epoch = commit.epochId || "";
+      const resp = await fetch(`/api/proofs/anchors?counter=${counter}&epoch=${encodeURIComponent(epoch)}&limit=2`);
+      if (resp.ok) {
+        const anchors = await resp.json();
+        if (Array.isArray(anchors)) {
+          anchors.forEach((a: Record<string, unknown>, i: number) => {
+            files[`ethereum-anchors/anchor${anchors.length > 1 ? `-${i + 1}` : ""}.json`] = strToU8(JSON.stringify(a, null, 2));
+          });
+        }
+      }
+    } catch {}
+    const zipped = zipSync(files, { level: 0 });
+    const blob = new Blob([zipped], { type: "application/zip" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = `occ-proof-${commit.counter}.json`; a.click();
+    const a = document.createElement("a"); a.href = url; a.download = `occ-proof-${commit.counter}.zip`; a.click();
     URL.revokeObjectURL(url);
   }
 
@@ -73,7 +92,7 @@ export default function ProofPage() {
             </span>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={downloadJson} style={btnStyle}>Export Proof</button>
+            <button onClick={exportZip} style={btnStyle}>Export Proof</button>
             <JsonToggle proof={proof} />
           </div>
         </div>
