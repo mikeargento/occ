@@ -150,14 +150,14 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   font-size: 1.375rem;
   font-weight: 600;
   letter-spacing: -0.02em;
-  color: #1A73E8;
+  color: #111827;
 }
 .prose-doc h3 {
   margin-top: 2rem;
   margin-bottom: 0.75rem;
   font-size: 1.125rem;
   font-weight: 600;
-  color: #1A73E8;
+  color: #111827;
 }
 .prose-doc p {
   margin-bottom: 1.25rem;

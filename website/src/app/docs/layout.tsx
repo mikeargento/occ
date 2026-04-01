@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Footer } from "@/components/footer";
+// Footer is in root layout
 
 const sections = [
   { href: "/docs", label: "Overview" },
@@ -33,7 +33,7 @@ function SidebarNav({ pathname, onNavigate }: { pathname: string; onNavigate?: (
           <Link key={s.href} href={s.href} onClick={onNavigate} style={{
             display: "block", padding: "6px 12px", fontSize: 14,
             fontWeight: pathname === s.href ? 600 : 400,
-            color: pathname === s.href ? "#111827" : "#6b7280",
+            color: pathname === s.href ? "#1A73E8" : "#1A73E8",
             textDecoration: "none", borderRadius: 6,
             background: pathname === s.href ? "#f3f4f6" : "transparent",
             transition: "all 0.15s",
@@ -45,7 +45,7 @@ function SidebarNav({ pathname, onNavigate }: { pathname: string; onNavigate?: (
       <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #e5e7eb" }}>
         <a href="https://github.com/mikeargento/occ" target="_blank" rel="noopener" style={{
           display: "block", padding: "6px 12px", fontSize: 13,
-          color: "#9ca3af", textDecoration: "none",
+          color: "#1A73E8", textDecoration: "none",
         }}>
           GitHub
         </a>
@@ -114,7 +114,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
           <div style={{ minWidth: 0, flex: 1 }}>{children}</div>
         </div>
       </div>
-      <Footer />
+      {/* Footer is in root layout */}
     </>
   );
 }

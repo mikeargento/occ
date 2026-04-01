@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { FileDrop } from "@/components/file-drop";
-import { Footer } from "@/components/footer";
+// Footer is in root layout
 import { Chat } from "@/components/chat";
 import {
   hashFile,
@@ -411,7 +411,7 @@ export default function OCCPage() {
 
           </div>
         )}
-        <Footer />
+        {/* Footer is in root layout */}
       </div>
     </div>
   );
