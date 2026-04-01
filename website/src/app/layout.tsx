@@ -11,7 +11,7 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "OCC — Proof Explorer",
+    default: "Prethereum",
     template: "%s | OCC",
   },
   description:
@@ -21,14 +21,14 @@ export const metadata: Metadata = {
     "cryptographic policy", "AI governance", "default deny", "proof explorer",
   ],
   openGraph: {
-    title: "OCC — Proof Explorer",
+    title: "Prethereum",
     description: "Live cryptographic proof chain. Create, verify, and explore OCC proofs.",
     type: "website",
     siteName: "OCC",
   },
   twitter: {
     card: "summary_large_image",
-    title: "OCC — Proof Explorer",
+    title: "Prethereum",
     description: "Live cryptographic proof chain. Create, verify, and explore OCC proofs.",
   },
   robots: { index: true, follow: true },
