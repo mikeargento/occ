@@ -86,7 +86,7 @@ export function FileDrop({
   };
 
   return (
-    <label
+    <div
       onDragOver={(e) => {
         e.preventDefault();
         if (!disabled) setDragover(true);
@@ -104,16 +104,20 @@ export function FileDrop({
         }
       `}
     >
-      {/* Standard file input — sr-only (not display:none) for Safari compat */}
+      {/* File input covers the entire drop zone when no files are selected */}
       <input
         ref={inputRef}
-        id="occ-file-input"
         type="file"
         accept={accept || "*/*"}
         multiple={multiple}
-        className="sr-only"
         onChange={handleInputChange}
         disabled={disabled}
+        style={!hasFiles ? {
+          position: "absolute", inset: 0, width: "100%", height: "100%",
+          opacity: 0, cursor: "pointer", zIndex: 1,
+        } : {
+          position: "absolute", width: 1, height: 1, opacity: 0, top: -9999,
+        }}
       />
 
       {/* Camera capture input (mobile) */}
@@ -220,6 +224,6 @@ export function FileDrop({
           </div>
         </div>
       )}
-    </label>
+    </div>
   );
 }

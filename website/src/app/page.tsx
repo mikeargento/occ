@@ -350,25 +350,9 @@ export default function MakerPage() {
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--c-text)" }}>
-      <style>{`
-        .occ-container { width: 90%; max-width: 1400px; margin: 0 auto; padding: 40px 0 80px; }
-        .occ-grid { display: flex; flex-direction: column; gap: 32px; }
-        .occ-action { }
-        .occ-ledger-wrap { }
-        @media (min-width: 900px) {
-          .occ-grid { flex-direction: row; gap: 48px; align-items: flex-start; }
-          .occ-action { flex: 0 0 min(50%, 560px); }
-          .occ-ledger-wrap { flex: 1; min-width: 0; }
-        }
-        @media (max-width: 600px) {
-          .occ-container { width: 95%; padding: 24px 0 60px; }
-        }
-      `}</style>
       <Nav />
 
-      <div className="occ-container">
-      <div className="occ-grid">
-      <div className="occ-action">
+      <div style={{ width: "90%", maxWidth: 1120, margin: "0 auto", padding: "40px 0 80px" }}>
 
         {/* Mode toggle */}
         <div style={{
@@ -626,10 +610,8 @@ export default function MakerPage() {
           </>
         )}
 
-      </div>{/* end occ-action */}
-
         {/* ═══ PUBLIC PROOF LEDGER ═══ */}
-        <div className="occ-ledger-wrap">
+        <div style={{ marginTop: 64 }}>
           <div style={{
             display: "flex", alignItems: "center", justifyContent: "space-between",
             marginBottom: 16,
@@ -732,9 +714,8 @@ export default function MakerPage() {
               )}
             </>
           )}
-        </div>{/* end occ-ledger-wrap */}
-      </div>{/* end occ-grid */}
-      </div>{/* end occ-container */}
+        </div>
+      </div>
     </div>
   );
 }
