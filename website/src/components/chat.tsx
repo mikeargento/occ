@@ -188,13 +188,14 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
       {/* Header */}
       <div
         style={{
-          padding: "8px 16px",
+          padding: "14px 16px",
           borderBottom: "1px solid rgba(255,255,255,0.08)",
           display: "flex",
           alignItems: "center",
-          justifyContent: "flex-end",
+          justifyContent: "space-between",
         }}
       >
+        <span style={{ fontWeight: 600, fontSize: 15, color: "#fff" }}>Ask about OCC</span>
         <button
           onClick={() => { setOpen(false); onOpenChange?.(false); }}
           style={{
@@ -364,9 +365,6 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
         .occ-chat-md h1, .occ-chat-md h2, .occ-chat-md h3 { font-size: 14px; font-weight: 600; color: #fff; margin: 8px 0 4px; }
       `}</style>
     </div>
-      <div style={{ display: "flex", justifyContent: "center", padding: "40px 0" }}>
-        <span style={{ fontSize: 15, color: "rgba(255,255,255,0.5)" }}>Ask about OCC</span>
-      </div>
     </div>
   );
 }
