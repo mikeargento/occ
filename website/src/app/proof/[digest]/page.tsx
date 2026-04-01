@@ -61,8 +61,9 @@ export default function ProofPage() {
       const epoch = commit.epochId || "";
       const resp = await fetch(`/api/proofs/anchors?counter=${counter}&epoch=${encodeURIComponent(epoch)}&limit=2`);
       if (resp.ok) {
-        const anchors = await resp.json();
-        if (Array.isArray(anchors)) {
+        const data = await resp.json();
+        const anchors = data.anchors || [];
+        if (Array.isArray(anchors) && anchors.length > 0) {
           anchors.forEach((a: Record<string, unknown>, i: number) => {
             files[`ethereum-anchors/anchor${anchors.length > 1 ? `-${i + 1}` : ""}.json`] = strToU8(JSON.stringify(a, null, 2));
           });
