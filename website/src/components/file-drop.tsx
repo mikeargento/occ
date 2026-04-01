@@ -214,7 +214,7 @@ export function FileDrop({
               : <>Drop a file or <label htmlFor="occ-file-input" className="cursor-pointer" onClick={(e) => e.stopPropagation()}>{browseLabel}</label></>
             }
           </div>
-          <div className="text-sm text-text-tertiary mt-2">
+          <div className="text-sm text-text-tertiary mt-2 text-center" style={{ whiteSpace: "pre-line" }}>
             {hint || "Any file type. Hashed locally in your browser"}
           </div>
         </div>
