@@ -145,12 +145,13 @@ export default function OCCPage() {
     if (!withProofs.length) return;
 
     setStep("exporting");
-    setExportProgress({ current: 0, total: withProofs.length + 1 });
+    const totalSteps = withProofs.length + 2; // files + anchors + zip
+    setExportProgress({ current: 0, total: totalSteps });
     const z: Record<string, Uint8Array> = {};
     const multi = withProofs.length > 1;
 
     for (let i = 0; i < withProofs.length; i++) {
-      setExportProgress({ current: i + 1, total: withProofs.length + 1 });
+      setExportProgress({ current: i + 1, total: totalSteps });
       const { file: f, proof: p } = withProofs[i];
       const base = f.name.replace(/\.[^.]+$/, "");
       const prefix = multi ? `${base}/` : "";
@@ -159,7 +160,7 @@ export default function OCCPage() {
     }
 
     // Fetch ETH anchors that bound these proofs (within the proof window + 12s)
-    setExportProgress({ current: withProofs.length, total: withProofs.length + 1 });
+    setExportProgress({ current: withProofs.length + 1, total: totalSteps });
     try {
       const earliest = withProofs[0];
       const resp = await fetch(`/api/proofs/anchors?digest=${encodeURIComponent(earliest.digestB64)}`);
@@ -178,7 +179,9 @@ export default function OCCPage() {
       }
     } catch { /* non-critical */ }
 
-    setExportProgress({ current: withProofs.length + 1, total: withProofs.length + 1 });
+    // Yield to UI so progress bar renders before blocking zipSync
+    await new Promise(r => setTimeout(r, 50));
+    setExportProgress({ current: totalSteps, total: totalSteps });
     const blob = new Blob([zipSync(z).buffer as ArrayBuffer], { type: "application/zip" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
