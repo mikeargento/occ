@@ -218,6 +218,7 @@ export default function OCCPage() {
               onFiles={handleFiles}
               hint=""
             />
+            <Chat onOpenChange={setChatOpen} />
           </div>
         )}
         {step === "drop" && chatOpen && (
@@ -351,7 +352,6 @@ export default function OCCPage() {
             </div>
           </div>
         )}
-        {!chatOpen && <Chat onOpenChange={setChatOpen} />}
         <Footer />
       </div>
     </div>
