@@ -181,11 +181,15 @@ export default function OCCPage() {
       z[`${prefix}proof.json`] = new TextEncoder().encode(JSON.stringify(p, null, 2));
     }
 
-    // Fetch ETH anchors that bound these proofs (within the proof window + 12s)
+    // Fetch ETH anchors AFTER the last proof in the batch (highest counter = future boundary)
     setExportProgress({ current: withProofs.length + 1, total: totalSteps });
     try {
-      const earliest = withProofs[0];
-      const resp = await fetch(`/api/proofs/anchors?digest=${encodeURIComponent(earliest.digestB64)}`);
+      const last = withProofs.reduce((a, b) => {
+        const ac = parseInt(a.proof?.commit?.counter || "0", 10);
+        const bc = parseInt(b.proof?.commit?.counter || "0", 10);
+        return bc > ac ? b : a;
+      });
+      const resp = await fetch(`/api/proofs/anchors?digest=${encodeURIComponent(last.digestB64)}`);
       if (resp.ok) {
         const data = await resp.json();
         if (data.anchors?.length > 0) {
