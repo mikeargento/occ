@@ -54,7 +54,7 @@ export default function OCCPage() {
 
   const fetchL = useCallback(async (p: number) => {
     try {
-      const r = await fetch(`/api/proofs?page=${p}&limit=15`); if (!r.ok) return;
+      const r = await fetch(`/api/proofs?page=${p}&limit=30`); if (!r.ok) return;
       const d = await r.json();
       setLedger((d.proofs || []).map((x: Record<string, unknown>) => ({ globalId: (x.id as number) || 0, digest: (x.digestB64 as string) || "—", counter: (x.counter as string) || undefined, enforcement: (x.enforcement as string) === "measured-tee" ? "Enclave" : "Software", time: x.commitTime ? Number(x.commitTime) : undefined, attribution: (x.attrName as string) || undefined, signer: ((x.signerPub as string) || "").slice(0, 12) || "—" })));
       setTotal(d.total || 0); setPage(p);
@@ -320,7 +320,7 @@ export default function OCCPage() {
                 >
                   <span style={{ width: 48, fontSize: 17, fontWeight: 600, color: "#0071e3", fontFamily: mono }}>{c}</span>
                   <div style={{ flex: 1, minWidth: 0, marginLeft: 12 }}>
-                    <div style={{ fontSize: 14, fontWeight: 500, color: "#1d1d1f", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    <div style={{ fontSize: 14, fontWeight: isEth ? 400 : 600, color: "#1d1d1f", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {e.attribution || "Proof"}
                     </div>
                     <div style={{ fontSize: 11, fontFamily: mono, color: "#86868b", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
