@@ -38,7 +38,7 @@ export default function ProofPage() {
     <Shell>
       <div style={{ padding: "80px 20px", textAlign: "center" }}>
         <div style={{ fontSize: 16, color: "#ff453a", marginBottom: 12 }}>{error || "Proof not found"}</div>
-        <a href="/" style={{ fontSize: 14, color: "var(--c-accent)" }}>Back to explorer</a>
+        <a href="/" style={{ fontSize: 14, color: "var(--c-accent)" }}>OCC</a>
       </div>
     </Shell>
   );
@@ -63,11 +63,6 @@ export default function ProofPage() {
 
       <div style={{ width: "90%", maxWidth: 800, margin: "0 auto", padding: "24px 0 60px", animation: "fadeIn .3s ease-out" }}>
 
-        {/* Back */}
-        <a href="/" style={{ fontSize: 14, color: "var(--c-text-tertiary)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 24 }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15 18 9 12 15 6" /></svg>
-          Back
-        </a>
 
         {/* Title bar */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
