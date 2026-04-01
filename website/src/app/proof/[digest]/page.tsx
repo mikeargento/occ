@@ -70,7 +70,7 @@ export default function ProofPage() {
       }
     } catch (_) { /* ignore */ }
     const zipped = zipSync(files, { level: 0 });
-    const blob = new Blob([zipped], { type: "application/zip" });
+    const blob = new Blob([zipped as unknown as BlobPart], { type: "application/zip" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = `occ-proof-${commit.counter}.zip`; a.click();
     URL.revokeObjectURL(url);
