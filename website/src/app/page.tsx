@@ -33,10 +33,10 @@ async function createBiometricAuth(digestB64: string): Promise<AgencyEnvelope | 
 
 /* ── Colors ── */
 const C = {
-  bg: "#f8f9fa", surface: "#ffffff", border: "#e8e8e8", borderLight: "#f0f0f0",
-  text: "#16191f", textSec: "#545b64", textTri: "#879596",
-  accent: "#ff9900", accentDark: "#ec7211",
-  green: "#1b8901", red: "#d63f38", blue: "#0073bb",
+  bg: "#F8FAFC", surface: "#FFFFFF", border: "#E2E8F0", borderLight: "#F1F5F9",
+  text: "#0F172A", textSec: "#475569", textTri: "#94A3B8",
+  accent: "#2563EB", accentHover: "#1D4ED8", accentSoft: "#DBEAFE",
+  green: "#16A34A", red: "#DC2626", blue: "#2563EB",
 };
 
 export default function OCCPage() {
@@ -143,7 +143,7 @@ export default function OCCPage() {
       `}</style>
 
       {/* ── Header bar ── */}
-      <div style={{ background: "#232f3e", padding: "0 24px" }}>
+      <div style={{ background: "#0F172A", padding: "0 24px" }}>
         <div className="occ-head" style={{ margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: 48 }}>
           <span style={{ fontSize: 18, fontWeight: 700, color: "#fff", letterSpacing: "-0.02em" }}>OCC</span>
           <div style={{ display: "flex", gap: 20 }}>
@@ -157,7 +157,7 @@ export default function OCCPage() {
       <div className="occ-action">
 
         {/* ── Segmented Control ── */}
-        <div style={{ display: "flex", padding: 3, borderRadius: 8, background: "#eaeded", marginBottom: 24 }}>
+        <div style={{ display: "flex", padding: 3, borderRadius: 8, background: C.borderLight, marginBottom: 24 }}>
           {(["create", "verify"] as Mode[]).map((m) => (
             <button key={m} onClick={() => { setMode(m); if (m === "create") resetCreate(); else resetVerify(); }} style={{
               flex: 1, height: 34, fontSize: 14, fontWeight: 600, border: "none", cursor: "pointer", borderRadius: 6,
@@ -191,7 +191,7 @@ export default function OCCPage() {
               />
               <div style={{
                 width: 52, height: 52, borderRadius: 12, margin: "0 auto 16px",
-                background: "#fef3e0", display: "flex", alignItems: "center", justifyContent: "center",
+                background: C.accentSoft, display: "flex", alignItems: "center", justifyContent: "center",
               }}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 5v12M7 10l5-5 5 5" /><path d="M4 17v2a1 1 0 001 1h14a1 1 0 001-1v-2" />
@@ -367,29 +367,20 @@ function Btn({ children, onClick, fill, style, c }: { children: React.ReactNode;
   return (
     <button onClick={onClick} style={{
       height: 44, fontSize: 15, fontWeight: 600, borderRadius: 8, border: "none", cursor: "pointer", flex: 1,
-      background: fill ? c.accent : "#eaeded", color: fill ? "#fff" : c.text,
+      background: fill ? c.accent : c.borderLight, color: fill ? "#fff" : c.text,
       transition: "all 0.15s", ...style,
     }}>{children}</button>
   );
 }
 
 function LedgerItem({ entry, last, mono, c }: { entry: ProofEntry; last: boolean; mono: string; c: typeof C }) {
-  const [expanded, setExpanded] = useState(false);
-  const [proof, setProof] = useState<OCCProof | null>(null);
-
-  async function toggle() {
-    if (!expanded && !proof && entry.digest !== "—") {
-      try { const resp = await fetch(`/api/proofs/${encodeURIComponent(toUrlSafeB64(entry.digest))}`); if (resp.ok) { const d = await resp.json(); if (d.proofs?.[0]?.proof) setProof(d.proofs[0].proof as OCCProof); } } catch {}
-    }
-    setExpanded(e => !e);
-  }
-
   const counter = entry.counter || String(entry.globalId);
   const isEth = entry.attribution?.startsWith("Ethereum");
+  const href = `/proof/${encodeURIComponent(toUrlSafeB64(entry.digest))}`;
 
   return (
     <div style={{ borderBottom: last ? "none" : `1px solid ${c.borderLight}` }}>
-      <div onClick={toggle} style={{ display: "flex", alignItems: "center", padding: "11px 16px", cursor: "pointer", transition: "background 0.1s" }}
+      <a href={href} style={{ display: "flex", alignItems: "center", padding: "11px 16px", cursor: "pointer", transition: "background 0.1s", textDecoration: "none", color: "inherit" }}
         onMouseEnter={(e) => { e.currentTarget.style.background = "#fafafa"; }}
         onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
       >
@@ -403,20 +394,10 @@ function LedgerItem({ entry, last, mono, c }: { entry: ProofEntry; last: boolean
           </div>
         </div>
         {isEth && <span style={{ fontSize: 11, fontWeight: 700, color: c.blue, background: "rgba(0,115,187,0.08)", padding: "2px 7px", borderRadius: 4, marginLeft: 8, flexShrink: 0 }}>ETH</span>}
-        <svg width="7" height="12" viewBox="0 0 7 12" fill="none" stroke={c.textTri} strokeWidth="1.5" strokeLinecap="round" style={{ marginLeft: 10, flexShrink: 0, transform: expanded ? "rotate(90deg)" : "none", transition: "transform 0.15s" }}>
+        <svg width="7" height="12" viewBox="0 0 7 12" fill="none" stroke={c.textTri} strokeWidth="1.5" strokeLinecap="round" style={{ marginLeft: 10, flexShrink: 0 }}>
           <path d="M1 1l5 5-5 5" />
         </svg>
-      </div>
-      {expanded && proof && (
-        <div style={{ padding: "0 16px 12px" }}>
-          <pre onClick={() => navigator.clipboard.writeText(JSON.stringify(proof, null, 2))} style={{
-            fontSize: 11, fontFamily: mono, lineHeight: 1.5, color: c.green,
-            background: "#fafafa", padding: 14, borderRadius: 8, overflow: "auto", maxHeight: 280, margin: 0, cursor: "pointer", border: `1px solid ${c.borderLight}`,
-          }}>
-            {JSON.stringify(proof, null, 2)}
-          </pre>
-        </div>
-      )}
+      </a>
     </div>
   );
 }

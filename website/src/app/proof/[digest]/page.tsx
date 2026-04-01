@@ -4,6 +4,13 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import type { OCCProof } from "@/lib/occ";
 
+const C = {
+  bg: "#F8FAFC", surface: "#FFFFFF", border: "#E2E8F0", borderLight: "#F1F5F9",
+  text: "#0F172A", textSec: "#475569", textTri: "#94A3B8",
+  accent: "#2563EB", green: "#16A34A", red: "#DC2626", blue: "#2563EB",
+};
+const mono = "'SF Mono', SFMono-Regular, 'JetBrains Mono', Consolas, monospace";
+
 export default function ProofPage() {
   const params = useParams();
   const digestParam = params.digest as string;
@@ -24,76 +31,52 @@ export default function ProofPage() {
         if (data.proofs?.[0]?.proof) {
           setProof(data.proofs[0].proof as OCCProof);
           if (data.causalWindow) setCausalWindow(data.causalWindow);
-        } else {
-          setError("Proof not found");
-        }
+        } else setError("Proof not found");
       } catch { setError("Failed to load proof"); }
       setLoading(false);
     })();
   }, [digestParam]);
 
-  if (loading) return (
-    <Page>
-      <div style={{ padding: "80px 20px", textAlign: "center", color: "var(--text3)" }}>Loading proof...</div>
-    </Page>
-  );
-
-  if (error || !proof) return (
-    <Page>
-      <div style={{ padding: "80px 20px", textAlign: "center" }}>
-        <div style={{ fontSize: 16, color: "var(--red)", marginBottom: 12 }}>{error || "Proof not found"}</div>
-        <a href="/" style={{ fontSize: 14, color: "var(--blue)" }}>&larr; Back</a>
-      </div>
-    </Page>
-  );
+  if (loading) return <Shell><div style={{ padding: "80px 20px", textAlign: "center", color: C.textTri }}>Loading proof...</div></Shell>;
+  if (error || !proof) return <Shell><div style={{ padding: "80px 20px", textAlign: "center" }}><div style={{ fontSize: 16, color: C.red, marginBottom: 12 }}>{error || "Proof not found"}</div><a href="/" style={{ fontSize: 14, color: C.blue }}>Back to explorer</a></div></Shell>;
 
   const commit = proof.commit;
   const attr = proof.attribution as { name?: string; title?: string; message?: string } | undefined;
   const slot = (proof as unknown as Record<string, unknown>).slotAllocation as Record<string, unknown> | undefined;
   const isEth = attr?.name?.startsWith("Ethereum");
   const isTee = proof.environment?.enforcement === "measured-tee";
-  const wallTime = commit.time ? new Date(Number(commit.time)).toLocaleString() : null;
+  const ts = (proof.timestamps as Record<string, Record<string, unknown>> | undefined)?.artifact;
 
   function downloadJson() {
     const blob = new Blob([JSON.stringify(proof, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = `occ-proof-${commit.counter}.json`; a.click();
+    const a = document.createElement("a"); a.href = url; a.download = `occ-proof-${commit.counter}.json`; a.click();
     URL.revokeObjectURL(url);
   }
 
   return (
-    <Page>
-      <style>{`
-        @keyframes fadeIn { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:translateY(0) } }
-      `}</style>
+    <Shell>
+      <div style={{ maxWidth: 700, margin: "0 auto", padding: "24px 20px 60px" }}>
 
-      <div style={{ maxWidth: 720, width: "100%", margin: "0 auto", padding: "24px 20px 48px", animation: "fadeIn .3s ease-out" }}>
-
-        {/* Back */}
-        <a href="/" style={{ fontSize: 14, color: "var(--text3)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 24 }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
-          Back
+        {/* Back link */}
+        <a href="/" style={{ fontSize: 14, color: C.blue, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6, marginBottom: 24 }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="15 18 9 12 15 6" /></svg>
+          Back to explorer
         </a>
 
-        {/* Title bar */}
+        {/* Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={{ fontSize: 28, fontWeight: 700, fontFamily: "var(--mono)", color: "var(--blue)" }}>#{commit.counter}</span>
-              {isTee && (
-                <span style={{ fontSize: 12, fontWeight: 600, color: "var(--green)", background: "rgba(0,200,83,.1)", border: "1px solid rgba(0,200,83,.2)", padding: "3px 10px", borderRadius: 20 }}>
-                  Hardware Enclave
-                </span>
-              )}
+              <span style={{ fontSize: 28, fontWeight: 800, fontFamily: mono, color: C.accent }}>#{commit.counter}</span>
+              {isTee && <span style={{ fontSize: 12, fontWeight: 600, color: C.green, background: "rgba(27,137,1,0.08)", padding: "3px 10px", borderRadius: 20 }}>Hardware Enclave</span>}
+              {isEth && <span style={{ fontSize: 12, fontWeight: 600, color: C.blue, background: "rgba(0,115,187,0.08)", padding: "3px 10px", borderRadius: 20 }}>ETH Anchor</span>}
             </div>
-            <div style={{ fontSize: 14, color: "var(--text3)", marginTop: 4 }}>
-              {attr?.name || "Proof"} {wallTime ? `\u00b7 ${wallTime}` : ""}
-            </div>
+            <div style={{ fontSize: 14, color: C.textTri, marginTop: 4 }}>{attr?.name || "Proof"}</div>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={downloadJson} style={actionBtn}>Export .json</button>
-            <button onClick={() => navigator.clipboard.writeText(JSON.stringify(proof, null, 2))} style={actionBtn}>Copy JSON</button>
+            <button onClick={downloadJson} style={btnStyle}>Export</button>
+            <button onClick={() => navigator.clipboard.writeText(JSON.stringify(proof, null, 2))} style={btnStyle}>Copy</button>
           </div>
         </div>
 
@@ -101,232 +84,130 @@ export default function ProofPage() {
         {isEth && attr?.title && (
           <a href={attr.title} target="_blank" rel="noopener" style={{
             display: "flex", alignItems: "center", justifyContent: "space-between",
-            padding: "14px 16px", marginBottom: 20, borderRadius: 12,
-            background: "rgba(0,149,246,.05)", border: "1px solid rgba(0,149,246,.15)",
-            textDecoration: "none", color: "var(--blue)", fontSize: 14, fontWeight: 500,
+            padding: "12px 16px", marginBottom: 16, borderRadius: 10,
+            background: "rgba(0,115,187,0.04)", border: `1px solid rgba(0,115,187,0.12)`,
+            textDecoration: "none", color: C.blue, fontSize: 14, fontWeight: 500,
           }}>
             <span>{attr.name}</span>
-            <span>View on Etherscan &rarr;</span>
+            <span>Etherscan &rarr;</span>
           </a>
         )}
 
         {/* Causal Window */}
         {causalWindow && (causalWindow.anchorBefore || causalWindow.anchorAfter) && (
-          <div style={{
-            marginBottom: 20, padding: "16px 20px", borderRadius: 12,
-            background: "rgba(52,211,153,.04)", border: "1px solid rgba(52,211,153,.15)",
-          }}>
-            <div style={{
-              fontSize: 12, fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: ".06em",
-              color: "#34d399", marginBottom: 14, display: "flex", alignItems: "center", gap: 6,
-            }}>
-              <span style={{ width: 3, height: 12, borderRadius: 1, background: "#34d399" }} />
-              Causal Window
-            </div>
-            <div style={{ fontSize: 13, color: "var(--text2)", lineHeight: 1.7 }}>
+          <div style={{ marginBottom: 16, padding: "14px 18px", borderRadius: 10, background: "rgba(27,137,1,0.04)", border: "1px solid rgba(27,137,1,0.12)" }}>
+            <div style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em", color: C.green, marginBottom: 10 }}>Causal Window</div>
+            <div style={{ fontSize: 13, color: C.textSec, lineHeight: 1.6 }}>
               {causalWindow.anchorBefore && causalWindow.anchorAfter ? (
-                <>
-                  This proof exists between{" "}
-                  <a href={causalWindow.anchorBefore.etherscanUrl || "#"} target="_blank" rel="noopener"
-                    style={{ color: "#34d399", textDecoration: "none", fontWeight: 600 }}>
-                    Ethereum #{causalWindow.anchorBefore.blockNumber}
-                  </a>
-                  {" "}(proof #{causalWindow.anchorBefore.counter}) and{" "}
-                  <a href={causalWindow.anchorAfter.etherscanUrl || "#"} target="_blank" rel="noopener"
-                    style={{ color: "#34d399", textDecoration: "none", fontWeight: 600 }}>
-                    Ethereum #{causalWindow.anchorAfter.blockNumber}
-                  </a>
-                  {" "}(proof #{causalWindow.anchorAfter.counter}).
-                  <span style={{ display: "block", marginTop: 6, fontSize: 12, color: "var(--text3)" }}>
-                    Everything in this window provably existed before block #{causalWindow.anchorAfter.blockNumber} was mined.
-                  </span>
-                </>
-              ) : causalWindow.anchorBefore && !causalWindow.anchorAfter ? (
-                <>
-                  This proof was created after{" "}
-                  <a href={causalWindow.anchorBefore.etherscanUrl || "#"} target="_blank" rel="noopener"
-                    style={{ color: "#34d399", textDecoration: "none", fontWeight: 600 }}>
-                    Ethereum #{causalWindow.anchorBefore.blockNumber}
-                  </a>
-                  {" "}(proof #{causalWindow.anchorBefore.counter}).
-                  <span style={{ display: "block", marginTop: 6, fontSize: 12, color: "var(--text3)" }}>
-                    Awaiting next Ethereum anchor to seal the forward boundary.
-                  </span>
-                </>
+                <>Between <a href={causalWindow.anchorBefore.etherscanUrl || "#"} target="_blank" rel="noopener" style={{ color: C.green, fontWeight: 600, textDecoration: "none" }}>Ethereum #{causalWindow.anchorBefore.blockNumber}</a> and <a href={causalWindow.anchorAfter.etherscanUrl || "#"} target="_blank" rel="noopener" style={{ color: C.green, fontWeight: 600, textDecoration: "none" }}>Ethereum #{causalWindow.anchorAfter.blockNumber}</a></>
               ) : causalWindow.anchorAfter ? (
-                <>
-                  This proof is sealed by{" "}
-                  <a href={causalWindow.anchorAfter.etherscanUrl || "#"} target="_blank" rel="noopener"
-                    style={{ color: "#34d399", textDecoration: "none", fontWeight: 600 }}>
-                    Ethereum #{causalWindow.anchorAfter.blockNumber}
-                  </a>
-                  {" "}(proof #{causalWindow.anchorAfter.counter}).
-                  <span style={{ display: "block", marginTop: 6, fontSize: 12, color: "var(--text3)" }}>
-                    This proof provably existed before block #{causalWindow.anchorAfter.blockNumber} was mined.
-                  </span>
-                </>
+                <>Sealed by <a href={causalWindow.anchorAfter.etherscanUrl || "#"} target="_blank" rel="noopener" style={{ color: C.green, fontWeight: 600, textDecoration: "none" }}>Ethereum #{causalWindow.anchorAfter.blockNumber}</a></>
+              ) : causalWindow.anchorBefore ? (
+                <>After <a href={causalWindow.anchorBefore.etherscanUrl || "#"} target="_blank" rel="noopener" style={{ color: C.green, fontWeight: 600, textDecoration: "none" }}>Ethereum #{causalWindow.anchorBefore.blockNumber}</a> — awaiting next anchor</>
               ) : null}
             </div>
-
-            {/* Visual timeline */}
-            <div style={{ marginTop: 16, display: "flex", alignItems: "center", gap: 0, fontSize: 11, fontFamily: "var(--mono)" }}>
-              {causalWindow.anchorBefore && (
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#34d399", flexShrink: 0 }} />
-                  <span style={{ color: "var(--text3)" }}>#{causalWindow.anchorBefore.counter}</span>
-                </div>
-              )}
-              <div style={{ flex: 1, height: 1, background: "rgba(52,211,153,.25)", margin: "0 8px", position: "relative" }}>
-                <div style={{
-                  position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
-                  width: 10, height: 10, borderRadius: "50%", background: "var(--blue)", border: "2px solid var(--surface)",
-                }} />
+            {/* Timeline */}
+            <div style={{ marginTop: 12, display: "flex", alignItems: "center", fontSize: 11, fontFamily: mono, color: C.textTri }}>
+              {causalWindow.anchorBefore && <><span style={{ width: 8, height: 8, borderRadius: "50%", background: C.green, flexShrink: 0 }} /><span style={{ marginLeft: 4 }}>#{causalWindow.anchorBefore.counter}</span></>}
+              <div style={{ flex: 1, height: 1, background: "rgba(27,137,1,0.2)", margin: "0 8px", position: "relative" }}>
+                <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 10, height: 10, borderRadius: "50%", background: C.accent, border: `2px solid ${C.surface}` }} />
               </div>
-              {causalWindow.anchorAfter ? (
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <span style={{ color: "var(--text3)" }}>#{causalWindow.anchorAfter.counter}</span>
-                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#34d399", flexShrink: 0 }} />
-                </div>
-              ) : (
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <span style={{ color: "var(--text3)" }}>pending</span>
-                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--text3)", flexShrink: 0, opacity: 0.4 }} />
-                </div>
-              )}
+              {causalWindow.anchorAfter ? <><span>#{causalWindow.anchorAfter.counter}</span><span style={{ width: 8, height: 8, borderRadius: "50%", background: C.green, flexShrink: 0, marginLeft: 4 }} /></> : <span style={{ color: C.textTri }}>pending</span>}
             </div>
           </div>
         )}
 
-        {/* Cards grid */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16 }}>
+        {/* Proof sections */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 12 }}>
 
-          {/* Artifact */}
-          <Card title="Artifact">
-            <Field label="Digest" value={proof.artifact.digestB64} mono />
-            <Field label="Algorithm" value={proof.artifact.hashAlg.toUpperCase()} />
-          </Card>
+          <Section title="Artifact">
+            <Row label="Digest" value={proof.artifact.digestB64} mono />
+            <Row label="Algorithm" value={proof.artifact.hashAlg.toUpperCase()} last />
+          </Section>
 
-          {/* Commit */}
-          <Card title="Commit">
-            <Field label="Counter" value={`#${commit.counter}`} highlight />
-            {wallTime && <Field label="Time" value={wallTime} />}
-            {commit.epochId && <Field label="Epoch ID" value={String(commit.epochId)} mono />}
-            {commit.prevB64 && <Field label="Previous Hash" value={commit.prevB64} mono />}
-            {commit.nonceB64 && <Field label="Nonce" value={commit.nonceB64} mono />}
-            {commit.slotCounter != null && <Field label="Slot Counter" value={`#${commit.slotCounter}`} />}
-            {commit.slotHashB64 && <Field label="Slot Hash" value={commit.slotHashB64} mono />}
-          </Card>
+          <Section title="Commit">
+            <Row label="Counter" value={`#${commit.counter}`} accent />
+            {commit.epochId && <Row label="Epoch" value={String(commit.epochId)} mono />}
+            {commit.prevB64 && <Row label="Previous" value={commit.prevB64} mono />}
+            {commit.nonceB64 && <Row label="Nonce" value={commit.nonceB64} mono />}
+            {commit.slotCounter != null && <Row label="Slot Counter" value={`#${commit.slotCounter}`} />}
+            {commit.slotHashB64 && <Row label="Slot Hash" value={commit.slotHashB64} mono last />}
+          </Section>
 
-          {/* Causal Slot */}
           {slot && (
-            <Card title="Causal Slot" accent="var(--slot, #06b6d4)">
-              <Field label="Counter" value={`#${slot.counter}`} highlight />
-              {slot.nonceB64 ? <Field label="Nonce" value={String(slot.nonceB64)} mono /> : null}
-              {slot.signatureB64 ? <Field label="Signature" value={String(slot.signatureB64)} mono /> : null}
-              {slot.epochId ? <Field label="Epoch ID" value={String(slot.epochId)} mono /> : null}
-            </Card>
+            <Section title="Causal Slot" color={C.blue}>
+              <Row label="Counter" value={`#${slot.counter}`} accent />
+              {slot.nonceB64 ? <Row label="Nonce" value={String(slot.nonceB64)} mono /> : null}
+              {slot.signatureB64 ? <Row label="Signature" value={String(slot.signatureB64)} mono /> : null}
+              {slot.epochId ? <Row label="Epoch" value={String(slot.epochId)} mono last /> : null}
+            </Section>
           )}
 
-          {/* Signer */}
-          <Card title="Signer">
-            <Field label="Public Key" value={proof.signer.publicKeyB64} mono />
-            <Field label="Signature" value={proof.signer.signatureB64} mono />
-          </Card>
+          <Section title="Signer">
+            <Row label="Public Key" value={proof.signer.publicKeyB64} mono />
+            <Row label="Signature" value={proof.signer.signatureB64} mono last />
+          </Section>
 
-          {/* Environment */}
-          <Card title="Environment" accent="var(--green)">
-            <Field label="Enforcement" value={isTee ? "Hardware Enclave (AWS Nitro)" : "Software"} />
-            {proof.environment?.measurement && <Field label="PCR0 Measurement" value={proof.environment.measurement} mono />}
-            {proof.environment?.attestation?.format && <Field label="Attestation Format" value={proof.environment.attestation.format} />}
-          </Card>
+          <Section title="Environment" color={C.green}>
+            <Row label="Enforcement" value={isTee ? "Hardware Enclave (AWS Nitro)" : "Software"} />
+            {proof.environment?.measurement && <Row label="PCR0" value={proof.environment.measurement} mono />}
+            {proof.environment?.attestation?.format && <Row label="Attestation" value={proof.environment.attestation.format} last />}
+          </Section>
 
-          {/* Attribution */}
           {attr && (
-            <Card title="Attribution">
-              {attr.name && <Field label="Name" value={attr.name} />}
-              {attr.message && <Field label="Data" value={attr.message} mono />}
-              {attr.title && <Field label="Link" value={attr.title} link />}
-            </Card>
+            <Section title="Attribution">
+              {attr.name && <Row label="Name" value={attr.name} />}
+              {attr.message && <Row label="Data" value={attr.message} mono />}
+              {attr.title && <Row label="Link" value={attr.title} link last />}
+            </Section>
           )}
 
-          {/* Timestamps */}
-          {proof.timestamps ? (
-            <Card title="Timestamps">
-              {(() => {
-                const ts = (proof.timestamps as Record<string, Record<string, unknown>>).artifact;
-                if (!ts) return null;
-                return (
-                  <>
-                    {ts.authority ? <Field label="Authority" value={String(ts.authority)} /> : null}
-                    {ts.time ? <Field label="TSA Time" value={String(ts.time)} /> : null}
-                    {ts.digestAlg ? <Field label="Digest Algorithm" value={String(ts.digestAlg)} /> : null}
-                  </>
-                );
-              })()}
-            </Card>
-          ) : null}
+          {ts && (
+            <Section title="Timestamp">
+              {ts.authority ? <Row label="Authority" value={String(ts.authority)} /> : null}
+              {ts.time ? <Row label="TSA Time" value={String(ts.time)} /> : null}
+              {ts.digestAlg ? <Row label="Algorithm" value={String(ts.digestAlg)} last /> : null}
+            </Section>
+          )}
         </div>
 
         {/* Raw JSON */}
-        <div style={{ marginTop: 24 }}>
-          <details>
-            <summary style={{ fontSize: 14, color: "var(--text3)", cursor: "pointer", padding: "8px 0", fontWeight: 500 }}>Raw JSON</summary>
-            <div style={{
-              marginTop: 8, padding: 16, background: "var(--surface)", border: "1px solid var(--border)",
-              borderRadius: 12, fontSize: 11, fontFamily: "var(--mono)", color: "var(--text3)",
-              whiteSpace: "pre-wrap", wordBreak: "break-all" as const, maxHeight: 500, overflow: "auto", lineHeight: 1.6,
-            }}>
-              {JSON.stringify(proof, null, 2)}
-            </div>
-          </details>
+        <details style={{ marginTop: 16, background: C.surface, borderRadius: 10, border: `1px solid ${C.border}` }}>
+          <summary style={{ padding: "12px 16px", fontSize: 14, fontWeight: 600, color: C.textSec, cursor: "pointer" }}>Raw JSON</summary>
+          <pre style={{ fontSize: 11, fontFamily: mono, lineHeight: 1.5, color: C.green, background: "#fafafa", padding: 16, margin: 0, overflow: "auto", maxHeight: 400, borderTop: `1px solid ${C.borderLight}`, whiteSpace: "pre-wrap", wordBreak: "break-all" }}>
+            {JSON.stringify(proof, null, 2)}
+          </pre>
+        </details>
+      </div>
+    </Shell>
+  );
+}
+
+/* ═══ Shell ═══ */
+
+function Shell({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{ minHeight: "100vh", background: C.bg, color: C.text, fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Amazon Ember', system-ui, sans-serif" }}>
+      <div style={{ background: "#0F172A", padding: "0 24px" }}>
+        <div style={{ maxWidth: 700, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: 48 }}>
+          <a href="/" style={{ fontSize: 18, fontWeight: 700, color: "#fff", textDecoration: "none" }}>OCC</a>
+          <div style={{ display: "flex", gap: 20 }}>
+            <a href="/docs" style={{ fontSize: 14, color: "rgba(255,255,255,0.7)", textDecoration: "none" }}>Docs</a>
+            <a href="https://github.com/mikeargento/occ" target="_blank" rel="noopener" style={{ fontSize: 14, color: "rgba(255,255,255,0.7)", textDecoration: "none" }}>GitHub</a>
+          </div>
         </div>
       </div>
-    </Page>
+      {children}
+    </div>
   );
 }
 
-/* ── Page wrapper ── */
+/* ═══ Section ═══ */
 
-function Page({ children }: { children: React.ReactNode }) {
+function Section({ title, color, children }: { title: string; color?: string; children: React.ReactNode }) {
   return (
-    <>
-      <style>{`
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        :root {
-          --bg: #000; --surface: #0a0a0a; --border: #1e1e1e;
-          --text: #f5f5f5; --text2: #a0a0a0; --text3: #666;
-          --blue: #0095f6; --green: #00c853; --red: #ed4956;
-          --slot: #06b6d4;
-          --font: acumin-pro, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-          --mono: var(--font-mono), 'SF Mono', 'JetBrains Mono', Consolas, monospace;
-        }
-        html, body { background: var(--bg); color: var(--text); font-family: var(--font); -webkit-font-smoothing: antialiased; }
-      `}</style>
-      <div style={{ minHeight: "100vh" }}>
-        <nav style={{ height: 52, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", borderBottom: "1px solid var(--border)" }}>
-          <a href="/" style={{ fontSize: 16, fontWeight: 700, color: "var(--text)", textDecoration: "none" }}>OCC</a>
-          <div style={{ display: "flex", gap: 20 }}>
-            <a href="/docs" style={{ fontSize: 14, color: "var(--text2)", textDecoration: "none" }}>Docs</a>
-            <a href="https://github.com/mikeargento/occ" target="_blank" rel="noopener" style={{ fontSize: 14, color: "var(--text2)", textDecoration: "none" }}>GitHub</a>
-          </div>
-        </nav>
-        {children}
-      </div>
-    </>
-  );
-}
-
-/* ── Card ── */
-
-function Card({ title, accent, children }: { title: string; accent?: string; children: React.ReactNode }) {
-  return (
-    <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, padding: 16, overflow: "hidden" }}>
-      <div style={{
-        fontSize: 12, fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: ".06em",
-        color: accent || "var(--text3)", marginBottom: 12,
-        display: "flex", alignItems: "center", gap: 6,
-      }}>
-        <span style={{ width: 3, height: 12, borderRadius: 1, background: accent || "var(--text3)" }} />
+    <div style={{ background: C.surface, borderRadius: 10, border: `1px solid ${C.border}`, overflow: "hidden" }}>
+      <div style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em", color: color || C.textTri, padding: "10px 16px", background: "#fafafa", borderBottom: `1px solid ${C.borderLight}` }}>
         {title}
       </div>
       {children}
@@ -334,47 +215,32 @@ function Card({ title, accent, children }: { title: string; accent?: string; chi
   );
 }
 
-/* ── Field with copy ── */
+/* ═══ Row ═══ */
 
-function Field({ label, value, mono, highlight, link }: { label: string; value: string; mono?: boolean; highlight?: boolean; link?: boolean }) {
+function Row({ label, value, mono: isMono, accent, link, last }: { label: string; value: string; mono?: boolean; accent?: boolean; link?: boolean; last?: boolean }) {
   const [copied, setCopied] = useState(false);
-
-  function handleClick() {
-    navigator.clipboard.writeText(value);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  }
-
   return (
-    <div
-      onClick={handleClick}
-      style={{
-        display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12,
-        padding: "6px 0", borderBottom: "1px solid var(--border)", cursor: "pointer",
-      }}
-    >
-      <span style={{ fontSize: 12, color: "var(--text3)", flexShrink: 0, minWidth: 80 }}>{label}</span>
+    <div onClick={() => { navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 1500); }} style={{
+      display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12,
+      padding: "9px 16px", borderBottom: last ? "none" : `1px solid ${C.borderLight}`, cursor: "pointer",
+    }}>
+      <span style={{ fontSize: 13, color: C.textTri, flexShrink: 0 }}>{label}</span>
       {link ? (
-        <a href={value} target="_blank" rel="noopener" onClick={(e) => e.stopPropagation()} style={{
-          fontSize: 12, color: "var(--blue)", textDecoration: "none", wordBreak: "break-all" as const, textAlign: "right" as const,
-        }}>{value}</a>
+        <a href={value} target="_blank" rel="noopener" onClick={e => e.stopPropagation()} style={{ fontSize: 12, color: C.blue, textDecoration: "none", wordBreak: "break-all", textAlign: "right" }}>{value}</a>
       ) : (
         <span style={{
-          fontSize: mono ? 11 : 13,
-          fontFamily: mono ? "var(--mono)" : "inherit",
-          color: copied ? "var(--green)" : highlight ? "var(--blue)" : "var(--text2)",
-          fontWeight: highlight ? 700 : 400,
-          wordBreak: "break-all" as const, textAlign: "right" as const,
-          transition: "color .2s", lineHeight: 1.4,
+          fontSize: isMono ? 11 : 13, fontFamily: isMono ? mono : "inherit",
+          color: copied ? C.green : accent ? C.accent : C.text,
+          fontWeight: accent ? 700 : 400, wordBreak: "break-all", textAlign: "right", lineHeight: 1.4, transition: "color 0.2s",
         }}>
-          {copied ? "Copied!" : value}
+          {copied ? "Copied!" : value.length > 44 ? value.slice(0, 36) + "..." : value}
         </span>
       )}
     </div>
   );
 }
 
-const actionBtn: React.CSSProperties = {
-  padding: "8px 16px", fontSize: 13, fontWeight: 600, color: "var(--text2)",
-  background: "transparent", border: "1px solid var(--border)", borderRadius: 10, cursor: "pointer",
+const btnStyle: React.CSSProperties = {
+  padding: "8px 16px", fontSize: 13, fontWeight: 600, color: C.textSec,
+  background: C.surface, border: `1px solid ${C.border}`, borderRadius: 8, cursor: "pointer",
 };
