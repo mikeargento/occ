@@ -26,8 +26,8 @@
   --font-mono: acumin-pro, -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
 }
 
-/* ── Design Tokens — dark (default) ── */
-:root, [data-theme="dark"] {
+/* ── Design Tokens — dark only ── */
+:root {
   --bg: #000000;
   --bg-elevated: #0a0a0a;
   --bg-subtle: #111111;
@@ -42,24 +42,6 @@
   --c-syntax-string: #34d399;
   --c-syntax-number: #fbbf24;
   color-scheme: dark;
-}
-
-/* ── Design Tokens — light ── */
-[data-theme="light"] {
-  --bg: #ffffff;
-  --bg-elevated: #f0f0f2;
-  --bg-subtle: #e2e2e7;
-  --c-border: #c7c7cc;
-  --c-border-subtle: #d1d1d6;
-  --c-text: #000000;
-  --c-text-secondary: #48484a;
-  --c-text-tertiary: #8e8e93;
-  --c-accent: #047857;
-  --c-accent-dim: #059669;
-  --c-syntax-key: #1d4ed8;
-  --c-syntax-string: #047857;
-  --c-syntax-number: #b45309;
-  color-scheme: light;
 }
 
 /* ── Base ── */

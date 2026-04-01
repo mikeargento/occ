@@ -39,7 +39,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={jetbrainsMono.variable}>
       <head>
         <link rel="stylesheet" href="https://use.typekit.net/svq0oqy.css" />
-        <script dangerouslySetInnerHTML={{ __html: `(function(){var t=localStorage.getItem('occ-theme');if(t)document.documentElement.setAttribute('data-theme',t)})()` }} />
       </head>
       <body style={{ fontFamily: "acumin-pro, -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif" }}>
         <main style={{ minHeight: "100vh" }}>{children}</main>
