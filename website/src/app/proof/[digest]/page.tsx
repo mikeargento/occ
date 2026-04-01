@@ -67,7 +67,7 @@ export default function ProofPage() {
         {/* Title bar */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
-            <span style={{ fontSize: 28, fontWeight: 700 }}>
+            <span style={{ fontSize: 28, fontWeight: 900, fontFamily: '"good-times", sans-serif' }}>
               <span style={{ color: "#fff" }}>OCC</span>{" "}
               <span style={{ color: "var(--c-accent)" }}>{isEth ? "Anchor" : "Proof"} #{commit.counter}</span>
             </span>
