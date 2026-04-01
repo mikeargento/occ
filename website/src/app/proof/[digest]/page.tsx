@@ -81,7 +81,7 @@ export default function ProofPage() {
           </div>
           <div style={{ display: "flex", gap: 8 }}>
             <button onClick={downloadJson} style={btnStyle}>Export .json</button>
-            <button onClick={() => navigator.clipboard.writeText(JSON.stringify(proof, null, 2))} style={btnStyle}>Copy JSON</button>
+            <JsonToggle proof={proof} />
           </div>
         </div>
 
@@ -193,19 +193,6 @@ export default function ProofPage() {
           )}
         </div>
 
-        {/* Raw JSON */}
-        <div style={{ marginTop: 24 }}>
-          <details>
-            <summary style={{ fontSize: 14, color: "var(--c-text-tertiary)", cursor: "pointer", padding: "8px 0", fontWeight: 500 }}>Raw JSON</summary>
-            <div style={{
-              marginTop: 8, padding: 16, background: "var(--bg-elevated)", border: "1px solid var(--c-border)",
-              borderRadius: 12, fontSize: 11, fontFamily: mono, color: "var(--c-text-tertiary)",
-              whiteSpace: "pre-wrap", wordBreak: "break-all", maxHeight: 500, overflow: "auto", lineHeight: 1.6,
-            }}>
-              {JSON.stringify(proof, null, 2)}
-            </div>
-          </details>
-        </div>
       </div>
     </Shell>
   );
@@ -280,3 +267,38 @@ const btnStyle: React.CSSProperties = {
   padding: "8px 16px", fontSize: 13, fontWeight: 600, color: "var(--c-text-secondary)",
   background: "transparent", border: "1px solid var(--c-border)", borderRadius: 10, cursor: "pointer",
 };
+
+function JsonToggle({ proof }: { proof: OCCProof }) {
+  const [open, setOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const json = JSON.stringify(proof, null, 2);
+
+  if (!open) {
+    return <button onClick={() => setOpen(true)} style={btnStyle}>JSON</button>;
+  }
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}
+      onClick={() => setOpen(false)}>
+      <div style={{ width: "100%", maxWidth: 700, maxHeight: "80vh", display: "flex", flexDirection: "column", background: "#0a0a0a", borderRadius: 16, border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden" }}
+        onClick={(e) => e.stopPropagation()}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+          <span style={{ fontSize: 14, fontWeight: 600, color: "#34d399" }}>Proof JSON</span>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={() => { navigator.clipboard.writeText(json); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+              style={{ ...btnStyle, fontSize: 12, padding: "5px 12px", color: copied ? "#34d399" : "var(--c-text-secondary)" }}>
+              {copied ? "Copied" : "Copy"}
+            </button>
+            <button onClick={() => setOpen(false)} style={{ ...btnStyle, fontSize: 12, padding: "5px 12px" }}>Close</button>
+          </div>
+        </div>
+        <pre style={{
+          fontSize: 12, lineHeight: 1.6, color: "#34d399", padding: 18, margin: 0,
+          overflow: "auto", flex: 1, whiteSpace: "pre-wrap", wordBreak: "break-all",
+        }}>
+          {json}
+        </pre>
+      </div>
+    </div>
+  );
+}
