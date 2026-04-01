@@ -6,7 +6,7 @@
  *   anchors-by-time/{timestamp}.json — chronological anchor listing
  */
 
-import { S3Client, GetObjectCommand, PutObjectCommand, ListObjectsV2Command, HeadObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, GetObjectCommand, PutObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
 
 function getClient() {
   return new S3Client({ region: (process.env.LEDGER_REGION || "us-east-2").trim() });
@@ -54,38 +54,52 @@ export async function storeProofByDigest(proof: Record<string, unknown>): Promis
   }
 }
 
-/** Get the first N ETH anchor proofs after a given proof (by its creation time in S3) */
+/**
+ * Get the first ETH anchor proof(s) AFTER a given proof on the same chain.
+ *
+ * Since anchors and user proofs share the same monotonic counter chain,
+ * we find the next anchor by listing proofs with counter > proof.counter
+ * in the same epoch, then filtering for Ethereum anchors (attribution.name).
+ */
 export async function getAnchorsAfterProof(digestB64: string, limit = 2): Promise<Array<Record<string, unknown>>> {
   try {
     const s3 = getClient();
     const bucket = getBucket();
 
-    // Get the proof's S3 object creation time
-    const proofKey = `by-digest/${toSafe(digestB64)}.json`;
-    let proofTime: string;
-    try {
-      const head = await s3.send(new HeadObjectCommand({ Bucket: bucket, Key: proofKey }));
-      proofTime = (head.LastModified || new Date()).toISOString().replace(/[:.]/g, "-");
-    } catch {
-      // Fallback: use 1 hour ago
-      proofTime = new Date(Date.now() - 3600000).toISOString().replace(/[:.]/g, "-");
-    }
+    // Get the proof to find its counter and epoch
+    const proof = await getProofByDigest(digestB64);
+    if (!proof) return [];
 
-    // List anchors-by-time/ after the proof was created
+    const commit = proof.commit as { counter?: string; epochId?: string };
+    const proofCounter = parseInt(commit.counter || "0", 10);
+    const epochId = commit.epochId || "";
+    if (!epochId) return [];
+
+    const safeEpoch = toSafe(epochId);
+    const startCounter = String(proofCounter + 1).padStart(12, "0");
+
+    // List proofs in the same epoch after this counter
+    // Scan up to 20 proofs to find anchors (at 12s intervals, anchors are dense)
     const result = await s3.send(new ListObjectsV2Command({
       Bucket: bucket,
-      Prefix: "anchors-by-time/",
-      StartAfter: `anchors-by-time/${proofTime}`,
-      MaxKeys: limit,
+      Prefix: `proofs/${safeEpoch}/`,
+      StartAfter: `proofs/${safeEpoch}/${startCounter}`,
+      MaxKeys: 20,
     }));
 
     const anchors: Array<Record<string, unknown>> = [];
     for (const obj of result.Contents || []) {
-      if (!obj.Key) continue;
+      if (!obj.Key || anchors.length >= limit) break;
       try {
         const getResult = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: obj.Key }));
         const body = await getResult.Body?.transformToString();
-        if (body) anchors.push(JSON.parse(body));
+        if (!body) continue;
+        const p = JSON.parse(body);
+        // Ethereum anchors have attribution.name === "Ethereum Anchor"
+        const attr = p.attribution as { name?: string } | undefined;
+        if (attr?.name === "Ethereum Anchor") {
+          anchors.push(p);
+        }
       } catch { /* skip */ }
     }
     return anchors;
