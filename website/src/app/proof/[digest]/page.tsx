@@ -327,7 +327,7 @@ function JsonToggle({ proof }: { proof: OCCProof }) {
           <span style={{ fontSize: 14, fontWeight: 600, color: "#1A73E8" }}>Proof JSON</span>
           <div style={{ display: "flex", gap: 8 }}>
             <button onClick={() => { navigator.clipboard.writeText(json); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
-              style={{ ...btnStyle, fontSize: 12, padding: "5px 12px", color: copied ? "#34d399" : "var(--c-text-secondary)" }}>
+              style={{ ...btnStyle, fontSize: 12, padding: "5px 12px" }}>
               {copied ? "Copied" : "Copy"}
             </button>
             <button onClick={() => setOpen(false)} style={{ ...btnStyle, fontSize: 12, padding: "5px 12px" }}>Close</button>
