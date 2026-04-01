@@ -3,14 +3,8 @@
 export function Nav() {
   return (
     <div style={{ textAlign: "center", paddingTop: 32, paddingBottom: 8 }}>
-      <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.02em" }}>
-        <span style={{ color: "#4285F4" }}>O</span>
-        <span style={{ color: "#EA4335" }}>C</span>
-        <span style={{ color: "#FBBC05" }}>C</span>
-        <span style={{ color: "#4285F4" }}>.</span>
-        <span style={{ color: "#34A853" }}>W</span>
-        <span style={{ color: "#EA4335" }}>T</span>
-        <span style={{ color: "#4285F4" }}>F</span>
+      <span style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--c-text)" }}>
+        OCC
       </span>
     </div>
   );
