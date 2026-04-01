@@ -68,7 +68,7 @@ export default function ProofPage() {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
             <span style={{ fontSize: 28, fontWeight: 900, fontFamily: '"good-times", sans-serif' }}>
-              <span style={{ color: "#fff" }}>OCC</span>{" "}
+              <span style={{ color: "var(--c-text)" }}>OCC</span>{" "}
               <span style={{ color: "var(--c-accent)" }}>{isEth ? "Anchor" : "Proof"} #{commit.counter}</span>
             </span>
           </div>
@@ -205,12 +205,12 @@ function Shell({ children }: { children: React.ReactNode }) {
 
 function Card({ title, children }: { title: string; accent?: string; children: React.ReactNode }) {
   return (
-    <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14, overflow: "hidden" }}>
+    <div style={{ background: "var(--bg-elevated)", border: "1px solid rgba(52,211,153,0.2)", borderRadius: 14, overflow: "hidden" }}>
       <div style={{
         fontSize: 14, fontWeight: 700, letterSpacing: "0.04em",
-        color: "#34d399", padding: "14px 18px",
-        background: "rgba(52,211,153,0.04)",
-        borderBottom: "1px solid rgba(255,255,255,0.04)",
+        color: "var(--c-accent)", padding: "14px 18px",
+        background: "var(--bg-subtle)",
+        borderBottom: "1px solid rgba(52,211,153,0.15)",
       }}>
         {title}
       </div>
@@ -231,10 +231,10 @@ function Field({ label, value, mono: isMono, highlight, link }: { label: string;
       onClick={() => { navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
       style={{
         display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12,
-        padding: "10px 18px", borderBottom: "1px solid rgba(255,255,255,0.03)", cursor: "pointer",
+        padding: "10px 18px", borderBottom: "1px solid rgba(52,211,153,0.1)", cursor: "pointer",
       }}
     >
-      <span style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", flexShrink: 0, minWidth: 80 }}>{label}</span>
+      <span style={{ fontSize: 13, color: "var(--c-text-tertiary)", flexShrink: 0, minWidth: 80 }}>{label}</span>
       {link ? (
         <a href={value} target="_blank" rel="noopener" onClick={(e) => e.stopPropagation()} style={{
           fontSize: 12, color: "var(--c-accent)", textDecoration: "none", wordBreak: "break-all", textAlign: "right",
@@ -272,9 +272,9 @@ function JsonToggle({ proof }: { proof: OCCProof }) {
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}
       onClick={() => setOpen(false)}>
-      <div style={{ width: "100%", maxWidth: 700, maxHeight: "80vh", display: "flex", flexDirection: "column", background: "#0a0a0a", borderRadius: 16, border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden" }}
+      <div style={{ width: "100%", maxWidth: 700, maxHeight: "80vh", display: "flex", flexDirection: "column", background: "var(--bg-elevated)", borderRadius: 16, border: "1px solid var(--c-border)", overflow: "hidden" }}
         onClick={(e) => e.stopPropagation()}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderBottom: "1px solid var(--c-border-subtle)" }}>
           <span style={{ fontSize: 14, fontWeight: 600, color: "#34d399" }}>Proof JSON</span>
           <div style={{ display: "flex", gap: 8 }}>
             <button onClick={() => { navigator.clipboard.writeText(json); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
