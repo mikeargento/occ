@@ -67,8 +67,9 @@ export default function ProofPage() {
         {/* Title bar */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
-            <span style={{ fontSize: 28, fontWeight: 700, color: "var(--c-accent)" }}>
-              {isEth ? "Anchor" : (attr?.name || "Proof")} #{commit.counter}
+            <span style={{ fontSize: 28, fontWeight: 700 }}>
+              <span style={{ color: "#fff" }}>OCC</span>{" "}
+              <span style={{ color: "var(--c-accent)" }}>{isEth ? "Anchor" : "Proof"} #{commit.counter}</span>
             </span>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
@@ -195,7 +196,6 @@ export default function ProofPage() {
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--c-text)" }}>
-      <Nav />
       {children}
     </div>
   );
