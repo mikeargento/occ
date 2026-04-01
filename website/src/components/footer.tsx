@@ -13,7 +13,7 @@ export function Footer() {
         flexWrap: "wrap", gap: 16,
       }}>
         <span style={{ fontSize: 13, color: "#9ca3af" }}>
-          Origin Controlled Computing
+          Origin Controlled Computing — Patent Pending
         </span>
         <div style={{ display: "flex", gap: 24 }}>
           <a href="/docs" style={{ fontSize: 13, color: "#6b7280", textDecoration: "none" }}>Docs</a>

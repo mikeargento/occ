@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { FileDrop } from "@/components/file-drop";
-import { Footer } from "@/components/nav";
+import { Footer } from "@/components/footer";
 import { Chat } from "@/components/chat";
 import {
   hashFile,
