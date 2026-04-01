@@ -214,7 +214,7 @@ export default function OCCPage() {
               multiple
               onFile={(f) => handleFiles([f])}
               onFiles={handleFiles}
-              hint={"Your file never leaves your device.\nOnly the hash is sent."}
+              hint={"Files never leave your device.\nOnly the hash is sent."}
             />
           </div>
         )}
