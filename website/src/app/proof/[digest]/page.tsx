@@ -18,6 +18,7 @@ export default function ProofPage() {
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [cachedFile, setCachedFile] = useState<{ name: string; data: ArrayBuffer } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -28,6 +29,24 @@ export default function ProofPage() {
         if (data.proofs?.[0]?.proof) {
           setProof(data.proofs[0].proof as OCCProof);
           if (data.causalWindow) setCausalWindow(data.causalWindow);
+          // Try to load cached file from IndexedDB
+          try {
+            const digestB64 = decodeURIComponent(digestParam).replace(/-/g, "+").replace(/_/g, "/");
+            const db = await new Promise<IDBDatabase>((resolve, reject) => {
+              const req = indexedDB.open("occ-files", 1);
+              req.onupgradeneeded = () => req.result.createObjectStore("files");
+              req.onsuccess = () => resolve(req.result);
+              req.onerror = () => reject(req.error);
+            });
+            const tx = db.transaction("files", "readonly");
+            const file = await new Promise<{ name: string; data: ArrayBuffer } | undefined>((resolve) => {
+              const req = tx.objectStore("files").get(digestB64);
+              req.onsuccess = () => resolve(req.result);
+              req.onerror = () => resolve(undefined);
+            });
+            db.close();
+            if (file) setCachedFile(file);
+          } catch (_) { /* no cached file */ }
         } else setError("Proof not found");
       } catch { setError("Failed to load proof"); }
       setLoading(false);
@@ -55,6 +74,10 @@ export default function ProofPage() {
     const files: Record<string, Uint8Array> = {
       "proof.json": strToU8(JSON.stringify(proof, null, 2)),
     };
+    // Include the original file if cached
+    if (cachedFile) {
+      files[cachedFile.name] = new Uint8Array(cachedFile.data);
+    }
     // Fetch bounding ETH anchors
     try {
       const counter = commit.counter;

@@ -379,14 +379,30 @@ export default function OCCPage() {
                     )}
                   </div>
                   {item.proof && (
-                    <a href={`/proof/${encodeURIComponent(toUrlSafeB64(item.digestB64))}`} target="_blank" rel="noopener"
+                    <button
+                      onClick={async () => {
+                        try {
+                          const db = await new Promise<IDBDatabase>((resolve, reject) => {
+                            const req = indexedDB.open("occ-files", 1);
+                            req.onupgradeneeded = () => req.result.createObjectStore("files");
+                            req.onsuccess = () => resolve(req.result);
+                            req.onerror = () => reject(req.error);
+                          });
+                          const tx = db.transaction("files", "readwrite");
+                          const buf = await item.file.arrayBuffer();
+                          tx.objectStore("files").put({ name: item.file.name, data: buf }, item.digestB64);
+                          await new Promise((r, j) => { tx.oncomplete = r; tx.onerror = j; });
+                          db.close();
+                        } catch (_) { /* non-critical */ }
+                        window.open(`/proof/${encodeURIComponent(toUrlSafeB64(item.digestB64))}`, "_blank");
+                      }}
                       style={{
                         fontSize: 15, fontWeight: 600, color: "#ffffff", textDecoration: "none",
                         flexShrink: 0, padding: "8px 24px", borderRadius: 980,
-                        background: "#1A73E8",
+                        background: "#1A73E8", border: "none", cursor: "pointer",
                       }}>
                       View
-                    </a>
+                    </button>
                   )}
                 </div>
               ))}
