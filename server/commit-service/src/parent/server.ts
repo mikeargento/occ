@@ -316,19 +316,9 @@ async function handleCommit(req: IncomingMessage, res: ServerResponse): Promise<
     proofs.push(proof);
   }
 
-  // Best-effort TSA timestamps — skip for ETH anchors (the block IS the timestamp)
-  const isAnchor = body.attribution?.name === "Ethereum Anchor";
-  if (!isAnchor) {
-    await Promise.all(
-      proofs.map(async (proof, i) => {
-        const d = body.digests[i]!;
-        const tsa = await requestTimestamp(d.digestB64).catch(() => null);
-        if (tsa) {
-          proof.timestamps = { artifact: tsa };
-        }
-      })
-    );
-  }
+  // TSA timestamps disabled — Ethereum anchors provide stronger time proof
+  // and TSA services rate-limit at scale. The ETH block hash in the causal
+  // chain is an unforgeable timestamp that doesn't depend on third parties.
 
   // Fire-and-forget: persist to immutable S3 ledger (includes by-digest index)
   void persistToLedger(proofs);
