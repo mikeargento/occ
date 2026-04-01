@@ -200,26 +200,20 @@ export function FileDrop({
           </button>
         </div>
       ) : (
-        <div className="flex flex-col items-center py-14 px-6 w-full">
-          <div className="w-14 h-14 bg-bg-subtle/80 border border-border-subtle flex items-center justify-center mb-5">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-text-tertiary">
+        <div className="flex flex-col items-center py-20 px-6 w-full">
+          <div className="w-16 h-16 bg-bg-subtle/80 border border-border-subtle rounded-2xl flex items-center justify-center mb-6">
+            <svg width="28" height="28" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.2" className="text-text-tertiary">
               <path d="M10 3v10M6 7l4-4 4 4" />
               <path d="M3 14v2a1 1 0 001 1h12a1 1 0 001-1v-2" />
             </svg>
           </div>
-          <div className="text-[15px] text-text-secondary">
+          <div className="text-[22px] font-semibold text-text tracking-tight">
             {multiple
-              ? <>Drop files here or <label htmlFor="occ-file-input" className="text-text font-medium cursor-pointer" onClick={(e) => e.stopPropagation()}>{browseLabel}</label></>
-              : <>Drop a file here or <label htmlFor="occ-file-input" className="text-text font-medium cursor-pointer" onClick={(e) => e.stopPropagation()}>{browseLabel}</label></>
+              ? <>Drop files or <label htmlFor="occ-file-input" className="text-accent cursor-pointer" onClick={(e) => e.stopPropagation()}>{browseLabel}</label></>
+              : <>Drop a file or <label htmlFor="occ-file-input" className="text-accent cursor-pointer" onClick={(e) => e.stopPropagation()}>{browseLabel}</label></>
             }
-            {showCapture && (
-              <>
-                {" "}&middot;{" "}
-                <span className="text-text font-medium" onClick={triggerCapture}>{captureLabel}</span>
-              </>
-            )}
           </div>
-          <div className="text-xs text-text-tertiary mt-1">
+          <div className="text-sm text-text-tertiary mt-2">
             {hint || "Any file type. Hashed locally in your browser"}
           </div>
         </div>
