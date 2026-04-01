@@ -4,7 +4,7 @@ export function Nav() {
   return (
     <div style={{ textAlign: "center", paddingTop: 32, paddingBottom: 8 }}>
       <span style={{ fontSize: 28, fontWeight: 900, fontStyle: "normal", fontFamily: 'var(--font-sans)', letterSpacing: "-0.02em", color: "var(--c-text)" }}>
-        OCC.WTF
+        OCC
       </span>
     </div>
   );
