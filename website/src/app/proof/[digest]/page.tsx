@@ -68,7 +68,7 @@ export default function ProofPage() {
           });
         }
       }
-    } catch {}
+    } catch (_) { /* ignore */ }
     const zipped = zipSync(files, { level: 0 });
     const blob = new Blob([zipped], { type: "application/zip" });
     const url = URL.createObjectURL(blob);
