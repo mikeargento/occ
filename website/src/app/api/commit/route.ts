@@ -23,10 +23,8 @@ export async function POST(req: NextRequest) {
     const teeData = await teeRes.json();
     const proofs = Array.isArray(teeData) ? teeData : [teeData];
 
-    // Index proofs by digest in S3 (fire-and-forget)
-    for (const p of proofs) {
-      void storeProofByDigest(p);
-    }
+    // Index proofs by digest in S3 (must await so lookups work immediately)
+    await Promise.all(proofs.map(p => storeProofByDigest(p)));
 
     return NextResponse.json(teeData);
   } catch (e) {

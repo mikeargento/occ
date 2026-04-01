@@ -30,8 +30,9 @@ export async function getProofByDigest(digestB64: string): Promise<Record<string
     if (!body) return null;
     return JSON.parse(body);
   } catch (err) {
-    if ((err as { name?: string }).name === "NoSuchKey") return null;
-    console.error("[s3] getProofByDigest failed:", (err as Error).message);
+    const name = (err as { name?: string }).name;
+    if (name === "NoSuchKey" || name === "NotFound") return null;
+    console.error("[s3] getProofByDigest failed:", name, (err as Error).message);
     return null;
   }
 }
