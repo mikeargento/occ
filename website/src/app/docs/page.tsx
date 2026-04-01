@@ -23,7 +23,7 @@ const pages = [
 export default function DocsPage() {
   return (
     <div>
-      <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-5">Documentation</h1>
+      <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-5">OCC Documentation</h1>
       <p className="text-text-secondary text-lg leading-relaxed mb-14 max-w-xl">
         Technical documentation for the OCC Protocol. Start with the concepts
         or jump directly to integration.
