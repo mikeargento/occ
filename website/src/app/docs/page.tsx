@@ -23,27 +23,29 @@ const pages = [
 export default function DocsPage() {
   return (
     <div>
-      <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-5">OCC Documentation</h1>
-      <p className="text-text-secondary text-lg leading-relaxed mb-14 max-w-xl">
+      <style>{`
+        .doc-card { border: 1px solid #e5e7eb; background: #fff; padding: 32px; border-radius: 12px; text-decoration: none; display: block; transition: border-color 0.15s, box-shadow 0.15s; }
+        .doc-card:hover { border-color: #1A73E8; box-shadow: 0 1px 4px rgba(26,115,232,0.1); }
+      `}</style>
+      <h1 style={{ fontSize: 32, fontWeight: 600, letterSpacing: "-0.03em", marginBottom: 20, color: "#1A73E8" }}>
+        OCC Documentation
+      </h1>
+      <p style={{ color: "#6b7280", fontSize: 18, lineHeight: 1.6, marginBottom: 56, maxWidth: 560 }}>
         Technical documentation for the OCC Protocol. Start with the concepts
         or jump directly to integration.
       </p>
 
-      <div className="space-y-5">
+      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         {pages.map((p, i) => (
           <ScrollReveal key={p.href} delay={i * 60}>
-            <Link
-              href={p.href}
-              className="group block border border-border-subtle bg-bg-elevated p-8 card-hover hover:border-border relative"
-              style={{ borderRadius: 12 }}
-            >
-              <div className="flex items-start gap-5">
-                <span className="text-xs font-mono text-text-tertiary mt-1 shrink-0">
+            <Link href={p.href} className="doc-card">
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 20 }}>
+                <span style={{ fontSize: 12, fontFamily: "monospace", color: "#1A73E8", marginTop: 4, flexShrink: 0, opacity: 0.6 }}>
                   {String(i + 1).padStart(2, "0")}
                 </span>
                 <div>
-                  <h2 className="text-lg font-semibold mb-2">{p.title}</h2>
-                  <p className="text-sm text-text-secondary leading-relaxed">{p.desc}</p>
+                  <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8, color: "#1A73E8" }}>{p.title}</h2>
+                  <p style={{ fontSize: 14, color: "#6b7280", lineHeight: 1.6, margin: 0 }}>{p.desc}</p>
                 </div>
               </div>
             </Link>
