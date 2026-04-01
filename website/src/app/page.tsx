@@ -265,9 +265,9 @@ export default function OCCPage() {
         {step === "scanning" && (
           <div style={{ textAlign: "center", padding: "80px 24px", animation: "slideIn 0.3s ease-out" }}>
             <div style={{ fontSize: 64, fontWeight: 800, color: "var(--c-text)", marginBottom: 8, fontFamily: "monospace", animation: "pulse 1s ease-in-out infinite", letterSpacing: "-0.04em" }}>
-              {scanProgress.current}<span style={{ color: "var(--c-text-tertiary)" }}>/{scanProgress.total}</span>
+              {scanProgress.current}<span style={{ color: "#9ca3af" }}>/{scanProgress.total}</span>
             </div>
-            <div style={{ fontSize: 15, color: "var(--c-text-tertiary)", fontWeight: 500 }}>Scanning</div>
+            <div style={{ fontSize: 15, color: "#9ca3af", fontWeight: 500 }}>Scanning</div>
             <div style={{ width: "40%", height: 2, borderRadius: 1, background: "var(--c-border-subtle)", overflow: "hidden", margin: "20px auto 0" }}>
               <div style={{ width: `${(scanProgress.current / scanProgress.total) * 100}%`, height: "100%", background: "#1A73E8", transition: "width 0.2s", boxShadow: "none" }} />
             </div>
@@ -280,7 +280,7 @@ export default function OCCPage() {
             <div style={{ fontSize: 64, fontWeight: 800, color: "#1A73E8", marginBottom: 8, fontFamily: "monospace", animation: "pulse 1s ease-in-out infinite", textShadow: "none", letterSpacing: "-0.04em" }}>
               {unproven.length}
             </div>
-            <div style={{ fontSize: 15, color: "var(--c-text-tertiary)", fontWeight: 500 }}>Signing in enclave</div>
+            <div style={{ fontSize: 15, color: "#9ca3af", fontWeight: 500 }}>Signing in enclave</div>
           </div>
         )}
 
@@ -308,7 +308,7 @@ export default function OCCPage() {
               }}>
                 {animCount}
               </div>
-              <div style={{ fontSize: 16, color: "var(--c-text-tertiary)", marginTop: 12, fontWeight: 500, letterSpacing: "0.02em" }}>
+              <div style={{ fontSize: 16, color: "#9ca3af", marginTop: 12, fontWeight: 500, letterSpacing: "0.02em" }}>
                 {allDone
                   ? `of ${items.length} proven`
                   : `of ${items.length} found`}
@@ -342,7 +342,7 @@ export default function OCCPage() {
               {items.map((item, i) => (
                 <div key={item.file.name + i} style={{
                   padding: "12px 0", borderTop: i > 0 ? "1px solid #d0d5dd" : "none",
-                  display: "flex", alignItems: "flex-start", gap: 10,
+                  display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
                   animation: `slideIn 0.2s ease-out ${i * 0.05}s both`,
                 }}>
                   <span style={{
@@ -350,7 +350,7 @@ export default function OCCPage() {
                     color: item.status === "found" || item.status === "proved" ? "#1A73E8"
                       : item.status === "proving" ? "#f0c060"
                       : item.status === "error" ? "#f87171"
-                      : "var(--c-text-tertiary)",
+                      : "#9ca3af",
                     fontWeight: 700,
                   }}>
                     {item.status === "found" || item.status === "proved" ? "✓"
@@ -361,10 +361,10 @@ export default function OCCPage() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {item.file.name}
-                      <span style={{ fontWeight: 400, color: "var(--c-text-tertiary)", marginLeft: 8 }}>{formatFileSize(item.file.size)}</span>
+                      <span style={{ fontWeight: 400, color: "#9ca3af", marginLeft: 8 }}>{formatFileSize(item.file.size)}</span>
                     </div>
                     {item.proof && (
-                      <div style={{ fontSize: 11, fontFamily: "monospace", color: "var(--c-text-tertiary)", marginTop: 3 }}>
+                      <div style={{ fontSize: 11, fontFamily: "monospace", color: "#9ca3af", marginTop: 3 }}>
                         #{item.proof.commit.counter} · {item.digestB64.slice(0, 20)}...
                       </div>
                     )}
@@ -375,7 +375,7 @@ export default function OCCPage() {
                       <div style={{ fontSize: 11, color: "#1A73E8", marginTop: 2 }}>Just proved</div>
                     )}
                     {item.status === "new" && (
-                      <div style={{ fontSize: 11, color: "var(--c-text-tertiary)", marginTop: 2 }}>Not yet proven</div>
+                      <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>Not yet proven</div>
                     )}
                   </div>
                   {item.proof && (
@@ -397,11 +397,12 @@ export default function OCCPage() {
                         window.open(`/proof/${encodeURIComponent(toUrlSafeB64(item.digestB64))}`, "_blank");
                       }}
                       style={{
-                        fontSize: 15, fontWeight: 600, color: "#ffffff", textDecoration: "none",
-                        flexShrink: 0, padding: "8px 24px", borderRadius: 980,
+                        fontSize: 13, fontWeight: 600, color: "#ffffff", textDecoration: "none",
+                        flexShrink: 0, padding: "8px 16px", borderRadius: 980,
                         background: "#1A73E8", border: "none", cursor: "pointer",
+                        whiteSpace: "nowrap",
                       }}>
-                      View
+                      View Details
                     </button>
                   )}
                 </div>
