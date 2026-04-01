@@ -115,41 +115,46 @@ export function Chat({ proofContext, preloadedQuestions }: ChatProps) {
 
   if (!open) {
     return (
-      <button
-        onClick={() => setOpen(true)}
-        style={{
-          position: "fixed",
-          bottom: 24,
-          right: 24,
-          width: 56,
-          height: 56,
-          borderRadius: "50%",
-          background: "#34d399",
-          border: "none",
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          boxShadow: "0 4px 20px rgba(52,211,153,0.3)",
-          zIndex: 1000,
-          transition: "transform 0.2s",
-        }}
-        onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.1)")}
-        onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
-      >
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="#000"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+      <div style={{ display: "flex", justifyContent: "center", padding: "32px 0" }}>
+        <button
+          onClick={() => setOpen(true)}
+          style={{
+            background: "none",
+            border: "1px solid rgba(255,255,255,0.15)",
+            borderRadius: 980,
+            padding: "12px 28px",
+            color: "rgba(255,255,255,0.6)",
+            fontSize: 15,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            transition: "all 0.2s",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = "rgba(52,211,153,0.4)";
+            e.currentTarget.style.color = "#34d399";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = "rgba(255,255,255,0.15)";
+            e.currentTarget.style.color = "rgba(255,255,255,0.6)";
+          }}
         >
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-        </svg>
-      </button>
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+          Ask about OCC
+        </button>
+      </div>
     );
   }
 
