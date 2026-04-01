@@ -32,10 +32,10 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
       <div style={{ display: "flex", gap: 48 }}>
         {/* Sidebar — desktop only */}
         <aside className="hidden-mobile" style={{ width: 200, flexShrink: 0 }}>
-          <div style={{ position: "sticky", top: 68 }}>
+          <div style={{ position: "sticky", top: 32 }}>
             <div style={{
               fontSize: 11, fontWeight: 500, textTransform: "uppercase",
-              letterSpacing: "0.1em", color: "var(--c-text-tertiary)", marginBottom: 16,
+              letterSpacing: "0.1em", color: "var(--c-text-tertiary)", marginBottom: 16, paddingTop: 8,
             }}>
               Documentation
             </div>
