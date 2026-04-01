@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { FileDrop } from "@/components/file-drop";
-import { Nav } from "@/components/nav";
+import { Nav, Footer } from "@/components/nav";
 import {
   hashFile,
   commitDigest,
@@ -346,6 +346,7 @@ export default function OCCPage() {
             </div>
           </div>
         )}
+        <Footer />
       </div>
     </div>
   );
