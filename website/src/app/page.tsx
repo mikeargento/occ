@@ -316,7 +316,7 @@ export default function OCCPage() {
                     )}
                   </div>
                   {item.proof && (
-                    <a href={`/proof/${encodeURIComponent(toUrlSafeB64(item.digestB64))}`}
+                    <a href={`/proof/${encodeURIComponent(toUrlSafeB64(item.digestB64))}`} target="_blank" rel="noopener"
                       style={{
                         fontSize: 13, fontWeight: 500, color: "var(--c-accent)", textDecoration: "none",
                         flexShrink: 0, padding: "6px 14px", borderRadius: 6,
