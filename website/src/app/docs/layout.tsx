@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
 
 const sections = [
@@ -20,16 +19,12 @@ const sections = [
   { href: "/docs/faq", label: "FAQ" },
 ];
 
-const extras = [
-  { href: "https://github.com/mikeargento/occ", label: "GitHub", external: true },
-];
-
 function SidebarNav({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
   return (
     <>
       <div style={{
         fontSize: 11, fontWeight: 500, textTransform: "uppercase",
-        letterSpacing: "0.1em", color: "var(--c-text-tertiary)", marginBottom: 16, paddingTop: 8,
+        letterSpacing: "0.1em", color: "#9ca3af", marginBottom: 16, paddingTop: 8,
       }}>
         Documentation
       </div>
@@ -38,32 +33,22 @@ function SidebarNav({ pathname, onNavigate }: { pathname: string; onNavigate?: (
           <Link key={s.href} href={s.href} onClick={onNavigate} style={{
             display: "block", padding: "6px 12px", fontSize: 14,
             fontWeight: pathname === s.href ? 600 : 400,
-            color: pathname === s.href ? "var(--c-text)" : "var(--c-text-secondary)",
+            color: pathname === s.href ? "#111827" : "#6b7280",
             textDecoration: "none", borderRadius: 6,
-            background: pathname === s.href ? "var(--bg-elevated)" : "transparent",
+            background: pathname === s.href ? "#f3f4f6" : "transparent",
             transition: "all 0.15s",
           }}>
             {s.label}
           </Link>
         ))}
       </nav>
-      <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--c-border-subtle)" }}>
-        {extras.map((e) => e.external ? (
-          <a key={e.href} href={e.href} target="_blank" rel="noopener" style={{
-            display: "block", padding: "6px 12px", fontSize: 13,
-            color: "var(--c-text-tertiary)", textDecoration: "none",
-          }}>
-            {e.label}
-          </a>
-        ) : (
-          <Link key={e.href} href={e.href} onClick={onNavigate} style={{
-            display: "block", padding: "6px 12px", fontSize: 13,
-            color: pathname.startsWith(e.href) ? "var(--c-text)" : "var(--c-text-tertiary)",
-            textDecoration: "none",
-          }}>
-            {e.label}
-          </Link>
-        ))}
+      <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #e5e7eb" }}>
+        <a href="https://github.com/mikeargento/occ" target="_blank" rel="noopener" style={{
+          display: "block", padding: "6px 12px", fontSize: 13,
+          color: "#9ca3af", textDecoration: "none",
+        }}>
+          GitHub
+        </a>
       </div>
     </>
   );
@@ -75,61 +60,94 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <>
-    <div style={{ maxWidth: 1120, margin: "0 auto", padding: "32px 24px 64px" }}>
-
-      {/* Mobile menu button */}
-      <div className="visible-mobile" style={{ marginBottom: 16 }}>
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          style={{
-            background: "var(--bg-elevated)",
-            border: "1px solid var(--c-border)",
-            borderRadius: 8,
-            padding: "10px 16px",
-            color: "var(--c-text)",
-            fontSize: 14,
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            width: "100%",
-          }}
-        >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-            {mobileMenuOpen
-              ? <path d="M4 4l8 8M12 4l-8 8" />
-              : <><path d="M2 4h12" /><path d="M2 8h12" /><path d="M2 12h12" /></>
-            }
-          </svg>
-          {sections.find(s => s.href === pathname)?.label || "Documentation"}
-        </button>
-
-        {mobileMenuOpen && (
-          <div style={{
-            marginTop: 8,
-            background: "var(--bg-elevated)",
-            border: "1px solid var(--c-border)",
-            borderRadius: 8,
-            padding: "8px",
+      {/* Nav bar */}
+      <div style={{
+        borderBottom: "1px solid #e5e7eb",
+        background: "#fff",
+        position: "sticky", top: 0, zIndex: 50,
+      }}>
+        <div style={{
+          maxWidth: 1120, margin: "0 auto", padding: "0 24px",
+          height: 56, display: "flex", alignItems: "center", justifyContent: "space-between",
+        }}>
+          <Link href="/" style={{
+            fontSize: 20, fontWeight: 900, color: "#111827",
+            textDecoration: "none", letterSpacing: "-0.02em",
           }}>
-            <SidebarNav pathname={pathname} onNavigate={() => setMobileMenuOpen(false)} />
+            OCC
+          </Link>
+          <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
+            <Link href="/docs" style={{
+              fontSize: 14, fontWeight: 500, color: "#1A73E8",
+              textDecoration: "none",
+            }}>
+              Docs
+            </Link>
+            <a href="https://github.com/mikeargento/occ" target="_blank" rel="noopener" style={{
+              fontSize: 14, fontWeight: 500, color: "#6b7280",
+              textDecoration: "none",
+            }}>
+              GitHub
+            </a>
           </div>
-        )}
+        </div>
       </div>
 
-      <div style={{ display: "flex", gap: 48 }}>
-        {/* Sidebar — desktop only */}
-        <aside className="hidden-mobile" style={{ width: 200, flexShrink: 0 }}>
-          <div style={{ position: "sticky", top: 32 }}>
-            <SidebarNav pathname={pathname} />
-          </div>
-        </aside>
+      <div style={{ maxWidth: 1120, margin: "0 auto", padding: "32px 24px 64px" }}>
 
-        {/* Content */}
-        <div style={{ minWidth: 0, flex: 1 }}>{children}</div>
+        {/* Mobile menu button */}
+        <div className="visible-mobile" style={{ marginBottom: 16 }}>
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            style={{
+              background: "#fff",
+              border: "1px solid #d0d5dd",
+              borderRadius: 8,
+              padding: "10px 16px",
+              color: "#111827",
+              fontSize: 14,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              width: "100%",
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+              {mobileMenuOpen
+                ? <path d="M4 4l8 8M12 4l-8 8" />
+                : <><path d="M2 4h12" /><path d="M2 8h12" /><path d="M2 12h12" /></>
+              }
+            </svg>
+            {sections.find(s => s.href === pathname)?.label || "Documentation"}
+          </button>
+
+          {mobileMenuOpen && (
+            <div style={{
+              marginTop: 8,
+              background: "#fff",
+              border: "1px solid #d0d5dd",
+              borderRadius: 8,
+              padding: "8px",
+            }}>
+              <SidebarNav pathname={pathname} onNavigate={() => setMobileMenuOpen(false)} />
+            </div>
+          )}
+        </div>
+
+        <div style={{ display: "flex", gap: 48 }}>
+          {/* Sidebar — desktop only */}
+          <aside className="hidden-mobile" style={{ width: 200, flexShrink: 0 }}>
+            <div style={{ position: "sticky", top: 88 }}>
+              <SidebarNav pathname={pathname} />
+            </div>
+          </aside>
+
+          {/* Content */}
+          <div style={{ minWidth: 0, flex: 1 }}>{children}</div>
+        </div>
       </div>
-    </div>
-    <Footer />
+      <Footer />
     </>
   );
 }

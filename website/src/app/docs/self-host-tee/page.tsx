@@ -9,7 +9,7 @@ export default function SelfHostTEEPage() {
   return (
     <div className="prose-doc">
       <h1 style={{ fontSize: 28, fontWeight: 700, letterSpacing: "-0.02em", marginBottom: 8 }}>Self-Host TEE</h1>
-      <p style={{ color: "var(--c-text-secondary)", marginBottom: 32 }}>
+      <p style={{ color: "#6b7280", marginBottom: 32 }}>
         Deploy your own OCC Trusted Execution Environment using AWS Nitro Enclaves. This guide assumes no prior TEE experience.
       </p>
 
