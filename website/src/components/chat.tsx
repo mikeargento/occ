@@ -173,9 +173,6 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
 
   return (
     <div>
-      <div style={{ textAlign: "center", marginBottom: 16 }}>
-        <span style={{ fontSize: 15, color: "rgba(255,255,255,0.5)" }}>Ask about OCC</span>
-      </div>
     <div className="occ-chat-panel"
       style={{
         width: "100%",
@@ -367,6 +364,9 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
         .occ-chat-md h1, .occ-chat-md h2, .occ-chat-md h3 { font-size: 14px; font-weight: 600; color: #fff; margin: 8px 0 4px; }
       `}</style>
     </div>
+      <div style={{ display: "flex", justifyContent: "center", padding: "40px 0" }}>
+        <span style={{ fontSize: 15, color: "rgba(255,255,255,0.5)" }}>Ask about OCC</span>
+      </div>
     </div>
   );
 }
