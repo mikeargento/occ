@@ -1,11 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { FileDrop } from "@/components/file-drop";
-import { Nav } from "@/components/nav";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   hashFile,
-  hashBytes,
   commitDigest,
   commitBatch,
   formatFileSize,
@@ -21,8 +18,8 @@ import { zipSync } from "fflate";
 
 /* ── Types ── */
 
-type Mode = "make" | "verify";
-type MakeStep = "drop" | "hashing" | "signing" | "done" | "error";
+type Mode = "create" | "verify";
+type CreateStep = "drop" | "hashing" | "signing" | "done" | "error";
 type VerifyStep = "drop" | "checking" | "result";
 
 interface ProofEntry {
@@ -45,7 +42,6 @@ FILE:       ${filename}
 DIGEST:     ${p.artifact.digestB64}
 ALGORITHM:  ${p.artifact.hashAlg.toUpperCase()}
 COUNTER:    #${p.commit.counter ?? "—"}
-TIME:       ${p.commit.time ? new Date(p.commit.time).toISOString() : "—"}
 ENFORCEMENT: ${p.environment?.enforcement === "measured-tee" ? "Hardware Enclave (AWS Nitro)" : "Software"}
 SIGNER:     ${p.signer.publicKeyB64}
 
@@ -67,21 +63,15 @@ Learn more: https://occ.wtf/docs
 
 async function createBiometricAuthorization(digestB64: string): Promise<AgencyEnvelope | undefined> {
   if (!window.PublicKeyCredential) return undefined;
-
   try {
     const challenge = crypto.getRandomValues(new Uint8Array(32));
     const credential = await navigator.credentials.get({
       publicKey: {
-        challenge,
-        timeout: 60000,
-        userVerification: "required",
-        rpId: window.location.hostname,
-        allowCredentials: [],
+        challenge, timeout: 60000, userVerification: "required",
+        rpId: window.location.hostname, allowCredentials: [],
       },
     }) as PublicKeyCredential | null;
-
     if (!credential) return undefined;
-
     const response = credential.response as AuthenticatorAssertionResponse;
     const sigBytes = new Uint8Array(response.signature);
     const sigB64 = btoa(String.fromCharCode(...sigBytes));
@@ -89,45 +79,36 @@ async function createBiometricAuthorization(digestB64: string): Promise<AgencyEn
     const authDataB64 = btoa(String.fromCharCode(...authData));
     const clientDataJSON = new TextDecoder().decode(response.clientDataJSON);
     const challengeB64 = btoa(String.fromCharCode(...challenge));
-
     const actor: ActorIdentity = {
-      keyId: credential.id,
-      publicKeyB64: "", // would need stored key
-      algorithm: "ES256",
-      provider: "webauthn",
+      keyId: credential.id, publicKeyB64: "", algorithm: "ES256", provider: "webauthn",
     };
-
     return {
       actor,
       authorization: {
-        format: "webauthn.get",
-        purpose: "occ/commit-authorize/v1",
-        actorKeyId: credential.id,
-        artifactHash: digestB64,
-        challenge: challengeB64,
-        timestamp: Date.now(),
-        signatureB64: sigB64,
-        clientDataJSON,
-        authenticatorDataB64: authDataB64,
+        format: "webauthn.get", purpose: "occ/commit-authorize/v1",
+        actorKeyId: credential.id, artifactHash: digestB64,
+        challenge: challengeB64, timestamp: Date.now(),
+        signatureB64: sigB64, clientDataJSON, authenticatorDataB64: authDataB64,
       },
     };
-  } catch {
-    return undefined; // biometrics declined or unavailable
-  }
+  } catch { return undefined; }
 }
 
-/* ── Main Page ── */
+/* ══════════════════════════════════════════════════════════════════════════ */
+/*  Main Page                                                                */
+/* ══════════════════════════════════════════════════════════════════════════ */
 
-export default function MakerPage() {
-  const [mode, setMode] = useState<Mode>("make");
+export default function OCCPage() {
+  const [mode, setMode] = useState<Mode>("create");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Make state
-  const [makeStep, setMakeStep] = useState<MakeStep>("drop");
-  const [makeFiles, setMakeFiles] = useState<File[]>([]);
-  const [makeDigest, setMakeDigest] = useState("");
-  const [makeProofs, setMakeProofs] = useState<OCCProof[]>([]);
-  const [makeError, setMakeError] = useState("");
-  const [makeProgress, setMakeProgress] = useState({ current: 0, total: 0, fileName: "" });
+  // Create state
+  const [createStep, setCreateStep] = useState<CreateStep>("drop");
+  const [createFiles, setCreateFiles] = useState<File[]>([]);
+  const [createDigest, setCreateDigest] = useState("");
+  const [createProofs, setCreateProofs] = useState<OCCProof[]>([]);
+  const [createError, setCreateError] = useState("");
+  const [createProgress, setCreateProgress] = useState({ current: 0, total: 0, fileName: "" });
   const [copied, setCopied] = useState(false);
   const [useBiometrics, setUseBiometrics] = useState(false);
   const [attribution, setAttribution] = useState("");
@@ -139,13 +120,14 @@ export default function MakerPage() {
   const [verifyResult, setVerifyResult] = useState<ProofVerifyResult | null>(null);
   const [fileDigestMatch, setFileDigestMatch] = useState<boolean | null>(null);
 
-  // Public ledger
+  // Ledger
   const [ledger, setLedger] = useState<ProofEntry[]>([]);
   const [ledgerTotal, setLedgerTotal] = useState(0);
   const [ledgerPage, setLedgerPage] = useState(1);
-  const [ledgerViewMode, setLedgerViewMode] = useState<"normal" | "timeonly">("normal");
 
-  // Fetch public ledger
+  // Drag state
+  const [dragover, setDragover] = useState(false);
+
   const fetchLedger = useCallback(async (page: number) => {
     try {
       const resp = await fetch(`/api/proofs?page=${page}&limit=15`);
@@ -168,113 +150,55 @@ export default function MakerPage() {
 
   useEffect(() => {
     fetchLedger(1);
-    // Auto-refresh ledger every 15 seconds
     const interval = setInterval(() => fetchLedger(1), 15000);
     return () => clearInterval(interval);
   }, [fetchLedger]);
 
-  /* ── Make handlers ── */
+  /* ── File handlers ── */
 
-  async function handleMakeFiles(files: File[]) {
-    setMakeFiles(files);
-    setMakeStep("hashing");
-    setMakeError("");
+  function handleFiles(files: File[]) {
+    if (mode === "create") handleCreateFiles(files);
+    else if (files.length === 1) handleVerifyFile(files[0]);
+  }
+
+  async function handleCreateFiles(files: File[]) {
+    setCreateFiles(files);
+    setCreateStep("hashing");
+    setCreateError("");
     try {
       if (files.length === 1) {
-        const f = files[0];
-        const d = await hashFile(f);
-        setMakeDigest(d);
-        setMakeStep("signing");
-
+        const d = await hashFile(files[0]);
+        setCreateDigest(d);
+        setCreateStep("signing");
         let agency: AgencyEnvelope | undefined;
-        if (useBiometrics) {
-          agency = await createBiometricAuthorization(d);
-        }
-
+        if (useBiometrics) agency = await createBiometricAuthorization(d);
         const attr = attribution.trim() ? { name: attribution.trim() } : undefined;
         const p = await commitDigest(d, undefined, agency, attr);
-        setMakeProofs([p]);
-        setMakeStep("done");
-
-        // Refresh ledger after short delay to ensure indexing is complete
+        setCreateProofs([p]);
+        setCreateStep("done");
         setTimeout(() => fetchLedger(1), 1500);
       } else {
-        // Batch mode
         const digests: Array<{ digestB64: string; hashAlg: "sha256" }> = [];
         for (let i = 0; i < files.length; i++) {
-          const f = files[i];
-          setMakeProgress({ current: i + 1, total: files.length, fileName: f.name });
-          const d = await hashFile(f);
+          setCreateProgress({ current: i + 1, total: files.length, fileName: files[i].name });
+          const d = await hashFile(files[i]);
           digests.push({ digestB64: d, hashAlg: "sha256" });
         }
-        setMakeDigest(digests[0].digestB64);
-        setMakeStep("signing");
-        setMakeProgress({ current: 0, total: files.length, fileName: "" });
-
+        setCreateDigest(digests[0].digestB64);
+        setCreateStep("signing");
         let agency: AgencyEnvelope | undefined;
-        if (useBiometrics) {
-          agency = await createBiometricAuthorization(digests[0].digestB64);
-        }
-
+        if (useBiometrics) agency = await createBiometricAuthorization(digests[0].digestB64);
         const attr = attribution.trim() ? { name: attribution.trim() } : undefined;
         const proofs = await commitBatch(digests, undefined, agency, attr);
-        setMakeProofs(proofs);
-        setMakeStep("done");
-
-        // Refresh ledger after short delay to ensure indexing is complete
+        setCreateProofs(proofs);
+        setCreateStep("done");
         setTimeout(() => fetchLedger(1), 1500);
       }
     } catch (err) {
-      setMakeError(err instanceof Error ? err.message : "Something went wrong");
-      setMakeStep("error");
+      setCreateError(err instanceof Error ? err.message : "Something went wrong");
+      setCreateStep("error");
     }
   }
-
-  function resetMake() {
-    setMakeFiles([]);
-    setMakeStep("drop");
-    setMakeDigest("");
-    setMakeProofs([]);
-    setMakeError("");
-  }
-
-  function copyProof() {
-    const json = makeProofs.length === 1
-      ? JSON.stringify(makeProofs[0], null, 2)
-      : JSON.stringify(makeProofs, null, 2);
-    navigator.clipboard.writeText(json);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
-
-  async function downloadZip() {
-    if (!makeProofs.length || !makeFiles.length) return;
-    const zipFiles: Record<string, Uint8Array> = {};
-
-    for (let i = 0; i < makeFiles.length; i++) {
-      const f = makeFiles[i];
-      const p = makeProofs[i] || makeProofs[0];
-      zipFiles[f.name] = new Uint8Array(await f.arrayBuffer());
-      const proofName = makeFiles.length > 1 ? `proof-${i + 1}.json` : "proof.json";
-      zipFiles[proofName] = new TextEncoder().encode(JSON.stringify(p, null, 2));
-      if (i === 0) {
-        zipFiles["VERIFY.txt"] = new TextEncoder().encode(buildVerifyTxt(f.name, p));
-      }
-    }
-
-    const zipped = zipSync(zipFiles);
-    const blob = new Blob([zipped.buffer as ArrayBuffer], { type: "application/zip" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = makeFiles.length === 1
-      ? `${makeFiles[0].name.replace(/\.[^.]+$/, "")}-occ-proof.zip`
-      : "occ-proof-batch.zip";
-    a.click();
-    URL.revokeObjectURL(url);
-  }
-
-  /* ── Verify handlers ── */
 
   async function handleVerifyFile(f: File) {
     setVerifyFile(f);
@@ -282,19 +206,15 @@ export default function MakerPage() {
     setFileDigestMatch(null);
     setVerifyResult(null);
     setVerifyProof(null);
-
     try {
       const text = await f.text();
       const proof = isOCCProof(text);
-
       if (proof) {
-        // User dropped a proof.json — verify the signature
         setVerifyProof(proof);
         const result = await verifyProofSignature(proof);
         setVerifyResult(result);
         setVerifyStep("result");
       } else {
-        // User dropped a regular file — hash it and check against the ledger
         const d = await hashFile(f);
         const resp = await fetch(`/api/proofs/${encodeURIComponent(toUrlSafeB64(d))}`);
         if (resp.ok) {
@@ -305,12 +225,8 @@ export default function MakerPage() {
             setFileDigestMatch(true);
             const result = await verifyProofSignature(p);
             setVerifyResult(result);
-          } else {
-            setFileDigestMatch(false);
-          }
-        } else {
-          setFileDigestMatch(false);
-        }
+          } else setFileDigestMatch(false);
+        } else setFileDigestMatch(false);
         setVerifyStep("result");
       }
     } catch {
@@ -319,407 +235,301 @@ export default function MakerPage() {
     }
   }
 
+  function resetCreate() {
+    setCreateFiles([]); setCreateStep("drop"); setCreateDigest(""); setCreateProofs([]); setCreateError("");
+  }
   function resetVerify() {
-    setVerifyFile(null);
-    setVerifyStep("drop");
-    setVerifyProof(null);
-    setVerifyResult(null);
-    setFileDigestMatch(null);
+    setVerifyFile(null); setVerifyStep("drop"); setVerifyProof(null); setVerifyResult(null); setFileDigestMatch(null);
   }
 
-  /* ── Styles ── */
+  function copyProof() {
+    const json = createProofs.length === 1 ? JSON.stringify(createProofs[0], null, 2) : JSON.stringify(createProofs, null, 2);
+    navigator.clipboard.writeText(json);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
 
-  const cardStyle: React.CSSProperties = {
-    border: "1px solid var(--c-border-subtle)",
-    padding: "32px 24px",
-    background: "var(--bg-elevated)",
-    marginBottom: 16,
-  };
+  async function downloadZip() {
+    if (!createProofs.length || !createFiles.length) return;
+    const zipFiles: Record<string, Uint8Array> = {};
+    for (let i = 0; i < createFiles.length; i++) {
+      const f = createFiles[i];
+      const p = createProofs[i] || createProofs[0];
+      zipFiles[f.name] = new Uint8Array(await f.arrayBuffer());
+      zipFiles[createFiles.length > 1 ? `proof-${i + 1}.json` : "proof.json"] = new TextEncoder().encode(JSON.stringify(p, null, 2));
+      if (i === 0) zipFiles["VERIFY.txt"] = new TextEncoder().encode(buildVerifyTxt(f.name, p));
+    }
+    const zipped = zipSync(zipFiles);
+    const blob = new Blob([zipped.buffer as ArrayBuffer], { type: "application/zip" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = createFiles.length === 1 ? `${createFiles[0].name.replace(/\.[^.]+$/, "")}-occ-proof.zip` : "occ-proof-batch.zip";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 
-  const btnOutline: React.CSSProperties = {
-    height: 48, fontSize: 15, fontWeight: 500,
-    border: "1px solid var(--c-border)", borderRadius: 10,
-    background: "transparent", color: "var(--c-text)", cursor: "pointer",
-    flex: 1,
-  };
+  const showDrop = (mode === "create" && createStep === "drop") || (mode === "verify" && verifyStep === "drop");
 
-  const btnSolid: React.CSSProperties = {
-    ...btnOutline,
-    border: "none", background: "var(--c-text)", color: "var(--bg)",
-  };
+  /* ── Render ── */
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--c-text)" }}>
-      <Nav />
+    <div style={{ minHeight: "100vh", background: "#000" }}>
+      {/* Header */}
+      <header style={{
+        padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between",
+        borderBottom: "1px solid rgba(255,255,255,0.08)",
+      }}>
+        <span style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.02em", color: "#fff" }}>OCC</span>
+        <div style={{ display: "flex", gap: 20 }}>
+          <a href="/docs" style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>Docs</a>
+          <a href="https://github.com/mikeargento/occ" target="_blank" rel="noopener" style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", textDecoration: "none" }}>GitHub</a>
+        </div>
+      </header>
 
-      <div style={{ maxWidth: 1120, margin: "0 auto", padding: "60px 36px" }}>
-        {/* Header */}
-        <h1 style={{ fontSize: 36, fontWeight: 700, letterSpacing: "-0.03em", marginBottom: 8 }}>
-          Maker
-        </h1>
-        <p style={{ fontSize: 16, color: "var(--c-text-secondary)", marginBottom: 32, lineHeight: 1.5 }}>
-          Create and verify cryptographic proofs signed inside a hardware enclave.
-        </p>
+      <div style={{ maxWidth: 640, margin: "0 auto", padding: "40px 20px 80px" }}>
 
-        {/* Mode toggle */}
+        {/* iOS Segmented Control */}
         <div style={{
-          display: "flex", gap: 0, marginBottom: 32,
-          border: "1px solid var(--c-border)", borderRadius: 10, overflow: "hidden",
+          display: "flex", padding: 3, borderRadius: 10,
+          background: "rgba(255,255,255,0.06)", marginBottom: 24,
         }}>
-          {(["make", "verify"] as Mode[]).map((m) => (
-            <button key={m} onClick={() => setMode(m)} style={{
-              flex: 1, height: 44, fontSize: 14, fontWeight: 600,
-              border: "none", cursor: "pointer",
-              background: mode === m ? "var(--c-text)" : "transparent",
-              color: mode === m ? "var(--bg)" : "var(--c-text-secondary)",
-              textTransform: "capitalize", letterSpacing: "0.02em",
+          {(["create", "verify"] as Mode[]).map((m) => (
+            <button key={m} onClick={() => { setMode(m); if (m === "create") resetCreate(); else resetVerify(); }} style={{
+              flex: 1, height: 36, fontSize: 14, fontWeight: 500,
+              border: "none", cursor: "pointer", borderRadius: 8,
+              background: mode === m ? "rgba(255,255,255,0.12)" : "transparent",
+              color: mode === m ? "#fff" : "rgba(255,255,255,0.45)",
+              transition: "all 0.2s ease",
             }}>
-              {m === "make" ? "Create proof" : "Verify proof"}
+              {m === "create" ? "Create" : "Verify"}
             </button>
           ))}
         </div>
 
-        {/* ═══ MAKE MODE ═══ */}
-        {mode === "make" && (
+        {/* Drop Zone */}
+        {showDrop && (
           <>
-            {makeStep === "drop" && (
-              <>
-                <FileDrop
-                  multiple
-                  onFile={(f) => handleMakeFiles([f])}
-                  onFiles={handleMakeFiles}
-                  hint="Drop file(s). Hashed locally — nothing uploaded. Supports batch."
-                />
-                {/* Options below the drop zone */}
-                <div style={{
-                  display: "flex", alignItems: "center", gap: 20, marginTop: 16,
-                  padding: "12px 16px",
-                  border: "1px solid var(--c-border-subtle)", background: "var(--bg-elevated)",
-                }}>
-                  <input
-                    type="text"
-                    value={attribution}
-                    onChange={(e) => setAttribution(e.target.value)}
-                    placeholder="Author name (optional)"
-                    style={{
-                      flex: 1, height: 32, padding: "0 10px",
-                      fontSize: 13, border: "1px solid var(--c-border)", borderRadius: 6,
-                      background: "transparent", color: "var(--c-text)",
-                    }}
-                  />
-                  <label style={{
-                    display: "flex", alignItems: "center", gap: 6,
-                    fontSize: 13, color: "var(--c-text-secondary)", cursor: "pointer",
-                    whiteSpace: "nowrap",
-                  }}>
-                    <input
-                      type="checkbox"
-                      checked={useBiometrics}
-                      onChange={(e) => setUseBiometrics(e.target.checked)}
-                      style={{ accentColor: "var(--accent)" }}
-                    />
-                    Biometric authorship
-                  </label>
-                </div>
-              </>
-            )}
-
-            {makeStep === "hashing" && (
-              <div style={{ ...cardStyle, textAlign: "center", padding: "48px 24px" }}>
-                <div style={{ fontSize: 14, color: "var(--c-text-secondary)", marginBottom: 12 }}>
-                  Hashing {makeFiles.length > 1 ? `${makeProgress.current} / ${makeProgress.total}` : ""} file{makeFiles.length !== 1 ? "s" : ""}...
-                </div>
-                {makeFiles.length > 1 && makeProgress.total > 0 && (
-                  <>
-                    <div style={{
-                      width: "100%", height: 4, borderRadius: 2,
-                      background: "var(--c-border)", overflow: "hidden", marginBottom: 8,
-                    }}>
-                      <div style={{
-                        width: `${(makeProgress.current / makeProgress.total) * 100}%`,
-                        height: "100%", borderRadius: 2,
-                        background: "#34d399", transition: "width 0.2s ease",
-                      }} />
-                    </div>
-                    <div style={{ fontSize: 12, color: "var(--c-text-tertiary)", fontFamily: "monospace" }}>
-                      {makeProgress.fileName}
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-
-            {makeStep === "signing" && (
-              <div style={{ ...cardStyle, textAlign: "center", padding: "48px 24px" }}>
-                <div style={{ fontSize: 14, color: "var(--c-text-secondary)", marginBottom: 8 }}>
-                  Signing {makeFiles.length > 1 ? `${makeFiles.length} files` : ""} in hardware enclave...
-                </div>
-                <div style={{ fontSize: 12, color: "var(--c-text-tertiary)", fontFamily: "monospace" }}>
-                  {makeDigest.slice(0, 32)}...
-                </div>
-              </div>
-            )}
-
-            {makeStep === "error" && (
-              <div style={{ ...cardStyle, textAlign: "center", borderColor: "#ff453a" }}>
-                <div style={{ fontSize: 14, color: "#ff453a", marginBottom: 16 }}>{makeError}</div>
-                <button onClick={resetMake} style={btnOutline}>Try again</button>
-              </div>
-            )}
-
-            {makeStep === "done" && makeProofs.length > 0 && (
-              <div>
-                <div style={cardStyle}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                    <span style={{ color: "#30d158", fontSize: 20 }}>●</span>
-                    <span style={{ fontSize: 16, fontWeight: 600 }}>
-                      {makeProofs.length === 1 ? "Proof created" : `${makeProofs.length} proofs created`}
-                    </span>
-                  </div>
-                  {makeFiles.map((f, i) => (
-                    <div key={f.name + i} style={{ marginBottom: i < makeFiles.length - 1 ? 12 : 0 }}>
-                      <div style={{ fontSize: 13, color: "var(--c-text-secondary)", marginBottom: 2 }}>
-                        {f.name} · {formatFileSize(f.size)}
-                      </div>
-                      <div style={{
-                        fontSize: 12, fontFamily: "monospace", color: "#30d158",
-                        wordBreak: "break-all", lineHeight: 1.5,
-                      }}>
-                        {makeProofs[i]?.artifact.digestB64}
-                      </div>
-                    </div>
-                  ))}
-                  <div style={{ display: "flex", gap: 12, fontSize: 12, color: "var(--c-text-tertiary)", marginTop: 16 }}>
-                    <span>Counter #{makeProofs[0].commit.counter}</span>
-                    <span>·</span>
-                    <span>{makeProofs[0].environment?.enforcement === "measured-tee" ? "Hardware Enclave" : "Software"}</span>
-                    <span>·</span>
-                    <span>{makeProofs[0].commit.time ? new Date(makeProofs[0].commit.time).toLocaleString() : ""}</span>
-                  </div>
-                </div>
-
-                {/* Proof JSON */}
-                <div style={cardStyle}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-                    <span style={{ fontSize: 12, fontWeight: 600, color: "var(--c-text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                      Proof JSON
-                    </span>
-                    <button onClick={copyProof} style={{
-                      fontSize: 12, fontWeight: 500, padding: "4px 12px",
-                      border: "1px solid var(--c-border)", borderRadius: 6,
-                      background: "transparent", color: copied ? "#30d158" : "var(--c-text-secondary)", cursor: "pointer",
-                    }}>
-                      {copied ? "Copied" : "Copy"}
-                    </button>
-                  </div>
-                  <pre style={{
-                    fontSize: 11, fontFamily: "monospace", lineHeight: 1.5,
-                    color: "#30d158", background: "#0a0a0a",
-                    padding: 16, borderRadius: 6, overflow: "auto", maxHeight: 400,
-                  }}>
-                    {makeProofs.length === 1
-                      ? JSON.stringify(makeProofs[0], null, 2)
-                      : JSON.stringify(makeProofs, null, 2)}
-                  </pre>
-                </div>
-
-                <div style={{ display: "flex", gap: 12 }}>
-                  <button onClick={downloadZip} style={btnSolid}>Download .zip</button>
-                  <button onClick={resetMake} style={btnOutline}>Create another</button>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-
-        {/* ═══ VERIFY MODE ═══ */}
-        {mode === "verify" && (
-          <>
-            {verifyStep === "drop" && (
-              <FileDrop
-                onFile={handleVerifyFile}
-                hint="Drop a proof.json to verify its signature, or drop any file to check if it has a proof on the ledger."
-              />
-            )}
-
-            {verifyStep === "checking" && (
-              <div style={{ ...cardStyle, textAlign: "center", padding: "48px 24px" }}>
-                <div style={{ fontSize: 14, color: "var(--c-text-secondary)" }}>
-                  Checking {verifyFile?.name}...
-                </div>
-              </div>
-            )}
-
-            {verifyStep === "result" && (
-              <div>
-                {/* Signature verification */}
-                {verifyResult && (
-                  <div style={cardStyle}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-                      <span style={{ color: verifyResult.valid ? "#30d158" : "#ff453a", fontSize: 20 }}>●</span>
-                      <span style={{ fontSize: 16, fontWeight: 600 }}>
-                        {verifyResult.valid ? "Signature valid" : "Signature invalid"}
-                      </span>
-                    </div>
-                    {verifyResult.checks.map((c, i) => (
-                      <div key={i} style={{
-                        display: "flex", alignItems: "baseline", gap: 8,
-                        fontSize: 13, marginBottom: 6, color: "var(--c-text-secondary)",
-                      }}>
-                        <span style={{
-                          color: c.status === "pass" ? "#30d158" : c.status === "fail" ? "#ff453a" : "var(--c-text-tertiary)",
-                          fontFamily: "monospace", fontSize: 12,
-                        }}>
-                          {c.status === "pass" ? "✓" : c.status === "fail" ? "✗" : "—"}
-                        </span>
-                        <span>{c.label}</span>
-                        {c.detail && <span style={{ color: "var(--c-text-tertiary)", fontSize: 12 }}>{c.detail}</span>}
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* File digest match */}
-                {fileDigestMatch !== null && !verifyProof && (
-                  <div style={cardStyle}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span style={{ color: fileDigestMatch ? "#30d158" : "#ff6b35", fontSize: 20 }}>●</span>
-                      <span style={{ fontSize: 16, fontWeight: 600 }}>
-                        {fileDigestMatch ? "File found on ledger" : "No proof found for this file"}
-                      </span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Show the proof if found */}
-                {verifyProof && (
-                  <div style={cardStyle}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: "var(--c-text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12 }}>
-                      Proof details
-                    </div>
-                    <div style={{ fontSize: 12, fontFamily: "monospace", color: "#30d158", wordBreak: "break-all", lineHeight: 1.5, marginBottom: 8 }}>
-                      {verifyProof.artifact.digestB64}
-                    </div>
-                    <div style={{ display: "flex", gap: 12, fontSize: 12, color: "var(--c-text-tertiary)", flexWrap: "wrap" }}>
-                      {verifyProof.commit.counter && <span>Counter #{verifyProof.commit.counter}</span>}
-                      <span>{verifyProof.environment?.enforcement === "measured-tee" ? "Hardware Enclave" : "Software"}</span>
-                      {verifyProof.commit.time && <span>{new Date(verifyProof.commit.time).toLocaleString()}</span>}
-                      {verifyProof.attribution?.name && <span>By: {verifyProof.attribution.name}</span>}
-                    </div>
-                  </div>
-                )}
-
-                <button onClick={resetVerify} style={{ ...btnOutline, width: "100%" }}>
-                  Verify another
-                </button>
-              </div>
-            )}
-          </>
-        )}
-
-        {/* ═══ PUBLIC PROOF LEDGER ═══ */}
-        <div style={{ marginTop: 64 }}>
-          <div style={{
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-            marginBottom: 16,
-          }}>
-            <h2 style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.02em" }}>
-              Public proof ledger
-            </h2>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <span style={{ fontSize: 13, color: "var(--c-text-tertiary)" }}>
-                {ledgerTotal.toLocaleString()} total proofs
-              </span>
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple={mode === "create"}
+              accept="*/*"
+              style={{ position: "absolute", width: 1, height: 1, opacity: 0, overflow: "hidden", top: -9999 }}
+              onChange={(e) => {
+                if (!e.target.files?.length) return;
+                handleFiles(Array.from(e.target.files));
+                e.target.value = "";
+              }}
+            />
+            <div
+              onDragOver={(e) => { e.preventDefault(); setDragover(true); }}
+              onDragLeave={() => setDragover(false)}
+              onDrop={(e) => {
+                e.preventDefault(); setDragover(false);
+                const files = Array.from(e.dataTransfer.files);
+                if (files.length) handleFiles(files);
+              }}
+              onClick={() => fileInputRef.current?.click()}
+              style={{
+                borderRadius: 16, padding: "56px 24px", textAlign: "center", cursor: "pointer",
+                border: dragover ? "2px solid rgba(52,211,153,0.6)" : "2px dashed rgba(255,255,255,0.12)",
+                background: dragover ? "rgba(52,211,153,0.04)" : "rgba(255,255,255,0.02)",
+                transition: "all 0.2s ease",
+              }}
+            >
               <div style={{
-                display: "flex", gap: 2, background: "var(--c-bg-secondary, #141416)", borderRadius: 8,
-                padding: 2, border: "1px solid var(--c-border-subtle)",
+                width: 48, height: 48, borderRadius: 12, margin: "0 auto 16px",
+                background: "rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: "center",
               }}>
-                {(["normal", "timeonly"] as const).map(m => (
-                  <button key={m} onClick={() => setLedgerViewMode(m)} style={{
-                    fontSize: 12, fontWeight: 500, padding: "5px 12px", borderRadius: 6,
-                    border: "none", cursor: "pointer", fontFamily: "inherit", transition: "all 0.15s",
-                    background: ledgerViewMode === m ? "var(--bg-elevated, #1c1c1e)" : "transparent",
-                    color: ledgerViewMode === m ? "var(--c-text)" : "var(--c-text-tertiary)",
-                  }}>
-                    {m === "normal" ? "Normal" : "Time Only"}
-                  </button>
-                ))}
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5">
+                  <path d="M12 5v12M7 10l5-5 5 5" />
+                  <path d="M4 17v2a1 1 0 001 1h14a1 1 0 001-1v-2" />
+                </svg>
+              </div>
+              <div style={{ fontSize: 15, color: "rgba(255,255,255,0.7)", marginBottom: 4 }}>
+                Drop {mode === "create" ? "file(s)" : "a file"} or <span style={{ color: "#34d399", fontWeight: 500 }}>browse</span>
+              </div>
+              <div style={{ fontSize: 13, color: "rgba(255,255,255,0.3)" }}>
+                {mode === "create" ? "Hashed locally. Nothing uploaded." : "Drop proof.json to verify, or any file to check the ledger."}
               </div>
             </div>
+
+            {mode === "create" && (
+              <div style={{
+                display: "flex", alignItems: "center", gap: 16, marginTop: 12, padding: "10px 14px",
+                borderRadius: 12, background: "rgba(255,255,255,0.03)",
+              }}>
+                <input
+                  type="text" value={attribution} onChange={(e) => setAttribution(e.target.value)}
+                  placeholder="Author (optional)"
+                  style={{
+                    flex: 1, height: 32, padding: "0 10px", fontSize: 13, borderRadius: 8,
+                    border: "1px solid rgba(255,255,255,0.1)", background: "transparent", color: "#fff", outline: "none",
+                  }}
+                />
+                <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: "rgba(255,255,255,0.45)", cursor: "pointer", whiteSpace: "nowrap" }}>
+                  <input type="checkbox" checked={useBiometrics} onChange={(e) => setUseBiometrics(e.target.checked)} style={{ accentColor: "#34d399" }} />
+                  Biometric
+                </label>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Create: Processing */}
+        {mode === "create" && createStep === "hashing" && (
+          <Card><div style={{ textAlign: "center", padding: "32px 0" }}>
+            <Spinner />
+            <div style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", marginTop: 16 }}>
+              Hashing {createFiles.length > 1 ? `${createProgress.current}/${createProgress.total}` : "file"}...
+            </div>
+          </div></Card>
+        )}
+
+        {mode === "create" && createStep === "signing" && (
+          <Card><div style={{ textAlign: "center", padding: "32px 0" }}>
+            <Spinner />
+            <div style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", marginTop: 16 }}>Signing in hardware enclave...</div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", fontFamily: "monospace", marginTop: 8 }}>{createDigest.slice(0, 32)}...</div>
+          </div></Card>
+        )}
+
+        {mode === "create" && createStep === "error" && (
+          <Card><div style={{ textAlign: "center", padding: "24px 0" }}>
+            <div style={{ fontSize: 14, color: "#ff453a", marginBottom: 20 }}>{createError}</div>
+            <Btn onClick={resetCreate}>Try again</Btn>
+          </div></Card>
+        )}
+
+        {/* Create: Done */}
+        {mode === "create" && createStep === "done" && createProofs.length > 0 && (
+          <>
+            <Card>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#30d158" }} />
+                <span style={{ fontSize: 15, fontWeight: 600, color: "#fff" }}>
+                  {createProofs.length === 1 ? "Proof created" : `${createProofs.length} proofs created`}
+                </span>
+              </div>
+              {createFiles.map((f, i) => (
+                <div key={f.name + i} style={{ marginBottom: i < createFiles.length - 1 ? 10 : 0 }}>
+                  <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)" }}>{f.name} · {formatFileSize(f.size)}</div>
+                  <div style={{ fontSize: 12, fontFamily: "monospace", color: "#34d399", wordBreak: "break-all", lineHeight: 1.5 }}>
+                    {createProofs[i]?.artifact.digestB64}
+                  </div>
+                </div>
+              ))}
+              <div style={{ display: "flex", gap: 12, fontSize: 12, color: "rgba(255,255,255,0.3)", marginTop: 14 }}>
+                <span>#{createProofs[0].commit.counter}</span>
+                <span>{createProofs[0].environment?.enforcement === "measured-tee" ? "Hardware Enclave" : "Software"}</span>
+              </div>
+            </Card>
+
+            <Card>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Proof JSON</span>
+                <Btn small onClick={copyProof}>{copied ? "Copied" : "Copy"}</Btn>
+              </div>
+              <pre style={{
+                fontSize: 11, fontFamily: "monospace", lineHeight: 1.5, color: "#34d399",
+                background: "rgba(0,0,0,0.4)", padding: 14, borderRadius: 10, overflow: "auto", maxHeight: 300,
+              }}>
+                {createProofs.length === 1 ? JSON.stringify(createProofs[0], null, 2) : JSON.stringify(createProofs, null, 2)}
+              </pre>
+            </Card>
+
+            <div style={{ display: "flex", gap: 10 }}>
+              <Btn fill onClick={downloadZip}>Download .zip</Btn>
+              <Btn onClick={resetCreate}>New proof</Btn>
+            </div>
+          </>
+        )}
+
+        {/* Verify: Processing */}
+        {mode === "verify" && verifyStep === "checking" && (
+          <Card><div style={{ textAlign: "center", padding: "32px 0" }}>
+            <Spinner />
+            <div style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", marginTop: 16 }}>Checking {verifyFile?.name}...</div>
+          </div></Card>
+        )}
+
+        {/* Verify: Result */}
+        {mode === "verify" && verifyStep === "result" && (
+          <>
+            {verifyResult && (
+              <Card>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                  <span style={{ width: 10, height: 10, borderRadius: "50%", background: verifyResult.valid ? "#30d158" : "#ff453a" }} />
+                  <span style={{ fontSize: 15, fontWeight: 600, color: "#fff" }}>
+                    {verifyResult.valid ? "Signature valid" : "Signature invalid"}
+                  </span>
+                </div>
+                {verifyResult.checks.map((c, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "baseline", gap: 8, fontSize: 13, marginBottom: 5, color: "rgba(255,255,255,0.6)" }}>
+                    <span style={{ color: c.status === "pass" ? "#30d158" : c.status === "fail" ? "#ff453a" : "rgba(255,255,255,0.3)", fontFamily: "monospace", fontSize: 12 }}>
+                      {c.status === "pass" ? "✓" : c.status === "fail" ? "✗" : "—"}
+                    </span>
+                    <span>{c.label}</span>
+                  </div>
+                ))}
+              </Card>
+            )}
+
+            {fileDigestMatch !== null && !verifyProof && (
+              <Card>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ width: 10, height: 10, borderRadius: "50%", background: fileDigestMatch ? "#30d158" : "rgba(255,255,255,0.2)" }} />
+                  <span style={{ fontSize: 15, fontWeight: 600, color: "#fff" }}>
+                    {fileDigestMatch ? "Found on ledger" : "No proof found"}
+                  </span>
+                </div>
+              </Card>
+            )}
+
+            {verifyProof && (
+              <Card>
+                <div style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10 }}>Proof</div>
+                <div style={{ fontSize: 12, fontFamily: "monospace", color: "#34d399", wordBreak: "break-all", lineHeight: 1.5, marginBottom: 8 }}>
+                  {verifyProof.artifact.digestB64}
+                </div>
+                <div style={{ display: "flex", gap: 10, fontSize: 12, color: "rgba(255,255,255,0.3)", flexWrap: "wrap" }}>
+                  {verifyProof.commit.counter && <span>#{verifyProof.commit.counter}</span>}
+                  <span>{verifyProof.environment?.enforcement === "measured-tee" ? "Hardware Enclave" : "Software"}</span>
+                  {verifyProof.attribution?.name && <span>{verifyProof.attribution.name}</span>}
+                </div>
+              </Card>
+            )}
+
+            <Btn onClick={resetVerify} style={{ width: "100%" }}>Verify another</Btn>
+          </>
+        )}
+
+        {/* ── Proof Ledger ── */}
+        <div style={{ marginTop: 48 }}>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 14 }}>
+            <h2 style={{ fontSize: 17, fontWeight: 600, color: "#fff", letterSpacing: "-0.01em" }}>Proof Ledger</h2>
+            <span style={{ fontSize: 13, color: "rgba(255,255,255,0.3)" }}>{ledgerTotal.toLocaleString()}</span>
           </div>
 
           {ledger.length === 0 ? (
-            <div style={{ ...cardStyle, textAlign: "center", color: "var(--c-text-tertiary)", fontSize: 14 }}>
-              No proofs yet
-            </div>
+            <Card><div style={{ textAlign: "center", color: "rgba(255,255,255,0.3)", fontSize: 14, padding: "20px 0" }}>No proofs yet</div></Card>
           ) : (
-            <>
-              <div style={{
-                border: "1px solid var(--c-border-subtle)",
-                borderRadius: 12,
-                background: "var(--bg-elevated)",
-                overflow: "hidden",
-              }}>
-                {/* Table header */}
-                <div style={{
-                  display: ledgerViewMode === "timeonly" ? "grid" : "grid",
-                  gridTemplateColumns: ledgerViewMode === "timeonly" ? "80px 1fr" : "60px 100px 1fr 120px 100px 120px",
-                  padding: "12px 20px",
-                  background: "rgba(255,255,255,0.02)",
-                  borderBottom: "1px solid var(--c-border-subtle)",
-                  fontSize: 12, fontWeight: 600, color: "var(--c-text-tertiary)",
-                  textTransform: "uppercase" as const, letterSpacing: "0.04em",
-                }}>
-                  {ledgerViewMode === "timeonly" ? (
-                    <>
-                      <span>#</span>
-                      <span>Time</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>#</span>
-                      <span>Type</span>
-                      <span>Digest</span>
-                      <span>Epoch</span>
-                      <span>Age</span>
-                      <span>Signer</span>
-                    </>
-                  )}
-                </div>
-                {ledger.map((entry, i) => (
-                  <LedgerRow key={entry.digest + i} entry={entry} isLast={i === ledger.length - 1} viewMode={ledgerViewMode} />
-                ))}
-              </div>
+            <div style={{ borderRadius: 14, overflow: "hidden", border: "1px solid rgba(255,255,255,0.06)" }}>
+              {ledger.map((entry, i) => (
+                <LedgerRow key={entry.digest + i} entry={entry} isLast={i === ledger.length - 1} />
+              ))}
+            </div>
+          )}
 
-              {/* Pagination */}
-              {ledgerTotal > 15 && (
-                <div style={{ display: "flex", justifyContent: "center", gap: 12, marginTop: 16 }}>
-                  <button
-                    onClick={() => fetchLedger(ledgerPage - 1)}
-                    disabled={ledgerPage <= 1}
-                    style={{
-                      ...btnOutline, flex: "none", width: 80, height: 36, fontSize: 13,
-                      opacity: ledgerPage <= 1 ? 0.3 : 1,
-                    }}
-                  >
-                    Prev
-                  </button>
-                  <span style={{ fontSize: 13, color: "var(--c-text-tertiary)", lineHeight: "36px" }}>
-                    Page {ledgerPage} of {Math.ceil(ledgerTotal / 15)}
-                  </span>
-                  <button
-                    onClick={() => fetchLedger(ledgerPage + 1)}
-                    disabled={ledgerPage >= Math.ceil(ledgerTotal / 15)}
-                    style={{
-                      ...btnOutline, flex: "none", width: 80, height: 36, fontSize: 13,
-                      opacity: ledgerPage >= Math.ceil(ledgerTotal / 15) ? 0.3 : 1,
-                    }}
-                  >
-                    Next
-                  </button>
-                </div>
-              )}
-            </>
+          {ledgerTotal > 15 && (
+            <div style={{ display: "flex", justifyContent: "center", gap: 10, marginTop: 14 }}>
+              <Btn small onClick={() => fetchLedger(ledgerPage - 1)} style={{ opacity: ledgerPage <= 1 ? 0.3 : 1 }}>Prev</Btn>
+              <span style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", lineHeight: "32px" }}>
+                {ledgerPage} / {Math.ceil(ledgerTotal / 15)}
+              </span>
+              <Btn small onClick={() => fetchLedger(ledgerPage + 1)} style={{ opacity: ledgerPage >= Math.ceil(ledgerTotal / 15) ? 0.3 : 1 }}>Next</Btn>
+            </div>
           )}
         </div>
       </div>
@@ -727,20 +537,60 @@ export default function MakerPage() {
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   Ledger Row — expandable, fetches full proof on first click
-   ═══════════════════════════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════════════════════════ */
+/*  Components                                                               */
+/* ══════════════════════════════════════════════════════════════════════════ */
 
-function LedgerRow({ entry, isLast, viewMode }: { entry: ProofEntry; isLast: boolean; viewMode: "normal" | "timeonly" }) {
+function Card({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{
+      background: "rgba(255,255,255,0.04)", borderRadius: 14,
+      border: "1px solid rgba(255,255,255,0.06)", padding: "16px 18px", marginBottom: 12,
+    }}>
+      {children}
+    </div>
+  );
+}
+
+function Btn({ children, onClick, fill, small, style }: {
+  children: React.ReactNode; onClick?: () => void; fill?: boolean; small?: boolean;
+  style?: React.CSSProperties;
+}) {
+  return (
+    <button onClick={onClick} style={{
+      height: small ? 32 : 44, fontSize: small ? 12 : 14, fontWeight: 500,
+      padding: small ? "0 14px" : "0 20px", borderRadius: small ? 8 : 10,
+      border: fill ? "none" : "1px solid rgba(255,255,255,0.12)",
+      background: fill ? "#fff" : "transparent",
+      color: fill ? "#000" : "rgba(255,255,255,0.7)",
+      cursor: "pointer", flex: fill ? 1 : undefined, transition: "all 0.15s",
+      ...style,
+    }}>
+      {children}
+    </button>
+  );
+}
+
+function Spinner() {
+  return (
+    <div style={{
+      width: 24, height: 24, border: "2px solid rgba(255,255,255,0.1)",
+      borderTopColor: "#34d399", borderRadius: "50%", margin: "0 auto",
+      animation: "spin 0.8s linear infinite",
+    }}>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+}
+
+/* ── Ledger Row ── */
+
+function LedgerRow({ entry, isLast }: { entry: ProofEntry; isLast: boolean }) {
   const [expanded, setExpanded] = useState(false);
   const [proof, setProof] = useState<OCCProof | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [copiedDigest, setCopiedDigest] = useState(false);
 
   async function toggle() {
-    if (viewMode === "timeonly") return;
     if (!expanded && !proof && entry.digest !== "—") {
-      setLoading(true);
       try {
         const resp = await fetch(`/api/proofs/${encodeURIComponent(toUrlSafeB64(entry.digest))}`);
         if (resp.ok) {
@@ -748,332 +598,51 @@ function LedgerRow({ entry, isLast, viewMode }: { entry: ProofEntry; isLast: boo
           if (data.proofs?.[0]?.proof) setProof(data.proofs[0].proof as OCCProof);
         }
       } catch { /* silent */ }
-      setLoading(false);
     }
     setExpanded(e => !e);
   }
 
-  const commit = proof?.commit;
-  const signer = proof?.signer;
-  const env = proof?.environment;
-  const proofAny = proof as unknown as Record<string, unknown> | undefined;
-  const policy = proofAny?.policy as Record<string, unknown> | undefined;
-  const principal = proofAny?.principal as Record<string, unknown> | undefined;
-  const timestamps = proof?.timestamps as Record<string, unknown> | undefined;
-  const slotAllocation = proofAny?.slotAllocation as Record<string, unknown> | undefined;
-  const attribution = proof?.attribution;
-
   const counter = entry.counter || String(entry.globalId);
-  const trunc = (s: string, n: number) => s.length > n ? s.slice(0, n) + "..." : s;
-  const toolName = entry.attribution || "proof";
-  const epochId = commit?.epochId ? String(commit.epochId) : "";
-  const signerPub = entry.signer || "";
-
-  // Shared cell styles
-  const cellStyle: React.CSSProperties = { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" };
-  const monoFont = "var(--font-mono), 'SF Mono', SFMono-Regular, monospace";
-
-  if (viewMode === "timeonly") {
-    return (
-      <div style={{
-        display: "grid", gridTemplateColumns: "80px 1fr",
-        padding: "14px 20px", alignItems: "center",
-        borderBottom: isLast ? "none" : "1px solid var(--c-border-subtle)",
-        fontSize: 14,
-      }}>
-        <span style={{ ...cellStyle, fontWeight: 600, color: "var(--accent, #0A84FF)", fontFamily: monoFont }}>{counter}</span>
-        <span style={{ ...cellStyle, fontFamily: monoFont, color: "var(--c-text-secondary)" }}>
-          {entry.time ? new Date(entry.time).toLocaleString() : "—"}
-        </span>
-      </div>
-    );
-  }
+  const isEth = entry.attribution?.startsWith("Ethereum");
+  const label = entry.attribution || "proof";
 
   return (
-    <div style={{ borderBottom: isLast ? "none" : "1px solid var(--c-border-subtle)" }}>
-      {/* Table row */}
+    <div style={{ borderBottom: isLast ? "none" : "1px solid rgba(255,255,255,0.04)" }}>
       <div onClick={toggle} style={{
-        display: "grid", gridTemplateColumns: "60px 100px 1fr 120px 100px 120px",
-        padding: "14px 20px", alignItems: "center",
-        fontSize: 14, transition: "background 0.1s", cursor: "pointer",
+        display: "flex", alignItems: "center", padding: "12px 16px",
+        cursor: "pointer", transition: "background 0.1s",
       }}
         onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.02)"; }}
         onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
       >
-        <span style={{ ...cellStyle, fontWeight: 600, color: "var(--accent, #0A84FF)", fontFamily: monoFont }}>{counter}</span>
-        <span style={cellStyle}>
-          <span style={{
-            display: "inline-block", fontSize: 11, fontWeight: 500, padding: "3px 8px",
-            borderRadius: 4, border: "1px solid var(--c-border-subtle)",
-            background: "rgba(255,255,255,0.02)", color: "var(--c-text-secondary)",
-            whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 90,
-          }} title={toolName}>{trunc(toolName, 12)}</span>
+        <span style={{ width: 48, fontSize: 14, fontWeight: 600, color: "#0A84FF", fontFamily: "monospace" }}>
+          {counter}
         </span>
         <span style={{
-          ...cellStyle, fontFamily: monoFont, fontSize: 13, color: "var(--c-text-secondary)",
-          display: "flex", alignItems: "center", gap: 6,
-        }} onClick={e => { e.stopPropagation(); navigator.clipboard.writeText(entry.digest); setCopiedDigest(true); setTimeout(() => setCopiedDigest(false), 1500); }}>
-          {trunc(entry.digest, 20)}
-          <button style={{
-            opacity: 0, transition: "opacity 0.15s", background: "none", border: "none",
-            color: "var(--c-text-tertiary)", cursor: "pointer", padding: 2,
-            display: "flex", alignItems: "center",
-          }}
-            onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.opacity = "0"; }}
-          >
-            {copiedDigest ? (
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2"><path d="M20 6L9 17l-5-5"/></svg>
-            ) : (
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
-            )}
-          </button>
-        </span>
-        <span style={{ ...cellStyle, color: "var(--c-text-secondary)", fontSize: 13 }} title={epochId}>{trunc(epochId, 12)}</span>
-        <span style={{ ...cellStyle, color: "var(--c-text-secondary)", fontSize: 13 }} title={entry.time ? new Date(entry.time).toLocaleString() : ""}>
-          {entry.time ? relativeTime(entry.time) : "—"}
-        </span>
-        <span style={{ ...cellStyle, fontFamily: monoFont, fontSize: 12, color: "var(--c-text-tertiary)" }} title={signerPub}>{trunc(signerPub, 12)}</span>
-      </div>
-
-      {/* Expanded detail */}
-      {expanded && (
-        <div style={{
-          padding: 20, background: "rgba(255,255,255,0.015)",
-          borderTop: "1px solid var(--c-border-subtle)",
+          fontSize: 11, fontWeight: 500, padding: "2px 8px", borderRadius: 4,
+          background: isEth ? "rgba(59,130,246,0.1)" : "rgba(255,255,255,0.04)",
+          color: isEth ? "#60a5fa" : "rgba(255,255,255,0.45)",
+          marginRight: 12, whiteSpace: "nowrap", maxWidth: 100, overflow: "hidden", textOverflow: "ellipsis",
         }}>
-          {loading && (
-            <div style={{ fontSize: 13, color: "var(--c-text-tertiary)", padding: "8px 0" }}>Loading proof...</div>
-          )}
-
-          {proof && (
-            <>
-              {/* Ethereum anchor link */}
-              {(proof.commit && (proof.commit as Record<string, unknown>).chainId === "occ:ethereum-anchors") || (proof.attribution?.name?.startsWith("Ethereum #")) ? (
-                <div style={{
-                  padding: "10px 16px", marginBottom: 16, borderRadius: 8,
-                  border: "1px solid rgba(59,130,246,0.2)", background: "rgba(59,130,246,0.05)",
-                  display: "flex", alignItems: "center", gap: 12, fontSize: 13, flexWrap: "wrap",
-                }}>
-                  <span style={{ color: "var(--c-text-secondary)" }}>
-                    {proof.attribution?.name || "Ethereum anchor"}
-                  </span>
-                  {proof.attribution?.title ? (
-                    <a href={proof.attribution.title} target="_blank" rel="noopener"
-                      style={{ color: "#3b82f6", textDecoration: "none", fontWeight: 500 }}>
-                      View on Etherscan →
-                    </a>
-                  ) : null}
-                </div>
-              ) : null}
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-                {/* Artifact */}
-                <LedgerDetailSection title="Artifact">
-                  <LedgerDetailField label="Digest" value={proof.artifact?.digestB64 || "—"} mono />
-                  {proof.version && <LedgerDetailField label="Version" value={proof.version} />}
-                </LedgerDetailSection>
-
-                {/* Commit */}
-                {commit && (
-                  <LedgerDetailSection title="Commit">
-                    {commit.time != null && <LedgerDetailField label="Time" value={new Date(commit.time).toLocaleString()} />}
-                    <LedgerDetailField label="Counter" value={`#${counter}`} />
-                    {commit.epochId && <LedgerDetailField label="Epoch" value={commit.epochId} mono />}
-                    {commit.prevB64 && <LedgerDetailField label="Prev Hash" value={commit.prevB64} mono />}
-                    {commit.nonceB64 && <LedgerDetailField label="Nonce" value={commit.nonceB64} mono />}
-                    {commit.slotCounter != null && <LedgerDetailField label="Slot #" value={String(commit.slotCounter)} />}
-                    {commit.slotHashB64 && <LedgerDetailField label="Slot Hash" value={commit.slotHashB64} mono />}
-                  </LedgerDetailSection>
-                )}
-
-                {/* Signer */}
-                {signer && (
-                  <LedgerDetailSection title="Signer">
-                    <LedgerDetailField label="Public Key" value={signer.publicKeyB64} mono />
-                    <LedgerDetailField label="Signature" value={signer.signatureB64} mono />
-                  </LedgerDetailSection>
-                )}
-
-                {/* Environment */}
-                {env && (
-                  <LedgerDetailSection title="Environment">
-                    <LedgerDetailField label="Enforcement" value={env.enforcement === "measured-tee" ? "Hardware Enclave" : env.enforcement === "hw-key" ? "Hardware Key" : "Software"} />
-                    {env.measurement && <LedgerDetailField label="PCR0" value={env.measurement} mono />}
-                  </LedgerDetailSection>
-                )}
-
-                {/* Principal */}
-                {principal && (
-                  <LedgerDetailSection title="Principal">
-                    {(principal as Record<string, unknown>).provider ? <LedgerDetailField label="Provider" value={String((principal as Record<string, unknown>).provider)} /> : null}
-                    {(principal as Record<string, unknown>).id ? <LedgerDetailField label="ID" value={String((principal as Record<string, unknown>).id)} mono /> : null}
-                  </LedgerDetailSection>
-                )}
-
-                {/* Policy */}
-                {policy && (
-                  <LedgerDetailSection title="Policy">
-                    {policy.name ? <LedgerDetailField label="Name" value={String(policy.name)} /> : null}
-                    {policy.digestB64 ? <LedgerDetailField label="Digest" value={String(policy.digestB64)} mono /> : null}
-                  </LedgerDetailSection>
-                )}
-
-                {/* Timestamps */}
-                {timestamps && (
-                  <LedgerDetailSection title="Timestamp">
-                    {(timestamps as Record<string, unknown>).artifact ? (
-                      <>
-                        {((timestamps as Record<string, unknown>).artifact as Record<string, unknown>)?.authority
-                          && <LedgerDetailField label="Authority" value={String(((timestamps as Record<string, unknown>).artifact as Record<string, unknown>).authority)} />}
-                        {((timestamps as Record<string, unknown>).artifact as Record<string, unknown>)?.time
-                          && <LedgerDetailField label="Time" value={String(((timestamps as Record<string, unknown>).artifact as Record<string, unknown>).time)} />}
-                      </>
-                    ) : null}
-                  </LedgerDetailSection>
-                )}
-
-                {/* Attribution */}
-                {attribution && (
-                  <LedgerDetailSection title="Attribution">
-                    {attribution.name && <LedgerDetailField label="Name" value={attribution.name} />}
-                  </LedgerDetailSection>
-                )}
-
-                {/* Slot Allocation */}
-                {slotAllocation && (
-                  <LedgerDetailSection title="Causal Slot">
-                    {(slotAllocation as any).counter != null && <LedgerDetailField label="Slot #" value={String((slotAllocation as any).counter)} />}
-                    {(slotAllocation as any).time && <LedgerDetailField label="Time" value={new Date((slotAllocation as any).time).toLocaleString()} />}
-                  </LedgerDetailSection>
-                )}
-              </div>
-
-              {/* JSON + Export */}
-              <div style={{ marginTop: 16, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-                <LedgerCopyableJson data={proof} />
-                <button onClick={() => {
-                  const json = JSON.stringify(proof, null, 2);
-                  const blob = new Blob([json], { type: "application/json" });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement("a");
-                  a.href = url;
-                  a.download = `occ-proof-${(proof.artifact?.digestB64 || "unknown").slice(0, 12)}.json`;
-                  a.click();
-                  URL.revokeObjectURL(url);
-                }} style={{
-                  fontSize: 12, fontWeight: 500, padding: "6px 14px", borderRadius: 6,
-                  border: "1px solid var(--c-border)", background: "transparent",
-                  color: "var(--c-text-secondary)", cursor: "pointer",
-                }}>
-                  Export .json
-                </button>
-              </div>
-            </>
-          )}
-
-          {!loading && !proof && (
-            <div style={{ fontSize: 13, color: "var(--c-text-tertiary)" }}>Full proof not available for this entry.</div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ── Detail section for ledger expanded view ── */
-function LedgerDetailSection({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div style={{
-      border: "1px solid var(--c-border-subtle)", borderRadius: 8,
-      overflow: "hidden",
-    }}>
-      <div style={{
-        fontSize: 12, fontWeight: 600,
-        color: "var(--c-text-tertiary)", padding: "8px 14px",
-        background: "rgba(255,255,255,0.02)",
-        borderBottom: "1px solid var(--c-border-subtle)",
-      }}>
-        {title}
+          {label.length > 14 ? label.slice(0, 14) + "..." : label}
+        </span>
+        <span style={{ flex: 1, fontSize: 12, fontFamily: "monospace", color: "rgba(255,255,255,0.3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {entry.digest.slice(0, 24)}...
+        </span>
+        <span style={{ fontSize: 12, color: "rgba(255,255,255,0.2)", marginLeft: 12 }}>
+          {entry.time ? relativeTime(entry.time) : ""}
+        </span>
       </div>
-      {children}
-    </div>
-  );
-}
 
-/* ── Detail field for ledger expanded view ── */
-function LedgerDetailField({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
-  const [copied, setCopied] = useState(false);
-  return (
-    <div style={{
-      display: "flex", justifyContent: "space-between", alignItems: "baseline",
-      padding: "8px 14px", borderBottom: "1px solid var(--c-border-subtle)",
-      fontSize: 13,
-    }}>
-      <span style={{ color: "var(--c-text-tertiary)", fontSize: 12 }}>{label}</span>
-      <span style={{
-        color: mono ? "#34d399" : "var(--c-text)",
-        fontFamily: mono ? "var(--font-mono), 'SF Mono', SFMono-Regular, monospace" : "inherit",
-        fontSize: mono ? 12 : 13,
-        textAlign: "right" as const, maxWidth: "60%",
-        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-        cursor: "pointer",
-      }} title={value} onClick={() => { navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 1500); }}>
-        {copied ? "Copied!" : value.length > 32 ? value.slice(0, 24) + "..." : value}
-      </span>
-    </div>
-  );
-}
-
-/* ── Copyable full JSON ── */
-function LedgerCopyableJson({ data }: { data: unknown }) {
-  const [copied, setCopied] = useState(false);
-  const [open, setOpen] = useState(false);
-  const json = JSON.stringify(data, null, 2);
-  const sizeKb = (new TextEncoder().encode(json).length / 1024).toFixed(1);
-
-  return (
-    <div>
-      <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: open ? 8 : 0 }}>
-        <button onClick={() => setOpen(!open)} style={{
-          fontSize: 12, fontWeight: 500, padding: "6px 14px", borderRadius: 6,
-          border: "1px solid var(--c-border)", background: "transparent",
-          color: "var(--c-text-secondary)", cursor: "pointer",
-        }}>
-          {open ? "Hide JSON" : "Show JSON"} ({sizeKb} KB)
-        </button>
-        {open && (
-          <button onClick={() => { navigator.clipboard.writeText(json); setCopied(true); setTimeout(() => setCopied(false), 1500); }} style={{
-            fontSize: 12, fontWeight: 500, padding: "6px 14px", borderRadius: 6,
-            border: "1px solid var(--c-border)", background: "transparent",
-            color: copied ? "#30d158" : "var(--c-text-secondary)", cursor: "pointer",
-          }}>
-            {copied ? "Copied!" : "Copy JSON"}
-          </button>
-        )}
-      </div>
-      {open && (
-        <div style={{ position: "relative" }}>
-          <pre
-            onClick={() => { navigator.clipboard.writeText(json); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
-            style={{
-              fontSize: 11, fontFamily: "var(--font-mono), monospace", lineHeight: 1.5,
-              color: "#30d158", background: "#0a0a0a",
-              padding: 16, borderRadius: 6, overflow: "auto", maxHeight: 400,
-              cursor: "pointer", transition: "box-shadow 0.2s",
-            }}
-          >
-            {json}
+      {expanded && proof && (
+        <div style={{ padding: "8px 16px 16px", background: "rgba(255,255,255,0.01)" }}>
+          <pre style={{
+            fontSize: 11, fontFamily: "monospace", lineHeight: 1.5, color: "#34d399",
+            background: "rgba(0,0,0,0.3)", padding: 14, borderRadius: 10, overflow: "auto", maxHeight: 300,
+            cursor: "pointer",
+          }} onClick={() => navigator.clipboard.writeText(JSON.stringify(proof, null, 2))}>
+            {JSON.stringify(proof, null, 2)}
           </pre>
-          {copied && (
-            <span style={{
-              position: "absolute", top: 8, right: 12,
-              fontSize: 11, fontWeight: 600, color: "#30d158",
-              background: "#0a0a0a", padding: "2px 8px", borderRadius: 4,
-            }}>
-              Copied
-            </span>
-          )}
         </div>
       )}
     </div>
