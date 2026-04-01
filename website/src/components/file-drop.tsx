@@ -97,10 +97,10 @@ export function FileDrop({
         h-full relative border transition-all duration-300 cursor-pointer aspect-[4/3] flex items-center
         ${disabled ? "opacity-50 cursor-not-allowed" : ""}
         ${dragover
-          ? "border-text/40 bg-text/5 ring-2 ring-text/10 ring-offset-2 ring-offset-bg scale-[1.01]"
+          ? "border-[#1A73E8] bg-[#f0f6ff] ring-2 ring-[#1A73E8]/20 ring-offset-2 ring-offset-white scale-[1.01]"
           : hasFiles
-          ? "border-border bg-bg-elevated"
-          : "border-border bg-bg-elevated hover:border-border-subtle hover:bg-bg-subtle"
+          ? "border-[#d0d5dd] bg-white"
+          : "border-[#d0d5dd] bg-white hover:border-[#9ca3af] hover:bg-[#f9fafb]"
         }
       `}
     >
@@ -202,19 +202,19 @@ export function FileDrop({
         </div>
       ) : (
         <div className="flex flex-col items-center py-20 px-6 w-full">
-          <div className="w-16 h-16 bg-bg-subtle/80 border border-border-subtle rounded-2xl flex items-center justify-center mb-6">
-            <svg width="28" height="28" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.2" className="text-text-tertiary">
+          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6" style={{ background: "#f3f4f6", border: "1px solid #e5e7eb" }}>
+            <svg width="28" height="28" viewBox="0 0 20 20" fill="none" stroke="#9ca3af" strokeWidth="1.2">
               <path d="M10 3v10M6 7l4-4 4 4" />
               <path d="M3 14v2a1 1 0 001 1h12a1 1 0 001-1v-2" />
             </svg>
           </div>
-          <div className="text-[22px] font-semibold tracking-tight" style={{ color: "#1A73E8" }}>
+          <div className="text-[22px] font-semibold tracking-tight" style={{ color: "#111827" }}>
             {multiple
-              ? <>Drop files or <label htmlFor="occ-file-input" className="cursor-pointer" onClick={(e) => e.stopPropagation()}>{browseLabel}</label></>
-              : <>Drop a file or <label htmlFor="occ-file-input" className="cursor-pointer" onClick={(e) => e.stopPropagation()}>{browseLabel}</label></>
+              ? <>Drop files or <label htmlFor="occ-file-input" className="cursor-pointer" style={{ color: "#1A73E8" }} onClick={(e) => e.stopPropagation()}>{browseLabel}</label></>
+              : <>Drop a file or <label htmlFor="occ-file-input" className="cursor-pointer" style={{ color: "#1A73E8" }} onClick={(e) => e.stopPropagation()}>{browseLabel}</label></>
             }
           </div>
-          <div className="text-xs text-text-tertiary mt-2 text-center" style={{ whiteSpace: "pre-line" }}>
+          <div className="text-xs mt-2 text-center" style={{ whiteSpace: "pre-line", color: "#6b7280" }}>
             {hint || "Any file type. Hashed locally in your browser"}
           </div>
         </div>
