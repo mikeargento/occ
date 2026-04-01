@@ -191,7 +191,10 @@ export default function OCCPage() {
       });
       const lastCounter = last.proof?.commit?.counter || "0";
       const lastEpoch = last.proof?.commit?.epochId || "";
-      const resp = await fetch(`/api/proofs/anchors?counter=${lastCounter}&epoch=${encodeURIComponent(lastEpoch)}`);
+      if (!lastEpoch) throw new Error("no epochId");
+      const url = `/api/proofs/anchors?counter=${lastCounter}&epoch=${encodeURIComponent(lastEpoch)}`;
+      console.log("[occ] anchor lookup:", url);
+      const resp = await fetch(url);
       if (resp.ok) {
         const data = await resp.json();
         if (data.anchors?.length > 0) {
