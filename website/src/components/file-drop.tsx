@@ -100,9 +100,14 @@ export function FileDrop({
           ? "border-text/40 bg-text/5 ring-2 ring-text/10 ring-offset-2 ring-offset-bg scale-[1.01]"
           : hasFiles
           ? "border-border bg-bg-elevated"
-          : "border-border bg-bg-elevated hover:border-text/20 hover:bg-bg-subtle"
+          : "border-border-subtle hover:border-border"
         }
       `}
+      style={!hasFiles && !dragover ? {
+        backgroundColor: "#000",
+        backgroundImage: "radial-gradient(rgba(52,211,153,0.12) 1px, transparent 1px)",
+        backgroundSize: "16px 16px",
+      } : undefined}
     >
       {/* File input covers the entire drop zone when no files are selected */}
       <input
