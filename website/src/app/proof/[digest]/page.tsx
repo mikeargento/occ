@@ -205,12 +205,12 @@ function Shell({ children }: { children: React.ReactNode }) {
 
 function Card({ title, children }: { title: string; accent?: string; children: React.ReactNode }) {
   return (
-    <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 14, overflow: "hidden" }}>
+    <div style={{ background: "#fff", border: "1px solid #d0d5dd", borderRadius: 14, overflow: "hidden" }}>
       <div style={{
         fontSize: 14, fontWeight: 700, letterSpacing: "0.04em",
         color: "#1A73E8", padding: "14px 18px",
         background: "rgba(26,115,232,0.04)",
-        borderBottom: "1px solid #f0f0f0",
+        borderBottom: "1px solid #e2e5e9",
       }}>
         {title}
       </div>
@@ -231,10 +231,10 @@ function Field({ label, value, mono: isMono, highlight, link }: { label: string;
       onClick={() => { navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
       style={{
         display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12,
-        padding: "10px 18px", borderBottom: "1px solid #f0f0f0", cursor: "pointer",
+        padding: "10px 18px", borderBottom: "1px solid #e2e5e9", cursor: "pointer",
       }}
     >
-      <span style={{ fontSize: 13, color: "#6b7280", flexShrink: 0, minWidth: 80 }}>{label}</span>
+      <span style={{ fontSize: 13, color: "#374151", fontWeight: 500, flexShrink: 0, minWidth: 80 }}>{label}</span>
       {link ? (
         <a href={value} target="_blank" rel="noopener" onClick={(e) => e.stopPropagation()} style={{
           fontSize: 12, color: "var(--c-accent)", textDecoration: "none", wordBreak: "break-all", textAlign: "right",
@@ -243,7 +243,7 @@ function Field({ label, value, mono: isMono, highlight, link }: { label: string;
         <span style={{
           fontSize: isMono ? 11 : 13,
           fontFamily: isMono ? mono : "inherit",
-          color: copied ? "#1A73E8" : highlight ? "var(--c-accent)" : "var(--c-text-secondary)",
+          color: copied ? "#1A73E8" : highlight ? "var(--c-accent)" : "#1f2937",
           fontWeight: highlight ? 700 : 400,
           wordBreak: "break-all", textAlign: "right",
           transition: "color .2s", lineHeight: 1.4,
@@ -272,7 +272,7 @@ function JsonToggle({ proof }: { proof: OCCProof }) {
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}
       onClick={() => setOpen(false)}>
-      <div style={{ width: "100%", maxWidth: 700, maxHeight: "80vh", display: "flex", flexDirection: "column", background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", overflow: "hidden" }}
+      <div style={{ width: "100%", maxWidth: 700, maxHeight: "80vh", display: "flex", flexDirection: "column", background: "#fff", borderRadius: 16, border: "1px solid #d0d5dd", overflow: "hidden" }}
         onClick={(e) => e.stopPropagation()}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderBottom: "1px solid #e5e7eb" }}>
           <span style={{ fontSize: 14, fontWeight: 600, color: "#1A73E8" }}>Proof JSON</span>
