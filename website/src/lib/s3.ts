@@ -1,19 +1,19 @@
 /**
  * S3-based proof storage — replaces Neon Postgres.
  *
- * Reads/writes proofs to S3 using deterministic keys:
+ * Keys:
  *   by-digest/{urlSafeDigest}.json  — lookup by artifact hash
  *   anchors-by-time/{timestamp}.json — chronological anchor listing
  */
 
-import { S3Client, GetObjectCommand, PutObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
+import { S3Client, GetObjectCommand, PutObjectCommand, ListObjectsV2Command, HeadObjectCommand } from "@aws-sdk/client-s3";
 
 function getClient() {
   return new S3Client({ region: (process.env.LEDGER_REGION || "us-east-2").trim() });
 }
 
 function getBucket() {
-  return process.env.LEDGER_BUCKET || "occ-ledger-prod";
+  return (process.env.LEDGER_BUCKET || "occ-ledger-prod").trim();
 }
 
 function toSafe(b64: string): string {
@@ -54,19 +54,29 @@ export async function storeProofByDigest(proof: Record<string, unknown>): Promis
   }
 }
 
-/** Get all ETH anchor proofs after a given timestamp (ISO string) */
-export async function getAnchorsAfter(afterTime: string): Promise<Array<Record<string, unknown>>> {
+/** Get the first N ETH anchor proofs after a given proof (by its creation time in S3) */
+export async function getAnchorsAfterProof(digestB64: string, limit = 2): Promise<Array<Record<string, unknown>>> {
   try {
     const s3 = getClient();
     const bucket = getBucket();
-    // List anchors-by-time/ objects after the given time
-    // S3 keys are lexicographically sorted, and our timestamps are ISO format, so StartAfter works
-    const safeTime = afterTime.replace(/[:.]/g, "-");
+
+    // Get the proof's S3 object creation time
+    const proofKey = `by-digest/${toSafe(digestB64)}.json`;
+    let proofTime: string;
+    try {
+      const head = await s3.send(new HeadObjectCommand({ Bucket: bucket, Key: proofKey }));
+      proofTime = (head.LastModified || new Date()).toISOString().replace(/[:.]/g, "-");
+    } catch {
+      // Fallback: use 1 hour ago
+      proofTime = new Date(Date.now() - 3600000).toISOString().replace(/[:.]/g, "-");
+    }
+
+    // List anchors-by-time/ after the proof was created
     const result = await s3.send(new ListObjectsV2Command({
       Bucket: bucket,
       Prefix: "anchors-by-time/",
-      StartAfter: `anchors-by-time/${safeTime}`,
-      MaxKeys: 100,
+      StartAfter: `anchors-by-time/${proofTime}`,
+      MaxKeys: limit,
     }));
 
     const anchors: Array<Record<string, unknown>> = [];
@@ -76,11 +86,11 @@ export async function getAnchorsAfter(afterTime: string): Promise<Array<Record<s
         const getResult = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: obj.Key }));
         const body = await getResult.Body?.transformToString();
         if (body) anchors.push(JSON.parse(body));
-      } catch { /* skip individual failures */ }
+      } catch { /* skip */ }
     }
     return anchors;
   } catch (err) {
-    console.error("[s3] getAnchorsAfter failed:", (err as Error).message);
+    console.error("[s3] getAnchorsAfterProof failed:", (err as Error).message);
     return [];
   }
 }

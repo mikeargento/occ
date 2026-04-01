@@ -69,11 +69,6 @@ export default function ProofPage() {
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <span style={{ fontSize: 28, fontWeight: 700, fontFamily: mono, color: "var(--c-accent)" }}>#{commit.counter}</span>
-              {isTee && (
-                <span style={{ fontSize: 12, fontWeight: 600, color: "#34d399", background: "rgba(52,211,153,.1)", border: "1px solid rgba(52,211,153,.2)", padding: "3px 10px", borderRadius: 20 }}>
-                  Hardware Enclave
-                </span>
-              )}
               {isEth && (
                 <span style={{ fontSize: 12, fontWeight: 600, color: "var(--c-accent)", background: "rgba(59,130,246,.1)", border: "1px solid rgba(59,130,246,.2)", padding: "3px 10px", borderRadius: 20 }}>
                   ETH Anchor

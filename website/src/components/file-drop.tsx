@@ -210,8 +210,8 @@ export function FileDrop({
           </div>
           <div className="text-[22px] font-semibold tracking-tight" style={{ color: "#34d399" }}>
             {multiple
-              ? <>Drop files or <label htmlFor="occ-file-input" className="cursor-pointer underline underline-offset-4" onClick={(e) => e.stopPropagation()}>{browseLabel}</label></>
-              : <>Drop a file or <label htmlFor="occ-file-input" className="cursor-pointer underline underline-offset-4" onClick={(e) => e.stopPropagation()}>{browseLabel}</label></>
+              ? <>Drop files or <label htmlFor="occ-file-input" className="cursor-pointer" onClick={(e) => e.stopPropagation()}>{browseLabel}</label></>
+              : <>Drop a file or <label htmlFor="occ-file-input" className="cursor-pointer" onClick={(e) => e.stopPropagation()}>{browseLabel}</label></>
             }
           </div>
           <div className="text-sm text-text-tertiary mt-2">

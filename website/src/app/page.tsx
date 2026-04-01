@@ -160,7 +160,7 @@ export default function OCCPage() {
       z[`${prefix}VERIFY.txt`] = new TextEncoder().encode(buildVerifyTxt(f.name, p!));
     }
 
-    // Fetch all ETH anchors after the earliest proof
+    // Fetch ETH anchors that bound these proofs (within the proof window + 12s)
     setExportProgress({ current: withProofs.length, total: withProofs.length + 1 });
     try {
       const earliest = withProofs[0];
@@ -168,10 +168,13 @@ export default function OCCPage() {
       if (resp.ok) {
         const data = await resp.json();
         if (data.anchors?.length > 0) {
-          const anchorsDir = multi ? "ethereum-anchors/" : "ethereum-anchors/";
-          for (let i = 0; i < data.anchors.length; i++) {
-            const a = data.anchors[i];
-            z[`${anchorsDir}anchor-${a.blockNumber || i}.json`] = new TextEncoder().encode(JSON.stringify(a.proofJson, null, 2));
+          // Only include the first anchor after the proofs (the sealing anchor)
+          // plus one before if available — that's the causal window
+          const firstAnchor = data.anchors[0];
+          z["ethereum-anchors/anchor.json"] = new TextEncoder().encode(JSON.stringify(firstAnchor, null, 2));
+          // Include a second one if it exists (belt and suspenders)
+          if (data.anchors[1]) {
+            z["ethereum-anchors/anchor-2.json"] = new TextEncoder().encode(JSON.stringify(data.anchors[1], null, 2));
           }
         }
       }
