@@ -256,6 +256,20 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
           </div>
         )}
 
+        {messages.length > 0 && !streaming && (
+          <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: 4 }}>
+            <button
+              onClick={() => setMessages(prev => prev.length <= 2 ? [] : prev.slice(0, -2))}
+              style={{
+                background: "none", border: "none", color: "#1A73E8", fontSize: 13,
+                fontWeight: 500, cursor: "pointer", padding: "2px 0",
+              }}
+            >
+              ← {messages.length <= 2 ? "Back to questions" : "Remove last"}
+            </button>
+          </div>
+        )}
+
         {messages.map((msg, i) => (
           <div
             key={i}
