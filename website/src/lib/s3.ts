@@ -31,9 +31,11 @@ export async function getProofByDigest(digestB64: string): Promise<Record<string
     return JSON.parse(body);
   } catch (err) {
     const name = (err as { name?: string }).name;
+    const msg = (err as Error).message;
     if (name === "NoSuchKey" || name === "NotFound") return null;
-    console.error("[s3] getProofByDigest failed:", name, (err as Error).message);
-    return null;
+    console.error("[s3] getProofByDigest FAILED:", { name, msg, bucket: getBucket(), region: process.env.LEDGER_REGION });
+    // Return debug info temporarily
+    return { _error: name, _msg: msg?.slice(0, 200) } as unknown as Record<string, unknown>;
   }
 }
 
