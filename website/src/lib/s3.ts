@@ -55,25 +55,16 @@ export async function storeProofByDigest(proof: Record<string, unknown>): Promis
 }
 
 /**
- * Get the first ETH anchor proof(s) AFTER a given proof on the same chain.
+ * Get the first ETH anchor proof(s) AFTER a given counter on the same chain.
  *
  * Since anchors and user proofs share the same monotonic counter chain,
- * we find the next anchor by listing proofs with counter > proof.counter
- * in the same epoch, then filtering for Ethereum anchors (attribution.name).
+ * we find the next anchor by scanning proofs with counter > proofCounter
+ * in the same epoch, filtering for Ethereum anchors (attribution.name).
  */
-export async function getAnchorsAfterProof(digestB64: string, limit = 2): Promise<Array<Record<string, unknown>>> {
+export async function getAnchorsAfterCounter(proofCounter: number, epochId: string, limit = 2): Promise<Array<Record<string, unknown>>> {
   try {
     const s3 = getClient();
     const bucket = getBucket();
-
-    // Get the proof to find its counter and epoch
-    const proof = await getProofByDigest(digestB64);
-    if (!proof) return [];
-
-    const commit = proof.commit as { counter?: string; epochId?: string };
-    const proofCounter = parseInt(commit.counter || "0", 10);
-    const epochId = commit.epochId || "";
-    if (!epochId) return [];
 
     const safeEpoch = toSafe(epochId);
     const startCounter = String(proofCounter + 1).padStart(12, "0");

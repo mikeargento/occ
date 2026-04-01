@@ -189,7 +189,9 @@ export default function OCCPage() {
         const bc = parseInt(b.proof?.commit?.counter || "0", 10);
         return bc > ac ? b : a;
       });
-      const resp = await fetch(`/api/proofs/anchors?digest=${encodeURIComponent(last.digestB64)}`);
+      const lastCounter = last.proof?.commit?.counter || "0";
+      const lastEpoch = last.proof?.commit?.epochId || "";
+      const resp = await fetch(`/api/proofs/anchors?counter=${lastCounter}&epoch=${encodeURIComponent(lastEpoch)}`);
       if (resp.ok) {
         const data = await resp.json();
         if (data.anchors?.length > 0) {
