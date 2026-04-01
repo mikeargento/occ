@@ -58,28 +58,13 @@ async function persistToLedger(proofs: OCCProof[]): Promise<void> {
       S3Client: new (config: { region: string }) => { send: (cmd: unknown) => Promise<void> };
       PutObjectCommand: new (params: Record<string, unknown>) => unknown;
     };
-    const { sha256: hashFn } = await import("@noble/hashes/sha256");
-    const { canonicalize: canon } = await import("occproof");
+    const { computeProofHash } = await import("occproof");
 
     const s3 = new S3Client({ region: process.env["LEDGER_REGION"] || "us-east-2" });
 
     for (const proof of proofs) {
-      // Compute proof hash from signed body
-      const signedBody: Record<string, unknown> = {
-        version: proof.version,
-        artifact: proof.artifact,
-        commit: proof.commit,
-        publicKeyB64: proof.signer.publicKeyB64,
-        enforcement: proof.environment.enforcement,
-        measurement: proof.environment.measurement,
-      };
-      if (proof.attribution) signedBody.attribution = proof.attribution;
-      if (proof.environment.attestation) {
-        signedBody.attestationFormat = proof.environment.attestation.format;
-      }
-
-      const hashBytes = hashFn(canon(signedBody));
-      const proofHashB64 = Buffer.from(hashBytes).toString("base64");
+      // Canonical proof hash — uses library's recursive-sort canonicalize + SHA-256
+      const proofHashB64 = computeProofHash(proof);
       const safeEpoch = (proof.commit.epochId ?? "unknown").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
       const safeHash = proofHashB64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
       const counter = (proof.commit.counter || "0").padStart(12, "0");

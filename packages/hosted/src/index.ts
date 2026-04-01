@@ -149,7 +149,7 @@ server.listen(PORT, "0.0.0.0", () => {
   console.log("");
   console.log(`  Dashboard:  http://localhost:${PORT}`);
   console.log(`  Anchor API: http://localhost:${PORT}/api/anchor/status`);
-  console.log(`  ETH Anchor: every 10 min → TEE → S3`);
+  console.log(`  ETH Anchor: every 12s → TEE → S3 (same chain)`);
   console.log("");
 
   startBitcoinAnchor();

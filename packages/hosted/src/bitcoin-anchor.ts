@@ -1,23 +1,53 @@
 /**
  * Ethereum Anchor Service
  *
- * Every 10 minutes, commits the latest Ethereum block hash to the OCC
- * proof chain via TEE. This creates an unpredictable external anchor —
- * everything in the OCC chain before this anchor provably existed
- * before that Ethereum block was mined.
+ * Commits the latest Ethereum block hash to the OCC proof chain via TEE.
+ * The anchor proof is a NORMAL OCC proof on the SAME monotonic counter chain
+ * as user proofs — same counter, same prevB64, same enclave key, same epoch.
  *
- * ~144 anchors/day. ~10 minute time windows.
+ * Because the Ethereum block hash is unpredictable and the anchor occurs
+ * later in the same chain, it acts as a FUTURE CAUSAL BOUNDARY — everything
+ * before this proof in the chain provably existed before the block was mined.
+ *
+ * Chain: User Proof → User Proof → ETH Anchor → User Proof → ETH Anchor
  *
  * "The future is the strongest clock."
  */
 
 import { sha256 } from "@noble/hashes/sha256";
 
+/* ── Canonical proof hash ── */
+
 /**
- * Persist an anchor proof to the S3 immutable ledger.
- * No-op if LEDGER_BUCKET is not set. Uses dynamic imports to avoid
- * requiring @aws-sdk/client-s3 at build time.
+ * Recursive key-sort canonicalization — matches the library's canonicalize().
+ * Produces deterministic JSON with sorted keys at every nesting level.
  */
+function canonicalize(obj: unknown): Uint8Array {
+  return new TextEncoder().encode(canonicalizeToString(obj));
+}
+
+function canonicalizeToString(obj: unknown): string {
+  if (obj === null || typeof obj !== "object") return JSON.stringify(obj);
+  if (Array.isArray(obj)) return "[" + obj.map(canonicalizeToString).join(",") + "]";
+  const sorted = Object.keys(obj as Record<string, unknown>).sort();
+  const entries = sorted
+    .filter((k) => (obj as Record<string, unknown>)[k] !== undefined)
+    .map((k) => JSON.stringify(k) + ":" + canonicalizeToString((obj as Record<string, unknown>)[k]));
+  return "{" + entries.join(",") + "}";
+}
+
+/**
+ * Compute canonical proof hash: SHA-256(canonicalize(proof)) → Base64.
+ * Covers the ENTIRE proof object (recursive key sort, compact JSON, UTF-8).
+ */
+function computeProofHash(proof: Record<string, unknown>): string {
+  const bytes = canonicalize(proof);
+  const hash = sha256(bytes);
+  return Buffer.from(hash).toString("base64");
+}
+
+/* ── S3 persistence ── */
+
 async function persistAnchor(
   proof: Record<string, unknown>,
   ethereum: { blockNumber: number; blockHash: string }
@@ -30,92 +60,58 @@ async function persistAnchor(
       S3Client: new (config: { region: string }) => { send: (cmd: unknown) => Promise<void> };
       PutObjectCommand: new (params: Record<string, unknown>) => unknown;
     };
-    const { sha256: hash } = await import("@noble/hashes/sha256");
 
     const s3 = new S3Client({ region: process.env.LEDGER_REGION || "us-east-2" });
-
-    // Compute proof hash
-    const signer = proof.signer as { publicKeyB64: string };
-    const env = proof.environment as { enforcement: string; measurement: string; attestation?: { format: string } };
     const commit = proof.commit as { counter: string; epochId: string };
-
-    const signedBody: Record<string, unknown> = {
-      version: proof.version,
-      artifact: proof.artifact,
-      commit: proof.commit,
-      publicKeyB64: signer.publicKeyB64,
-      enforcement: env.enforcement,
-      measurement: env.measurement,
-    };
-    if (proof.attribution) signedBody.attribution = proof.attribution;
-    if (env.attestation) signedBody.attestationFormat = env.attestation.format;
-
-    const bodyStr = JSON.stringify(signedBody, Object.keys(signedBody).sort());
-    const hashBytes = hash(new TextEncoder().encode(bodyStr));
-    const proofHashB64 = Buffer.from(hashBytes).toString("base64");
+    const proofHashB64 = computeProofHash(proof);
 
     const safeEpoch = commit.epochId.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
     const safeHash = proofHashB64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
     const counter = (commit.counter || "0").padStart(12, "0");
-
-    // Store proof
-    const proofKey = `proofs/${safeEpoch}/${counter}-${safeHash}.json`;
     const retention = new Date();
     retention.setDate(retention.getDate() + 3650);
 
+    const stored = { ...proof, proofHashB64 };
+
+    // Store proof (same format as user proofs)
     await s3.send(new PutObjectCommand({
       Bucket: bucket,
-      Key: proofKey,
-      Body: JSON.stringify({ ...proof, proofHashB64 }, null, 2),
+      Key: `proofs/${safeEpoch}/${counter}-${safeHash}.json`,
+      Body: JSON.stringify(stored, null, 2),
       ContentType: "application/json",
       ObjectLockMode: "COMPLIANCE",
       ObjectLockRetainUntilDate: retention,
     }));
 
-    // Store anchor record
-    const anchorBody = { proofHashB64, epochId: commit.epochId, counter: commit.counter, ...ethereum };
-    const anchorHashBytes = hash(new TextEncoder().encode(JSON.stringify(anchorBody, Object.keys(anchorBody).sort())));
-    const anchorHashB64 = Buffer.from(anchorHashBytes).toString("base64");
-    const safeAnchorHash = anchorHashB64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-    const anchorKey = `anchors/${safeEpoch}/${counter}-${safeAnchorHash}.json`;
-
-    await s3.send(new PutObjectCommand({
-      Bucket: bucket,
-      Key: anchorKey,
-      Body: JSON.stringify({ proof: { ...proof, proofHashB64 }, ethereum, epochId: commit.epochId, counter: commit.counter, anchorHashB64 }, null, 2),
-      ContentType: "application/json",
-      ObjectLockMode: "COMPLIANCE",
-      ObjectLockRetainUntilDate: retention,
-    }));
-
-    // Also write a by-digest index and a time-ordered anchor index
-    const artifact = (proof as Record<string, unknown>).artifact as { digestB64: string };
+    // By-digest index (artifact hash → proof)
+    const artifact = proof.artifact as { digestB64: string };
     const safeDigest = artifact.digestB64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
     await s3.send(new PutObjectCommand({
       Bucket: bucket,
       Key: `by-digest/${safeDigest}.json`,
-      Body: JSON.stringify({ ...proof, proofHashB64 }, null, 2),
+      Body: JSON.stringify(stored, null, 2),
       ContentType: "application/json",
     }));
 
-    // Time-ordered anchor for chronological listing
+    // Anchor index (time-ordered for causal window queries)
     const ts = new Date().toISOString().replace(/[:.]/g, "-");
     await s3.send(new PutObjectCommand({
       Bucket: bucket,
       Key: `anchors-by-time/${ts}-${ethereum.blockNumber}.json`,
-      Body: JSON.stringify({ ...proof, proofHashB64, ethereum }, null, 2),
+      Body: JSON.stringify({ ...stored, ethereum }, null, 2),
       ContentType: "application/json",
     }));
 
-    console.log(`[ledger] anchor stored: block=${ethereum.blockNumber} key=${anchorKey}`);
+    console.log(`[ledger] anchor stored: block=${ethereum.blockNumber} counter=${commit.counter}`);
   } catch (err) {
     console.error("[ledger] persist anchor failed:", (err as Error).message);
   }
 }
 
+/* ── Ethereum RPC ── */
+
 const TEE_URL = "https://nitro.occproof.com";
-// No chainId — all proofs go on the TEE's single default chain
-let anchorIntervalMs = 10 * 60 * 1000; // 10 minutes default
+let anchorIntervalMs = 12 * 1000; // 12 seconds — every finalized Ethereum block
 
 function toBase64(bytes: Uint8Array): string {
   return Buffer.from(bytes).toString("base64");
@@ -127,10 +123,6 @@ interface EthBlock {
   timestamp: number;
 }
 
-/**
- * Fetch the latest Ethereum block.
- * Uses public JSON-RPC endpoints — no API key needed.
- */
 async function getLatestBlock(): Promise<EthBlock> {
   const endpoints = [
     "https://ethereum-rpc.publicnode.com",
@@ -166,24 +158,23 @@ async function getLatestBlock(): Promise<EthBlock> {
   throw new Error("Could not fetch Ethereum block from any RPC endpoint");
 }
 
+/* ── TEE commit ── */
+
 /**
  * Commit an Ethereum block hash to the OCC chain via TEE.
+ *
+ * The anchor proof is a normal OCC proof where:
+ * - artifact.digestB64 = SHA-256(blockHash) — the block hash IS the artifact
+ * - attribution.name = "Ethereum Anchor" (signed, human-readable label)
+ * - attribution.message = blockHash (signed, the actual anchor data)
+ * - metadata = { type: "ethereum-anchor", ... } (unsigned, advisory)
+ *
+ * It shares the same counter, prevB64, epochId, and signing key as all
+ * other proofs on this chain. It IS the chain.
  */
 async function commitAnchor(block: EthBlock): Promise<{ proof: unknown; digestB64: string } | null> {
   const hashBytes = sha256(new TextEncoder().encode(block.hash));
   const digestB64 = toBase64(hashBytes);
-
-  const metadata = {
-    type: "ethereum-anchor",
-    anchor: {
-      source: "ethereum",
-      blockNumber: block.number,
-      blockHash: block.hash,
-      blockTime: block.timestamp,
-      blockTimeISO: new Date(block.timestamp * 1000).toISOString(),
-      verify: `https://etherscan.io/block/${block.number}`,
-    },
-  };
 
   try {
     const res = await fetch(`${TEE_URL}/commit`, {
@@ -191,11 +182,22 @@ async function commitAnchor(block: EthBlock): Promise<{ proof: unknown; digestB6
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         digests: [{ digestB64, hashAlg: "sha256" }],
-        metadata,
+        // Attribution is SIGNED — block data is tamper-evident
         attribution: {
-          name: `Ethereum #${block.number}`,
+          name: "Ethereum Anchor",
           message: block.hash,
           title: `https://etherscan.io/block/${block.number}`,
+        },
+        // Metadata is NOT signed — advisory only
+        metadata: {
+          type: "ethereum-anchor",
+          anchor: {
+            network: "mainnet",
+            blockNumber: block.number,
+            blockHash: block.hash,
+            blockTime: block.timestamp,
+            blockTimeISO: new Date(block.timestamp * 1000).toISOString(),
+          },
         },
       }),
     });
@@ -205,7 +207,7 @@ async function commitAnchor(block: EthBlock): Promise<{ proof: unknown; digestB6
     const data = await res.json();
     const proof = Array.isArray(data) ? data[0] : data.proofs?.[0] ?? data;
 
-    // Persist to immutable S3 ledger (anchor + proof + by-digest index)
+    // Persist to S3 (same chain, same format, just with anchor index too)
     void persistAnchor(proof, { blockNumber: block.number, blockHash: block.hash });
 
     return { proof, digestB64 };
@@ -215,20 +217,17 @@ async function commitAnchor(block: EthBlock): Promise<{ proof: unknown; digestB6
   }
 }
 
-/* ── State ── */
+/* ── State & scheduling ── */
 
 let lastAnchoredBlock = 0;
 let intervalId: ReturnType<typeof setInterval> | null = null;
 
-/**
- * Check for a new Ethereum block and anchor it.
- */
 async function checkAndAnchor(): Promise<void> {
   try {
     const block = await getLatestBlock();
 
     if (block.number <= lastAnchoredBlock) {
-      return; // Already anchored a block at or after this height
+      return;
     }
 
     console.log(`[eth-anchor] Block #${block.number} — anchoring...`);
@@ -236,67 +235,23 @@ async function checkAndAnchor(): Promise<void> {
 
     if (result) {
       lastAnchoredBlock = block.number;
-      console.log(`[eth-anchor] Anchored block #${block.number} → ${result.digestB64.slice(0, 20)}...`);
+      console.log(`[eth-anchor] Anchored block #${block.number} → counter on same chain`);
     }
   } catch (err) {
-    console.error("[eth-anchor] Error:", (err as Error).message);
+    console.error("[eth-anchor] check failed:", (err as Error).message);
   }
 }
 
-/**
- * Start the Ethereum anchor service.
- */
-export function startBitcoinAnchor(): void {
-  console.log(`[eth-anchor] Starting — anchoring every ${anchorIntervalMs / 1000}s`);
-  checkAndAnchor();
-  intervalId = setInterval(checkAndAnchor, anchorIntervalMs);
-}
-
-/**
- * Stop the anchor service.
- */
-export function stopBitcoinAnchor(): void {
-  if (intervalId) {
-    clearInterval(intervalId);
-    intervalId = null;
-    console.log("[eth-anchor] Stopped");
-  }
-}
-
-/**
- * Change the anchor interval at runtime.
- * Restarts the interval timer immediately.
- * Minimum: 12 seconds (one Ethereum block).
- */
-export function setAnchorInterval(seconds: number): { ok: boolean; intervalSeconds: number } {
-  if (seconds < 12) throw new Error("Minimum interval is 12 seconds (one Ethereum block)");
-  if (seconds > 86400) throw new Error("Maximum interval is 86400 seconds (24 hours)");
-  anchorIntervalMs = seconds * 1000;
-  // Restart the timer with new interval
-  if (intervalId) {
-    clearInterval(intervalId);
-    intervalId = setInterval(checkAndAnchor, anchorIntervalMs);
-  }
-  console.log(`[eth-anchor] Interval changed to ${seconds}s`);
-  return { ok: true, intervalSeconds: seconds };
-}
-
-/**
- * Manually trigger an anchor.
- */
 export async function manualAnchor(): Promise<{ block: EthBlock; proof: unknown; digestB64: string } | null> {
   const block = await getLatestBlock();
   const result = await commitAnchor(block);
   if (result) {
     lastAnchoredBlock = block.number;
-    return { block, ...result };
+    return { block, proof: result.proof, digestB64: result.digestB64 };
   }
   return null;
 }
 
-/**
- * Get the current anchor status.
- */
 export function getAnchorStatus(): { running: boolean; lastAnchoredBlock: number; source: string; intervalSeconds: number } {
   return {
     running: intervalId !== null,
@@ -305,3 +260,34 @@ export function getAnchorStatus(): { running: boolean; lastAnchoredBlock: number
     intervalSeconds: anchorIntervalMs / 1000,
   };
 }
+
+export function startAnchorService(intervalMs?: number): void {
+  if (intervalMs) anchorIntervalMs = intervalMs;
+  console.log(`[eth-anchor] Starting Ethereum anchor service (interval: ${anchorIntervalMs / 1000}s)`);
+
+  // Run immediately, then on interval
+  void checkAndAnchor();
+  intervalId = setInterval(() => void checkAndAnchor(), anchorIntervalMs);
+}
+
+export function stopAnchorService(): void {
+  if (intervalId) {
+    clearInterval(intervalId);
+    intervalId = null;
+    console.log("[eth-anchor] Anchor service stopped");
+  }
+}
+
+export function setAnchorInterval(seconds: number): { ok: boolean; intervalSeconds: number } {
+  anchorIntervalMs = seconds * 1000;
+  if (intervalId) {
+    clearInterval(intervalId);
+    intervalId = setInterval(() => void checkAndAnchor(), anchorIntervalMs);
+  }
+  console.log(`[eth-anchor] Interval updated: ${seconds}s`);
+  return { ok: true, intervalSeconds: seconds };
+}
+
+// Legacy aliases
+export const startBitcoinAnchor = startAnchorService;
+export const stopBitcoinAnchor = stopAnchorService;
