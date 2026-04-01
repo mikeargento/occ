@@ -315,6 +315,28 @@ export default function OCCPage() {
               </div>
             </div>
 
+            {/* Actions — above list so they're always visible */}
+            <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
+              {unproven.length > 0 && (
+                <button onClick={proveRemaining} style={{ ...btnFill, background: "var(--c-accent)", color: "var(--bg)" }}>
+                  Prove {unproven.length} remaining
+                </button>
+              )}
+              {found.length > 0 && (
+                <button
+                  onClick={anchorCountdown > 0 ? undefined : downloadZip}
+                  style={{
+                    ...(anchorCountdown > 0 ? { ...btnOut, opacity: 0.5, cursor: "default" } : allDone ? btnFill : btnOut),
+                  }}
+                >
+                  {anchorCountdown > 0 ? `Sealing with Ethereum... ${anchorCountdown}s` : "Download .zip"}
+                </button>
+              )}
+              <button onClick={reset} style={btnOut}>
+                {allDone ? "New" : "Start over"}
+              </button>
+            </div>
+
             {/* File list */}
             <div style={card}>
               {items.map((item, i) => (
@@ -370,27 +392,6 @@ export default function OCCPage() {
               ))}
             </div>
 
-            {/* Actions */}
-            <div style={{ display: "flex", gap: 12 }}>
-              {unproven.length > 0 && (
-                <button onClick={proveRemaining} style={{ ...btnFill, background: "#34d399", color: "var(--bg)" }}>
-                  Prove {unproven.length} remaining
-                </button>
-              )}
-              {found.length > 0 && (
-                <button
-                  onClick={anchorCountdown > 0 ? undefined : downloadZip}
-                  style={{
-                    ...(anchorCountdown > 0 ? { ...btnOut, opacity: 0.5, cursor: "default" } : allDone ? btnFill : btnOut),
-                  }}
-                >
-                  {anchorCountdown > 0 ? `Sealing with Ethereum... ${anchorCountdown}s` : "Download .zip"}
-                </button>
-              )}
-              <button onClick={reset} style={btnOut}>
-                {allDone ? "New" : "Start over"}
-              </button>
-            </div>
           </div>
         )}
         <Footer />
