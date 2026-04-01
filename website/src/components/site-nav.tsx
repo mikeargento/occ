@@ -6,7 +6,7 @@ export function SiteNav() {
   return (
     <div style={{
       borderBottom: "1px solid #e5e7eb",
-      background: "#fff",
+      background: "#f9fafb",
       position: "sticky", top: 0, zIndex: 50,
     }}>
       <div style={{
