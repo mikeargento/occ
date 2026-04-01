@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { FileDrop } from "@/components/file-drop";
 import { Nav, Footer } from "@/components/nav";
+import { Chat } from "@/components/chat";
 import {
   hashFile,
   commitDigest,
@@ -214,7 +215,7 @@ export default function OCCPage() {
               multiple
               onFile={(f) => handleFiles([f])}
               onFiles={handleFiles}
-              hint={"Files never leave your device.\nOnly the hash is sent."}
+              hint=""
             />
           </div>
         )}
@@ -347,6 +348,7 @@ export default function OCCPage() {
           </div>
         )}
         <Footer />
+        <Chat />
       </div>
     </div>
   );
