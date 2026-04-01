@@ -100,7 +100,7 @@ export function FileDrop({
           ? "border-text/40 bg-text/5 ring-2 ring-text/10 ring-offset-2 ring-offset-bg scale-[1.01]"
           : hasFiles
           ? "border-border bg-bg-elevated"
-          : "border-border-subtle bg-bg-elevated/50 hover:border-border hover:bg-bg-elevated"
+          : "border-border bg-bg-elevated hover:border-text/20 hover:bg-bg-subtle"
         }
       `}
     >
