@@ -14,7 +14,7 @@ import {
   type OCCProof,
 } from "@/lib/occ";
 import { toUrlSafeB64 } from "@/lib/explorer";
-import { zipSync } from "fflate";
+import { zip } from "fflate";
 
 type Step = "drop" | "scanning" | "results" | "proving" | "exporting";
 
@@ -179,10 +179,12 @@ export default function OCCPage() {
       }
     } catch { /* non-critical */ }
 
-    // Yield to UI so progress bar renders before blocking zipSync
-    await new Promise(r => setTimeout(r, 50));
+    setExportProgress({ current: totalSteps - 1, total: totalSteps });
+    const zipData = await new Promise<Uint8Array>((resolve, reject) => {
+      zip(z, { level: 0 }, (err, data) => err ? reject(err) : resolve(data));
+    });
     setExportProgress({ current: totalSteps, total: totalSteps });
-    const blob = new Blob([zipSync(z).buffer as ArrayBuffer], { type: "application/zip" });
+    const blob = new Blob([zipData.buffer as ArrayBuffer], { type: "application/zip" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
