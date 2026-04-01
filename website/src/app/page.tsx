@@ -369,7 +369,7 @@ export default function OCCPage() {
                       </div>
                     )}
                     {item.status === "found" && item.valid && (
-                      <div style={{ fontSize: 11, color: "#30d158", marginTop: 2 }}>Signature valid</div>
+                      <div style={{ fontSize: 11, color: "#34d399", marginTop: 2 }}>Signature valid</div>
                     )}
                     {item.status === "proved" && (
                       <div style={{ fontSize: 11, color: "#34d399", marginTop: 2 }}>Just proved</div>
