@@ -363,6 +363,9 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
         .occ-chat-md li { margin-bottom: 4px; }
         .occ-chat-md code { background: rgba(255,255,255,0.1); padding: 1px 5px; border-radius: 4px; font-size: 13px; }
         .occ-chat-md h1, .occ-chat-md h2, .occ-chat-md h3 { font-size: 14px; font-weight: 600; color: #fff; margin: 8px 0 4px; }
+        @media (max-width: 640px) {
+          .occ-chat-panel { aspect-ratio: 3/4 !important; }
+        }
       `}</style>
     </div>
     </div>
