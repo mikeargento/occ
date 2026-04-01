@@ -13,14 +13,14 @@ interface ChatProps {
 
 const DEFAULT_QUESTIONS = [
   "What does OCC prove?",
+  "What problem does OCC solve?",
   "How is this different from a timestamp?",
-  "What is a hardware enclave?",
-  "What are Ethereum anchors?",
-  "Is my file uploaded?",
-  "What's inside the proof JSON?",
+  "Why not just hash a file?",
+  "What makes this impossible to fake?",
   "What is a causal slot?",
+  "What are Ethereum anchors?",
   "How do I verify a proof?",
-  "Can the same file be proven twice?",
+  "Is my file ever uploaded?",
   "What is OCC NOT?",
 ];
 
