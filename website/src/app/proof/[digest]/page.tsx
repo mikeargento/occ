@@ -33,7 +33,6 @@ export default function ProofPage() {
           try {
             let digestB64 = decodeURIComponent(digestParam).replace(/-/g, "+").replace(/_/g, "/");
             while (digestB64.length % 4 !== 0) digestB64 += "=";
-            console.log("[occ] looking up cached file, key:", digestB64);
             const db = await new Promise<IDBDatabase>((resolve, reject) => {
               const req = indexedDB.open("occ-files", 1);
               req.onupgradeneeded = () => req.result.createObjectStore("files");
@@ -47,9 +46,8 @@ export default function ProofPage() {
               req.onerror = () => resolve(undefined);
             });
             db.close();
-            console.log("[occ] cached file result:", file ? file.name : "not found");
             if (file) setCachedFile(file);
-          } catch (e) { console.error("[occ] cache lookup error:", e); }
+          } catch (_) { /* no cached file */ }
         } else setError("Proof not found");
       } catch { setError("Failed to load proof"); }
       setLoading(false);
