@@ -256,8 +256,8 @@ function Field({ label, value, mono: isMono, highlight, link }: { label: string;
 }
 
 const btnStyle: React.CSSProperties = {
-  padding: "8px 16px", fontSize: 13, fontWeight: 600, color: "var(--c-text-secondary)",
-  background: "transparent", border: "1px solid var(--c-border)", borderRadius: 10, cursor: "pointer",
+  padding: "8px 16px", fontSize: 13, fontWeight: 600, color: "#1A73E8",
+  background: "transparent", border: "1px solid #1A73E8", borderRadius: 10, cursor: "pointer",
 };
 
 function JsonToggle({ proof }: { proof: OCCProof }) {
