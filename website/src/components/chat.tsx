@@ -17,14 +17,24 @@ interface ChatProps {
 const DEFAULT_QUESTIONS = [
   "What does OCC prove?",
   "What problem does OCC solve?",
+  "Why does causal order matter?",
   "How is this different from a timestamp?",
   "Why not just hash a file?",
   "What makes this impossible to fake?",
+  "Does OCC prove when something happened?",
+  "Why is this better than a blockchain?",
+  "What is OCC NOT?",
+  "Why is this called Origin Controlled Computing?",
+  "What is a hardware enclave?",
   "What is a causal slot?",
+  "What is atomic causality?",
   "What are Ethereum anchors?",
+  "Why are future anchors needed?",
+  "What is an epoch?",
+  "How are proofs chained together?",
   "How do I verify a proof?",
   "Is my file ever uploaded?",
-  "What is OCC NOT?",
+  "What happens if the server disappears?",
 ];
 
 export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOpen }: ChatProps) {
