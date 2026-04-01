@@ -305,10 +305,6 @@ export default function OCCPage() {
             {proveStep === "drop" && (
               <>
                 <FileDrop multiple onFile={(f) => handleProveFiles([f])} onFiles={handleProveFiles} hint="Drop file(s). Hashed locally — nothing uploaded." />
-                <div style={{ marginTop: 16, padding: "12px 16px", border: "1px solid var(--c-border-subtle)", background: "var(--bg-elevated)" }}>
-                  <input type="text" value={attribution} onChange={(e) => setAttribution(e.target.value)} placeholder="Author name (optional)"
-                    style={{ width: "100%", height: 32, padding: "0 10px", fontSize: 13, border: "1px solid var(--c-border)", borderRadius: 6, background: "transparent", color: "var(--c-text)" }} />
-                </div>
               </>
             )}
 
