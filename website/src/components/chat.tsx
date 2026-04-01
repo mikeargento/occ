@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef, useEffect, useCallback } from "react";
+import ReactMarkdown from "react-markdown";
 
 interface Message {
   role: "user" | "assistant";
@@ -275,11 +276,12 @@ export function Chat({ proofContext, preloadedQuestions }: ChatProps) {
                 padding: "10px 14px",
                 fontSize: 14,
                 lineHeight: 1.5,
-                whiteSpace: "pre-wrap",
                 wordBreak: "break-word",
               }}
             >
-              {msg.content}
+              {msg.role === "assistant" ? (
+                <div className="occ-chat-md"><ReactMarkdown>{msg.content}</ReactMarkdown></div>
+              ) : msg.content}
               {streaming && i === messages.length - 1 && msg.role === "assistant" && (
                 <span
                   style={{
@@ -350,6 +352,13 @@ export function Chat({ proofContext, preloadedQuestions }: ChatProps) {
           0%, 50% { opacity: 1; }
           51%, 100% { opacity: 0; }
         }
+        .occ-chat-md p { margin: 0 0 8px; }
+        .occ-chat-md p:last-child { margin-bottom: 0; }
+        .occ-chat-md strong { color: #fff; font-weight: 600; }
+        .occ-chat-md ul, .occ-chat-md ol { margin: 4px 0 8px; padding-left: 18px; }
+        .occ-chat-md li { margin-bottom: 4px; }
+        .occ-chat-md code { background: rgba(255,255,255,0.1); padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+        .occ-chat-md h1, .occ-chat-md h2, .occ-chat-md h3 { font-size: 14px; font-weight: 600; color: #fff; margin: 8px 0 4px; }
         @media (max-width: 500px) {
           .occ-chat-panel {
             inset: 0 !important;
