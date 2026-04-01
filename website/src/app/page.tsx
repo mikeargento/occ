@@ -71,13 +71,13 @@ export default function OCCPage() {
       if (fs.length === 1) {
         const d = await hashFile(fs[0]); setDigest(d); setStep("signing");
         const a = author.trim() ? { name: author.trim() } : undefined;
-        setProofs([await commitDigest(d, undefined, undefined, a)]); setStep("done"); setTimeout(() => fetchL(1), 1500);
+        setProofs([await commitDigest(d, undefined, undefined, a)]); setStep("done"); fetchL(1); setTimeout(() => fetchL(1), 2000);
       } else {
         const ds: Array<{ digestB64: string; hashAlg: "sha256" }> = [];
         for (let i = 0; i < fs.length; i++) { setProgress({ c: i + 1, t: fs.length, n: fs[i].name }); ds.push({ digestB64: await hashFile(fs[i]), hashAlg: "sha256" }); }
         setDigest(ds[0].digestB64); setStep("signing");
         const a = author.trim() ? { name: author.trim() } : undefined;
-        setProofs(await commitBatch(ds, undefined, undefined, a)); setStep("done"); setTimeout(() => fetchL(1), 1500);
+        setProofs(await commitBatch(ds, undefined, undefined, a)); setStep("done"); fetchL(1); setTimeout(() => fetchL(1), 2000);
       }
     } catch (e) { setErr(e instanceof Error ? e.message : "Failed"); setStep("error"); }
   }
