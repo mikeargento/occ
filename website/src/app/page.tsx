@@ -229,7 +229,7 @@ export default function OCCPage() {
 
   /* ── Styles ── */
   const card: React.CSSProperties = { border: "1px solid #e5e7eb", padding: "24px 20px", background: "#fff", borderRadius: 16, marginBottom: 16 };
-  const btnFill: React.CSSProperties = { height: 52, fontSize: 15, fontWeight: 600, border: "none", borderRadius: 12, background: "#1A73E8", color: "#111827", cursor: "pointer", flex: 1, letterSpacing: "-0.01em" };
+  const btnFill: React.CSSProperties = { height: 52, fontSize: 15, fontWeight: 600, border: "none", borderRadius: 12, background: "#1A73E8", color: "#ffffff", cursor: "pointer", flex: 1, letterSpacing: "-0.01em" };
   const btnOut: React.CSSProperties = { height: 52, fontSize: 15, fontWeight: 500, borderRadius: 12, cursor: "pointer", flex: 1, border: "1px solid #d1d5db", background: "#fff", color: "#111827" };
 
   return (
@@ -277,7 +277,7 @@ export default function OCCPage() {
         {/* ── Proving ── */}
         {step === "proving" && (
           <div style={{ textAlign: "center", padding: "80px 24px", animation: "slideIn 0.3s ease-out" }}>
-            <div style={{ fontSize: 64, fontWeight: 800, color: "#059669", marginBottom: 8, fontFamily: "monospace", animation: "pulse 1s ease-in-out infinite", textShadow: "none", letterSpacing: "-0.04em" }}>
+            <div style={{ fontSize: 64, fontWeight: 800, color: "#1A73E8", marginBottom: 8, fontFamily: "monospace", animation: "pulse 1s ease-in-out infinite", textShadow: "none", letterSpacing: "-0.04em" }}>
               {unproven.length}
             </div>
             <div style={{ fontSize: 15, color: "var(--c-text-tertiary)", fontWeight: 500 }}>Signing in enclave</div>
@@ -302,7 +302,7 @@ export default function OCCPage() {
             <div style={{ textAlign: "center", marginBottom: 40, paddingTop: 16 }}>
               <div style={{
                 fontSize: 96, fontWeight: 800, letterSpacing: "-0.06em",
-                color: allDone ? "#34d399" : "#fff",
+                color: allDone ? "#1A73E8" : "var(--c-text)",
                 fontFamily: "monospace", lineHeight: 1, animation: "countPop 0.4s ease-out",
                 textShadow: "none",
               }}>
@@ -318,7 +318,7 @@ export default function OCCPage() {
             {/* Actions — above list so they're always visible */}
             <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
               {unproven.length > 0 && (
-                <button onClick={proveRemaining} style={{ ...btnFill, background: "var(--c-accent)", color: "var(--bg)" }}>
+                <button onClick={proveRemaining} style={{ ...btnFill, background: "var(--c-accent)", color: "#ffffff" }}>
                   Prove {unproven.length} remaining
                 </button>
               )}
@@ -347,7 +347,7 @@ export default function OCCPage() {
                 }}>
                   <span style={{
                     fontSize: 22, marginTop: -2, flexShrink: 0, width: 28, textAlign: "center",
-                    color: item.status === "found" || item.status === "proved" ? "#34d399"
+                    color: item.status === "found" || item.status === "proved" ? "#1A73E8"
                       : item.status === "proving" ? "#f0c060"
                       : item.status === "error" ? "#f87171"
                       : "var(--c-text-tertiary)",
@@ -369,10 +369,10 @@ export default function OCCPage() {
                       </div>
                     )}
                     {item.status === "found" && item.valid && (
-                      <div style={{ fontSize: 11, color: "#059669", marginTop: 2 }}>Signature valid</div>
+                      <div style={{ fontSize: 11, color: "#1A73E8", marginTop: 2 }}>Signature valid</div>
                     )}
                     {item.status === "proved" && (
-                      <div style={{ fontSize: 11, color: "#059669", marginTop: 2 }}>Just proved</div>
+                      <div style={{ fontSize: 11, color: "#1A73E8", marginTop: 2 }}>Just proved</div>
                     )}
                     {item.status === "new" && (
                       <div style={{ fontSize: 11, color: "var(--c-text-tertiary)", marginTop: 2 }}>Not yet proven</div>
@@ -381,7 +381,7 @@ export default function OCCPage() {
                   {item.proof && (
                     <a href={`/proof/${encodeURIComponent(toUrlSafeB64(item.digestB64))}`} target="_blank" rel="noopener"
                       style={{
-                        fontSize: 15, fontWeight: 600, color: "var(--bg)", textDecoration: "none",
+                        fontSize: 15, fontWeight: 600, color: "#ffffff", textDecoration: "none",
                         flexShrink: 0, padding: "8px 24px", borderRadius: 980,
                         background: "#1A73E8",
                       }}>
