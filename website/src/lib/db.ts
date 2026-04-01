@@ -95,7 +95,7 @@ export async function listProofs(page = 1, limit = 20) {
 
   const [rows, countResult] = await Promise.all([
     sql`SELECT id, digest_b64, counter, commit_time, enforcement, signer_pub, has_agency, has_tsa, attr_name, indexed_at
-      FROM proofs ORDER BY CAST(counter AS INTEGER) DESC NULLS LAST LIMIT ${limit} OFFSET ${offset}`,
+      FROM proofs ORDER BY indexed_at DESC NULLS LAST LIMIT ${limit} OFFSET ${offset}`,
     sql`SELECT COUNT(*) as total FROM proofs`,
   ]);
 
