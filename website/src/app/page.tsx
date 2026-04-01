@@ -132,11 +132,12 @@ export default function MakerPage() {
   const [useBiometrics, setUseBiometrics] = useState(false);
   const [attribution, setAttribution] = useState("");
 
-  // Verify state
+  // Verify state (supports batch)
   const [verifyStep, setVerifyStep] = useState<VerifyStep>("drop");
   const [verifyFile, setVerifyFile] = useState<File | null>(null);
   const [verifyProof, setVerifyProof] = useState<OCCProof | null>(null);
   const [verifyResult, setVerifyResult] = useState<ProofVerifyResult | null>(null);
+  const [verifyBatch, setVerifyBatch] = useState<Array<{ file: File; proof: OCCProof | null; result: ProofVerifyResult | null; match: boolean | null }>>([]);
   const [fileDigestMatch, setFileDigestMatch] = useState<boolean | null>(null);
 
   // Public ledger
@@ -254,10 +255,17 @@ export default function MakerPage() {
     for (let i = 0; i < makeFiles.length; i++) {
       const f = makeFiles[i];
       const p = makeProofs[i] || makeProofs[0];
-      zipFiles[f.name] = new Uint8Array(await f.arrayBuffer());
-      const proofName = makeFiles.length > 1 ? `proof-${i + 1}.json` : "proof.json";
-      zipFiles[proofName] = new TextEncoder().encode(JSON.stringify(p, null, 2));
-      if (i === 0) {
+      const base = f.name.replace(/\.[^.]+$/, "");
+      // Each file gets paired with its proof
+      if (makeFiles.length > 1) {
+        // Batch: subfolder per file
+        zipFiles[`${base}/${f.name}`] = new Uint8Array(await f.arrayBuffer());
+        zipFiles[`${base}/proof.json`] = new TextEncoder().encode(JSON.stringify(p, null, 2));
+        zipFiles[`${base}/VERIFY.txt`] = new TextEncoder().encode(buildVerifyTxt(f.name, p));
+      } else {
+        // Single: flat
+        zipFiles[f.name] = new Uint8Array(await f.arrayBuffer());
+        zipFiles["proof.json"] = new TextEncoder().encode(JSON.stringify(p, null, 2));
         zipFiles["VERIFY.txt"] = new TextEncoder().encode(buildVerifyTxt(f.name, p));
       }
     }
@@ -268,7 +276,7 @@ export default function MakerPage() {
     const a = document.createElement("a");
     a.href = url;
     a.download = makeFiles.length === 1
-      ? `${makeFiles[0].name.replace(/\.[^.]+$/, "")}-occ-proof.zip`
+      ? `${makeFiles[0].name.replace(/\.[^.]+$/, "")}-occ.zip`
       : "occ-proof-batch.zip";
     a.click();
     URL.revokeObjectURL(url);
@@ -276,47 +284,90 @@ export default function MakerPage() {
 
   /* ── Verify handlers ── */
 
-  async function handleVerifyFile(f: File) {
-    setVerifyFile(f);
-    setVerifyStep("checking");
-    setFileDigestMatch(null);
-    setVerifyResult(null);
-    setVerifyProof(null);
+  async function handleVerifyFiles(files: File[]) {
+    if (files.length === 1) {
+      // Single file — use simple flow
+      const f = files[0];
+      setVerifyFile(f);
+      setVerifyStep("checking");
+      setFileDigestMatch(null);
+      setVerifyResult(null);
+      setVerifyProof(null);
+      setVerifyBatch([]);
 
-    try {
-      const text = await f.text();
-      const proof = isOCCProof(text);
-
-      if (proof) {
-        // User dropped a proof.json — verify the signature
-        setVerifyProof(proof);
-        const result = await verifyProofSignature(proof);
-        setVerifyResult(result);
-        setVerifyStep("result");
-      } else {
-        // User dropped a regular file — hash it and check against the ledger
-        const d = await hashFile(f);
-        const resp = await fetch(`/api/proofs/${encodeURIComponent(toUrlSafeB64(d))}`);
-        if (resp.ok) {
-          const data = await resp.json();
-          if (data.proofs?.length > 0) {
-            const p = data.proofs[0].proof as OCCProof;
-            setVerifyProof(p);
-            setFileDigestMatch(true);
-            const result = await verifyProofSignature(p);
-            setVerifyResult(result);
-          } else {
-            setFileDigestMatch(false);
-          }
+      try {
+        const text = await f.text();
+        const proof = isOCCProof(text);
+        if (proof) {
+          setVerifyProof(proof);
+          setVerifyResult(await verifyProofSignature(proof));
+          setVerifyStep("result");
         } else {
-          setFileDigestMatch(false);
+          const d = await hashFile(f);
+          const resp = await fetch(`/api/proofs/${encodeURIComponent(toUrlSafeB64(d))}`);
+          if (resp.ok) {
+            const data = await resp.json();
+            if (data.proofs?.length > 0) {
+              const p = data.proofs[0].proof as OCCProof;
+              setVerifyProof(p); setFileDigestMatch(true);
+              setVerifyResult(await verifyProofSignature(p));
+            } else setFileDigestMatch(false);
+          } else setFileDigestMatch(false);
+          setVerifyStep("result");
         }
-        setVerifyStep("result");
+      } catch { setVerifyStep("result"); setFileDigestMatch(false); }
+    } else {
+      // Batch verify
+      setVerifyStep("checking");
+      setVerifyBatch([]);
+      const results: typeof verifyBatch = [];
+
+      for (const f of files) {
+        try {
+          const text = await f.text();
+          const proof = isOCCProof(text);
+          if (proof) {
+            const result = await verifyProofSignature(proof);
+            results.push({ file: f, proof, result, match: null });
+          } else {
+            const d = await hashFile(f);
+            const resp = await fetch(`/api/proofs/${encodeURIComponent(toUrlSafeB64(d))}`);
+            if (resp.ok) {
+              const data = await resp.json();
+              if (data.proofs?.length > 0) {
+                const p = data.proofs[0].proof as OCCProof;
+                const result = await verifyProofSignature(p);
+                results.push({ file: f, proof: p, result, match: true });
+              } else {
+                results.push({ file: f, proof: null, result: null, match: false });
+              }
+            } else {
+              results.push({ file: f, proof: null, result: null, match: false });
+            }
+          }
+        } catch {
+          results.push({ file: f, proof: null, result: null, match: false });
+        }
       }
-    } catch {
+
+      setVerifyBatch(results);
       setVerifyStep("result");
-      setFileDigestMatch(false);
     }
+  }
+
+  async function downloadVerifyBatchZip() {
+    if (!verifyBatch.length) return;
+    const zipFiles: Record<string, Uint8Array> = {};
+    for (const item of verifyBatch) {
+      if (item.proof) {
+        zipFiles[`${item.file.name}/proof.json`] = new TextEncoder().encode(JSON.stringify(item.proof, null, 2));
+      }
+    }
+    const zipped = zipSync(zipFiles);
+    const blob = new Blob([zipped.buffer as ArrayBuffer], { type: "application/zip" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = "occ-verify-batch.zip"; a.click();
+    URL.revokeObjectURL(url);
   }
 
   function resetVerify() {
@@ -325,6 +376,7 @@ export default function MakerPage() {
     setVerifyProof(null);
     setVerifyResult(null);
     setFileDigestMatch(null);
+    setVerifyBatch([]);
   }
 
   /* ── Styles ── */
@@ -517,23 +569,68 @@ export default function MakerPage() {
           <>
             {verifyStep === "drop" && (
               <FileDrop
-                onFile={handleVerifyFile}
-                hint="Drop a proof.json to verify its signature, or drop any file to check if it has a proof on the ledger."
+                multiple
+                onFile={(f) => handleVerifyFiles([f])}
+                onFiles={handleVerifyFiles}
+                hint="Drop proof.json(s) to verify signatures, or files to check the ledger. Supports batch."
               />
             )}
 
             {verifyStep === "checking" && (
               <div style={{ ...cardStyle, textAlign: "center", padding: "48px 24px" }}>
                 <div style={{ fontSize: 14, color: "var(--c-text-secondary)" }}>
-                  Checking {verifyFile?.name}...
+                  Checking...
                 </div>
               </div>
             )}
 
             {verifyStep === "result" && (
               <div>
-                {/* Signature verification */}
-                {verifyResult && (
+                {/* ── Batch verify results ── */}
+                {verifyBatch.length > 0 && (
+                  <>
+                    <div style={cardStyle}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                        <span style={{ color: verifyBatch.every(b => b.result?.valid || b.match) ? "#30d158" : "#ff6b35", fontSize: 20 }}>●</span>
+                        <span style={{ fontSize: 16, fontWeight: 600 }}>
+                          {verifyBatch.filter(b => b.result?.valid || b.match).length} / {verifyBatch.length} verified
+                        </span>
+                      </div>
+                      {verifyBatch.map((item, i) => (
+                        <div key={item.file.name + i} style={{
+                          display: "flex", alignItems: "center", gap: 10, padding: "10px 0",
+                          borderTop: i > 0 ? "1px solid var(--c-border-subtle)" : "none",
+                        }}>
+                          <span style={{ color: item.result?.valid ? "#30d158" : item.match === false ? "#ff453a" : "#ff6b35", fontFamily: "monospace", fontSize: 14 }}>
+                            {item.result?.valid ? "✓" : item.match === false ? "✗" : "?"}
+                          </span>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 13, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                              {item.file.name}
+                            </div>
+                            {item.proof && (
+                              <div style={{ fontSize: 11, fontFamily: "monospace", color: "var(--c-text-tertiary)", marginTop: 2 }}>
+                                #{item.proof.commit.counter} · {item.proof.artifact.digestB64.slice(0, 20)}...
+                              </div>
+                            )}
+                            {item.match === false && !item.proof && (
+                              <div style={{ fontSize: 11, color: "var(--c-text-tertiary)", marginTop: 2 }}>No proof found</div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {verifyBatch.some(b => b.proof) && (
+                      <div style={{ display: "flex", gap: 12, marginBottom: 12 }}>
+                        <button onClick={downloadVerifyBatchZip} style={btnSolid}>Export proofs .zip</button>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* ── Single verify results ── */}
+                {verifyBatch.length === 0 && verifyResult && (
                   <div style={cardStyle}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
                       <span style={{ color: verifyResult.valid ? "#30d158" : "#ff453a", fontSize: 20 }}>●</span>
@@ -553,14 +650,12 @@ export default function MakerPage() {
                           {c.status === "pass" ? "✓" : c.status === "fail" ? "✗" : "—"}
                         </span>
                         <span>{c.label}</span>
-                        {c.detail && <span style={{ color: "var(--c-text-tertiary)", fontSize: 12 }}>{c.detail}</span>}
                       </div>
                     ))}
                   </div>
                 )}
 
-                {/* File digest match */}
-                {fileDigestMatch !== null && !verifyProof && (
+                {verifyBatch.length === 0 && fileDigestMatch !== null && !verifyProof && (
                   <div style={cardStyle}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <span style={{ color: fileDigestMatch ? "#30d158" : "#ff6b35", fontSize: 20 }}>●</span>
@@ -571,8 +666,7 @@ export default function MakerPage() {
                   </div>
                 )}
 
-                {/* Show the proof if found */}
-                {verifyProof && (
+                {verifyBatch.length === 0 && verifyProof && (
                   <div style={cardStyle}>
                     <div style={{ fontSize: 12, fontWeight: 600, color: "var(--c-text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 12 }}>
                       Proof details
@@ -583,7 +677,6 @@ export default function MakerPage() {
                     <div style={{ display: "flex", gap: 12, fontSize: 12, color: "var(--c-text-tertiary)", flexWrap: "wrap" }}>
                       {verifyProof.commit.counter && <span>Counter #{verifyProof.commit.counter}</span>}
                       <span>{verifyProof.environment?.enforcement === "measured-tee" ? "Hardware Enclave" : "Software"}</span>
-                      {verifyProof.commit.time && <span>{new Date(verifyProof.commit.time).toLocaleString()}</span>}
                       {verifyProof.attribution?.name && <span>By: {verifyProof.attribution.name}</span>}
                     </div>
                   </div>
