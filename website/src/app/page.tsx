@@ -214,7 +214,7 @@ export default function OCCPage() {
               multiple
               onFile={(f) => handleFiles([f])}
               onFiles={handleFiles}
-              hint={"Prove or verify your files.\nYour file is the key."}
+              hint={"Prove or verify.\nYour file is your key."}
             />
           </div>
         )}
