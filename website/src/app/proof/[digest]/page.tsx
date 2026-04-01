@@ -243,7 +243,7 @@ function Field({ label, value, mono: isMono, highlight, link }: { label: string;
         <span style={{
           fontSize: isMono ? 11 : 13,
           fontFamily: isMono ? mono : "inherit",
-          color: copied ? "#34d399" : highlight ? "var(--c-accent)" : "var(--c-text-secondary)",
+          color: copied ? "#1A73E8" : highlight ? "var(--c-accent)" : "var(--c-text-secondary)",
           fontWeight: highlight ? 700 : 400,
           wordBreak: "break-all", textAlign: "right",
           transition: "color .2s", lineHeight: 1.4,
