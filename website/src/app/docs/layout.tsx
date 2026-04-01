@@ -28,7 +28,6 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <>
-    <Nav />
     <div style={{ maxWidth: 1120, margin: "0 auto", padding: "32px 24px 64px" }}>
       <div style={{ display: "flex", gap: 48 }}>
         {/* Sidebar — desktop only */}
