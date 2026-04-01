@@ -154,7 +154,7 @@ export function Chat({ proofContext, preloadedQuestions }: ChatProps) {
   }
 
   return (
-    <div
+    <div className="occ-chat-panel"
       style={{
         position: "fixed",
         bottom: 24,
@@ -318,7 +318,7 @@ export function Chat({ proofContext, preloadedQuestions }: ChatProps) {
             borderRadius: 10,
             padding: "10px 14px",
             color: "#fff",
-            fontSize: 14,
+            fontSize: 16,
             outline: "none",
           }}
         />
@@ -344,6 +344,17 @@ export function Chat({ proofContext, preloadedQuestions }: ChatProps) {
         @keyframes blink {
           0%, 50% { opacity: 1; }
           51%, 100% { opacity: 0; }
+        }
+        @media (max-width: 500px) {
+          .occ-chat-panel {
+            inset: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            height: 100% !important;
+            max-height: 100% !important;
+            border-radius: 0 !important;
+            border: none !important;
+          }
         }
       `}</style>
     </div>
