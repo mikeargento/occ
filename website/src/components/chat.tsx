@@ -198,9 +198,9 @@ export function Chat({ proofContext, preloadedQuestions }: ChatProps) {
             border: "none",
             color: "rgba(255,255,255,0.5)",
             cursor: "pointer",
-            fontSize: 20,
+            fontSize: 28,
             lineHeight: 1,
-            padding: "0 4px",
+            padding: "4px 8px",
           }}
         >
           &times;
