@@ -12,7 +12,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ dig
     if (proof) {
       return NextResponse.json({ proofs: [{ proof }] });
     }
-    return NextResponse.json({ proofs: [] });
+    // Debug: log what we tried
+    console.log("[api/proofs/digest] not found:", { digest, standardB64, bucket: process.env.LEDGER_BUCKET, region: process.env.LEDGER_REGION, hasKey: !!process.env.AWS_ACCESS_KEY_ID });
+    return NextResponse.json({ proofs: [], debug: { digest, standardB64, bucket: process.env.LEDGER_BUCKET ? "set" : "unset", key: process.env.AWS_ACCESS_KEY_ID ? "set" : "unset" } });
   } catch (e) {
     console.error("GET /api/proofs/digest error:", e);
     return NextResponse.json({ error: "Failed" }, { status: 500 });
