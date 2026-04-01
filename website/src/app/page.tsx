@@ -25,9 +25,6 @@ interface FileItem {
   status: "found" | "new" | "proving" | "proved" | "error";
 }
 
-function buildVerifyTxt(filename: string, p: OCCProof): string {
-  return `OCC Proof — ${filename}\nDigest: ${p.artifact.digestB64}\nCounter: #${p.commit.counter ?? "—"}\nSigner: ${p.signer.publicKeyB64}\nhttps://occ.wtf/docs\n`;
-}
 
 export default function OCCPage() {
   const [step, setStep] = useState<Step>("drop");
@@ -157,7 +154,6 @@ export default function OCCPage() {
       const prefix = multi ? `${base}/` : "";
       z[`${prefix}${f.name}`] = new Uint8Array(await f.arrayBuffer());
       z[`${prefix}proof.json`] = new TextEncoder().encode(JSON.stringify(p, null, 2));
-      z[`${prefix}VERIFY.txt`] = new TextEncoder().encode(buildVerifyTxt(f.name, p!));
     }
 
     // Fetch ETH anchors that bound these proofs (within the proof window + 12s)
