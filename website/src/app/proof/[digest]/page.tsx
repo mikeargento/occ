@@ -31,7 +31,8 @@ export default function ProofPage() {
           if (data.causalWindow) setCausalWindow(data.causalWindow);
           // Try to load cached file from IndexedDB
           try {
-            const digestB64 = decodeURIComponent(digestParam).replace(/-/g, "+").replace(/_/g, "/");
+            let digestB64 = decodeURIComponent(digestParam).replace(/-/g, "+").replace(/_/g, "/");
+            while (digestB64.length % 4 !== 0) digestB64 += "=";
             const db = await new Promise<IDBDatabase>((resolve, reject) => {
               const req = indexedDB.open("occ-files", 1);
               req.onupgradeneeded = () => req.result.createObjectStore("files");
