@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { FileDrop } from "@/components/file-drop";
 import { Nav, Footer } from "@/components/nav";
 import { Chat } from "@/components/chat";
@@ -34,6 +34,27 @@ export default function OCCPage() {
   const [exportProgress, setExportProgress] = useState({ current: 0, total: 0 });
   const [animCount, setAnimCount] = useState(0);
   const [chatOpen, setChatOpen] = useState(false);
+  const [anchorCountdown, setAnchorCountdown] = useState(0);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Start 12s countdown when proofs finish (waiting for next ETH anchor)
+  const startAnchorCountdown = () => {
+    setAnchorCountdown(12);
+    if (countdownRef.current) clearInterval(countdownRef.current);
+    countdownRef.current = setInterval(() => {
+      setAnchorCountdown(prev => {
+        if (prev <= 1) {
+          if (countdownRef.current) clearInterval(countdownRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  useEffect(() => {
+    return () => { if (countdownRef.current) clearInterval(countdownRef.current); };
+  }, []);
 
   const found = items.filter(i => i.status === "found" || i.status === "proved");
   const unproven = items.filter(i => i.status === "new");
@@ -127,6 +148,7 @@ export default function OCCPage() {
     }
 
     setStep("results");
+    startAnchorCountdown();
 
     // Animate new count
     const newTotal = items.filter(i => i.status === "found").length + toProve.length;
@@ -347,8 +369,13 @@ export default function OCCPage() {
                 </button>
               )}
               {found.length > 0 && (
-                <button onClick={downloadZip} style={allDone ? btnFill : btnOut}>
-                  Download .zip
+                <button
+                  onClick={anchorCountdown > 0 ? undefined : downloadZip}
+                  style={{
+                    ...(anchorCountdown > 0 ? { ...btnOut, opacity: 0.5, cursor: "default" } : allDone ? btnFill : btnOut),
+                  }}
+                >
+                  {anchorCountdown > 0 ? `Sealing with Ethereum... ${anchorCountdown}s` : "Download .zip"}
                 </button>
               )}
               <button onClick={reset} style={btnOut}>
