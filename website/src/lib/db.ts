@@ -176,6 +176,36 @@ export async function getCausalWindow(epochId: string, counter: string): Promise
   };
 }
 
+/* ── Get all ETH anchors after a given proof (by indexed_at) ── */
+
+export async function getAnchorsAfterProof(digestB64: string): Promise<Array<{ counter: string; attrName: string; blockNumber: number | null; proofJson: Record<string, unknown> }>> {
+  const sql = getDb();
+
+  // Find the indexed_at of this proof
+  const proofRows = await sql`SELECT indexed_at FROM proofs WHERE digest_b64 = ${digestB64} ORDER BY indexed_at ASC LIMIT 1`;
+  if (proofRows.length === 0) return [];
+  const indexedAt = proofRows[0].indexed_at as string;
+
+  // Get all ETH anchors indexed after this proof
+  const rows = await sql`SELECT counter, attr_name, proof_json
+    FROM proofs
+    WHERE attr_name LIKE 'Ethereum%'
+      AND indexed_at > ${indexedAt}
+    ORDER BY indexed_at ASC
+    LIMIT 50`;
+
+  return rows.map(r => {
+    const attrName = r.attr_name as string;
+    const blockMatch = attrName.match(/#(\d+)/);
+    return {
+      counter: r.counter as string,
+      attrName,
+      blockNumber: blockMatch ? Number(blockMatch[1]) : null,
+      proofJson: r.proof_json as Record<string, unknown>,
+    };
+  });
+}
+
 /* ── Reset ── */
 
 export async function resetProofs() {
