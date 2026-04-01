@@ -21,27 +21,27 @@
   --color-warning: #eab308;
   --color-error: #ef4444;
   --color-info: #3b82f6;
-  --font-sans: acumin-pro, -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
-  --font-serif: acumin-pro, -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
-  --font-mono: acumin-pro, -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  --font-serif: var(--font-inter), Georgia, serif;
+  --font-mono: var(--font-jetbrains-mono), "SF Mono", SFMono-Regular, monospace;
 }
 
-/* ── Design Tokens — dark only ── */
+/* ── Design Tokens ── */
 :root {
-  --bg: #050505;
-  --bg-elevated: #0c0d0c;
-  --bg-subtle: #121312;
-  --c-border: #1c1e1c;
-  --c-border-subtle: #161816;
-  --c-text: #e8ece8;
-  --c-text-secondary: #8a9a8e;
-  --c-text-tertiary: #4a5a4e;
-  --c-accent: #34d399;
-  --c-accent-dim: #059669;
-  --c-syntax-key: #6cb4f0;
-  --c-syntax-string: #34d399;
-  --c-syntax-number: #f0c060;
-  color-scheme: dark;
+  --bg: #ffffff;
+  --bg-elevated: #f9fafb;
+  --bg-subtle: #f3f4f6;
+  --c-border: #e5e7eb;
+  --c-border-subtle: #f0f0f0;
+  --c-text: #111827;
+  --c-text-secondary: #6b7280;
+  --c-text-tertiary: #9ca3af;
+  --c-accent: #1A73E8;
+  --c-accent-dim: #4A90E2;
+  --c-syntax-key: #2563eb;
+  --c-syntax-string: #059669;
+  --c-syntax-number: #d97706;
+  color-scheme: light;
 }
 
 /* ── Base ── */
@@ -64,7 +64,7 @@ h1 {
 }
 
 ::selection {
-  background: rgba(52, 211, 153, 0.15);
+  background: rgba(0, 0, 0, 0.08);
 }
 
 /* ── Scrollbar ── */

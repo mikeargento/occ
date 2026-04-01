@@ -228,9 +228,9 @@ export default function OCCPage() {
   function reset() { setStep("drop"); setItems([]); setAnimCount(0); }
 
   /* ── Styles ── */
-  const card: React.CSSProperties = { border: "1px solid rgba(52,211,153,0.25)", padding: "24px 20px", background: "rgba(52,211,153,0.02)", borderRadius: 16, marginBottom: 16 };
-  const btnFill: React.CSSProperties = { height: 52, fontSize: 15, fontWeight: 600, border: "none", borderRadius: 12, background: "var(--c-accent)", color: "var(--bg)", cursor: "pointer", flex: 1, letterSpacing: "-0.01em" };
-  const btnOut: React.CSSProperties = { height: 52, fontSize: 15, fontWeight: 500, borderRadius: 12, cursor: "pointer", flex: 1, border: "1px solid rgba(52,211,153,0.30)", background: "transparent", color: "var(--c-text)" };
+  const card: React.CSSProperties = { border: "1px solid #e5e7eb", padding: "24px 20px", background: "#fff", borderRadius: 16, marginBottom: 16 };
+  const btnFill: React.CSSProperties = { height: 52, fontSize: 15, fontWeight: 600, border: "none", borderRadius: 12, background: "#1A73E8", color: "#111827", cursor: "pointer", flex: 1, letterSpacing: "-0.01em" };
+  const btnOut: React.CSSProperties = { height: 52, fontSize: 15, fontWeight: 500, borderRadius: 12, cursor: "pointer", flex: 1, border: "1px solid #d1d5db", background: "#fff", color: "#111827" };
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--c-text)", display: "flex", flexDirection: "column" }}>
@@ -239,7 +239,7 @@ export default function OCCPage() {
         @keyframes countPop { 0% { transform: scale(0.5); opacity: 0 } 50% { transform: scale(1.15) } 100% { transform: scale(1); opacity: 1 } }
         @keyframes slideIn { from { opacity: 0; transform: translateY(12px) } to { opacity: 1; transform: translateY(0) } }
         @keyframes pulse { 0%, 100% { opacity: 1 } 50% { opacity: 0.4 } }
-        @keyframes glow { 0%, 100% { box-shadow: 0 0 20px rgba(52,211,153,0.1) } 50% { box-shadow: 0 0 40px rgba(52,211,153,0.2) } }
+        @keyframes glow { 0%, 100% { box-shadow: none } 50% { box-shadow: none } }
       `}</style>
       <Nav />
 
@@ -269,7 +269,7 @@ export default function OCCPage() {
             </div>
             <div style={{ fontSize: 15, color: "var(--c-text-tertiary)", fontWeight: 500 }}>Scanning</div>
             <div style={{ width: "40%", height: 2, borderRadius: 1, background: "var(--c-border-subtle)", overflow: "hidden", margin: "20px auto 0" }}>
-              <div style={{ width: `${(scanProgress.current / scanProgress.total) * 100}%`, height: "100%", background: "#34d399", transition: "width 0.2s", boxShadow: "0 0 12px rgba(52,211,153,0.5)" }} />
+              <div style={{ width: `${(scanProgress.current / scanProgress.total) * 100}%`, height: "100%", background: "#1A73E8", transition: "width 0.2s", boxShadow: "none" }} />
             </div>
           </div>
         )}
@@ -277,7 +277,7 @@ export default function OCCPage() {
         {/* ── Proving ── */}
         {step === "proving" && (
           <div style={{ textAlign: "center", padding: "80px 24px", animation: "slideIn 0.3s ease-out" }}>
-            <div style={{ fontSize: 64, fontWeight: 800, color: "#34d399", marginBottom: 8, fontFamily: "monospace", animation: "pulse 1s ease-in-out infinite", textShadow: "0 0 40px rgba(52,211,153,0.4)", letterSpacing: "-0.04em" }}>
+            <div style={{ fontSize: 64, fontWeight: 800, color: "#059669", marginBottom: 8, fontFamily: "monospace", animation: "pulse 1s ease-in-out infinite", textShadow: "none", letterSpacing: "-0.04em" }}>
               {unproven.length}
             </div>
             <div style={{ fontSize: 15, color: "var(--c-text-tertiary)", fontWeight: 500 }}>Signing in enclave</div>
@@ -289,7 +289,7 @@ export default function OCCPage() {
           <div style={{ textAlign: "center", padding: "80px 24px", animation: "slideIn 0.3s ease-out" }}>
             <div style={{ fontSize: 15, color: "var(--c-text-secondary)", marginBottom: 16, fontWeight: 500 }}>Packaging</div>
             <div style={{ width: "40%", height: 2, borderRadius: 1, background: "var(--c-border-subtle)", overflow: "hidden", margin: "0 auto" }}>
-              <div style={{ width: `${(exportProgress.current / exportProgress.total) * 100}%`, height: "100%", background: "#34d399", transition: "width 0.15s", boxShadow: "0 0 12px rgba(52,211,153,0.5)" }} />
+              <div style={{ width: `${(exportProgress.current / exportProgress.total) * 100}%`, height: "100%", background: "#1A73E8", transition: "width 0.15s", boxShadow: "none" }} />
             </div>
           </div>
         )}
@@ -304,7 +304,7 @@ export default function OCCPage() {
                 fontSize: 96, fontWeight: 800, letterSpacing: "-0.06em",
                 color: allDone ? "#34d399" : "#fff",
                 fontFamily: "monospace", lineHeight: 1, animation: "countPop 0.4s ease-out",
-                textShadow: allDone ? "0 0 60px rgba(52,211,153,0.4)" : "none",
+                textShadow: "none",
               }}>
                 {animCount}
               </div>
@@ -341,7 +341,7 @@ export default function OCCPage() {
             <div style={card}>
               {items.map((item, i) => (
                 <div key={item.file.name + i} style={{
-                  padding: "12px 0", borderTop: i > 0 ? "1px solid rgba(52,211,153,0.2)" : "none",
+                  padding: "12px 0", borderTop: i > 0 ? "1px solid #e5e7eb" : "none",
                   display: "flex", alignItems: "flex-start", gap: 10,
                   animation: `slideIn 0.2s ease-out ${i * 0.05}s both`,
                 }}>
@@ -369,10 +369,10 @@ export default function OCCPage() {
                       </div>
                     )}
                     {item.status === "found" && item.valid && (
-                      <div style={{ fontSize: 11, color: "#34d399", marginTop: 2 }}>Signature valid</div>
+                      <div style={{ fontSize: 11, color: "#059669", marginTop: 2 }}>Signature valid</div>
                     )}
                     {item.status === "proved" && (
-                      <div style={{ fontSize: 11, color: "#34d399", marginTop: 2 }}>Just proved</div>
+                      <div style={{ fontSize: 11, color: "#059669", marginTop: 2 }}>Just proved</div>
                     )}
                     {item.status === "new" && (
                       <div style={{ fontSize: 11, color: "var(--c-text-tertiary)", marginTop: 2 }}>Not yet proven</div>
@@ -383,7 +383,7 @@ export default function OCCPage() {
                       style={{
                         fontSize: 15, fontWeight: 600, color: "var(--bg)", textDecoration: "none",
                         flexShrink: 0, padding: "8px 24px", borderRadius: 980,
-                        background: "#34d399",
+                        background: "#1A73E8",
                       }}>
                       View
                     </a>

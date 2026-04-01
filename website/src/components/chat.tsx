@@ -133,7 +133,7 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
           onClick={() => { setOpen(true); onOpenChange?.(true); }}
           style={{
             background: "none",
-            border: "1px solid rgba(52,211,153,0.30)",
+            border: "1px solid rgba(26,115,232,0.30)",
             borderRadius: 980,
             padding: "12px 28px",
             color: "var(--c-text-secondary)",
@@ -145,11 +145,11 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
             transition: "all 0.2s",
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = "rgba(52,211,153,0.4)";
-            e.currentTarget.style.color = "#34d399";
+            e.currentTarget.style.borderColor = "rgba(26,115,232,0.4)";
+            e.currentTarget.style.color = "#1A73E8";
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = "rgba(52,211,153,0.30)";
+            e.currentTarget.style.borderColor = "rgba(26,115,232,0.30)";
             e.currentTarget.style.color = "var(--c-text-secondary)";
           }}
         >
@@ -242,9 +242,9 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
                   transition: "all 0.15s",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "rgba(52,211,153,0.1)";
-                  e.currentTarget.style.borderColor = "rgba(52,211,153,0.3)";
-                  e.currentTarget.style.color = "#34d399";
+                  e.currentTarget.style.background = "rgba(26,115,232,0.1)";
+                  e.currentTarget.style.borderColor = "rgba(26,115,232,0.3)";
+                  e.currentTarget.style.color = "#1A73E8";
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.background = "var(--bg-elevated)";
@@ -270,7 +270,7 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
               style={{
                 background:
                   msg.role === "user"
-                    ? "#34d399"
+                    ? "#1A73E8"
                     : "var(--bg-elevated)",
                 color: msg.role === "user" ? "var(--bg)" : "var(--c-text)",
                 borderRadius:
@@ -292,7 +292,7 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
                     display: "inline-block",
                     width: 6,
                     height: 14,
-                    background: "#34d399",
+                    background: "#1A73E8",
                     marginLeft: 2,
                     animation: "blink 1s infinite",
                     verticalAlign: "text-bottom",

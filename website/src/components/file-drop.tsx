@@ -100,7 +100,7 @@ export function FileDrop({
           ? "border-text/40 bg-text/5 ring-2 ring-text/10 ring-offset-2 ring-offset-bg scale-[1.01]"
           : hasFiles
           ? "border-border bg-bg-elevated"
-          : "border-accent/30 bg-bg-elevated/50 hover:border-accent/50 hover:bg-bg-elevated"
+          : "border-border bg-bg-elevated hover:border-border-subtle hover:bg-bg-subtle"
         }
       `}
     >
@@ -208,7 +208,7 @@ export function FileDrop({
               <path d="M3 14v2a1 1 0 001 1h12a1 1 0 001-1v-2" />
             </svg>
           </div>
-          <div className="text-[22px] font-semibold tracking-tight" style={{ color: "#34d399" }}>
+          <div className="text-[22px] font-semibold tracking-tight" style={{ color: "#1A73E8" }}>
             {multiple
               ? <>Drop files or <label htmlFor="occ-file-input" className="cursor-pointer" onClick={(e) => e.stopPropagation()}>{browseLabel}</label></>
               : <>Drop a file or <label htmlFor="occ-file-input" className="cursor-pointer" onClick={(e) => e.stopPropagation()}>{browseLabel}</label></>

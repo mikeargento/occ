@@ -68,7 +68,7 @@ export default function ProofPage() {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
             <span style={{ fontSize: 28, fontWeight: 900, fontFamily: '"good-times", sans-serif' }}>
-              <span style={{ color: "#fff" }}>OCC</span>{" "}
+              <span style={{ color: "#111827" }}>OCC</span>{" "}
               <span style={{ color: "var(--c-accent)" }}>{isEth ? "Anchor" : "Proof"} #{commit.counter}</span>
             </span>
           </div>
@@ -95,35 +95,35 @@ export default function ProofPage() {
         {causalWindow && (causalWindow.anchorBefore || causalWindow.anchorAfter) && (
           <div style={{
             marginBottom: 20, padding: "16px 20px", borderRadius: 12,
-            background: "rgba(52,211,153,.04)", border: "1px solid rgba(52,211,153,.15)",
+            background: "rgba(26,115,232,.04)", border: "1px solid rgba(26,115,232,.15)",
           }}>
-            <div style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em", color: "#34d399", marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{ width: 3, height: 12, borderRadius: 1, background: "#34d399" }} />
+            <div style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em", color: "#1A73E8", marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ width: 3, height: 12, borderRadius: 1, background: "#1A73E8" }} />
               Causal Window
             </div>
             <div style={{ fontSize: 13, color: "var(--c-text-secondary)", lineHeight: 1.7 }}>
               {causalWindow.anchorBefore && causalWindow.anchorAfter ? (
-                <>Between <a href={causalWindow.anchorBefore.etherscanUrl || "#"} target="_blank" rel="noopener" style={{ color: "#34d399", textDecoration: "none", fontWeight: 600 }}>Ethereum #{causalWindow.anchorBefore.blockNumber}</a> and <a href={causalWindow.anchorAfter.etherscanUrl || "#"} target="_blank" rel="noopener" style={{ color: "#34d399", textDecoration: "none", fontWeight: 600 }}>Ethereum #{causalWindow.anchorAfter.blockNumber}</a></>
+                <>Between <a href={causalWindow.anchorBefore.etherscanUrl || "#"} target="_blank" rel="noopener" style={{ color: "#1A73E8", textDecoration: "none", fontWeight: 600 }}>Ethereum #{causalWindow.anchorBefore.blockNumber}</a> and <a href={causalWindow.anchorAfter.etherscanUrl || "#"} target="_blank" rel="noopener" style={{ color: "#1A73E8", textDecoration: "none", fontWeight: 600 }}>Ethereum #{causalWindow.anchorAfter.blockNumber}</a></>
               ) : causalWindow.anchorAfter ? (
-                <>Sealed by <a href={causalWindow.anchorAfter.etherscanUrl || "#"} target="_blank" rel="noopener" style={{ color: "#34d399", textDecoration: "none", fontWeight: 600 }}>Ethereum #{causalWindow.anchorAfter.blockNumber}</a></>
+                <>Sealed by <a href={causalWindow.anchorAfter.etherscanUrl || "#"} target="_blank" rel="noopener" style={{ color: "#1A73E8", textDecoration: "none", fontWeight: 600 }}>Ethereum #{causalWindow.anchorAfter.blockNumber}</a></>
               ) : causalWindow.anchorBefore ? (
-                <>After <a href={causalWindow.anchorBefore.etherscanUrl || "#"} target="_blank" rel="noopener" style={{ color: "#34d399", textDecoration: "none", fontWeight: 600 }}>Ethereum #{causalWindow.anchorBefore.blockNumber}</a> — awaiting next anchor</>
+                <>After <a href={causalWindow.anchorBefore.etherscanUrl || "#"} target="_blank" rel="noopener" style={{ color: "#1A73E8", textDecoration: "none", fontWeight: 600 }}>Ethereum #{causalWindow.anchorBefore.blockNumber}</a> — awaiting next anchor</>
               ) : null}
             </div>
             <div style={{ marginTop: 12, display: "flex", alignItems: "center", fontSize: 11, fontFamily: mono }}>
               {causalWindow.anchorBefore && (
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#34d399", flexShrink: 0 }} />
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#1A73E8", flexShrink: 0 }} />
                   <span style={{ color: "var(--c-text-tertiary)" }}>#{causalWindow.anchorBefore.counter}</span>
                 </div>
               )}
-              <div style={{ flex: 1, height: 1, background: "rgba(52,211,153,.25)", margin: "0 8px", position: "relative" }}>
+              <div style={{ flex: 1, height: 1, background: "rgba(26,115,232,.25)", margin: "0 8px", position: "relative" }}>
                 <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 10, height: 10, borderRadius: "50%", background: "var(--c-accent)", border: "2px solid var(--bg-elevated)" }} />
               </div>
               {causalWindow.anchorAfter ? (
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   <span style={{ color: "var(--c-text-tertiary)" }}>#{causalWindow.anchorAfter.counter}</span>
-                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#34d399", flexShrink: 0 }} />
+                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#1A73E8", flexShrink: 0 }} />
                 </div>
               ) : (
                 <span style={{ color: "var(--c-text-tertiary)" }}>pending</span>
@@ -205,12 +205,12 @@ function Shell({ children }: { children: React.ReactNode }) {
 
 function Card({ title, children }: { title: string; accent?: string; children: React.ReactNode }) {
   return (
-    <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14, overflow: "hidden" }}>
+    <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 14, overflow: "hidden" }}>
       <div style={{
         fontSize: 14, fontWeight: 700, letterSpacing: "0.04em",
-        color: "#34d399", padding: "14px 18px",
-        background: "rgba(52,211,153,0.04)",
-        borderBottom: "1px solid rgba(255,255,255,0.04)",
+        color: "#1A73E8", padding: "14px 18px",
+        background: "rgba(26,115,232,0.04)",
+        borderBottom: "1px solid #f0f0f0",
       }}>
         {title}
       </div>
@@ -231,10 +231,10 @@ function Field({ label, value, mono: isMono, highlight, link }: { label: string;
       onClick={() => { navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
       style={{
         display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12,
-        padding: "10px 18px", borderBottom: "1px solid rgba(255,255,255,0.03)", cursor: "pointer",
+        padding: "10px 18px", borderBottom: "1px solid #f0f0f0", cursor: "pointer",
       }}
     >
-      <span style={{ fontSize: 13, color: "rgba(255,255,255,0.4)", flexShrink: 0, minWidth: 80 }}>{label}</span>
+      <span style={{ fontSize: 13, color: "#6b7280", flexShrink: 0, minWidth: 80 }}>{label}</span>
       {link ? (
         <a href={value} target="_blank" rel="noopener" onClick={(e) => e.stopPropagation()} style={{
           fontSize: 12, color: "var(--c-accent)", textDecoration: "none", wordBreak: "break-all", textAlign: "right",
@@ -270,12 +270,12 @@ function JsonToggle({ proof }: { proof: OCCProof }) {
   }
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}
+    <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}
       onClick={() => setOpen(false)}>
-      <div style={{ width: "100%", maxWidth: 700, maxHeight: "80vh", display: "flex", flexDirection: "column", background: "#0a0a0a", borderRadius: 16, border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden" }}
+      <div style={{ width: "100%", maxWidth: 700, maxHeight: "80vh", display: "flex", flexDirection: "column", background: "#fff", borderRadius: 16, border: "1px solid #e5e7eb", overflow: "hidden" }}
         onClick={(e) => e.stopPropagation()}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-          <span style={{ fontSize: 14, fontWeight: 600, color: "#34d399" }}>Proof JSON</span>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderBottom: "1px solid #e5e7eb" }}>
+          <span style={{ fontSize: 14, fontWeight: 600, color: "#1A73E8" }}>Proof JSON</span>
           <div style={{ display: "flex", gap: 8 }}>
             <button onClick={() => { navigator.clipboard.writeText(json); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
               style={{ ...btnStyle, fontSize: 12, padding: "5px 12px", color: copied ? "#34d399" : "var(--c-text-secondary)" }}>
@@ -285,7 +285,7 @@ function JsonToggle({ proof }: { proof: OCCProof }) {
           </div>
         </div>
         <pre style={{
-          fontSize: 12, lineHeight: 1.6, color: "#7edcb5", padding: 18, margin: 0,
+          fontSize: 12, lineHeight: 1.6, color: "#374151", padding: 18, margin: 0, background: "#f9fafb",
           overflow: "auto", flex: 1, whiteSpace: "pre-wrap", wordBreak: "break-all",
         }}>
           {json}
