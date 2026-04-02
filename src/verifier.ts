@@ -27,6 +27,47 @@
  *   - Verifiers requiring measured-tee guarantees MUST combine
  *     requireEnforcement with allowedMeasurements and requireAttestation.
  *   - The measurement allowlist is the primary cryptographic trust anchor.
+ *
+ * ## Compliant Verifier Requirements
+ *
+ * Any implementation that claims to verify OCC proofs MUST perform ALL of
+ * the following steps:
+ *
+ *   1. **Ed25519 signature verification** — Reconstruct the canonical
+ *      SignedBody from proof fields (version, artifact, commit, publicKeyB64,
+ *      enforcement, measurement, attestationFormat, and optional actor,
+ *      attribution, policy, principal). Canonicalize deterministically and
+ *      verify signer.signatureB64 over those bytes using signer.publicKeyB64.
+ *
+ *   2. **Attestation binding** — If environment.attestation is present, the
+ *      decoded attestation report MUST contain user_data equal to SHA-256 of
+ *      the same canonical SignedBody bytes. This binds the TEE hardware
+ *      attestation to the exact signed content. Platform-specific report
+ *      parsing is out of scope for this library but MUST be performed by
+ *      production verifiers.
+ *
+ *   3. **Slot allocation verification** — If slotAllocation is present:
+ *      (a) verify Ed25519 signature over the canonical slot body,
+ *      (b) verify commit.slotHashB64 == SHA-256(canonicalize(slotBody)),
+ *      (c) verify slot.nonceB64 == commit.nonceB64,
+ *      (d) verify slot.counter < commit.counter.
+ *      The slot body includes chainId when present.
+ *
+ *   4. **Chain linking (prevB64)** — If commit.prevB64 is present, verify it
+ *      equals SHA-256(canonicalize(previousProof)) of the immediately
+ *      preceding proof in the same chain. Single-proof verifiers may skip
+ *      this but MUST document that chain integrity is not verified.
+ *
+ *   5. **Measurement policy enforcement** — Maintain an allowlist of trusted
+ *      measurements (PCR0 hashes). Proofs with unknown measurements MUST be
+ *      rejected in production. The measurement is signed (inside SignedBody)
+ *      so it is tamper-evident, but self-reported — attestation verification
+ *      (step 2) makes it trustworthy.
+ *
+ *   6. **metadata is advisory and unsigned** — proof.metadata is NOT covered
+ *      by the Ed25519 signature. It MUST NOT be treated as authenticated.
+ *      Only fields inside the SignedBody are cryptographically bound.
+ *      Attribution, policy, principal, and actor ARE in the signed body.
  */
 
 import { createVerify, createHash } from "node:crypto";
@@ -682,6 +723,7 @@ async function verifySlotAllocation(proof: OCCProof): Promise<string | null> {
     time: slot.time,
     epochId: slot.epochId,
     publicKeyB64: slot.publicKeyB64,
+    ...(slot.chainId ? { chainId: slot.chainId } : {}),
   };
   const slotCanonicalBytes = canonicalize(slotBody);
 
@@ -712,15 +754,15 @@ async function verifySlotAllocation(proof: OCCProof): Promise<string | null> {
   }
 
   // 3. Confirm slot body has no artifact data (causal independence)
-  // The slot body schema is { version, nonceB64, counter, time, epochId, publicKeyB64 }.
-  // If any artifact-related field were present, it would break the causal argument.
-  // This check is structural: the slot body type does not include digestB64 or artifact.
-  // We verify defensively against any unexpected fields.
-  const slotBodyKeys = Object.keys(slotBody).sort();
-  const expectedKeys = ["counter", "epochId", "nonceB64", "publicKeyB64", "time", "version"];
-  if (slotBodyKeys.length !== expectedKeys.length ||
-      !slotBodyKeys.every((k, i) => k === expectedKeys[i])) {
-    return "slotAllocation body contains unexpected fields — causal independence violated";
+  // The slot body contains: version, nonceB64, counter, time, epochId, publicKeyB64,
+  // and optionally chainId. If any artifact-related field were present, it would
+  // break the causal argument. We reject known artifact fields defensively.
+  const forbiddenKeys = new Set(["digestB64", "artifact", "hashAlg", "signatureB64"]);
+  const slotBodyKeys = Object.keys(slotBody);
+  for (const key of slotBodyKeys) {
+    if (forbiddenKeys.has(key)) {
+      return `slotAllocation body contains forbidden field '${key}' — causal independence violated`;
+    }
   }
 
   // 4. Verify signed binding: SHA-256(canonicalize(slotBody)) === commit.slotHashB64

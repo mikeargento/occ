@@ -707,6 +707,8 @@ export interface SlotAllocation {
   epochId: string;
   /** Enclave Ed25519 public key. Must match signer.publicKeyB64. */
   publicKeyB64: string;
+  /** Chain isolation identifier. Omitted for the default "global" chain. */
+  chainId?: string;
   /** Ed25519 signature over canonical slot body (all fields above). */
   signatureB64: string;
 }

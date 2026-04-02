@@ -159,6 +159,7 @@ function getAllChainStates(): Map<string, ChainState> {
 // ---------------------------------------------------------------------------
 
 const CHALLENGE_TTL_MS = 60_000; // 60 seconds
+const MAX_PENDING_CHALLENGES = 500;
 const pendingChallenges = new Map<string, number>(); // challenge → expiresAt
 
 // Validated batch agency — allows batch proofs 2..N to inherit actor identity.
@@ -190,6 +191,10 @@ function cleanExpiredChallenges(): void {
 async function handleChallenge(): Promise<{ challenge: string }> {
   cleanExpiredChallenges();
 
+  if (pendingChallenges.size >= MAX_PENDING_CHALLENGES) {
+    throw new Error("Too many pending challenges — try again later");
+  }
+
   // Generate fresh nonce from NSM hardware RNG
   const nonceBytes = await nitroHost.getFreshNonce();
   const challenge = Buffer.from(nonceBytes).toString("base64");
@@ -208,6 +213,7 @@ async function handleChallenge(): Promise<{ challenge: string }> {
 // ---------------------------------------------------------------------------
 
 const SLOT_TTL_MS = 120_000; // 2 minutes
+const MAX_PENDING_SLOTS = 1000;
 
 interface SlotEntry {
   record: SlotAllocation;
@@ -242,6 +248,10 @@ function cleanExpiredSlots(): void {
  */
 async function handleAllocateSlot(chainId?: string): Promise<{ slotId: string; slot: SlotAllocation; chainId: string }> {
   cleanExpiredSlots();
+
+  if (pendingSlots.size >= MAX_PENDING_SLOTS) {
+    throw new Error("Too many pending slots — try again later");
+  }
 
   // 1. Get or create the chain, then increment its counter.
   const chain = getChain(chainId);
@@ -546,6 +556,7 @@ async function handleCommit(req: {
     counter: slotRecord.counter,
     epochId: slotRecord.epochId,
     publicKeyB64: slotRecord.publicKeyB64,
+    ...(slotRecord.chainId ? { chainId: slotRecord.chainId } : {}),
   };
   const slotHashB64 = Buffer.from(sha256(canonicalize(slotBody))).toString("base64");
 
@@ -992,3 +1003,12 @@ const SOCKET_PATH = "/app/enclave.sock";
 server.listen(SOCKET_PATH, () => {
   console.log(`[enclave] listening on ${SOCKET_PATH}`);
 });
+
+// Periodic cleanup — sweep expired slots, challenges, and validated batches
+// every 30 seconds. The enclave is single-threaded (Node.js event loop), so
+// no race conditions with request handlers. Existing opportunistic cleanup
+// on each request is preserved — this catches idle-period accumulation.
+setInterval(() => {
+  cleanExpiredSlots();
+  cleanExpiredChallenges();
+}, 30_000);

@@ -84,6 +84,17 @@ import { verify } from "occproof";
 const result = await verify({ proof, bytes });
 ```
 
+### Verification checklist
+
+A compliant verifier MUST check:
+
+1. **Ed25519 signature** — canonical signed body covers artifact, commit, attribution, policy, principal, actor, measurement
+2. **Attestation binding** — attestation report's `userData` == SHA-256 of signed body (binds hardware attestation to exact content)
+3. **Slot allocation** — verify slot signature, confirm `slotHashB64` matches canonical slot body, confirm `slot.counter < commit.counter`
+4. **Chain linking** — `prevB64` matches SHA-256 of the previous proof in the same chain
+5. **Measurement policy** — enforce an allowlist of trusted PCR0 hashes; reject unknown measurements in production
+6. **metadata is unsigned** — `proof.metadata` is advisory only and NOT covered by the signature
+
 ---
 
 ## What OCC is NOT

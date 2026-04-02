@@ -37,6 +37,7 @@ const PORT = Number(
 
 const INDEX_URL = process.env["PROOF_INDEX_URL"] ?? "https://occ.wtf/api/proofs";
 const LEDGER_BUCKET = process.env["LEDGER_BUCKET"];
+const ALLOW_DEBUG_MODE = process.env["ALLOW_DEBUG_MODE"] === "true";
 
 if (LEDGER_BUCKET) {
   console.log(`[parent] S3 ledger enabled: ${LEDGER_BUCKET}`);
@@ -512,6 +513,21 @@ server.listen(PORT, async () => {
   } catch (err) {
     console.error(`[parent] enclave init failed: ${err instanceof Error ? err.message : String(err)}`);
     console.error(`[parent] enclave will start as genesis epoch`);
+  }
+
+  // Production safety: refuse to serve proofs from debug enclaves
+  try {
+    const keyInfo = await getKeyInfo();
+    if (/^0+$/.test(keyInfo.measurement)) {
+      if (!ALLOW_DEBUG_MODE) {
+        console.error("[parent] FATAL: enclave is in debug mode (measurement is all zeros).");
+        console.error("[parent] Set ALLOW_DEBUG_MODE=true to allow this. Shutting down.");
+        process.exit(1);
+      }
+      console.warn("[parent] WARNING: running with debug enclave (ALLOW_DEBUG_MODE=true)");
+    }
+  } catch (err) {
+    console.error(`[parent] Failed to verify enclave measurement: ${err instanceof Error ? err.message : String(err)}`);
   }
 });
 
