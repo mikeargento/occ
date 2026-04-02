@@ -114,7 +114,6 @@ export default function ProofPage() {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
             <span style={{ fontSize: 28, fontWeight: 900, fontFamily: 'var(--font-sans)' }}>
-              <span style={{ color: "#111827" }}>OCC</span>{" "}
               <span style={{ color: "var(--c-accent)" }}>{isEth ? "Anchor" : "Proof"} #{commit.counter}</span>
             </span>
           </div>
