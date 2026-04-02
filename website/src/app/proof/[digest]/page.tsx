@@ -221,6 +221,22 @@ export default function ProofPage() {
             {proof.environment?.attestation?.format && <Field label="Attestation Format" value={proof.environment.attestation.format} />}
           </Card>
 
+          {/* QR Code */}
+          <div style={{
+            background: "#fff", border: "1px solid #d0d5dd", borderRadius: 14,
+            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+            padding: 24, gap: 12,
+          }}>
+            <QRCodeSVG
+              value={typeof window !== "undefined" ? window.location.href : `https://occ.wtf/proof/${digestParam}`}
+              size={120}
+              level="M"
+              fgColor="#111827"
+              bgColor="#ffffff"
+            />
+            <span style={{ fontSize: 12, color: "#9ca3af" }}>Scan to verify</span>
+          </div>
+
           {attr && (
             <Card title="Attribution">
               {attr.name && <Field label="Name" value={attr.name} />}
@@ -238,22 +254,6 @@ export default function ProofPage() {
           )}
         </div>
 
-        {/* QR Code */}
-        <div style={{ display: "flex", justifyContent: "center", marginTop: 32 }}>
-          <div style={{
-            background: "#fff", border: "1px solid #d0d5dd", borderRadius: 14,
-            padding: 24, display: "flex", flexDirection: "column", alignItems: "center", gap: 12,
-          }}>
-            <QRCodeSVG
-              value={typeof window !== "undefined" ? window.location.href : `https://occ.wtf/proof/${digestParam}`}
-              size={160}
-              level="M"
-              fgColor="#111827"
-              bgColor="#ffffff"
-            />
-            <span style={{ fontSize: 12, color: "#9ca3af" }}>Scan to verify this proof</span>
-          </div>
-        </div>
 
       </div>
     </Shell>
