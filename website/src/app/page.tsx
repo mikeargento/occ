@@ -38,27 +38,25 @@ export default function OCCPage() {
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Start 12s countdown when proofs finish (waiting for next ETH anchor)
+  const endTimeRef = useRef<number>(0);
   const startAnchorCountdown = () => {
+    endTimeRef.current = Date.now() + 12000;
     setAnchorCountdown(12);
     if (countdownRef.current) clearInterval(countdownRef.current);
     countdownRef.current = setInterval(() => {
-      setAnchorCountdown(prev => {
-        if (prev <= 1) {
-          if (countdownRef.current) clearInterval(countdownRef.current);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+      const remaining = Math.ceil((endTimeRef.current - Date.now()) / 1000);
+      if (remaining <= 0) {
+        setAnchorCountdown(0);
+        if (countdownRef.current) clearInterval(countdownRef.current);
+      } else {
+        setAnchorCountdown(remaining);
+      }
+    }, 250);
   };
 
   useEffect(() => {
-    document.body.style.overflow = step === "drop" ? "hidden" : "";
     if (step !== "drop") window.scrollTo(0, 0);
-    return () => {
-      document.body.style.overflow = "";
-      if (countdownRef.current) clearInterval(countdownRef.current);
-    };
+    return () => { if (countdownRef.current) clearInterval(countdownRef.current); };
   }, [step]);
 
   const found = items.filter(i => i.status === "found" || i.status === "proved");
@@ -240,9 +238,9 @@ export default function OCCPage() {
   return (
     <div style={{ background: "var(--bg)", color: "var(--c-text)", display: "flex", flexDirection: "column" }}>
       <style>{`
-        .occ-wrap { width: 90%; max-width: 640px; margin: 0 auto; padding: 24px 0 80px; display: flex; flex-direction: column; align-items: stretch; gap: 24px; }
-        .occ-wrap.occ-drop { justify-content: center; height: calc(100dvh - 57px); padding-bottom: 24px; }
-        .occ-wrap .file-drop-container { flex: 1; max-height: 60vh; }
+        .occ-wrap { width: 90%; max-width: 640px; margin: 0 auto; padding: 40px 0 80px; display: flex; flex-direction: column; align-items: stretch; gap: 24px; }
+        .occ-wrap .file-drop-container { height: 360px; }
+        @media (max-width: 640px) { .occ-wrap .file-drop-container { height: 280px; } }
         @keyframes countPop { 0% { transform: scale(0.5); opacity: 0 } 50% { transform: scale(1.15) } 100% { transform: scale(1); opacity: 1 } }
         @keyframes slideIn { from { opacity: 0; transform: translateY(12px) } to { opacity: 1; transform: translateY(0) } }
         @keyframes pulse { 0%, 100% { opacity: 1 } 50% { opacity: 0.4 } }
@@ -250,7 +248,7 @@ export default function OCCPage() {
       `}</style>
       {/* Nav is in root layout */}
 
-      <div className={`occ-wrap${step === "drop" ? " occ-drop" : ""}`}>
+      <div className="occ-wrap">
 
         {/* ── Drop zone or Chat ── */}
         {step === "drop" && !chatOpen && (
