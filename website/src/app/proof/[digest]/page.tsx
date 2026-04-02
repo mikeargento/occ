@@ -110,9 +110,12 @@ export default function ProofPage() {
         @keyframes fadeIn { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:translateY(0) } }
         .proof-fields > div:last-child { border-bottom: none !important; }
         @media print {
-          body { background: #fff !important; }
+          body { background: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           #site-nav, .no-print { display: none !important; }
-          div { break-inside: avoid; }
+          main { padding: 0 !important; }
+          .proof-grid { display: block !important; }
+          .proof-grid > * { break-inside: avoid; margin-bottom: 12px; }
+          @page { margin: 0.5in; size: letter; }
         }
       `}</style>
 
@@ -188,7 +191,7 @@ export default function ProofPage() {
         )}
 
         {/* Cards grid */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
+        <div className="proof-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
 
           <Card title="Artifact">
             <Field label="Digest" value={proof.artifact.digestB64} mono />
