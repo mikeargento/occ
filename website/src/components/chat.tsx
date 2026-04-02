@@ -376,7 +376,18 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
         .occ-chat-md code { background: #e5e7eb; padding: 1px 5px; border-radius: 4px; font-size: 13px; }
         .occ-chat-md h1, .occ-chat-md h2, .occ-chat-md h3 { font-size: 14px; font-weight: 600; color: #111827; margin: 8px 0 4px; }
         @media (max-width: 640px) {
-          .occ-chat-panel { aspect-ratio: unset !important; height: calc(100vh - 160px) !important; max-height: none !important; }
+          .occ-chat-panel {
+            position: fixed !important;
+            inset: 56px 0 0 0 !important;
+            width: 100% !important;
+            height: auto !important;
+            aspect-ratio: unset !important;
+            max-height: none !important;
+            border-radius: 0 !important;
+            border: none !important;
+            border-top: 1px solid #e5e7eb !important;
+            z-index: 60 !important;
+          }
         }
       `}</style>
     </div>

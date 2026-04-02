@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-// Footer is in root layout
 
 const sections = [
   { href: "/docs", label: "Overview" },
@@ -21,101 +20,78 @@ const sections = [
 
 function SidebarNav({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
   return (
-    <>
-      <div style={{
-        fontSize: 11, fontWeight: 500, textTransform: "uppercase",
-        letterSpacing: "0.1em", color: "#9ca3af", marginBottom: 16, paddingTop: 8,
-      }}>
-        Documentation
-      </div>
-      <nav style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-        {sections.map((s) => (
-          <Link key={s.href} href={s.href} onClick={onNavigate} style={{
-            display: "block", padding: "6px 12px", fontSize: 14,
-            fontWeight: pathname === s.href ? 600 : 400,
-            color: pathname === s.href ? "#1A73E8" : "#1A73E8",
-            textDecoration: "none", borderRadius: 6,
-            background: pathname === s.href ? "#f3f4f6" : "transparent",
-            transition: "all 0.15s",
-          }}>
-            {s.label}
-          </Link>
-        ))}
-      </nav>
-      <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid #e5e7eb" }}>
-        <a href="https://github.com/mikeargento/occ" target="_blank" rel="noopener" style={{
-          display: "block", padding: "6px 12px", fontSize: 13,
-          color: "#1A73E8", textDecoration: "none",
+    <nav style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+      {sections.map((s) => (
+        <Link key={s.href} href={s.href} onClick={onNavigate} style={{
+          display: "block", padding: "6px 12px", fontSize: 14,
+          fontWeight: pathname === s.href ? 600 : 400,
+          color: "#1A73E8",
+          textDecoration: "none", borderRadius: 6,
+          background: pathname === s.href ? "#f3f4f6" : "transparent",
         }}>
-          GitHub
-        </a>
-      </div>
-    </>
+          {s.label}
+        </Link>
+      ))}
+    </nav>
   );
 }
 
 export default function DocsLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const currentLabel = sections.find(s => s.href === pathname)?.label || "Docs";
 
   return (
-    <>
-      <div style={{ maxWidth: 1120, margin: "0 auto", padding: "32px 24px 64px" }}>
-        <div style={{ display: "flex", gap: 48 }}>
-          {/* Sidebar — desktop only */}
-          <aside className="hidden-mobile" style={{ width: 200, flexShrink: 0 }}>
-            <div style={{ position: "sticky", top: 88 }}>
-              <SidebarNav pathname={pathname} />
+    <div style={{ maxWidth: 1120, margin: "0 auto", padding: "32px 24px 80px" }}>
+      <div style={{ display: "flex", gap: 48 }}>
+        {/* Sidebar — desktop only */}
+        <aside className="hidden-mobile" style={{ width: 200, flexShrink: 0 }}>
+          <div style={{ position: "sticky", top: 88 }}>
+            <div style={{
+              fontSize: 11, fontWeight: 500, textTransform: "uppercase",
+              letterSpacing: "0.1em", color: "#9ca3af", marginBottom: 16, paddingTop: 8,
+            }}>
+              Documentation
             </div>
-          </aside>
+            <SidebarNav pathname={pathname} />
+          </div>
+        </aside>
 
-          {/* Content */}
-          <div style={{ minWidth: 0, flex: 1 }}>
-            {children}
+        {/* Content */}
+        <div style={{ minWidth: 0, flex: 1 }}>
+          {children}
 
-            {/* Mobile nav — below content on mobile */}
-            <div className="visible-mobile" style={{ marginTop: 32 }}>
-              <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                style={{
-                  background: "#fff",
-                  border: "1px solid #d0d5dd",
-                  borderRadius: 8,
-                  padding: "10px 16px",
-                  color: "#111827",
-                  fontSize: 14,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  width: "100%",
-                }}
-              >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  {mobileMenuOpen
-                    ? <path d="M4 4l8 8M12 4l-8 8" />
-                    : <><path d="M2 4h12" /><path d="M2 8h12" /><path d="M2 12h12" /></>
-                  }
-                </svg>
-                {sections.find(s => s.href === pathname)?.label || "Navigate"}
-              </button>
+          {/* Mobile nav — at bottom of content */}
+          <div className="visible-mobile" style={{ marginTop: 40, borderTop: "1px solid #e5e7eb", paddingTop: 24 }}>
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              style={{
+                background: "#1A73E8",
+                border: "none",
+                borderRadius: 8,
+                padding: "12px 16px",
+                color: "#fff",
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                width: "100%",
+                justifyContent: "center",
+              }}
+            >
+              {mobileMenuOpen ? "Close" : `Navigate · ${currentLabel}`}
+            </button>
 
-              {mobileMenuOpen && (
-                <div style={{
-                  marginTop: 8,
-                  background: "#fff",
-                  border: "1px solid #d0d5dd",
-                  borderRadius: 8,
-                  padding: "8px",
-                }}>
-                  <SidebarNav pathname={pathname} onNavigate={() => setMobileMenuOpen(false)} />
-                </div>
-              )}
-            </div>
+            {mobileMenuOpen && (
+              <div style={{ marginTop: 12, padding: "8px 0" }}>
+                <SidebarNav pathname={pathname} onNavigate={() => setMobileMenuOpen(false)} />
+              </div>
+            )}
           </div>
         </div>
       </div>
-      {/* Footer is in root layout */}
-    </>
+    </div>
   );
 }

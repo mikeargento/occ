@@ -235,7 +235,8 @@ export default function OCCPage() {
   return (
     <div style={{ background: "var(--bg)", color: "var(--c-text)", display: "flex", flexDirection: "column" }}>
       <style>{`
-        .occ-wrap { width: 90%; max-width: 640px; margin: 0 auto; padding: 0; display: flex; flex-direction: column; justify-content: center; height: calc(100dvh - 56px - 44px); }
+        html:has(.occ-home) { overflow: hidden; }
+        .occ-wrap { width: 90%; max-width: 640px; margin: 0 auto; padding: 0; display: flex; flex-direction: column; justify-content: center; height: calc(100dvh - 56px - 44px); overflow: hidden; }
         @keyframes countPop { 0% { transform: scale(0.5); opacity: 0 } 50% { transform: scale(1.15) } 100% { transform: scale(1); opacity: 1 } }
         @keyframes slideIn { from { opacity: 0; transform: translateY(12px) } to { opacity: 1; transform: translateY(0) } }
         @keyframes pulse { 0%, 100% { opacity: 1 } 50% { opacity: 0.4 } }
@@ -243,7 +244,7 @@ export default function OCCPage() {
       `}</style>
       {/* Nav is in root layout */}
 
-      <div className="occ-wrap">
+      <div className="occ-wrap occ-home">
 
         {/* ── Drop zone or Chat ── */}
         {step === "drop" && !chatOpen && (
