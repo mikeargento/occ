@@ -182,6 +182,7 @@ async function commitAnchor(block: EthBlock): Promise<{ proof: unknown; digestB6
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         digests: [{ digestB64, hashAlg: "sha256" }],
+        chainId: "occ:main",
         // Attribution is SIGNED — block data is tamper-evident
         attribution: {
           name: "Ethereum Anchor",
