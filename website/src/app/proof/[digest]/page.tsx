@@ -110,12 +110,6 @@ export default function ProofPage() {
         @keyframes fadeIn { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:translateY(0) } }
         .proof-fields > div:last-child { border-bottom: none !important; }
         @media print {
-          body { background: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-          #site-nav, .no-print { display: none !important; }
-          main { padding: 0 !important; }
-          .proof-grid { display: block !important; }
-          .proof-grid > * { break-inside: avoid; margin-bottom: 12px; }
-          @page { margin: 0.5in; size: letter; }
         }
       `}</style>
 
@@ -129,9 +123,8 @@ export default function ProofPage() {
               <span style={{ color: "var(--c-accent)" }}>{isEth ? "Anchor" : "Proof"} #{commit.counter}</span>
             </span>
           </div>
-          <div className="no-print" style={{ display: "flex", gap: 8 }}>
+          <div style={{ display: "flex", gap: 8 }}>
             <button onClick={exportZip} style={btnStyle}>Export Proof</button>
-            <button onClick={() => window.print()} style={btnStyle}>Export PDF</button>
             <JsonToggle proof={proof} />
           </div>
         </div>
