@@ -408,8 +408,8 @@ export default function OCCPage() {
                         })();
                       }}
                       style={{
-                        fontSize: 13, fontWeight: 600, color: "#ffffff", textDecoration: "none",
-                        flexShrink: 0, padding: "8px 16px", borderRadius: 980,
+                        fontSize: 15, fontWeight: 600, color: "#ffffff", textDecoration: "none",
+                        flexShrink: 0, padding: "12px 28px", borderRadius: 980,
                         background: "#1A73E8", border: "none", cursor: "pointer",
                         whiteSpace: "nowrap",
                       }}>
