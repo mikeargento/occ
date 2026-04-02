@@ -204,7 +204,8 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
             border: "none",
             color: "#ef4444",
             cursor: "pointer",
-            fontSize: 28,
+            fontSize: 36,
+            fontWeight: 700,
             lineHeight: 1,
             padding: "4px 8px",
           }}
