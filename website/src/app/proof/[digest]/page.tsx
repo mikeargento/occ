@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 // Nav is in root layout
 import type { OCCProof } from "@/lib/occ";
 import { zipSync, strToU8 } from "fflate";
+import { QRCodeSVG } from "qrcode.react";
 
 const mono = "var(--font-mono), 'SF Mono', SFMono-Regular, monospace";
 
@@ -235,6 +236,23 @@ export default function ProofPage() {
               {ts.digestAlg ? <Field label="Digest Algorithm" value={String(ts.digestAlg)} /> : null}
             </Card>
           )}
+        </div>
+
+        {/* QR Code */}
+        <div style={{ display: "flex", justifyContent: "center", marginTop: 32 }}>
+          <div style={{
+            background: "#fff", border: "1px solid #d0d5dd", borderRadius: 14,
+            padding: 24, display: "flex", flexDirection: "column", alignItems: "center", gap: 12,
+          }}>
+            <QRCodeSVG
+              value={typeof window !== "undefined" ? window.location.href : `https://occ.wtf/proof/${digestParam}`}
+              size={160}
+              level="M"
+              fgColor="#111827"
+              bgColor="#ffffff"
+            />
+            <span style={{ fontSize: 12, color: "#9ca3af" }}>Scan to verify this proof</span>
+          </div>
         </div>
 
       </div>
