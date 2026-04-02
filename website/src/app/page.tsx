@@ -53,7 +53,15 @@ export default function OCCPage() {
   };
 
   useEffect(() => {
-    return () => { if (countdownRef.current) clearInterval(countdownRef.current); };
+    // Hide footer on homepage — it causes scroll
+    const footer = document.querySelector("footer");
+    if (footer) footer.style.display = "none";
+    document.body.style.overflow = "hidden";
+    return () => {
+      if (footer) footer.style.display = "";
+      document.body.style.overflow = "";
+      if (countdownRef.current) clearInterval(countdownRef.current);
+    };
   }, []);
 
   const found = items.filter(i => i.status === "found" || i.status === "proved");
@@ -235,8 +243,7 @@ export default function OCCPage() {
   return (
     <div style={{ background: "var(--bg)", color: "var(--c-text)", display: "flex", flexDirection: "column" }}>
       <style>{`
-        html:has(.occ-home) { overflow: hidden; }
-        .occ-wrap { width: 90%; max-width: 640px; margin: 0 auto; padding: 0; display: flex; flex-direction: column; justify-content: center; height: calc(100dvh - 56px - 44px); overflow: hidden; }
+        .occ-wrap { width: 90%; max-width: 640px; margin: 0 auto; padding: 0; display: flex; flex-direction: column; justify-content: center; height: calc(100dvh - 57px); }
         @keyframes countPop { 0% { transform: scale(0.5); opacity: 0 } 50% { transform: scale(1.15) } 100% { transform: scale(1); opacity: 1 } }
         @keyframes slideIn { from { opacity: 0; transform: translateY(12px) } to { opacity: 1; transform: translateY(0) } }
         @keyframes pulse { 0%, 100% { opacity: 1 } 50% { opacity: 0.4 } }
