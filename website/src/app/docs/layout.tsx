@@ -61,47 +61,6 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
   return (
     <>
       <div style={{ maxWidth: 1120, margin: "0 auto", padding: "32px 24px 64px" }}>
-
-        {/* Mobile menu button */}
-        <div className="visible-mobile" style={{ marginBottom: 16 }}>
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            style={{
-              background: "#fff",
-              border: "1px solid #d0d5dd",
-              borderRadius: 8,
-              padding: "10px 16px",
-              color: "#111827",
-              fontSize: 14,
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              width: "100%",
-            }}
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-              {mobileMenuOpen
-                ? <path d="M4 4l8 8M12 4l-8 8" />
-                : <><path d="M2 4h12" /><path d="M2 8h12" /><path d="M2 12h12" /></>
-              }
-            </svg>
-            {sections.find(s => s.href === pathname)?.label || "Documentation"}
-          </button>
-
-          {mobileMenuOpen && (
-            <div style={{
-              marginTop: 8,
-              background: "#fff",
-              border: "1px solid #d0d5dd",
-              borderRadius: 8,
-              padding: "8px",
-            }}>
-              <SidebarNav pathname={pathname} onNavigate={() => setMobileMenuOpen(false)} />
-            </div>
-          )}
-        </div>
-
         <div style={{ display: "flex", gap: 48 }}>
           {/* Sidebar — desktop only */}
           <aside className="hidden-mobile" style={{ width: 200, flexShrink: 0 }}>
@@ -111,7 +70,49 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
           </aside>
 
           {/* Content */}
-          <div style={{ minWidth: 0, flex: 1 }}>{children}</div>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            {children}
+
+            {/* Mobile nav — below content on mobile */}
+            <div className="visible-mobile" style={{ marginTop: 32 }}>
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                style={{
+                  background: "#fff",
+                  border: "1px solid #d0d5dd",
+                  borderRadius: 8,
+                  padding: "10px 16px",
+                  color: "#111827",
+                  fontSize: 14,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  width: "100%",
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  {mobileMenuOpen
+                    ? <path d="M4 4l8 8M12 4l-8 8" />
+                    : <><path d="M2 4h12" /><path d="M2 8h12" /><path d="M2 12h12" /></>
+                  }
+                </svg>
+                {sections.find(s => s.href === pathname)?.label || "Navigate"}
+              </button>
+
+              {mobileMenuOpen && (
+                <div style={{
+                  marginTop: 8,
+                  background: "#fff",
+                  border: "1px solid #d0d5dd",
+                  borderRadius: 8,
+                  padding: "8px",
+                }}>
+                  <SidebarNav pathname={pathname} onNavigate={() => setMobileMenuOpen(false)} />
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
       {/* Footer is in root layout */}
