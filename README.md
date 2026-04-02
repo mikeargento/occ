@@ -1,90 +1,46 @@
 # OCC — Origin Controlled Computing
 
-**Define what your AI agents can do.**
+**Cryptographic proof of when digital objects came into existence.**
 
 [![npm occproof](https://img.shields.io/npm/v/occproof?label=occproof&color=cb3837)](https://www.npmjs.com/package/occproof)
-[![Website](https://img.shields.io/badge/occ.wtf-live-34d399)](https://occ.wtf)
-[![Dashboard](https://img.shields.io/badge/agent.occ.wtf-dashboard-34d399)](https://agent.occ.wtf)
+[![Website](https://img.shields.io/badge/occ.wtf-live-1A73E8)](https://occ.wtf)
+[![Docs](https://img.shields.io/badge/docs-1A73E8)](https://occ.wtf/docs)
 
-Every rule is mathematically proven before a single action can exist.
+OCC produces portable cryptographic proof when bytes are committed through a hardware-attested execution boundary. The proof is not added to the artifact — it is caused by the act of committing through the authorized path.
+
+Patent Pending.
 
 ---
 
-## Try OCC
+## Try It
 
-1. **Sign in** at [agent.occ.wtf](https://agent.occ.wtf)
-2. **Copy your link** — one URL, unique to you
-3. **Paste into your AI** — Cursor, Claude Code, or any MCP-compatible tool
-4. **Set your rules** — toggle categories, add custom rules, commit to chain
-5. **Use your AI** — blocked actions appear on your dashboard, you allow or deny
+1. Go to [occ.wtf](https://occ.wtf)
+2. Drop a file
+3. Get a proof
 
-That's it. No installs. No config files. One link.
+Your file never leaves your device. Only the SHA-256 hash is sent to the enclave. The proof is signed inside an AWS Nitro Enclave and sealed by Ethereum anchors every 12 seconds.
+
+---
+
+## What OCC Proves
+
+- **This specific digital state existed** — at this position in a monotonic causal chain
+- **It was committed through a hardware boundary** — AWS Nitro Enclave with attested measurement
+- **Everything before it already existed** — Ethereum front anchors seal backward
+- **The ordering is unforgeable** — atomic causality, not timestamps
+
+Time is subjective. Causality isn't. OCC gives you causality directly.
 
 ---
 
 ## How It Works
 
-OCC is not a permission check. It's a computation model where execution is only reachable through pre-existing, mathematically provable authorization.
+1. **Allocate** — The enclave pre-allocates a causal slot (nonce + counter) before the artifact hash is known
+2. **Bind** — The artifact's SHA-256 digest is bound to the pre-allocated slot and signed with Ed25519 inside the TEE
+3. **Commit** — The artifact and its proof are produced together. Fail-closed: if any step fails, nothing is produced
+4. **Anchor** — Every 12 seconds, an Ethereum block hash is committed to the same chain as a future causal boundary
 
-1. **You set rules** — toggles and custom rules on [agent.occ.wtf](https://agent.occ.wtf)
-2. **Rules become a proof** — committed through a Trusted Execution Environment (TEE), signed and hash-chained
-3. **Your AI connects via MCP** — one URL, everything flows through OCC
-4. **Tool calls are gated** — no authorization object = no execution path
-5. **You allow or deny** — each decision creates a signed authorization object through the TEE
-6. **Every execution references its authorization** — the proof that authorized the action and the record that it happened are the same object
-
----
-
-## Connect Your AI
-
-### Cursor
-
-Settings → MCP → Add Custom MCP → paste your URL
-
-### Claude Code
-
-```sh
-claude mcp add occ --transport http https://agent.occ.wtf/mcp/YOUR_TOKEN
-```
-
-### Any MCP tool
-
-Paste your URL into the MCP server settings.
-
----
-
-## What OCC is NOT
-
-- **Not a blockchain** — no consensus, no distributed ledger, no token
-- **Not a permission check** — authorization is an object that must exist before execution, not a runtime decision
-- **Not a log** — the proof IS the authorization, extended with the execution result
-- **Not DRM** — no encrypted containers or access control
-
----
-
-## Developer Tools
-
-OCC also ships as libraries for building policy enforcement directly into your code:
-
-### JavaScript / TypeScript
-
-```sh
-npm install occproof          # Core proof library
-npm install occ-mcp-proxy     # MCP proxy with default-deny
-npm install occ-anthropic     # Anthropic SDK integration
-npm install occ-openai        # OpenAI SDK integration
-npm install occ-vercel        # Vercel AI SDK
-```
-
-### Python
-
-```sh
-pip install occ-anthropic     # Anthropic SDK
-pip install occ-langchain     # LangChain
-pip install occ-crewai        # CrewAI
-pip install occ-gemini        # Google Gemini
-pip install occ-google-adk    # Google ADK
-```
+The slot exists before the artifact. The proof is caused by the commit. The Ethereum anchor proves everything before it existed before that block was mined.
 
 ---
 
@@ -96,14 +52,30 @@ Every proof is a self-contained JSON document. No server needed to verify.
 {
   "version": "occ/1",
   "artifact": { "hashAlg": "sha256", "digestB64": "..." },
-  "commit": { "counter": "42", "time": 1700000000000, "epochId": "..." },
+  "commit": {
+    "counter": "48",
+    "slotCounter": "47",
+    "epochId": "...",
+    "prevB64": "...",
+    "chainId": "occ:main"
+  },
   "signer": { "publicKeyB64": "...", "signatureB64": "..." },
-  "environment": { "enforcement": "measured-tee", "measurement": "..." },
-  "policy": { "digestB64": "...", "authorProofDigestB64": "..." }
+  "environment": {
+    "enforcement": "measured-tee",
+    "measurement": "638d655a...",
+    "attestation": { "format": "aws-nitro" }
+  },
+  "slotAllocation": { "counter": "47", "signatureB64": "..." },
+  "proofHash": "..."
 }
 ```
 
-The `policy` field links every action to the rule that authorized it. The `authorProofDigestB64` is the causal link — it points to the authorization proof that made the execution possible.
+Key fields:
+- `counter` — monotonic position in the causal chain (shared with Ethereum anchors)
+- `slotCounter` — the pre-allocated slot that preceded this commit
+- `prevB64` — hash of the previous proof (chain linking)
+- `proofHash` — canonical SHA-256 of the proof (excluded from its own computation)
+- `environment.measurement` — PCR0 of the enclave image (verifiable)
 
 ### Verify a proof
 
@@ -114,16 +86,13 @@ const result = await verify({ proof, bytes });
 
 ---
 
-## Two Signing Modes
+## What OCC is NOT
 
-| | Local Signing | TEE (Hardware) |
-|---|---|---|
-| **Key storage** | Ed25519 keypair on your machine | Key never leaves the enclave |
-| **Verification** | Signature valid, software boundary | Signature valid, hardware-attested boundary |
-| **Use case** | Development, testing | Production, compliance |
-| **Setup** | Zero config | AWS Nitro Enclave |
-
-The hosted dashboard at [agent.occ.wtf](https://agent.occ.wtf) uses TEE signing by default.
+- **Not a timestamp** — proves causal order, not clock time
+- **Not a blockchain** — no consensus, no distributed ledger, no token
+- **Not a watermark** — no data embedded in the file
+- **Not DRM** — no encrypted containers or access control
+- **Not proof of authorship** — proves commitment through a boundary, not who created it
 
 ---
 
@@ -132,25 +101,24 @@ The hosted dashboard at [agent.occ.wtf](https://agent.occ.wtf) uses TEE signing 
 ```
 occ/
   src/                        Core library (occproof on npm)
-  packages/
-    hosted/                   Hosted dashboard + MCP endpoint (agent.occ.wtf)
-    commandcentral/           Dashboard UI (Next.js static export)
-    mcp-proxy/                Local MCP proxy — default-deny policies
-    policy-sdk/               Policy enforcement engine
-    integrations/             Framework integrations (JS + Python)
   server/
     commit-service/           TEE commit service (AWS Nitro Enclave)
+      src/enclave/            Enclave app (Ed25519, counter, slots)
+      src/parent/             Parent server (HTTP, VSOCK bridge)
+  packages/
+    hosted/                   Ethereum anchor service (Railway)
   website/                    occ.wtf (Next.js on Vercel)
 ```
 
----
+### Infrastructure
 
-## Links
-
-- **[occ.wtf](https://occ.wtf)** — project site
-- **[agent.occ.wtf](https://agent.occ.wtf)** — dashboard
-- **[occ.wtf/explorer](https://occ.wtf/explorer)** — proof explorer
-- **[occ.wtf/docs](https://occ.wtf/docs)** — documentation
+| Component | Location | Purpose |
+|---|---|---|
+| TEE | AWS EC2 + Nitro Enclave | Signs proofs, maintains monotonic counter |
+| Anchor | Railway (agent.occ.wtf) | Commits ETH block hashes every 12 seconds |
+| Ledger | S3 (occ-ledger-prod) | Immutable proof storage, 10-year Object Lock |
+| Website | Vercel (occ.wtf) | Drop zone, proof pages, chat, docs |
+| Tunnel | Cloudflare (nitro.occproof.com) | Public access to TEE |
 
 ---
 
@@ -160,13 +128,23 @@ occ/
 |---|---|---|
 | Hashing | SHA-256 | `@noble/hashes` |
 | Signatures | Ed25519 | `@noble/ed25519` |
+| Attestation | AWS Nitro | Hardware (PCR0 measurement) |
+| Anchoring | Ethereum | Block hash commitment |
 
 Audited, zero-dependency, pure TypeScript.
 
 ---
 
+## Links
+
+- **[occ.wtf](https://occ.wtf)** — prove and verify files
+- **[occ.wtf/docs](https://occ.wtf/docs)** — documentation
+- **[GitHub](https://github.com/mikeargento/occ)** — source code
+
+---
+
 ## License
 
-Copyright 2024-2026 Mike Argento.
+Copyright 2024-2026 Mike Argento. Patent Pending.
 
 Licensed under the [Apache License, Version 2.0](./LICENSE).
