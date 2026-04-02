@@ -207,14 +207,7 @@ export default function OCCPage() {
       if (resp.ok) {
         const data = await resp.json();
         if (data.anchors?.length > 0) {
-          // Only include the first anchor after the proofs (the sealing anchor)
-          // plus one before if available — that's the causal window
-          const firstAnchor = data.anchors[0];
-          z["ethereum-anchors/anchor.json"] = new TextEncoder().encode(JSON.stringify(firstAnchor, null, 2));
-          // Include a second one if it exists (belt and suspenders)
-          if (data.anchors[1]) {
-            z["ethereum-anchors/anchor-2.json"] = new TextEncoder().encode(JSON.stringify(data.anchors[1], null, 2));
-          }
+          z["ethereum-anchor.json"] = new TextEncoder().encode(JSON.stringify(data.anchors[0], null, 2));
         }
       }
     } catch { /* non-critical */ }
