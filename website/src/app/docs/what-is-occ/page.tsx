@@ -11,7 +11,7 @@ export default function WhatIsOCCPage() {
     <article className="prose-doc">
       <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-6">What is OCC</h1>
 
-      <p className="text-text-secondary leading-relaxed mb-10">
+      <p className="text-[#374151] leading-relaxed mb-10">
         OCC (Origin Controlled Computing) is a protocol that produces portable
         cryptographic proof when bytes are committed through an authorized
         execution boundary. The proof attests that a specific digital state was
@@ -20,41 +20,41 @@ export default function WhatIsOCCPage() {
       </p>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">The core idea</h2>
-      <p className="text-text-secondary leading-relaxed mb-4">
+      <p className="text-[#374151] leading-relaxed mb-4">
         Most systems produce artifacts first and try to prove things about
         them later, attaching signatures, metadata, timestamps, or ledger
         entries after the fact.
       </p>
-      <p className="text-text-secondary leading-relaxed mb-4">
+      <p className="text-[#374151] leading-relaxed mb-4">
         OCC inverts this. Valid proof can only exist if the artifact was
         committed through a protected path. The proof is not added to the
         artifact. It is caused by the act of committing through the
         authorized boundary.
       </p>
 
-      <div className="border-l-2 border-l-text-tertiary pl-6 my-8">
-        <p className="text-sm text-text italic">
+      <div className="border-l-2 border-l-[#1A73E8] pl-6 my-8">
+        <p className="text-sm text-[#111827] italic">
           If proof exists, the authorized commit path was traversed.
         </p>
       </div>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">How it works</h2>
-      <p className="text-text-secondary leading-relaxed mb-4">
+      <p className="text-[#374151] leading-relaxed mb-4">
         Authorization, cryptographic binding, and commit happen as one
         indivisible operation:
       </p>
       <ol className="space-y-3 mb-6">
-        <li className="text-text-secondary leading-relaxed">
+        <li className="text-[#374151] leading-relaxed">
           <strong className="text-text">1. Allocate</strong> - The enclave pre-allocates a
           causal slot (nonce + counter) before the artifact hash is known,
           proving the commitment position was reserved independently.
         </li>
-        <li className="text-text-secondary leading-relaxed">
+        <li className="text-[#374151] leading-relaxed">
           <strong className="text-text">2. Bind</strong> - The artifact&apos;s SHA-256 digest is
           bound to the pre-allocated slot, combined with the monotonic counter,
           and signed with Ed25519 inside the TEE.
         </li>
-        <li className="text-text-secondary leading-relaxed">
+        <li className="text-[#374151] leading-relaxed">
           <strong className="text-text">3. Commit</strong> - The artifact and its proof are
           produced together. Fail-closed: if any step fails, nothing is
           produced. The proof includes the signed slot record as causal evidence.
@@ -62,49 +62,49 @@ export default function WhatIsOCCPage() {
       </ol>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">What you get</h2>
-      <p className="text-text-secondary leading-relaxed mb-4">
-        An OCC proof is a JSON object (schema version <code className="text-xs font-mono bg-bg-subtle px-1.5 py-0.5">occ/1</code>) containing:
+      <p className="text-[#374151] leading-relaxed mb-4">
+        An OCC proof is a JSON object (schema version <code className="text-xs font-mono bg-[#f3f4f6] px-1.5 py-0.5">occ/1</code>) containing:
       </p>
       <ul className="space-y-2 mb-6">
-        <li className="text-text-secondary"><strong className="text-text">artifact</strong> - SHA-256 digest of the committed bytes</li>
-        <li className="text-text-secondary"><strong className="text-text">commit</strong> - fresh nonce, monotonic counter, slot binding (slotCounter, slotHashB64), epoch identity, optional chain link</li>
-        <li className="text-text-secondary"><strong className="text-text">signer</strong> - Ed25519 public key and signature over the canonical signed body</li>
-        <li className="text-text-secondary"><strong className="text-text">environment</strong> - enforcement tier, platform measurement (PCR0), hardware attestation</li>
-        <li className="text-text-secondary"><strong className="text-text">slotAllocation</strong> - the pre-allocated causal slot record, independently signed by the enclave</li>
-        <li className="text-text-secondary"><strong className="text-text">agency</strong> - optional actor-bound proof via device biometrics (passkey/WebAuthn), with batch support</li>
-        <li className="text-text-secondary"><strong className="text-text">attribution</strong> - optional signed creator metadata (name, title, message)</li>
-        <li className="text-text-secondary"><strong className="text-text">timestamps</strong> - optional RFC 3161 TSA timestamps from an independent time authority</li>
+        <li className="text-[#374151]"><strong className="text-text">artifact</strong> - SHA-256 digest of the committed bytes</li>
+        <li className="text-[#374151]"><strong className="text-text">commit</strong> - fresh nonce, monotonic counter, slot binding (slotCounter, slotHashB64), epoch identity, optional chain link</li>
+        <li className="text-[#374151]"><strong className="text-text">signer</strong> - Ed25519 public key and signature over the canonical signed body</li>
+        <li className="text-[#374151]"><strong className="text-text">environment</strong> - enforcement tier, platform measurement (PCR0), hardware attestation</li>
+        <li className="text-[#374151]"><strong className="text-text">slotAllocation</strong> - the pre-allocated causal slot record, independently signed by the enclave</li>
+        <li className="text-[#374151]"><strong className="text-text">agency</strong> - optional actor-bound proof via device biometrics (passkey/WebAuthn), with batch support</li>
+        <li className="text-[#374151]"><strong className="text-text">attribution</strong> - optional signed creator metadata (name, title, message)</li>
+        <li className="text-[#374151]"><strong className="text-text">timestamps</strong> - optional RFC 3161 TSA timestamps from an independent time authority</li>
       </ul>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Key properties</h2>
       <ul className="space-y-2 mb-6">
-        <li className="text-text-secondary"><strong className="text-text">Portable</strong> — a self-contained JSON object. Any verifier can check it offline with only the public key and the original bytes.</li>
-        <li className="text-text-secondary"><strong className="text-text">Atomic</strong> — fail-closed. Either a complete, valid proof is produced, or nothing is.</li>
-        <li className="text-text-secondary"><strong className="text-text">Causal</strong> — every proof is bound to a pre-allocated slot created before the artifact hash was known.</li>
-        <li className="text-text-secondary"><strong className="text-text">Ordered</strong> — monotonic counter within its epoch. Counter + epoch + chain link establish sequencing.</li>
-        <li className="text-text-secondary"><strong className="text-text">Measured</strong> — binds to a specific execution environment via measurement (PCR0 on Nitro, MRENCLAVE on SGX).</li>
-        <li className="text-text-secondary"><strong className="text-text">Verifiable</strong> — Ed25519 signature, SHA-256 digest, canonical serialization. Standard cryptographic primitives.</li>
+        <li className="text-[#374151]"><strong className="text-text">Portable</strong> — a self-contained JSON object. Any verifier can check it offline with only the public key and the original bytes.</li>
+        <li className="text-[#374151]"><strong className="text-text">Atomic</strong> — fail-closed. Either a complete, valid proof is produced, or nothing is.</li>
+        <li className="text-[#374151]"><strong className="text-text">Causal</strong> — every proof is bound to a pre-allocated slot created before the artifact hash was known.</li>
+        <li className="text-[#374151]"><strong className="text-text">Ordered</strong> — monotonic counter within its epoch. Counter + epoch + chain link establish sequencing.</li>
+        <li className="text-[#374151]"><strong className="text-text">Measured</strong> — binds to a specific execution environment via measurement (PCR0 on Nitro, MRENCLAVE on SGX).</li>
+        <li className="text-[#374151]"><strong className="text-text">Verifiable</strong> — Ed25519 signature, SHA-256 digest, canonical serialization. Standard cryptographic primitives.</li>
       </ul>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Enforcement tiers</h2>
       <div className="overflow-x-auto mb-8">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-border-subtle">
-              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-text-tertiary">Tier</th>
-              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-text-tertiary">Key Location</th>
-              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-text-tertiary">Boundary</th>
-              <th className="text-left py-2 text-xs font-medium uppercase tracking-wider text-text-tertiary">Use Case</th>
+            <tr className="border-b border-[#e5e7eb]">
+              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#9ca3af]">Tier</th>
+              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#9ca3af]">Key Location</th>
+              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#9ca3af]">Boundary</th>
+              <th className="text-left py-2 text-xs font-medium uppercase tracking-wider text-[#9ca3af]">Use Case</th>
             </tr>
           </thead>
-          <tbody className="text-text-secondary">
-            <tr className="border-b border-border-subtle">
+          <tbody className="text-[#374151]">
+            <tr className="border-b border-[#e5e7eb]">
               <td className="py-2 pr-4"><code className="text-xs font-mono">stub</code></td>
               <td className="py-2 pr-4">Process memory</td>
               <td className="py-2 pr-4">Software</td>
               <td className="py-2">Development, testing</td>
             </tr>
-            <tr className="border-b border-border-subtle">
+            <tr className="border-b border-[#e5e7eb]">
               <td className="py-2 pr-4"><code className="text-xs font-mono">hw-key</code></td>
               <td className="py-2 pr-4">HSM / Secure Enclave</td>
               <td className="py-2 pr-4">Software</td>
@@ -121,7 +121,7 @@ export default function WhatIsOCCPage() {
       </div>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Formal properties</h2>
-      <p className="text-text-secondary leading-relaxed mb-4">
+      <p className="text-[#374151] leading-relaxed mb-4">
         The commit path satisfies these structural properties:
       </p>
       <CommitPathDiagram />

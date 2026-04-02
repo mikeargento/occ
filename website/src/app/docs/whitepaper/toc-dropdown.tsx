@@ -77,7 +77,7 @@ export default function TocDropdown() {
     <div ref={ref} className="relative mb-8">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-4 py-3 border border-border-subtle bg-bg-elevated text-sm text-text-secondary hover:text-text hover:border-text-tertiary transition-colors"
+        className="w-full flex items-center justify-between px-4 py-3 border border-[#e5e7eb] bg-[#f9fafb] text-sm text-[#374151] hover:text-[#111827] hover:border-text-tertiary transition-colors"
       >
         <span className="font-medium">Table of Contents</span>
         <svg
@@ -92,17 +92,17 @@ export default function TocDropdown() {
       </button>
 
       {open && (
-        <div className="absolute z-50 mt-1 w-full max-h-[70vh] overflow-y-auto border border-border-subtle bg-bg-elevated">
+        <div className="absolute z-50 mt-1 w-full max-h-[70vh] overflow-y-auto border border-[#e5e7eb] bg-[#f9fafb]">
           {sections.map((s) => (
             <button
               key={s.id}
               onClick={() => scrollTo(s.id)}
               className={`w-full text-left px-4 py-2 text-sm hover:bg-white/5 transition-colors flex gap-2 ${
-                s.indent ? "pl-8 text-text-tertiary" : "text-text-secondary font-medium"
+                s.indent ? "pl-8 text-[#9ca3af]" : "text-[#374151] font-medium"
               }`}
             >
               {s.num && (
-                <span className="text-text-tertiary w-8 shrink-0 font-mono text-xs leading-5">
+                <span className="text-[#9ca3af] w-8 shrink-0 font-mono text-xs leading-5">
                   {s.num}
                 </span>
               )}

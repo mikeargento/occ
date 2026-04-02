@@ -10,7 +10,7 @@ export default function AgentSdkPage() {
   return (
     <article className="prose-doc">
       <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-6">Agent SDK</h1>
-      <p className="text-text-secondary mb-6">
+      <p className="text-[#374151] mb-6">
         Wrap any tool call with a portable, cryptographic execution receipt.
         The SDK normalizes inputs and outputs, hashes them into a canonical envelope,
         and commits the digest through OCC. Raw data never leaves your runtime.
@@ -20,17 +20,17 @@ export default function AgentSdkPage() {
       <h2 className="text-xl font-semibold mt-12 mb-4">Install</h2>
       <div className="code-block">
         <div className="code-block-header"><span>Shell</span></div>
-        <pre className="text-xs font-mono leading-relaxed text-text-secondary overflow-x-auto">{`npm install occ-agent`}</pre>
+        <pre className="text-xs font-mono leading-relaxed text-[#374151] overflow-x-auto">{`npm install occ-agent`}</pre>
       </div>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Quick start</h2>
-      <p className="text-text-secondary mb-4">
-        The built-in <code className="text-xs font-mono bg-bg-subtle px-1.5 py-0.5">fetch_url</code> tool
+      <p className="text-[#374151] mb-4">
+        The built-in <code className="text-xs font-mono bg-[#f3f4f6] px-1.5 py-0.5">fetch_url</code> tool
         is ready to use. Wrap it, call it, and get back your output with an OCC proof attached.
       </p>
       <div className="code-block">
         <div className="code-block-header"><span>TypeScript</span></div>
-        <pre className="text-xs font-mono leading-relaxed text-text-secondary overflow-x-auto">{`import { wrapTool, fetchUrlTool } from "occ-agent";
+        <pre className="text-xs font-mono leading-relaxed text-[#374151] overflow-x-auto">{`import { wrapTool, fetchUrlTool } from "occ-agent";
 
 const verifiedFetch = wrapTool(fetchUrlTool, {
   apiUrl: "https://nitro.occproof.com",
@@ -44,10 +44,10 @@ result.occProof;          // portable OCC proof`}</pre>
       </div>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">How it works</h2>
-      <p className="text-text-secondary mb-4">
+      <p className="text-[#374151] mb-4">
         Every call follows the same six-step pipeline:
       </p>
-      <ol className="space-y-2 text-sm text-text-secondary mb-6">
+      <ol className="space-y-2 text-sm text-[#374151] mb-6">
         <li><strong className="text-text">1. Normalize input</strong> - deterministic JSON representation of the tool input</li>
         <li><strong className="text-text">2. Hash input</strong> - SHA-256 of the canonical input bytes</li>
         <li><strong className="text-text">3. Execute</strong> - run the tool function</li>
@@ -55,20 +55,20 @@ result.occProof;          // portable OCC proof`}</pre>
         <li><strong className="text-text">5. Build envelope</strong> - canonical JSON with tool name, version, both hashes, timestamp</li>
         <li><strong className="text-text">6. Commit</strong> - SHA-256 of the envelope is sent to OCC. The enclave signs it and returns a proof.</li>
       </ol>
-      <div className="border-l-2 border-l-text-tertiary pl-6 mb-6">
-        <p className="text-sm text-text italic">
+      <div className="border-l-2 border-l-[#1A73E8] pl-6 mb-6">
+        <p className="text-sm text-[#111827] italic">
           Only the 32-byte envelope digest crosses the network. The enclave never sees your input, output, or tool logic.
         </p>
       </div>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Define a custom tool</h2>
-      <p className="text-text-secondary mb-4">
+      <p className="text-[#374151] mb-4">
         Any async function can become a verified tool. Define the execution logic
         and normalization functions. The SDK handles the rest.
       </p>
       <div className="code-block">
         <div className="code-block-header"><span>TypeScript</span></div>
-        <pre className="text-xs font-mono leading-relaxed text-text-secondary overflow-x-auto">{`import { wrapTool } from "occ-agent";
+        <pre className="text-xs font-mono leading-relaxed text-[#374151] overflow-x-auto">{`import { wrapTool } from "occ-agent";
 import type { ToolDefinition } from "occ-agent";
 
 const summarizeTool: ToolDefinition<
@@ -95,12 +95,12 @@ const result = await verifiedSummarize({ text: "..." });
       </div>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">One-shot execution</h2>
-      <p className="text-text-secondary mb-4">
+      <p className="text-[#374151] mb-4">
         For single calls without creating a reusable wrapper:
       </p>
       <div className="code-block">
         <div className="code-block-header"><span>TypeScript</span></div>
-        <pre className="text-xs font-mono leading-relaxed text-text-secondary overflow-x-auto">{`import { runVerifiedTool, fetchUrlTool } from "occ-agent";
+        <pre className="text-xs font-mono leading-relaxed text-[#374151] overflow-x-auto">{`import { runVerifiedTool, fetchUrlTool } from "occ-agent";
 
 const result = await runVerifiedTool(
   fetchUrlTool,
@@ -110,13 +110,13 @@ const result = await runVerifiedTool(
       </div>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Export a receipt</h2>
-      <p className="text-text-secondary mb-4">
+      <p className="text-[#374151] mb-4">
         Save the execution envelope and OCC proof as a portable JSON document.
         Raw tool output is intentionally excluded. It stays in your runtime.
       </p>
       <div className="code-block">
         <div className="code-block-header"><span>TypeScript</span></div>
-        <pre className="text-xs font-mono leading-relaxed text-text-secondary overflow-x-auto">{`import { exportReceipt, loadReceipt } from "occ-agent";
+        <pre className="text-xs font-mono leading-relaxed text-[#374151] overflow-x-auto">{`import { exportReceipt, loadReceipt } from "occ-agent";
 
 // Export to JSON string
 const json = exportReceipt(result);
@@ -127,20 +127,20 @@ const receipt = loadReceipt(await fs.readFile("receipt.json", "utf8"));
 // receipt.envelope - the execution envelope
 // receipt.proof    - the OCC proof`}</pre>
       </div>
-      <div className="border-l-2 border-l-text-tertiary pl-6 mb-6">
-        <p className="text-sm text-text italic">
-          The receipt format is <code className="text-xs font-mono bg-bg-subtle px-1.5 py-0.5">occ-agent/receipt/1</code>. It contains everything needed for offline verification. Hand it to anyone and they can verify without contacting OCC.
+      <div className="border-l-2 border-l-[#1A73E8] pl-6 mb-6">
+        <p className="text-sm text-[#111827] italic">
+          The receipt format is <code className="text-xs font-mono bg-[#f3f4f6] px-1.5 py-0.5">occ-agent/receipt/1</code>. It contains everything needed for offline verification. Hand it to anyone and they can verify without contacting OCC.
         </p>
       </div>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Verify a receipt</h2>
-      <p className="text-text-secondary mb-4">
+      <p className="text-[#374151] mb-4">
         Verification is offline. Given an envelope and proof, anyone can check
-        that the execution was committed through OCC. Works with a <code className="text-xs font-mono bg-bg-subtle px-1.5 py-0.5">VerifiedToolResult</code> or a loaded receipt.
+        that the execution was committed through OCC. Works with a <code className="text-xs font-mono bg-[#f3f4f6] px-1.5 py-0.5">VerifiedToolResult</code> or a loaded receipt.
       </p>
       <div className="code-block">
         <div className="code-block-header"><span>TypeScript</span></div>
-        <pre className="text-xs font-mono leading-relaxed text-text-secondary overflow-x-auto">{`import { verifyExecutionReceipt, loadReceipt } from "occ-agent";
+        <pre className="text-xs font-mono leading-relaxed text-[#374151] overflow-x-auto">{`import { verifyExecutionReceipt, loadReceipt } from "occ-agent";
 
 // From a VerifiedToolResult
 const verification = await verifyExecutionReceipt(
@@ -158,12 +158,12 @@ v.checks.signatureValid;    // Ed25519 signature valid`}</pre>
       </div>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Execution envelope</h2>
-      <p className="text-text-secondary mb-4">
+      <p className="text-[#374151] mb-4">
         The canonical execution record committed to OCC:
       </p>
       <div className="code-block">
         <div className="code-block-header"><span>JSON</span></div>
-        <pre className="text-xs font-mono leading-relaxed text-text-secondary overflow-x-auto">{`{
+        <pre className="text-xs font-mono leading-relaxed text-[#374151] overflow-x-auto">{`{
   "type": "tool-execution",
   "tool": "fetch_url",
   "toolVersion": "1.0.0",
@@ -174,7 +174,7 @@ v.checks.signatureValid;    // Ed25519 signature valid`}</pre>
   "timestamp": 1773464119585
 }`}</pre>
       </div>
-      <p className="text-text-secondary mb-4">
+      <p className="text-[#374151] mb-4">
         Fields are sorted alphabetically and serialized without whitespace
         before hashing. This ensures any implementation produces the same digest
         for the same execution.
@@ -183,35 +183,35 @@ v.checks.signatureValid;    // Ed25519 signature valid`}</pre>
       <h2 className="text-xl font-semibold mt-12 mb-4">API reference</h2>
 
       <h3 className="text-lg font-semibold mt-8 mb-3">wrapTool(tool, config)</h3>
-      <p className="text-text-secondary mb-4">
-        Returns an async function that executes the tool and returns a <code className="text-xs font-mono bg-bg-subtle px-1.5 py-0.5">VerifiedToolResult</code>.
+      <p className="text-[#374151] mb-4">
+        Returns an async function that executes the tool and returns a <code className="text-xs font-mono bg-[#f3f4f6] px-1.5 py-0.5">VerifiedToolResult</code>.
       </p>
       <div className="overflow-x-auto mb-6">
         <table>
           <thead>
             <tr>
-              <th className="text-left text-xs font-semibold text-text-secondary uppercase tracking-wide pb-3 pr-6">Parameter</th>
-              <th className="text-left text-xs font-semibold text-text-secondary uppercase tracking-wide pb-3 pr-6">Type</th>
-              <th className="text-left text-xs font-semibold text-text-secondary uppercase tracking-wide pb-3">Description</th>
+              <th className="text-left text-xs font-semibold text-[#374151] uppercase tracking-wide pb-3 pr-6">Parameter</th>
+              <th className="text-left text-xs font-semibold text-[#374151] uppercase tracking-wide pb-3 pr-6">Type</th>
+              <th className="text-left text-xs font-semibold text-[#374151] uppercase tracking-wide pb-3">Description</th>
             </tr>
           </thead>
-          <tbody className="text-sm text-text-secondary">
-            <tr className="border-t border-border-subtle">
+          <tbody className="text-sm text-[#374151]">
+            <tr className="border-t border-[#e5e7eb]">
               <td className="py-3 pr-6 font-mono text-xs">tool</td>
               <td className="py-3 pr-6 font-mono text-xs">ToolDefinition</td>
               <td className="py-3">Tool with name, version, execute, normalize functions</td>
             </tr>
-            <tr className="border-t border-border-subtle">
+            <tr className="border-t border-[#e5e7eb]">
               <td className="py-3 pr-6 font-mono text-xs">config.apiUrl</td>
               <td className="py-3 pr-6 font-mono text-xs">string</td>
               <td className="py-3">OCC commit service URL</td>
             </tr>
-            <tr className="border-t border-border-subtle">
+            <tr className="border-t border-[#e5e7eb]">
               <td className="py-3 pr-6 font-mono text-xs">config.apiKey</td>
               <td className="py-3 pr-6 font-mono text-xs">string?</td>
               <td className="py-3">Optional Bearer token for authenticated endpoints</td>
             </tr>
-            <tr className="border-t border-border-subtle">
+            <tr className="border-t border-[#e5e7eb]">
               <td className="py-3 pr-6 font-mono text-xs">config.runtime</td>
               <td className="py-3 pr-6 font-mono text-xs">string?</td>
               <td className="py-3">Runtime identifier (default: &quot;agent-skills&quot;)</td>
@@ -225,33 +225,33 @@ v.checks.signatureValid;    // Ed25519 signature valid`}</pre>
         <table>
           <thead>
             <tr>
-              <th className="text-left text-xs font-semibold text-text-secondary uppercase tracking-wide pb-3 pr-6">Field</th>
-              <th className="text-left text-xs font-semibold text-text-secondary uppercase tracking-wide pb-3 pr-6">Type</th>
-              <th className="text-left text-xs font-semibold text-text-secondary uppercase tracking-wide pb-3">Description</th>
+              <th className="text-left text-xs font-semibold text-[#374151] uppercase tracking-wide pb-3 pr-6">Field</th>
+              <th className="text-left text-xs font-semibold text-[#374151] uppercase tracking-wide pb-3 pr-6">Type</th>
+              <th className="text-left text-xs font-semibold text-[#374151] uppercase tracking-wide pb-3">Description</th>
             </tr>
           </thead>
-          <tbody className="text-sm text-text-secondary">
-            <tr className="border-t border-border-subtle">
+          <tbody className="text-sm text-[#374151]">
+            <tr className="border-t border-[#e5e7eb]">
               <td className="py-3 pr-6 font-mono text-xs">name</td>
               <td className="py-3 pr-6 font-mono text-xs">string</td>
               <td className="py-3">Tool identifier (e.g. &quot;fetch_url&quot;)</td>
             </tr>
-            <tr className="border-t border-border-subtle">
+            <tr className="border-t border-[#e5e7eb]">
               <td className="py-3 pr-6 font-mono text-xs">version</td>
               <td className="py-3 pr-6 font-mono text-xs">string</td>
               <td className="py-3">Semver version string</td>
             </tr>
-            <tr className="border-t border-border-subtle">
+            <tr className="border-t border-[#e5e7eb]">
               <td className="py-3 pr-6 font-mono text-xs">execute</td>
               <td className="py-3 pr-6 font-mono text-xs">(input) =&gt; Promise</td>
               <td className="py-3">The actual tool logic</td>
             </tr>
-            <tr className="border-t border-border-subtle">
+            <tr className="border-t border-[#e5e7eb]">
               <td className="py-3 pr-6 font-mono text-xs">normalizeInput</td>
               <td className="py-3 pr-6 font-mono text-xs">(input) =&gt; unknown</td>
               <td className="py-3">Deterministic input representation for hashing</td>
             </tr>
-            <tr className="border-t border-border-subtle">
+            <tr className="border-t border-[#e5e7eb]">
               <td className="py-3 pr-6 font-mono text-xs">normalizeOutput</td>
               <td className="py-3 pr-6 font-mono text-xs">(output) =&gt; unknown</td>
               <td className="py-3">Deterministic output representation for hashing</td>
@@ -261,7 +261,7 @@ v.checks.signatureValid;    // Ed25519 signature valid`}</pre>
       </div>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Privacy model</h2>
-      <ul className="space-y-2 text-sm text-text-secondary">
+      <ul className="space-y-2 text-sm text-[#374151]">
         <li>• <strong className="text-text">Hashes only.</strong> Only SHA-256 digests are sent to OCC. Raw input and output stay in your runtime.</li>
         <li>• <strong className="text-text">No reverse engineering.</strong> SHA-256 is preimage-resistant. The digest reveals nothing about the original data.</li>
         <li>• <strong className="text-text">Metadata is optional.</strong> Tool name and runtime are included in the commit metadata, but this is configurable.</li>
@@ -269,16 +269,16 @@ v.checks.signatureValid;    // Ed25519 signature valid`}</pre>
       </ul>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Source</h2>
-      <p className="text-text-secondary">
-        <a href="https://github.com/mikeargento/occ/tree/main/packages/occ-agent" target="_blank" rel="noopener" className="text-text hover:text-accent transition-colors underline underline-offset-4">
+      <p className="text-[#374151]">
+        <a href="https://github.com/mikeargento/occ/tree/main/packages/occ-agent" target="_blank" rel="noopener" className="text-[#111827] hover:text-accent transition-colors underline underline-offset-4">
           github.com/mikeargento/occ/packages/occ-agent
         </a>
         {" · "}
-        <a href="https://www.npmjs.com/package/occ-agent" target="_blank" rel="noopener" className="text-text hover:text-accent transition-colors underline underline-offset-4">
+        <a href="https://www.npmjs.com/package/occ-agent" target="_blank" rel="noopener" className="text-[#111827] hover:text-accent transition-colors underline underline-offset-4">
           npm
         </a>
         {" · "}
-        <Link href="/agent" className="text-text hover:text-accent transition-colors underline underline-offset-4">
+        <Link href="/agent" className="text-[#111827] hover:text-accent transition-colors underline underline-offset-4">
           demo
         </Link>
       </p>

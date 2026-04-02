@@ -10,8 +10,8 @@ export default function TrustModelPage() {
     <article className="prose-doc">
       <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-6">Trust Model</h1>
 
-      <div className="border-l-2 border-l-text-tertiary pl-6 mb-8">
-        <p className="text-sm text-text italic leading-relaxed">
+      <div className="border-l-2 border-l-[#1A73E8] pl-6 mb-8">
+        <p className="text-sm text-[#111827] italic leading-relaxed">
           OCC guarantees single-successor semantics within the verifier-accepted
           measurement and monotonicity domain of the enforcing boundary.
         </p>
@@ -21,33 +21,33 @@ export default function TrustModelPage() {
       <div className="overflow-x-auto mb-8">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-border-subtle">
-              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-text-tertiary">Assumption</th>
-              <th className="text-left py-2 text-xs font-medium uppercase tracking-wider text-text-tertiary">If it fails</th>
+            <tr className="border-b border-[#e5e7eb]">
+              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#9ca3af]">Assumption</th>
+              <th className="text-left py-2 text-xs font-medium uppercase tracking-wider text-[#9ca3af]">If it fails</th>
             </tr>
           </thead>
-          <tbody className="text-text-secondary">
-            <tr className="border-b border-border-subtle">
+          <tbody className="text-[#374151]">
+            <tr className="border-b border-[#e5e7eb]">
               <td className="py-2 pr-4">Boundary isolation - TEE prevents external key access</td>
               <td className="py-2">All guarantees collapse</td>
             </tr>
-            <tr className="border-b border-border-subtle">
+            <tr className="border-b border-[#e5e7eb]">
               <td className="py-2 pr-4">Key secrecy - Ed25519 private key never leaves boundary</td>
               <td className="py-2">Proof forgery becomes possible</td>
             </tr>
-            <tr className="border-b border-border-subtle">
+            <tr className="border-b border-[#e5e7eb]">
               <td className="py-2 pr-4">Nonce freshness - ≥128 bits, never reused</td>
               <td className="py-2">Replay within a session</td>
             </tr>
-            <tr className="border-b border-border-subtle">
+            <tr className="border-b border-[#e5e7eb]">
               <td className="py-2 pr-4">Honest measurement - hardware correctly measures enclave</td>
               <td className="py-2">Delegated to TEE vendor</td>
             </tr>
-            <tr className="border-b border-border-subtle">
+            <tr className="border-b border-[#e5e7eb]">
               <td className="py-2 pr-4">Monotonic counter durability - survives restarts</td>
               <td className="py-2">Anti-rollback degrades to single session</td>
             </tr>
-            <tr className="border-b border-border-subtle">
+            <tr className="border-b border-[#e5e7eb]">
               <td className="py-2 pr-4">Causal slot integrity - slot allocated before artifact hash known</td>
               <td className="py-2">Without pre-allocation, commit order could be forged</td>
             </tr>
@@ -71,15 +71,15 @@ export default function TrustModelPage() {
           { threat: "Counter position forgery", mitigation: "Causal slot pre-allocation: slotHashB64 binding + slotCounter < counter ordering proves pre-allocation" },
           { threat: "Agency replay across batches", mitigation: "Single-use challenge consumed on first validation; batch context scoped to declared digests" },
         ].map((t) => (
-          <div key={t.threat} className="flex gap-4 border-l-2 border-l-text-tertiary pl-4 py-1">
-            <div className="text-sm font-medium text-text shrink-0 w-44">{t.threat}</div>
-            <div className="text-sm text-text-secondary">{t.mitigation}</div>
+          <div key={t.threat} className="flex gap-4 border-l-2 border-l-[#1A73E8] pl-4 py-1">
+            <div className="text-sm font-medium text-[#111827] shrink-0 w-44">{t.threat}</div>
+            <div className="text-sm text-[#374151]">{t.mitigation}</div>
           </div>
         ))}
       </div>
 
       <h3 className="text-base font-semibold mt-6 mb-3">Out-of-scope threats</h3>
-      <ul className="space-y-2 mb-8 text-sm text-text-secondary">
+      <ul className="space-y-2 mb-8 text-sm text-[#374151]">
         <li>• Signing key exfiltration - assumes boundary is secure</li>
         <li>• TEE firmware vulnerability - delegated to hardware vendor</li>
         <li>• Weak verifier policy - caller responsibility</li>
@@ -87,7 +87,7 @@ export default function TrustModelPage() {
       </ul>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Non-goals</h2>
-      <ul className="space-y-2 mb-8 text-sm text-text-secondary">
+      <ul className="space-y-2 mb-8 text-sm text-[#374151]">
         <li>• <strong className="text-text">Global ordering</strong> - no total ordering across independent boundaries</li>
         <li>• <strong className="text-text">Cross-boundary double-spend</strong> - same artifact can be submitted to separate boundaries</li>
         <li>• <strong className="text-text">Copy prevention</strong> - OCC does not prevent raw byte copying</li>

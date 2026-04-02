@@ -9,16 +9,16 @@ export default function Sections4Through6() {
       {/* ================================================================ */}
       <section id="sec-invariants">
         <h2 className="text-xl font-semibold mt-12 mb-4">
-          <span className="text-text-tertiary mr-2">4</span>
+          <span className="text-[#9ca3af] mr-2">4</span>
           System Invariants
         </h2>
 
-        <p className="text-text-secondary mb-4">
+        <p className="text-[#374151] mb-4">
           If Origin Controlled Computing is correctly implemented, the following
           invariants hold:
         </p>
 
-        <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+        <div className="my-5 border-l-[3px] border-text-tertiary bg-[#f9fafb] p-5">
           <p className="text-sm text-text">
             <strong>Invariant 4.1</strong> (Authenticated Reachability).
             Authenticated durable state exists if and only if a successful
@@ -27,7 +27,7 @@ export default function Sections4Through6() {
           </p>
         </div>
 
-        <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+        <div className="my-5 border-l-[3px] border-text-tertiary bg-[#f9fafb] p-5">
           <p className="text-sm text-text">
             <strong>Invariant 4.2</strong> (Binding Evidence). Every
             authenticated artifact has associated verification
@@ -37,14 +37,14 @@ export default function Sections4Through6() {
             a reference point, or both. (A reference point stores verification
             evidence produced at genesis; it does not confer authenticated status
             and plays no role in enforcement. See{" "}
-            <a href="#sec-verification-independence" className="text-text underline">
+            <a href="#sec-verification-independence" className="text-[#111827] underline">
               Section 9.5
             </a>
             .)
           </p>
         </div>
 
-        <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+        <div className="my-5 border-l-[3px] border-text-tertiary bg-[#f9fafb] p-5">
           <p className="text-sm text-text">
             <strong>Invariant 4.3</strong> (Policy-Anchored Verification). An
             artifact verifies if and only if its verification material validates
@@ -52,7 +52,7 @@ export default function Sections4Through6() {
           </p>
         </div>
 
-        <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+        <div className="my-5 border-l-[3px] border-text-tertiary bg-[#f9fafb] p-5">
           <p className="text-sm text-text">
             <strong>Invariant 4.4</strong> (Distinguishability). Durable state
             not produced via boundary finalization cannot satisfy verification
@@ -60,7 +60,7 @@ export default function Sections4Through6() {
           </p>
         </div>
 
-        <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+        <div className="my-5 border-l-[3px] border-text-tertiary bg-[#f9fafb] p-5">
           <p className="text-sm text-text">
             <strong>Invariant 4.5</strong> (Authenticity as Reachability).
             Authenticated durable state is defined by enforced state transitions,
@@ -68,7 +68,7 @@ export default function Sections4Through6() {
           </p>
         </div>
 
-        <p className="text-text-secondary mb-4">
+        <p className="text-[#374151] mb-4">
           The significance of Invariant 4.5 deserves emphasis. In conventional
           systems, authenticity is a <em>label</em>: a property that can be
           attached to, claimed about, or inferred from an artifact after it
@@ -81,7 +81,7 @@ export default function Sections4Through6() {
           closed under authorized genesis&mdash;nothing else can produce it.
         </p>
 
-        <p className="text-text-secondary mb-4">
+        <p className="text-[#374151] mb-4">
           This is the central claim of the paper: if authenticated digital state
           can only come into existence through a controlled creation path, then
           the existence of an authenticated artifact is itself proof that the
@@ -91,9 +91,9 @@ export default function Sections4Through6() {
           artifacts after the fact.
         </p>
 
-        <p className="text-text-secondary mb-4">
+        <p className="text-[#374151] mb-4">
           Returning to the camera example from{" "}
-          <a href="#sec-concrete-example" className="text-text underline">
+          <a href="#sec-concrete-example" className="text-[#111827] underline">
             Section 2.1
           </a>
           : under OCC, the system would not merely attest that trusted code ran.
@@ -109,13 +109,13 @@ export default function Sections4Through6() {
           for that data. The result: no authenticated artifact is produced.
         </p>
 
-        <p className="text-text-secondary mb-4">
+        <p className="text-[#374151] mb-4">
           Returning to the provenance example from{" "}
-          <a href="#sec-provenance-example" className="text-text underline">
+          <a href="#sec-provenance-example" className="text-[#111827] underline">
             Section 2.2
           </a>
           : under OCC with reference-based verification (described in{" "}
-          <a href="#sec-verification-independence" className="text-text underline">
+          <a href="#sec-verification-independence" className="text-[#111827] underline">
             Section 9.5
           </a>
           ), the downstream consumer could still verify the stripped image by
@@ -132,16 +132,16 @@ export default function Sections4Through6() {
       {/* ================================================================ */}
       <section id="sec-tota">
         <h2 className="text-xl font-semibold mt-12 mb-4">
-          <span className="text-text-tertiary mr-2">5</span>
+          <span className="text-[#9ca3af] mr-2">5</span>
           Trusted Origin Token Architecture
         </h2>
 
-        <p className="text-text-secondary mb-4">
+        <p className="text-[#374151] mb-4">
           We begin with a concrete model that makes the enforcement principle
           tangible before generalizing.
         </p>
 
-        <p className="text-text-secondary mb-4">
+        <p className="text-[#374151] mb-4">
           The Trusted Origin Token Architecture addresses uncontrolled digital
           state creation by introducing a pre-creation authorization requirement.
           Authenticated creation requires consumption of a pre-existing
@@ -151,14 +151,14 @@ export default function Sections4Through6() {
           cannot be reused.
         </p>
 
-        <p className="text-text-secondary mb-4">
+        <p className="text-[#374151] mb-4">
           Under this model, a system may prepare candidate data freely, but
           finalization into authenticated durable form is permitted only if a
           valid unused token is consumed during the same atomic operation that
           commits the artifact.
         </p>
 
-        <p className="text-text-secondary mb-4">
+        <p className="text-[#374151] mb-4">
           The key insight is best understood through analogy. Before digital
           cameras, a photograph could only exist if film existed first. The film
           did not merely record the image&mdash;it <em>enforced</em> whether the
@@ -171,11 +171,11 @@ export default function Sections4Through6() {
         {/* 5.1 Functional Properties */}
         <section id="sec-functional-properties">
           <h3 className="text-lg font-semibold mt-8 mb-4">
-            <span className="text-text-tertiary mr-2">5.1</span>
+            <span className="text-[#9ca3af] mr-2">5.1</span>
             Functional Properties
           </h3>
 
-          <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-[#f9fafb] p-5">
             <p className="text-sm text-text">
               <strong>Property 5.1</strong> (Scarcity). Each authenticated
               artifact corresponds to exactly one token that existed prior to
@@ -183,14 +183,14 @@ export default function Sections4Through6() {
             </p>
           </div>
 
-          <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-[#f9fafb] p-5">
             <p className="text-sm text-text">
               <strong>Property 5.2</strong> (Non-Replay). Tokens cannot be
               reused. Each token authorizes exactly one finalization event.
             </p>
           </div>
 
-          <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-[#f9fafb] p-5">
             <p className="text-sm text-text">
               <strong>Property 5.3</strong> (Non-Retroactivity). Tokens cannot be
               applied after durable state already exists. Authorization must
@@ -198,7 +198,7 @@ export default function Sections4Through6() {
             </p>
           </div>
 
-          <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-[#f9fafb] p-5">
             <p className="text-sm text-text">
               <strong>Property 5.4</strong> (Commit-Path Enforcement). Token
               consumption and finalization occur within the same indivisible
@@ -206,7 +206,7 @@ export default function Sections4Through6() {
             </p>
           </div>
 
-          <p className="text-text-secondary mb-4">
+          <p className="text-[#374151] mb-4">
             The Trusted Origin Token Architecture ensures that authenticated
             durable state cannot exist unless a pre-authorized unit is
             irreversibly consumed at birth.
@@ -216,11 +216,11 @@ export default function Sections4Through6() {
         {/* 5.2 Limits of Token-Based Enforcement */}
         <section id="sec-limits-token">
           <h3 className="text-lg font-semibold mt-8 mb-4">
-            <span className="text-text-tertiary mr-2">5.2</span>
+            <span className="text-[#9ca3af] mr-2">5.2</span>
             Limits of Token-Based Enforcement
           </h3>
 
-          <p className="text-text-secondary mb-4">
+          <p className="text-[#374151] mb-4">
             While the token model provides a clear and intuitive model of origin
             control, it introduces operational complexity. Tokens must be
             generated, stored, distributed, tracked, and reconciled across
@@ -230,7 +230,7 @@ export default function Sections4Through6() {
             infrastructure-coupled to production systems.
           </p>
 
-          <p className="text-text-secondary mb-4">
+          <p className="text-[#374151] mb-4">
             More importantly, <em>tokens are not the fundamental source of trust</em>.
             What matters is not the consumption of a specific pre-existing
             object, but that an irreversible, non-repeatable authorization event
@@ -246,11 +246,11 @@ export default function Sections4Through6() {
       {/* ================================================================ */}
       <section id="sec-occ">
         <h2 className="text-xl font-semibold mt-12 mb-4">
-          <span className="text-text-tertiary mr-2">6</span>
+          <span className="text-[#9ca3af] mr-2">6</span>
           Origin Controlled Computing and Atomic Causality
         </h2>
 
-        <p className="text-text-secondary mb-4">
+        <p className="text-[#374151] mb-4">
           The Trusted Origin Token Architecture reveals a structural principle
           that is more general than tokens. What enforced origin control in TOTA
           was not the token itself&mdash;it was the fact that authenticated state
@@ -262,7 +262,7 @@ export default function Sections4Through6() {
           boundary achieves the same enforcement.
         </p>
 
-        <p className="text-text-secondary mb-4">
+        <p className="text-[#374151] mb-4">
           Origin Controlled Computing generalizes this principle. Instead of
           consuming a pre-generated token, the enforcement component generates a{" "}
           <em>boundary-fresh cryptographic value</em> <M c="N" /> during the
@@ -271,7 +271,7 @@ export default function Sections4Through6() {
           accidental duplication.
         </p>
 
-        <p className="text-text-secondary mb-4">
+        <p className="text-[#374151] mb-4">
           The reader should note what changed and what did not. What changed is
           the mechanism: tokens are replaced by boundary-fresh generation. What
           did <em>not</em> change is the enforcement invariant: authenticated
@@ -280,11 +280,11 @@ export default function Sections4Through6() {
           is the primitive. The mechanism is an implementation detail.
         </p>
 
-        <p className="text-text-secondary mb-4">
+        <p className="text-[#374151] mb-4">
           This value serves the same functional role as a consumed authorization
           unit:
         </p>
-        <ul className="list-disc pl-6 space-y-1 text-sm text-text-secondary mb-6">
+        <ul className="list-disc pl-6 space-y-1 text-sm text-[#374151] mb-6">
           <li>It could not have existed prior to the finalization event.</li>
           <li>It could not have been predicted or precomputed.</li>
           <li>It cannot be recreated after the event.</li>
@@ -295,7 +295,7 @@ export default function Sections4Through6() {
         </ul>
 
         {/* Figure 1: Token-Nonce Duality */}
-        <div className="my-8 border border-border-subtle bg-bg-elevated p-6">
+        <div className="my-8 border border-[#e5e7eb] bg-[#f9fafb] p-6">
           {/* Desktop layout */}
           <div className="hidden sm:flex items-start justify-center gap-12">
             {/* TOTA side */}
@@ -303,43 +303,43 @@ export default function Sections4Through6() {
               <div className="font-semibold text-[13px] mb-3 text-text">
                 TOTA: Token Consumption
               </div>
-              <div className="bg-bg-elevated border border-border-subtle rounded-none px-4 py-2 text-[13px] text-text-secondary mb-2">
+              <div className="bg-[#f9fafb] border border-[#e5e7eb] rounded-none px-4 py-2 text-[13px] text-[#374151] mb-2">
                 Token Pool{" "}
-                <span className="text-text-tertiary text-[11px]">
+                <span className="text-[#9ca3af] text-[11px]">
                   T&#x2081;, T&#x2082;, &hellip; T&#x2099;
                 </span>
               </div>
-              <div className="text-text-tertiary text-lg">&darr;</div>
-              <div className="border-2 border-border-subtle bg-bg-elevated rounded-none p-4 my-1">
-                <div className="border border-border-subtle rounded-none px-3.5 py-1.5 text-[13px] text-text-secondary mb-2">
+              <div className="text-[#9ca3af] text-lg">&darr;</div>
+              <div className="border-2 border-[#1A73E8]/20 bg-[#f9fafb] rounded-none p-4 my-1">
+                <div className="border border-[#e5e7eb] rounded-none px-3.5 py-1.5 text-[13px] text-[#374151] mb-2">
                   Consume T<sub>k</sub>
                 </div>
-                <div className="text-text-tertiary text-sm">&darr;</div>
-                <div className="border border-border-subtle rounded-none px-3.5 py-1.5 text-[13px] text-text-secondary my-2">
+                <div className="text-[#9ca3af] text-sm">&darr;</div>
+                <div className="border border-[#e5e7eb] rounded-none px-3.5 py-1.5 text-[13px] text-[#374151] my-2">
                   Bind (H, T<sub>k</sub>)
                 </div>
-                <div className="text-text-tertiary text-sm">&darr;</div>
-                <div className="border border-border-subtle rounded-none px-3.5 py-1.5 text-[13px] text-text-secondary mt-2">
+                <div className="text-[#9ca3af] text-sm">&darr;</div>
+                <div className="border border-[#e5e7eb] rounded-none px-3.5 py-1.5 text-[13px] text-[#374151] mt-2">
                   Commit
                 </div>
               </div>
-              <div className="text-text-tertiary text-lg">&darr;</div>
-              <div className="border border-border-subtle rounded-none px-4 py-2 text-[13px] text-text-secondary mt-1">
+              <div className="text-[#9ca3af] text-lg">&darr;</div>
+              <div className="border border-[#e5e7eb] rounded-none px-4 py-2 text-[13px] text-[#374151] mt-1">
                 Authenticated
                 <br />
                 Artifact
               </div>
-              <div className="text-text-tertiary text-[11px] mt-1">
+              <div className="text-[#9ca3af] text-[11px] mt-1">
                 1 token &rarr; 1 artifact
               </div>
             </div>
 
             {/* Equivalence divider */}
             <div className="flex flex-col items-center justify-center pt-24">
-              <div className="text-[28px] font-light text-text-tertiary">
+              <div className="text-[28px] font-light text-[#9ca3af]">
                 &equiv;
               </div>
-              <div className="text-[11px] text-text-tertiary text-center mt-0.5">
+              <div className="text-[11px] text-[#9ca3af] text-center mt-0.5">
                 same injective
                 <br />
                 genesis
@@ -351,31 +351,31 @@ export default function Sections4Through6() {
               <div className="font-semibold text-[13px] mb-3 text-text">
                 OCC: Boundary-Fresh Generation
               </div>
-              <div className="bg-bg-elevated border border-border-subtle rounded-none px-4 py-2 text-[13px] text-text-secondary mb-2">
+              <div className="bg-[#f9fafb] border border-[#e5e7eb] rounded-none px-4 py-2 text-[13px] text-[#374151] mb-2">
                 Freshness Source{" "}
-                <span className="text-text-tertiary text-[11px]">CSPRNG</span>
+                <span className="text-[#9ca3af] text-[11px]">CSPRNG</span>
               </div>
-              <div className="text-text-tertiary text-lg">&darr;</div>
-              <div className="border-2 border-border-subtle bg-bg-elevated rounded-none p-4 my-1">
-                <div className="border border-border-subtle rounded-none px-3.5 py-1.5 text-[13px] text-text-secondary mb-2">
+              <div className="text-[#9ca3af] text-lg">&darr;</div>
+              <div className="border-2 border-[#1A73E8]/20 bg-[#f9fafb] rounded-none p-4 my-1">
+                <div className="border border-[#e5e7eb] rounded-none px-3.5 py-1.5 text-[13px] text-[#374151] mb-2">
                   Generate N
                 </div>
-                <div className="text-text-tertiary text-sm">&darr;</div>
-                <div className="border border-border-subtle rounded-none px-3.5 py-1.5 text-[13px] text-text-secondary my-2">
+                <div className="text-[#9ca3af] text-sm">&darr;</div>
+                <div className="border border-[#e5e7eb] rounded-none px-3.5 py-1.5 text-[13px] text-[#374151] my-2">
                   Bind (H, N)
                 </div>
-                <div className="text-text-tertiary text-sm">&darr;</div>
-                <div className="border border-border-subtle rounded-none px-3.5 py-1.5 text-[13px] text-text-secondary mt-2">
+                <div className="text-[#9ca3af] text-sm">&darr;</div>
+                <div className="border border-[#e5e7eb] rounded-none px-3.5 py-1.5 text-[13px] text-[#374151] mt-2">
                   Commit
                 </div>
               </div>
-              <div className="text-text-tertiary text-lg">&darr;</div>
-              <div className="border border-border-subtle rounded-none px-4 py-2 text-[13px] text-text-secondary mt-1">
+              <div className="text-[#9ca3af] text-lg">&darr;</div>
+              <div className="border border-[#e5e7eb] rounded-none px-4 py-2 text-[13px] text-[#374151] mt-1">
                 Authenticated
                 <br />
                 Artifact
               </div>
-              <div className="text-text-tertiary text-[11px] mt-1">
+              <div className="text-[#9ca3af] text-[11px] mt-1">
                 1 nonce &rarr; 1 artifact
               </div>
             </div>
@@ -386,73 +386,73 @@ export default function Sections4Through6() {
             <div className="font-semibold text-[13px] mb-2 text-text">
               TOTA: Token Consumption
             </div>
-            <div className="w-full border border-border-subtle rounded-none px-4 py-2 text-[13px] text-text-secondary text-center">
+            <div className="w-full border border-[#e5e7eb] rounded-none px-4 py-2 text-[13px] text-[#374151] text-center">
               Token Pool{" "}
-              <span className="text-text-tertiary text-[11px]">
+              <span className="text-[#9ca3af] text-[11px]">
                 T&#x2081;, T&#x2082;, &hellip; T&#x2099;
               </span>
             </div>
-            <div className="text-text-tertiary">&darr;</div>
-            <div className="w-full border-2 border-border-subtle bg-bg-elevated rounded-none p-3 text-center">
-              <div className="text-[13px] text-text-secondary mb-1.5">
+            <div className="text-[#9ca3af]">&darr;</div>
+            <div className="w-full border-2 border-[#1A73E8]/20 bg-[#f9fafb] rounded-none p-3 text-center">
+              <div className="text-[13px] text-[#374151] mb-1.5">
                 Consume T<sub>k</sub>
               </div>
-              <div className="text-text-tertiary">&darr;</div>
-              <div className="text-[13px] text-text-secondary my-1.5">
+              <div className="text-[#9ca3af]">&darr;</div>
+              <div className="text-[13px] text-[#374151] my-1.5">
                 Bind (H, T<sub>k</sub>)
               </div>
-              <div className="text-text-tertiary">&darr;</div>
-              <div className="text-[13px] text-text-secondary mt-1.5">
+              <div className="text-[#9ca3af]">&darr;</div>
+              <div className="text-[13px] text-[#374151] mt-1.5">
                 Commit
               </div>
             </div>
-            <div className="text-text-tertiary">&darr;</div>
-            <div className="w-full border border-border-subtle rounded-none px-4 py-2 text-[13px] text-text-secondary text-center">
+            <div className="text-[#9ca3af]">&darr;</div>
+            <div className="w-full border border-[#e5e7eb] rounded-none px-4 py-2 text-[13px] text-[#374151] text-center">
               Authenticated Artifact
             </div>
-            <div className="text-[11px] text-text-tertiary">
+            <div className="text-[11px] text-[#9ca3af]">
               1 token &rarr; 1 artifact
             </div>
 
-            <div className="text-[22px] font-light text-text-tertiary mt-2">
+            <div className="text-[22px] font-light text-[#9ca3af] mt-2">
               &equiv;
             </div>
-            <div className="text-[11px] text-text-tertiary mb-4">
+            <div className="text-[11px] text-[#9ca3af] mb-4">
               same injective genesis
             </div>
 
             <div className="font-semibold text-[13px] mb-2 text-text">
               OCC: Boundary-Fresh Generation
             </div>
-            <div className="w-full border border-border-subtle rounded-none px-4 py-2 text-[13px] text-text-secondary text-center">
+            <div className="w-full border border-[#e5e7eb] rounded-none px-4 py-2 text-[13px] text-[#374151] text-center">
               Freshness Source{" "}
-              <span className="text-text-tertiary text-[11px]">CSPRNG</span>
+              <span className="text-[#9ca3af] text-[11px]">CSPRNG</span>
             </div>
-            <div className="text-text-tertiary">&darr;</div>
-            <div className="w-full border-2 border-border-subtle bg-bg-elevated rounded-none p-3 text-center">
-              <div className="text-[13px] text-text-secondary mb-1.5">
+            <div className="text-[#9ca3af]">&darr;</div>
+            <div className="w-full border-2 border-[#1A73E8]/20 bg-[#f9fafb] rounded-none p-3 text-center">
+              <div className="text-[13px] text-[#374151] mb-1.5">
                 Generate N
               </div>
-              <div className="text-text-tertiary">&darr;</div>
-              <div className="text-[13px] text-text-secondary my-1.5">
+              <div className="text-[#9ca3af]">&darr;</div>
+              <div className="text-[13px] text-[#374151] my-1.5">
                 Bind (H, N)
               </div>
-              <div className="text-text-tertiary">&darr;</div>
-              <div className="text-[13px] text-text-secondary mt-1.5">
+              <div className="text-[#9ca3af]">&darr;</div>
+              <div className="text-[13px] text-[#374151] mt-1.5">
                 Commit
               </div>
             </div>
-            <div className="text-text-tertiary">&darr;</div>
-            <div className="w-full border border-border-subtle rounded-none px-4 py-2 text-[13px] text-text-secondary text-center">
+            <div className="text-[#9ca3af]">&darr;</div>
+            <div className="w-full border border-[#e5e7eb] rounded-none px-4 py-2 text-[13px] text-[#374151] text-center">
               Authenticated Artifact
             </div>
-            <div className="text-[11px] text-text-tertiary">
+            <div className="text-[11px] text-[#9ca3af]">
               1 nonce &rarr; 1 artifact
             </div>
           </div>
 
-          <p className="text-xs text-text-tertiary mt-4 leading-relaxed">
-            <strong className="text-text-secondary">Figure 1.</strong>{" "}
+          <p className="text-xs text-[#9ca3af] mt-4 leading-relaxed">
+            <strong className="text-[#374151]">Figure 1.</strong>{" "}
             Token&ndash;Nonce duality. TOTA (left) consumes a pre-existing token
             from a finite pool. OCC (right) generates a boundary-fresh value
             from a cryptographic source. Both enforce the same invariant: each
@@ -463,7 +463,7 @@ export default function Sections4Through6() {
           </p>
         </div>
 
-        <p className="text-text-secondary mb-4">
+        <p className="text-[#374151] mb-4">
           The equivalence shown in Figure 1 is structural, not operational. The
           reader should resist the interpretation that OCC merely replaces
           physical tokens with virtual ones. The insight is the reverse: TOTA is
@@ -477,7 +477,7 @@ export default function Sections4Through6() {
           mechanism.
         </p>
 
-        <p className="text-text-secondary mb-4">
+        <p className="text-[#374151] mb-4">
           Similarly, the boundary-fresh value <M c="N" /> should not be
           understood as merely a &ldquo;nonce for replay protection.&rdquo; In
           conventional protocols, nonces prevent message replay. In OCC, the
@@ -491,17 +491,17 @@ export default function Sections4Through6() {
         {/* 6.1 Atomic Causality */}
         <section id="sec-atomic-causality">
           <h3 className="text-lg font-semibold mt-8 mb-4">
-            <span className="text-text-tertiary mr-2">6.1</span>
+            <span className="text-[#9ca3af] mr-2">6.1</span>
             Atomic Causality
           </h3>
 
-          <p className="text-text-secondary mb-4">
+          <p className="text-[#374151] mb-4">
             Under Atomic Causality, three operations are linked into a single
             indivisible event inside an atomic execution boundary, completed only
             through a protected commit interface requiring a boundary-held
             capability:
           </p>
-          <ol className="list-decimal pl-6 space-y-1 text-sm text-text-secondary mb-6">
+          <ol className="list-decimal pl-6 space-y-1 text-sm text-[#374151] mb-6">
             <li>
               <strong className="text-text">Authorization</strong>: A
               boundary-held capability is exercised.
@@ -517,14 +517,14 @@ export default function Sections4Through6() {
             </li>
           </ol>
 
-          <p className="text-text-secondary mb-4">
+          <p className="text-[#374151] mb-4">
             Authenticated durable state is reachable only if these operations
             occur together, in order, within the same atomic execution boundary.
             If any step fails, no authenticated artifact is produced.
           </p>
 
           {/* Figure 2: Atomic Causality */}
-          <div className="my-8 border border-border-subtle bg-bg-elevated p-6">
+          <div className="my-8 border border-[#e5e7eb] bg-[#f9fafb] p-6">
             {/* Desktop layout */}
             <div className="hidden sm:flex items-start justify-center gap-12">
               {/* OCC side */}
@@ -532,23 +532,23 @@ export default function Sections4Through6() {
                 <div className="font-semibold text-[13px] mb-3 text-text">
                   OCC: Atomic Causality
                 </div>
-                <div className="border-2 border-border-subtle bg-bg-elevated rounded-none p-4">
-                  <div className="border border-text-tertiary rounded-none px-5 py-2 text-[13px] text-text-secondary mb-2">
+                <div className="border-2 border-[#1A73E8]/20 bg-[#f9fafb] rounded-none p-4">
+                  <div className="border border-text-tertiary rounded-none px-5 py-2 text-[13px] text-[#374151] mb-2">
                     1. Authorize
                   </div>
-                  <div className="text-text-tertiary text-sm">&darr;</div>
-                  <div className="border border-text-tertiary rounded-none px-5 py-2 text-[13px] text-text-secondary my-2">
+                  <div className="text-[#9ca3af] text-sm">&darr;</div>
+                  <div className="border border-text-tertiary rounded-none px-5 py-2 text-[13px] text-[#374151] my-2">
                     2. Bind
                   </div>
-                  <div className="text-text-tertiary text-sm">&darr;</div>
-                  <div className="border border-text-tertiary rounded-none px-5 py-2 text-[13px] text-text-secondary mt-2">
+                  <div className="text-[#9ca3af] text-sm">&darr;</div>
+                  <div className="border border-text-tertiary rounded-none px-5 py-2 text-[13px] text-[#374151] mt-2">
                     3. Commit
                   </div>
                 </div>
-                <div className="text-[11px] text-text-tertiary mt-1.5">
+                <div className="text-[11px] text-[#9ca3af] mt-1.5">
                   single atomic operation
                 </div>
-                <div className="text-text-secondary text-xl mt-1">
+                <div className="text-[#374151] text-xl mt-1">
                   &#x2713;
                 </div>
               </div>
@@ -559,29 +559,29 @@ export default function Sections4Through6() {
                   Non-OCC: Separated Steps
                 </div>
                 <div className="p-4">
-                  <div className="border border-border-subtle rounded-none px-5 py-2 text-[13px] text-text-secondary">
+                  <div className="border border-[#e5e7eb] rounded-none px-5 py-2 text-[13px] text-[#374151]">
                     1. Authorize
                   </div>
                   <div className="flex items-center justify-center gap-2 my-1.5">
-                    <span className="text-text-tertiary text-sm">&darr;</span>
-                    <span className="text-[11px] text-text-tertiary border-l-2 border-dashed border-text-tertiary pl-2">
+                    <span className="text-[#9ca3af] text-sm">&darr;</span>
+                    <span className="text-[11px] text-[#9ca3af] border-l-2 border-dashed border-text-tertiary pl-2">
                       &larr; observable gap
                     </span>
                   </div>
-                  <div className="border border-border-subtle rounded-none px-5 py-2 text-[13px] text-text-secondary">
+                  <div className="border border-[#e5e7eb] rounded-none px-5 py-2 text-[13px] text-[#374151]">
                     2. Bind
                   </div>
                   <div className="flex items-center justify-center gap-2 my-1.5">
-                    <span className="text-text-tertiary text-sm">&darr;</span>
-                    <span className="text-[11px] text-text-tertiary border-l-2 border-dashed border-text-tertiary pl-2">
+                    <span className="text-[#9ca3af] text-sm">&darr;</span>
+                    <span className="text-[11px] text-[#9ca3af] border-l-2 border-dashed border-text-tertiary pl-2">
                       &larr; observable gap
                     </span>
                   </div>
-                  <div className="border border-border-subtle rounded-none px-5 py-2 text-[13px] text-text-secondary">
+                  <div className="border border-[#e5e7eb] rounded-none px-5 py-2 text-[13px] text-[#374151]">
                     3. Commit
                   </div>
                 </div>
-                <div className="text-text-tertiary text-xl mt-1">
+                <div className="text-[#9ca3af] text-xl mt-1">
                   &#x2717;
                 </div>
               </div>
@@ -593,53 +593,53 @@ export default function Sections4Through6() {
                 <div className="font-semibold text-[13px] mb-3 text-text">
                   OCC: Atomic Causality
                 </div>
-                <div className="border-2 border-border-subtle bg-bg-elevated rounded-none p-4">
-                  <div className="border border-text-tertiary rounded-none px-5 py-2 text-[13px] text-text-secondary mb-2">
+                <div className="border-2 border-[#1A73E8]/20 bg-[#f9fafb] rounded-none p-4">
+                  <div className="border border-text-tertiary rounded-none px-5 py-2 text-[13px] text-[#374151] mb-2">
                     1. Authorize
                   </div>
-                  <div className="text-text-tertiary">&darr;</div>
-                  <div className="border border-text-tertiary rounded-none px-5 py-2 text-[13px] text-text-secondary my-2">
+                  <div className="text-[#9ca3af]">&darr;</div>
+                  <div className="border border-text-tertiary rounded-none px-5 py-2 text-[13px] text-[#374151] my-2">
                     2. Bind
                   </div>
-                  <div className="text-text-tertiary">&darr;</div>
-                  <div className="border border-text-tertiary rounded-none px-5 py-2 text-[13px] text-text-secondary mt-2">
+                  <div className="text-[#9ca3af]">&darr;</div>
+                  <div className="border border-text-tertiary rounded-none px-5 py-2 text-[13px] text-[#374151] mt-2">
                     3. Commit
                   </div>
                 </div>
-                <div className="text-[11px] text-text-tertiary mt-1.5">
+                <div className="text-[11px] text-[#9ca3af] mt-1.5">
                   single atomic operation &#x2713;
                 </div>
               </div>
 
-              <div className="border-t border-border-subtle pt-5 text-center">
+              <div className="border-t border-[#e5e7eb] pt-5 text-center">
                 <div className="font-semibold text-[13px] mb-3 text-text">
                   Non-OCC: Separated Steps
                 </div>
                 <div className="px-3 py-2">
-                  <div className="border border-dashed border-border-subtle rounded-none px-5 py-2 text-[13px] text-text-tertiary mb-2">
+                  <div className="border border-dashed border-[#e5e7eb] rounded-none px-5 py-2 text-[13px] text-[#9ca3af] mb-2">
                     Authorize
                   </div>
-                  <div className="text-text-tertiary">
+                  <div className="text-[#9ca3af]">
                     &darr; (separate call)
                   </div>
-                  <div className="border border-dashed border-border-subtle rounded-none px-5 py-2 text-[13px] text-text-tertiary my-2">
+                  <div className="border border-dashed border-[#e5e7eb] rounded-none px-5 py-2 text-[13px] text-[#9ca3af] my-2">
                     Bind
                   </div>
-                  <div className="text-text-tertiary">
+                  <div className="text-[#9ca3af]">
                     &darr; (separate call)
                   </div>
-                  <div className="border border-dashed border-border-subtle rounded-none px-5 py-2 text-[13px] text-text-tertiary mt-2">
+                  <div className="border border-dashed border-[#e5e7eb] rounded-none px-5 py-2 text-[13px] text-[#9ca3af] mt-2">
                     Commit
                   </div>
                 </div>
-                <div className="text-[11px] text-text-tertiary mt-1.5">
+                <div className="text-[11px] text-[#9ca3af] mt-1.5">
                   gap allows bypass &#x2717;
                 </div>
               </div>
             </div>
 
-            <p className="text-xs text-text-tertiary mt-4 leading-relaxed">
-              <strong className="text-text-secondary">Figure 2.</strong> Atomic
+            <p className="text-xs text-[#9ca3af] mt-4 leading-relaxed">
+              <strong className="text-[#374151]">Figure 2.</strong> Atomic
               Causality versus separated operations. In OCC (left),
               authorization, binding, and commit occur as a single indivisible
               event inside the boundary with no externally observable
@@ -653,17 +653,17 @@ export default function Sections4Through6() {
         {/* 6.2 Why This Is Not Attested Execution */}
         <section id="sec-not-attestation">
           <h3 className="text-lg font-semibold mt-8 mb-4">
-            <span className="text-text-tertiary mr-2">6.2</span>
+            <span className="text-[#9ca3af] mr-2">6.2</span>
             Why This Is Not Attested Execution
           </h3>
 
-          <p className="text-text-secondary mb-4">
+          <p className="text-[#374151] mb-4">
             This enforcement model is not equivalent to conventional attested
             execution followed by signing. The distinction is precise and
             consequential.
           </p>
 
-          <p className="text-text-secondary mb-4">
+          <p className="text-[#374151] mb-4">
             Attestation-based systems can demonstrate that particular trusted
             code executed and produced particular signed outputs. This answers
             the question: <em>&ldquo;Was this artifact produced by trusted
@@ -673,7 +673,7 @@ export default function Sections4Through6() {
             commit path?&rdquo;</em>
           </p>
 
-          <p className="text-text-secondary mb-4">
+          <p className="text-[#374151] mb-4">
             In most attestation-based systems, enforcement is advisory. Trusted
             processes may produce signed outputs, while untrusted processes may
             still produce durable state that enters downstream systems through
@@ -681,7 +681,7 @@ export default function Sections4Through6() {
             path&mdash;it is in the unattested paths that remain open.
           </p>
 
-          <p className="text-text-secondary mb-4">
+          <p className="text-[#374151] mb-4">
             Origin Controlled Computing closes this gap. Authenticated durable
             state is reachable <em>only</em> through protected commit paths that
             enforce atomic binding, authorization, and durable commit at the
@@ -696,11 +696,11 @@ export default function Sections4Through6() {
         {/* 6.3 Token-Equivalence of Boundary-Fresh Generation */}
         <section id="sec-token-equivalence">
           <h3 className="text-lg font-semibold mt-8 mb-4">
-            <span className="text-text-tertiary mr-2">6.3</span>
+            <span className="text-[#9ca3af] mr-2">6.3</span>
             Token-Equivalence of Boundary-Fresh Generation
           </h3>
 
-          <p className="text-text-secondary mb-4">
+          <p className="text-[#374151] mb-4">
             Token-equivalence does not arise from uniqueness alone. It arises
             from atomic, attested finalization that combines several properties:
             boundary isolation ensures the fresh output is generated only inside
@@ -712,7 +712,7 @@ export default function Sections4Through6() {
             trust anchors.
           </p>
 
-          <p className="text-text-secondary mb-4">
+          <p className="text-[#374151] mb-4">
             Together, these properties ensure that producing valid verification
             material implies that a specific authorization event occurred inside
             the boundary at finalization time. The fresh value <M c="N" />{" "}
@@ -726,7 +726,7 @@ export default function Sections4Through6() {
             enforcement guarantee.
           </p>
 
-          <p className="text-text-secondary mb-4">
+          <p className="text-[#374151] mb-4">
             Functionally, the space of possible boundary-fresh outputs acts as
             an effectively inexhaustible universe of unused authorization units,
             and generating one during finalization constitutes irreversible

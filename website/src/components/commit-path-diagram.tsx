@@ -2,7 +2,7 @@
 
 function Math({ children }: { children: React.ReactNode }) {
   return (
-    <div className="text-[9px] sm:text-base font-mono text-text leading-relaxed mb-3 whitespace-nowrap overflow-x-auto">
+    <div className="text-[9px] sm:text-base font-mono text-[#111827] leading-relaxed mb-3 whitespace-nowrap overflow-x-auto">
       {children}
     </div>
   );
@@ -57,13 +57,13 @@ export function CommitPathDiagram() {
       {equations.map((eq) => (
         <div
           key={eq.label}
-          className="border border-border-subtle bg-bg-elevated p-4 sm:p-5"
+          className="border border-[#e5e7eb] border-l-[3px] border-l-[#1A73E8] bg-[#f9fafb] p-4 sm:p-5"
         >
-          <div className="text-[10px] font-medium uppercase tracking-wider text-text-tertiary mb-3">
+          <div className="text-[10px] font-medium uppercase tracking-wider text-[#1A73E8] mb-3">
             {eq.label}
           </div>
           {eq.math}
-          <p className="text-xs text-text-tertiary leading-relaxed">
+          <p className="text-xs text-[#9ca3af] leading-relaxed">
             {eq.note}
           </p>
         </div>

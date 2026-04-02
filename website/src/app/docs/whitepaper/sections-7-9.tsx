@@ -8,10 +8,10 @@ export default function Sections7to9() {
       {/* ================================================================ */}
       <section id="sec-formal">
         <h2 className="text-xl font-semibold mt-12 mb-4">
-          <span className="text-text-tertiary mr-2">7</span> Formal Model
+          <span className="text-[#9ca3af] mr-2">7</span> Formal Model
         </h2>
 
-        <p className="text-sm text-text-secondary leading-relaxed mb-6">
+        <p className="text-sm text-[#374151] leading-relaxed mb-6">
           We formalize Origin Controlled Computing using a labeled transition
           system and closure algebra. This formalization captures the essential
           properties of the architecture and enables precise comparison with
@@ -21,17 +21,17 @@ export default function Sections7to9() {
         {/* 7.1 */}
         <section id="sec-state-space">
           <h3 className="text-lg font-semibold mt-8 mb-3">
-            <span className="text-text-tertiary mr-2">7.1</span> State Space
+            <span className="text-[#9ca3af] mr-2">7.1</span> State Space
             and Transition System
           </h3>
 
-          <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
-            <p className="text-sm text-text leading-relaxed mb-3">
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-[#f9fafb] p-5">
+            <p className="text-sm text-[#111827] leading-relaxed mb-3">
               <strong>Definition 7.1</strong> (OCC System). An OCC system is a
               labeled transition system{" "}
               <M c={"(\\Sigma, \\rightarrow, E)"} /> where:
             </p>
-            <ul className="space-y-2 text-sm text-text-secondary">
+            <ul className="space-y-2 text-sm text-[#374151]">
               <li>
                 <M c={"\\Sigma"} /> is the state space, partitioned into{" "}
                 <M
@@ -65,7 +65,7 @@ export default function Sections7to9() {
             </ul>
           </div>
 
-          <p className="text-sm text-text-secondary leading-relaxed mb-6">
+          <p className="text-sm text-[#374151] leading-relaxed mb-6">
             The genesis constructor relation <M c={"\\mathcal{C}"} /> captures
             the protected commit interface: it is the only relation that
             produces elements of <M c={"\\Sigma_{\\text{auth}}"} />. Candidate
@@ -77,16 +77,16 @@ export default function Sections7to9() {
         {/* 7.2 */}
         <section id="sec-core-invariants">
           <h3 className="text-lg font-semibold mt-8 mb-3">
-            <span className="text-text-tertiary mr-2">7.2</span> Core
+            <span className="text-[#9ca3af] mr-2">7.2</span> Core
             Invariants
           </h3>
 
-          <p className="text-sm text-text-secondary leading-relaxed mb-4">
+          <p className="text-sm text-[#374151] leading-relaxed mb-4">
             An OCC-compliant system enforces three invariants:
           </p>
 
-          <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
-            <p className="text-sm text-text leading-relaxed mb-2">
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-[#f9fafb] p-5">
+            <p className="text-sm text-[#111827] leading-relaxed mb-2">
               <strong>Invariant 7.2</strong> (Constructibility — Closure
               Property).
             </p>
@@ -95,7 +95,7 @@ export default function Sections7to9() {
                 "\\forall\\, s' \\in \\Sigma_{\\text{auth}} : s' \\in \\mathrm{Cl}_{\\mathcal{C}}(E_{\\text{auth}})"
               }
             />
-            <p className="text-sm text-text-secondary leading-relaxed mt-2 mb-1">
+            <p className="text-sm text-[#374151] leading-relaxed mt-2 mb-1">
               where{" "}
               <M
                 c={
@@ -104,14 +104,14 @@ export default function Sections7to9() {
               />
               .
             </p>
-            <p className="text-sm text-text-secondary leading-relaxed">
+            <p className="text-sm text-[#374151] leading-relaxed">
               Every element of the authenticated state space was produced by a
               genesis constructor under an authorized event.
             </p>
           </div>
 
-          <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
-            <p className="text-sm text-text leading-relaxed mb-2">
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-[#f9fafb] p-5">
+            <p className="text-sm text-[#111827] leading-relaxed mb-2">
               <strong>Invariant 7.3</strong> (Constructor Completeness —
               Unforgeability).
             </p>
@@ -120,7 +120,7 @@ export default function Sections7to9() {
                 "\\forall\\, s, s', e :\\; (s \\xrightarrow{e} s' \\;\\wedge\\; s' \\in \\Sigma_{\\text{auth}}) \\;\\Rightarrow\\; (e \\in E_{\\text{auth}} \\;\\wedge\\; (s, e, s') \\in \\mathcal{C})"
               }
             />
-            <p className="text-sm text-text-secondary leading-relaxed mt-2">
+            <p className="text-sm text-[#374151] leading-relaxed mt-2">
               All transitions into the authenticated state space are genesis
               constructors under authorized events. There is no transition into{" "}
               <M c={"\\Sigma_{\\text{auth}}"} /> that bypasses{" "}
@@ -128,8 +128,8 @@ export default function Sections7to9() {
             </p>
           </div>
 
-          <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
-            <p className="text-sm text-text leading-relaxed mb-2">
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-[#f9fafb] p-5">
+            <p className="text-sm text-[#111827] leading-relaxed mb-2">
               <strong>Invariant 7.4</strong> (Atomic Causality —
               Indivisibility).
             </p>
@@ -138,7 +138,7 @@ export default function Sections7to9() {
                 "\\forall\\, (s, e, s') \\in \\mathcal{C} :\\; \\text{authorize}(e),\\; \\text{bind}(e),\\; \\text{commit}(s')"
               }
             />
-            <p className="text-sm text-text-secondary leading-relaxed mt-2">
+            <p className="text-sm text-[#374151] leading-relaxed mt-2">
               occur in a single atomic transition with no intermediate states
               observable outside the protected boundary. Authorization,
               cryptographic binding, and durable commit are inseparable within
@@ -150,11 +150,11 @@ export default function Sections7to9() {
         {/* 7.3 */}
         <section id="sec-closure-algebra">
           <h3 className="text-lg font-semibold mt-8 mb-3">
-            <span className="text-text-tertiary mr-2">7.3</span> Authenticated
+            <span className="text-[#9ca3af] mr-2">7.3</span> Authenticated
             State as Closure Algebra
           </h3>
 
-          <p className="text-sm text-text-secondary leading-relaxed mb-4">
+          <p className="text-sm text-[#374151] leading-relaxed mb-4">
             The authenticated state space{" "}
             <M c={"\\Sigma_{\\text{auth}}"} /> forms a{" "}
             <em>closure space</em> generated by authorization events through
@@ -166,7 +166,7 @@ export default function Sections7to9() {
             }
           />
 
-          <p className="text-sm text-text-secondary leading-relaxed my-4">
+          <p className="text-sm text-[#374151] leading-relaxed my-4">
             The invariant{" "}
             <M
               c={
@@ -179,10 +179,10 @@ export default function Sections7to9() {
             than a local property of individual artifacts.
           </p>
 
-          <p className="text-sm text-text-secondary leading-relaxed mb-2">
+          <p className="text-sm text-[#374151] leading-relaxed mb-2">
             This formulation connects to existing mathematical structures:
           </p>
-          <ul className="space-y-2 text-sm text-text-secondary mb-6">
+          <ul className="space-y-2 text-sm text-[#374151] mb-6">
             <li>
               <strong className="text-text">Order theory</strong>:{" "}
               <M c={"\\Sigma_{\\text{auth}}"} /> forms a Moore family (closed
@@ -205,18 +205,18 @@ export default function Sections7to9() {
         {/* 7.4 */}
         <section id="sec-duality">
           <h3 className="text-lg font-semibold mt-8 mb-3">
-            <span className="text-text-tertiary mr-2">7.4</span> Token–Nonce
+            <span className="text-[#9ca3af] mr-2">7.4</span> Token–Nonce
             Duality
           </h3>
 
-          <p className="text-sm text-text-secondary leading-relaxed mb-4">
+          <p className="text-sm text-[#374151] leading-relaxed mb-4">
             The Trusted Origin Token Architecture and Origin Controlled
             Computing enforce the same injective genesis invariant through dual
             mechanisms:
           </p>
 
-          <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
-            <p className="text-sm text-text leading-relaxed">
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-[#f9fafb] p-5">
+            <p className="text-sm text-[#111827] leading-relaxed">
               <strong>Definition 7.5</strong> (Injective Genesis). A system
               enforces injective genesis if and only if the map{" "}
               <M
@@ -232,7 +232,7 @@ export default function Sections7to9() {
             </p>
           </div>
 
-          <p className="text-sm text-text-secondary leading-relaxed mb-4">
+          <p className="text-sm text-[#374151] leading-relaxed mb-4">
             <strong className="text-text">Token Conservation (TOTA).</strong>{" "}
             Authorization events are reified as consumable tokens. Consumption
             tracking enforces{" "}
@@ -245,7 +245,7 @@ export default function Sections7to9() {
             types in linear logic.
           </p>
 
-          <p className="text-sm text-text-secondary leading-relaxed mb-4">
+          <p className="text-sm text-[#374151] leading-relaxed mb-4">
             <strong className="text-text">
               Boundary-Fresh Uniqueness (OCC).
             </strong>{" "}
@@ -256,7 +256,7 @@ export default function Sections7to9() {
             freshness guarantees.
           </p>
 
-          <p className="text-sm text-text-secondary leading-relaxed mb-4">
+          <p className="text-sm text-[#374151] leading-relaxed mb-4">
             Under perfect cryptography and uncompromised boundary assumptions,
             these mechanisms are <em>cryptographic duals</em>: they enforce the
             same cardinality constraint{" "}
@@ -271,8 +271,8 @@ export default function Sections7to9() {
             from collision resistance and freshness guarantees.
           </p>
 
-          <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
-            <p className="text-sm text-text leading-relaxed mb-3">
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-[#f9fafb] p-5">
+            <p className="text-sm text-[#111827] leading-relaxed mb-3">
               <strong>Remark 7.6</strong> (Structural Non-Reusability).
               Injective genesis ensures that no authorization event can
               contribute to more than one authenticated artifact, and no
@@ -284,7 +284,7 @@ export default function Sections7to9() {
               genesis constructor, not a bookkeeping constraint enforced by
               external tracking.
             </p>
-            <p className="text-sm text-text-secondary leading-relaxed">
+            <p className="text-sm text-[#374151] leading-relaxed">
               Readers familiar with distributed ledger systems may recognize an
               analogy to double-spend prevention. The invariant is similar —{" "}
               <M
@@ -309,11 +309,11 @@ export default function Sections7to9() {
       {/* ================================================================ */}
       <section id="sec-security">
         <h2 className="text-xl font-semibold mt-12 mb-4">
-          <span className="text-text-tertiary mr-2">8</span> Adversarial Model
+          <span className="text-[#9ca3af] mr-2">8</span> Adversarial Model
           and Security Game
         </h2>
 
-        <p className="text-sm text-text-secondary leading-relaxed mb-6">
+        <p className="text-sm text-[#374151] leading-relaxed mb-6">
           We define a security game that captures the adversarial setting in
           which Origin Controlled Computing operates.
         </p>
@@ -321,13 +321,13 @@ export default function Sections7to9() {
         {/* 8.1 */}
         <section id="sec-threat-model">
           <h3 className="text-lg font-semibold mt-8 mb-3">
-            <span className="text-text-tertiary mr-2">8.1</span> Threat Model
+            <span className="text-[#9ca3af] mr-2">8.1</span> Threat Model
           </h3>
 
-          <p className="text-sm text-text-secondary leading-relaxed mb-3">
+          <p className="text-sm text-[#374151] leading-relaxed mb-3">
             The adversary <M c={"\\mathcal{A}"} /> is assumed to possess:
           </p>
-          <ul className="space-y-2 text-sm text-text-secondary mb-6">
+          <ul className="space-y-2 text-sm text-[#374151] mb-6">
             <li>
               Full control of application code executing outside the atomic
               execution boundary.
@@ -342,10 +342,10 @@ export default function Sections7to9() {
             </li>
           </ul>
 
-          <p className="text-sm text-text-secondary leading-relaxed mb-3">
+          <p className="text-sm text-[#374151] leading-relaxed mb-3">
             The adversary does <em>not</em> possess:
           </p>
-          <ul className="space-y-2 text-sm text-text-secondary mb-6">
+          <ul className="space-y-2 text-sm text-[#374151] mb-6">
             <li>
               The ability to execute code inside the atomic execution boundary.
             </li>
@@ -363,12 +363,12 @@ export default function Sections7to9() {
         {/* 8.2 */}
         <section id="sec-forgery-game">
           <h3 className="text-lg font-semibold mt-8 mb-3">
-            <span className="text-text-tertiary mr-2">8.2</span> Security Game:
+            <span className="text-[#9ca3af] mr-2">8.2</span> Security Game:
             Origin Forgery
           </h3>
 
-          <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
-            <p className="text-sm text-text leading-relaxed mb-3">
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-[#f9fafb] p-5">
+            <p className="text-sm text-[#111827] leading-relaxed mb-3">
               <strong>Definition 8.1</strong> (Origin Forgery Game). The game{" "}
               <M
                 c={
@@ -378,7 +378,7 @@ export default function Sections7to9() {
               proceeds as follows, where <M c={"\\lambda"} /> is the security
               parameter:
             </p>
-            <ol className="space-y-2 text-sm text-text-secondary list-decimal list-inside">
+            <ol className="space-y-2 text-sm text-[#374151] list-decimal list-inside">
               <li>
                 <strong className="text-text">Setup.</strong> The challenger
                 initializes an OCC system with boundary identity{" "}
@@ -415,8 +415,8 @@ export default function Sections7to9() {
             </ol>
           </div>
 
-          <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
-            <p className="text-sm text-text leading-relaxed mb-2">
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-[#f9fafb] p-5">
+            <p className="text-sm text-[#111827] leading-relaxed mb-2">
               <strong>Definition 8.2</strong> (OCC Security). An OCC system is{" "}
               <em>secure</em> if for all probabilistic polynomial-time
               adversaries <M c={"\\mathcal{A}"} />:
@@ -428,8 +428,8 @@ export default function Sections7to9() {
             />
           </div>
 
-          <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
-            <p className="text-sm text-text leading-relaxed">
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-[#f9fafb] p-5">
+            <p className="text-sm text-[#111827] leading-relaxed">
               <strong>Proposition 8.3</strong> (Security Reduction). If the
               signature scheme is existentially unforgeable under
               chosen-message attack (EUF-CMA) and the freshness source is
@@ -438,8 +438,8 @@ export default function Sections7to9() {
             </p>
           </div>
 
-          <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
-            <p className="text-sm text-text leading-relaxed mb-3">
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-[#f9fafb] p-5">
+            <p className="text-sm text-[#111827] leading-relaxed mb-3">
               <strong>Proof sketch.</strong> Suppose adversary{" "}
               <M c={"\\mathcal{A}"} /> wins the Origin Forgery Game with
               non-negligible probability. Then <M c={"\\mathcal{A}"} /> has
@@ -451,7 +451,7 @@ export default function Sections7to9() {
               <M c={"H^*"} />. Since <M c={"\\mathcal{A}"} /> did not invoke
               the boundary, either:
             </p>
-            <ol className="space-y-1 text-sm text-text-secondary list-[lower-alpha] list-inside">
+            <ol className="space-y-1 text-sm text-[#374151] list-[lower-alpha] list-inside">
               <li>
                 <M c={"\\mathcal{A}"} /> forged the signature, contradicting
                 EUF-CMA security; or
@@ -467,12 +467,12 @@ export default function Sections7to9() {
                 win condition.
               </li>
             </ol>
-            <p className="text-sm text-text-secondary leading-relaxed mt-3">
+            <p className="text-sm text-[#374151] leading-relaxed mt-3">
               Therefore no PPT adversary wins with non-negligible probability.
             </p>
           </div>
 
-          <p className="text-sm text-text-secondary leading-relaxed mb-6">
+          <p className="text-sm text-[#374151] leading-relaxed mb-6">
             This reduction relies on two distinct classes of assumption:
             cryptographic assumptions (EUF-CMA signature security, collision
             resistance of the freshness source) and architectural assumptions
@@ -489,11 +489,11 @@ export default function Sections7to9() {
         {/* 8.3 */}
         <section id="sec-falsifiers">
           <h3 className="text-lg font-semibold mt-8 mb-3">
-            <span className="text-text-tertiary mr-2">8.3</span> Falsifiable
+            <span className="text-[#9ca3af] mr-2">8.3</span> Falsifiable
             Distinctions
           </h3>
 
-          <p className="text-sm text-text-secondary leading-relaxed mb-6">
+          <p className="text-sm text-[#374151] leading-relaxed mb-6">
             The following tests distinguish OCC-compliant systems from systems
             that appear similar but fail to enforce origin control.
           </p>
@@ -501,7 +501,7 @@ export default function Sections7to9() {
           <h4 className="text-base font-semibold mt-6 mb-2">
             F1: Post-hoc Annotation.
           </h4>
-          <p className="text-sm text-text-secondary leading-relaxed mb-4">
+          <p className="text-sm text-[#374151] leading-relaxed mb-4">
             If there exists a function{" "}
             <M
               c={
@@ -519,7 +519,7 @@ export default function Sections7to9() {
           <h4 className="text-base font-semibold mt-6 mb-2">
             F2: Unconfined Constructor.
           </h4>
-          <p className="text-sm text-text-secondary leading-relaxed mb-4">
+          <p className="text-sm text-[#374151] leading-relaxed mb-4">
             If the genesis constructor can be invoked from contexts outside the
             protected boundary, the system violates constructor completeness.
             This test fails when signing keys are accessible to application
@@ -531,7 +531,7 @@ export default function Sections7to9() {
           <h4 className="text-base font-semibold mt-6 mb-2">
             F3: Authorization Forgery.
           </h4>
-          <p className="text-sm text-text-secondary leading-relaxed mb-4">
+          <p className="text-sm text-[#374151] leading-relaxed mb-4">
             If an adversary without boundary access can produce events{" "}
             <M c={"e"} /> satisfying{" "}
             <M c={"\\mathrm{authorized}(e) = \\mathrm{true}"} />, the system
@@ -543,7 +543,7 @@ export default function Sections7to9() {
           <h4 className="text-base font-semibold mt-6 mb-2">
             F4: Observable Atomicity Break.
           </h4>
-          <p className="text-sm text-text-secondary leading-relaxed mb-4">
+          <p className="text-sm text-[#374151] leading-relaxed mb-4">
             If the genesis transition can be decomposed into externally
             observable intermediate steps — authorization at time{" "}
             <M c={"t_1"} />, binding at <M c={"t_2 > t_1"} />, commit at{" "}
@@ -556,7 +556,7 @@ export default function Sections7to9() {
           <h4 className="text-base font-semibold mt-6 mb-2">
             F5: Retroactive Authentication.
           </h4>
-          <p className="text-sm text-text-secondary leading-relaxed mb-6">
+          <p className="text-sm text-[#374151] leading-relaxed mb-6">
             If durable state can be created first and then promoted to
             authenticated form by any post-hoc operation that preserves content,
             the system is implementing annotation, not origin control. This is
@@ -571,17 +571,17 @@ export default function Sections7to9() {
       {/* ================================================================ */}
       <section id="sec-architecture">
         <h2 className="text-xl font-semibold mt-12 mb-4">
-          <span className="text-text-tertiary mr-2">9</span> Architecture
+          <span className="text-[#9ca3af] mr-2">9</span> Architecture
         </h2>
 
         {/* 9.1 */}
         <section id="sec-state-transition">
           <h3 className="text-lg font-semibold mt-8 mb-3">
-            <span className="text-text-tertiary mr-2">9.1</span> State
+            <span className="text-[#9ca3af] mr-2">9.1</span> State
             Transition Model
           </h3>
 
-          <p className="text-sm text-text-secondary leading-relaxed mb-4">
+          <p className="text-sm text-[#374151] leading-relaxed mb-4">
             Origin Controlled Computing distinguishes between candidate digital
             state and authenticated durable state. Candidate state may exist
             anywhere and may be adversarial. Authenticated durable state
@@ -590,14 +590,14 @@ export default function Sections7to9() {
             enforced finalization.
           </p>
 
-          <p className="text-sm text-text-secondary leading-relaxed mb-4">
+          <p className="text-sm text-[#374151] leading-relaxed mb-4">
             The transition from candidate to authenticated occurs at{" "}
             <em>commit paths</em>: file writes, storage uploads, message
             publication, model output export, sensor data release, and log entry
             creation.
           </p>
 
-          <p className="text-sm text-text-secondary leading-relaxed mb-6">
+          <p className="text-sm text-[#374151] leading-relaxed mb-6">
             This transition is mediated by four architectural components: an
             atomic execution boundary, boundary-fresh cryptographic computation,
             a protected commit interface, and a boundary-held capability.
@@ -607,80 +607,80 @@ export default function Sections7to9() {
           </p>
 
           {/* Figure 3: State Transition Model */}
-          <div className="my-6 border border-border-subtle bg-bg-elevated p-5">
+          <div className="my-6 border border-[#e5e7eb] bg-[#f9fafb] p-5">
             {/* Desktop layout */}
             <div className="hidden sm:flex items-center justify-center gap-0 flex-wrap">
-              <div className="border border-border-subtlepx-5 py-3 text-sm text-center bg-bg-elevated">
+              <div className="border border-[#e5e7eb]px-5 py-3 text-sm text-center bg-[#f9fafb]">
                 Candidate
                 <br />
                 Digital State
-                <div className="text-xs text-text-tertiary mt-1">
+                <div className="text-xs text-[#9ca3af] mt-1">
                   (created freely)
                 </div>
               </div>
               <div className="flex flex-col items-center px-2">
-                <div className="text-xs text-text-tertiary mb-0.5">submit</div>
-                <div className="text-text-tertiary text-lg">&rarr;</div>
+                <div className="text-xs text-[#9ca3af] mb-0.5">submit</div>
+                <div className="text-[#9ca3af] text-lg">&rarr;</div>
               </div>
-              <div className="border-2 border-border-subtle bg-bg-elevatedpx-4 py-5 text-center">
-                <div className="font-bold text-[11px] text-text-tertiary mb-2 tracking-wider uppercase">
+              <div className="border-2 border-[#e5e7eb] bg-[#f9fafb]px-4 py-5 text-center">
+                <div className="font-bold text-[11px] text-[#9ca3af] mb-2 tracking-wider uppercase">
                   Atomic Execution Boundary
                 </div>
-                <div className="border border-border-subtlepx-4 py-2.5 text-sm bg-bg-elevated">
+                <div className="border border-[#e5e7eb]px-4 py-2.5 text-sm bg-[#f9fafb]">
                   Protected Commit
                   <br />
                   Interface
                 </div>
               </div>
               <div className="flex flex-col items-center px-2">
-                <div className="text-xs text-text-tertiary mb-0.5">
+                <div className="text-xs text-[#9ca3af] mb-0.5">
                   finalize
                 </div>
-                <div className="text-text-tertiary text-lg">&rarr;</div>
+                <div className="text-[#9ca3af] text-lg">&rarr;</div>
               </div>
-              <div className="border border-border-subtlepx-5 py-3 text-sm text-center bg-bg-elevated">
+              <div className="border border-[#e5e7eb]px-5 py-3 text-sm text-center bg-[#f9fafb]">
                 Authenticated
                 <br />
                 Durable State
-                <div className="text-xs text-text-tertiary mt-1">
+                <div className="text-xs text-[#9ca3af] mt-1">
                   (includes verification material)
                 </div>
               </div>
             </div>
             {/* Mobile layout */}
             <div className="flex sm:hidden flex-col items-center gap-2 text-sm">
-              <div className="border border-border-subtlepx-5 py-3 bg-bg-elevated w-full text-center">
+              <div className="border border-[#e5e7eb]px-5 py-3 bg-[#f9fafb] w-full text-center">
                 Candidate Digital State
                 <br />
-                <span className="text-xs text-text-tertiary">
+                <span className="text-xs text-[#9ca3af]">
                   (created freely)
                 </span>
               </div>
-              <div className="text-xs text-text-tertiary">submit &darr;</div>
-              <div className="border-2 border-border-subtle bg-bg-elevatedp-4 w-full text-center">
-                <div className="font-bold text-[11px] text-text-tertiary mb-2 tracking-wider uppercase">
+              <div className="text-xs text-[#9ca3af]">submit &darr;</div>
+              <div className="border-2 border-[#e5e7eb] bg-[#f9fafb]p-4 w-full text-center">
+                <div className="font-bold text-[11px] text-[#9ca3af] mb-2 tracking-wider uppercase">
                   Atomic Execution Boundary
                 </div>
-                <div className="border border-border-subtlepx-2.5 py-2 text-sm bg-bg-elevated">
+                <div className="border border-[#e5e7eb]px-2.5 py-2 text-sm bg-[#f9fafb]">
                   Protected Commit Interface
                 </div>
               </div>
-              <div className="text-xs text-text-tertiary">
+              <div className="text-xs text-[#9ca3af]">
                 finalize &darr;
               </div>
-              <div className="border border-border-subtlepx-5 py-3 bg-bg-elevated w-full text-center">
+              <div className="border border-[#e5e7eb]px-5 py-3 bg-[#f9fafb] w-full text-center">
                 Authenticated Durable State
                 <br />
-                <span className="text-xs text-text-tertiary">
+                <span className="text-xs text-[#9ca3af]">
                   (includes verification material)
                 </span>
               </div>
             </div>
-            <p className="text-xs text-text-tertiary italic text-center mt-3">
+            <p className="text-xs text-[#9ca3af] italic text-center mt-3">
               &#x2717; no direct path from candidate state to authenticated
               state
             </p>
-            <p className="text-xs text-text-tertiary text-center mt-3">
+            <p className="text-xs text-[#9ca3af] text-center mt-3">
               <strong>Figure 3.</strong> State transition model. Authenticated
               durable state is reachable only through the protected commit
               interface inside the atomic execution boundary. No direct path
@@ -692,14 +692,14 @@ export default function Sections7to9() {
         {/* 9.2 */}
         <section id="sec-finalization-protocol">
           <h3 className="text-lg font-semibold mt-8 mb-3">
-            <span className="text-text-tertiary mr-2">9.2</span> Atomic
+            <span className="text-[#9ca3af] mr-2">9.2</span> Atomic
             Finalization Protocol
           </h3>
 
-          <p className="text-sm text-text-secondary leading-relaxed mb-4">
+          <p className="text-sm text-[#374151] leading-relaxed mb-4">
             Atomic finalization proceeds as a single ordered operation:
           </p>
-          <ol className="space-y-2 text-sm text-text-secondary list-decimal list-inside mb-4">
+          <ol className="space-y-2 text-sm text-[#374151] list-decimal list-inside mb-4">
             <li>Candidate state is prepared outside the boundary.</li>
             <li>
               The request enters the protected commit interface and crosses into
@@ -724,7 +724,7 @@ export default function Sections7to9() {
             </li>
           </ol>
 
-          <p className="text-sm text-text-secondary leading-relaxed mb-6">
+          <p className="text-sm text-[#374151] leading-relaxed mb-6">
             If any step fails, no authenticated durable state is produced. The
             system is <em>fail-closed</em>: failures prevent authenticated
             creation rather than producing ambiguous or partially authenticated
@@ -735,11 +735,11 @@ export default function Sections7to9() {
         {/* 9.3 */}
         <section id="sec-verification-model">
           <h3 className="text-lg font-semibold mt-8 mb-3">
-            <span className="text-text-tertiary mr-2">9.3</span> Verification
+            <span className="text-[#9ca3af] mr-2">9.3</span> Verification
             Model
           </h3>
 
-          <p className="text-sm text-text-secondary leading-relaxed mb-4">
+          <p className="text-sm text-[#374151] leading-relaxed mb-4">
             Verification relies on cryptographic attestation produced by the
             atomic execution boundary over the binding between content and
             boundary-fresh output. Concretely, the boundary produces
@@ -749,7 +749,7 @@ export default function Sections7to9() {
             attested using boundary-held cryptographic keys.
           </p>
 
-          <p className="text-sm text-text-secondary leading-relaxed mb-4">
+          <p className="text-sm text-[#374151] leading-relaxed mb-4">
             Verifiers accept artifacts only if the verification material
             validates under approved trust anchors, which may include pinned
             boundary public keys, manufacturer or platform roots certifying
@@ -757,7 +757,7 @@ export default function Sections7to9() {
             acceptable boundary identities, epochs, and validity windows.
           </p>
 
-          <p className="text-sm text-text-secondary leading-relaxed mb-6">
+          <p className="text-sm text-[#374151] leading-relaxed mb-6">
             No registry of artifacts is required. Verifiers need not identify
             the producing application — only that the artifact could not have
             been finalized outside an approved boundary under accepted policy.
@@ -767,11 +767,11 @@ export default function Sections7to9() {
         {/* 9.4 */}
         <section id="sec-enforcement-verification">
           <h3 className="text-lg font-semibold mt-8 mb-3">
-            <span className="text-text-tertiary mr-2">9.4</span> Enforcement
+            <span className="text-[#9ca3af] mr-2">9.4</span> Enforcement
             and Verification Are Separate Architectural Layers
           </h3>
 
-          <p className="text-sm text-text-secondary leading-relaxed mb-4">
+          <p className="text-sm text-[#374151] leading-relaxed mb-4">
             A distinction fundamental to OCC must be stated explicitly.
             Enforcement determines whether authenticated durable state{" "}
             <em>exists</em>. Verification determines whether a third party can{" "}
@@ -780,7 +780,7 @@ export default function Sections7to9() {
             layers.
           </p>
 
-          <p className="text-sm text-text-secondary leading-relaxed mb-4">
+          <p className="text-sm text-[#374151] leading-relaxed mb-4">
             Enforcement is irrevocable. Once candidate state has been finalized
             through the protected commit interface — once authorization,
             binding, and durable commit have occurred as a single atomic event
@@ -789,7 +789,7 @@ export default function Sections7to9() {
             that depends on the continued availability of any proof material.
           </p>
 
-          <p className="text-sm text-text-secondary leading-relaxed mb-4">
+          <p className="text-sm text-[#374151] leading-relaxed mb-4">
             Verification is operationally contingent. A verifier can confirm an
             artifact{"'"}s authenticated status only if verification material is
             accessible — either co-traveling with the artifact or retrievable
@@ -801,7 +801,7 @@ export default function Sections7to9() {
             path, not a property of currently available evidence.
           </p>
 
-          <p className="text-sm text-text-secondary leading-relaxed mb-6">
+          <p className="text-sm text-[#374151] leading-relaxed mb-6">
             This separation is what distinguishes OCC from verification systems,
             provenance frameworks, and attestation protocols. Those systems
             define authenticity in terms of what can currently be checked. OCC
@@ -814,11 +814,11 @@ export default function Sections7to9() {
         {/* 9.5 */}
         <section id="sec-verification-independence">
           <h3 className="text-lg font-semibold mt-8 mb-3">
-            <span className="text-text-tertiary mr-2">9.5</span> Verification
+            <span className="text-[#9ca3af] mr-2">9.5</span> Verification
             Independence from Proof Transport
           </h3>
 
-          <p className="text-sm text-text-secondary leading-relaxed mb-4">
+          <p className="text-sm text-[#374151] leading-relaxed mb-4">
             A critical architectural property of OCC is that the enforcement
             invariants described in Section 4 hold at genesis and are not
             contingent on any subsequent verification event, proof transport
@@ -827,7 +827,7 @@ export default function Sections7to9() {
             component of enforcement.
           </p>
 
-          <p className="text-sm text-text-secondary leading-relaxed mb-4">
+          <p className="text-sm text-[#374151] leading-relaxed mb-4">
             The verification model is therefore independent of how verification
             material reaches the verifier. OCC supports multiple verification
             models, and the choice among them is a deployment decision, not an
@@ -838,7 +838,7 @@ export default function Sections7to9() {
           <h4 className="text-base font-semibold mt-6 mb-2">
             Portable proof.
           </h4>
-          <p className="text-sm text-text-secondary leading-relaxed mb-4">
+          <p className="text-sm text-[#374151] leading-relaxed mb-4">
             Verification material travels with the artifact — embedded in file
             metadata, carried in a sidecar file, or included in a manifest
             bundle. This is compatible with existing provenance formats such as
@@ -849,7 +849,7 @@ export default function Sections7to9() {
           <h4 className="text-base font-semibold mt-6 mb-2">
             Reference-based verification.
           </h4>
-          <p className="text-sm text-text-secondary leading-relaxed mb-4">
+          <p className="text-sm text-[#374151] leading-relaxed mb-4">
             Verification material is held at one or more canonical reference
             points operated by the producing boundary, a trusted third party, or
             a federated network. When a verifier encounters an artifact without
@@ -862,7 +862,7 @@ export default function Sections7to9() {
           <h4 className="text-base font-semibold mt-6 mb-2">
             Hybrid verification.
           </h4>
-          <p className="text-sm text-text-secondary leading-relaxed mb-4">
+          <p className="text-sm text-[#374151] leading-relaxed mb-4">
             Artifacts carry verification material when the distribution channel
             preserves it. Reference points serve as authoritative fallback for
             stripped, reformatted, or re-distributed artifacts. Both modes
@@ -871,25 +871,25 @@ export default function Sections7to9() {
           </p>
 
           {/* Figure 4: Verification Independence */}
-          <div className="my-6 border border-border-subtle bg-bg-elevated p-5">
+          <div className="my-6 border border-[#e5e7eb] bg-[#f9fafb] p-5">
             <div className="font-bold text-sm text-center mb-4 tracking-wide">
               Verification Independence from Proof Transport
             </div>
             {/* Desktop layout */}
             <div className="hidden sm:flex items-start justify-center gap-3 flex-wrap text-sm">
               <div className="text-center">
-                <div className="border border-text-tertiarypx-3.5 py-2.5 bg-bg-elevated">
+                <div className="border border-text-tertiarypx-3.5 py-2.5 bg-[#f9fafb]">
                   OCC Boundary
                   <br />
-                  <span className="text-xs text-text-tertiary">(genesis)</span>
+                  <span className="text-xs text-[#9ca3af]">(genesis)</span>
                 </div>
                 <div className="flex gap-6 mt-2">
                   <div className="flex flex-col items-center">
-                    <div className="text-xs text-text-tertiary">
+                    <div className="text-xs text-[#9ca3af]">
                       store proof
                     </div>
-                    <div className="text-text-tertiary">&darr;</div>
-                    <div className="border border-text-tertiarypx-3 py-2 text-xs bg-bg-elevated">
+                    <div className="text-[#9ca3af]">&darr;</div>
+                    <div className="border border-text-tertiarypx-3 py-2 text-xs bg-[#f9fafb]">
                       Reference Point
                       <br />
                       <span className="font-mono text-xs">
@@ -898,12 +898,12 @@ export default function Sections7to9() {
                     </div>
                   </div>
                   <div className="flex flex-col items-center">
-                    <div className="text-xs text-text-tertiary">finalize</div>
-                    <div className="text-text-tertiary">&darr;</div>
-                    <div className="border border-border-subtlepx-3.5 py-2 text-xs">
+                    <div className="text-xs text-[#9ca3af]">finalize</div>
+                    <div className="text-[#9ca3af]">&darr;</div>
+                    <div className="border border-[#e5e7eb]px-3.5 py-2 text-xs">
                       Artifact
                       <br />
-                      <span className="text-xs text-text-tertiary">
+                      <span className="text-xs text-[#9ca3af]">
                         (content bytes)
                       </span>
                     </div>
@@ -911,27 +911,27 @@ export default function Sections7to9() {
                 </div>
               </div>
               <div className="flex flex-col items-center justify-center pt-4">
-                <div className="text-xs text-text-tertiary">distribute</div>
-                <div className="text-text-tertiary text-lg">&rarr;</div>
+                <div className="text-xs text-[#9ca3af]">distribute</div>
+                <div className="text-[#9ca3af] text-lg">&rarr;</div>
               </div>
               <div className="flex flex-col gap-2.5 pt-2.5">
                 <div className="flex items-center gap-2">
-                  <div className="border border-border-subtlepx-3 py-1.5 text-xs">
+                  <div className="border border-[#e5e7eb]px-3 py-1.5 text-xs">
                     Copy (with proof)
                   </div>
-                  <span className="text-text-tertiary">&rarr;</span>
-                  <div className="border border-text-tertiarypx-3 py-1.5 text-xs bg-bg-elevated">
+                  <span className="text-[#9ca3af]">&rarr;</span>
+                  <div className="border border-text-tertiarypx-3 py-1.5 text-xs bg-[#f9fafb]">
                     Verify
                     <br />
                     <span className="text-[11px]">(portable proof)</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="border border-border-subtlepx-3 py-1.5 text-xs">
+                  <div className="border border-[#e5e7eb]px-3 py-1.5 text-xs">
                     Copy (stripped)
                   </div>
-                  <span className="text-text-tertiary">&rarr;</span>
-                  <div className="border border-text-tertiarypx-3 py-1.5 text-xs bg-bg-elevated">
+                  <span className="text-[#9ca3af]">&rarr;</span>
+                  <div className="border border-text-tertiarypx-3 py-1.5 text-xs bg-[#f9fafb]">
                     Verify
                     <br />
                     <span className="text-[11px]">(reference lookup)</span>
@@ -941,16 +941,16 @@ export default function Sections7to9() {
             </div>
             {/* Mobile layout */}
             <div className="flex sm:hidden flex-col items-center gap-2 text-sm">
-              <div className="border border-text-tertiarypx-3.5 py-2.5 bg-bg-elevated w-full text-center">
+              <div className="border border-text-tertiarypx-3.5 py-2.5 bg-[#f9fafb] w-full text-center">
                 OCC Boundary
                 <br />
-                <span className="text-xs text-text-tertiary">(genesis)</span>
+                <span className="text-xs text-[#9ca3af]">(genesis)</span>
               </div>
               <div className="flex gap-2 w-full">
                 <div className="flex-1 flex flex-col items-center gap-1">
-                  <div className="text-xs text-text-tertiary">store proof</div>
-                  <div className="text-text-tertiary">&darr;</div>
-                  <div className="border border-text-tertiaryp-2 text-xs text-center w-full bg-bg-elevated">
+                  <div className="text-xs text-[#9ca3af]">store proof</div>
+                  <div className="text-[#9ca3af]">&darr;</div>
+                  <div className="border border-text-tertiaryp-2 text-xs text-center w-full bg-[#f9fafb]">
                     Reference Point
                     <br />
                     <span className="font-mono text-xs">
@@ -959,36 +959,36 @@ export default function Sections7to9() {
                   </div>
                 </div>
                 <div className="flex-1 flex flex-col items-center gap-1">
-                  <div className="text-xs text-text-tertiary">finalize</div>
-                  <div className="text-text-tertiary">&darr;</div>
-                  <div className="border border-border-subtlep-2 text-xs text-center w-full">
+                  <div className="text-xs text-[#9ca3af]">finalize</div>
+                  <div className="text-[#9ca3af]">&darr;</div>
+                  <div className="border border-[#e5e7eb]p-2 text-xs text-center w-full">
                     Artifact
                     <br />
-                    <span className="text-xs text-text-tertiary">
+                    <span className="text-xs text-[#9ca3af]">
                       (content bytes)
                     </span>
                   </div>
                 </div>
               </div>
-              <div className="text-xs text-text-tertiary">&darr; distribute</div>
+              <div className="text-xs text-[#9ca3af]">&darr; distribute</div>
               <div className="flex flex-col gap-1.5 w-full">
                 <div className="flex items-center gap-1.5 text-xs">
-                  <div className="border border-border-subtlepx-2 py-1.5 flex-1 text-center">
+                  <div className="border border-[#e5e7eb]px-2 py-1.5 flex-1 text-center">
                     Copy (with proof)
                   </div>
-                  <span className="text-text-tertiary">&rarr;</span>
-                  <div className="border border-text-tertiarypx-2 py-1.5 flex-1 text-center bg-bg-elevated">
+                  <span className="text-[#9ca3af]">&rarr;</span>
+                  <div className="border border-text-tertiarypx-2 py-1.5 flex-1 text-center bg-[#f9fafb]">
                     Verify
                     <br />
                     <span className="text-[10px]">(portable)</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5 text-xs">
-                  <div className="border border-border-subtlepx-2 py-1.5 flex-1 text-center">
+                  <div className="border border-[#e5e7eb]px-2 py-1.5 flex-1 text-center">
                     Copy (stripped)
                   </div>
-                  <span className="text-text-tertiary">&rarr;</span>
-                  <div className="border border-text-tertiarypx-2 py-1.5 flex-1 text-center bg-bg-elevated">
+                  <span className="text-[#9ca3af]">&rarr;</span>
+                  <div className="border border-text-tertiarypx-2 py-1.5 flex-1 text-center bg-[#f9fafb]">
                     Verify
                     <br />
                     <span className="text-[10px]">(ref lookup)</span>
@@ -996,7 +996,7 @@ export default function Sections7to9() {
                 </div>
               </div>
             </div>
-            <p className="text-xs text-text-tertiary text-center mt-4">
+            <p className="text-xs text-[#9ca3af] text-center mt-4">
               <strong>Figure 4.</strong> Verification independence from proof
               transport. Artifacts may carry verification material (top path) or
               be verified by reference lookup using the content hash (bottom
@@ -1006,7 +1006,7 @@ export default function Sections7to9() {
             </p>
           </div>
 
-          <p className="text-sm text-text-secondary leading-relaxed mb-4">
+          <p className="text-sm text-[#374151] leading-relaxed mb-4">
             This property has significant practical consequences.
             OCC-authenticated artifacts can be freely copied, reformatted,
             compressed, transcoded, or distributed through channels that strip
@@ -1024,14 +1024,14 @@ export default function Sections7to9() {
             and file conversion tools.
           </p>
 
-          <p className="text-sm text-text-secondary leading-relaxed mb-4">
+          <p className="text-sm text-[#374151] leading-relaxed mb-4">
             This property is particularly consequential in delay-tolerant and
             interplanetary networks, where verification material must travel
             with the data and no return channel to the origin may exist at
             verification time.
           </p>
 
-          <p className="text-sm text-text-secondary leading-relaxed mb-4">
+          <p className="text-sm text-[#374151] leading-relaxed mb-4">
             A clarification regarding content transforms is warranted.
             Verification depends on recomputing a content-dependent hash that
             matches the hash bound at genesis. Lossless operations that preserve
@@ -1053,7 +1053,7 @@ export default function Sections7to9() {
             invariant is the same regardless of digest construction.
           </p>
 
-          <p className="text-sm text-text-secondary leading-relaxed mb-6">
+          <p className="text-sm text-[#374151] leading-relaxed mb-6">
             A reference point is not an artifact registry. A registry implies
             centralized control over all authenticated artifacts and creates a
             single point of failure for the entire system. A reference point is
@@ -1070,103 +1070,103 @@ export default function Sections7to9() {
           </p>
 
           {/* Figure 5: Verification Structure */}
-          <div className="my-6 border border-border-subtle bg-bg-elevated p-5">
+          <div className="my-6 border border-[#e5e7eb] bg-[#f9fafb] p-5">
             {/* Desktop layout */}
             <div className="hidden sm:flex items-start justify-center gap-8 flex-wrap text-sm">
               <div className="min-w-[220px]">
-                <div className="font-bold text-xs uppercase text-text-tertiary bg-bg-elevated border border-border-subtle px-3.5 py-2 text-center tracking-wider">
+                <div className="font-bold text-xs uppercase text-[#9ca3af] bg-[#f9fafb] border border-[#e5e7eb] px-3.5 py-2 text-center tracking-wider">
                   Authenticated Artifact
                 </div>
-                <div className="border border-border-subtle border-t-0 px-3.5 py-2 text-xs">
+                <div className="border border-[#e5e7eb] border-t-0 px-3.5 py-2 text-xs">
                   content bytes
                 </div>
-                <div className="font-bold text-xs uppercase text-text-tertiary bg-bg-elevated border border-border-subtle border-t-0 px-3.5 py-2 text-center tracking-wider">
+                <div className="font-bold text-xs uppercase text-[#9ca3af] bg-[#f9fafb] border border-[#e5e7eb] border-t-0 px-3.5 py-2 text-center tracking-wider">
                   Verification Material
                 </div>
-                <div className="border border-border-subtle border-t-0 px-3.5 py-1.5 text-xs font-mono bg-bg-elevated">
+                <div className="border border-[#e5e7eb] border-t-0 px-3.5 py-1.5 text-xs font-mono bg-[#f9fafb]">
                   H = hash(content)
                 </div>
-                <div className="border border-border-subtle border-t-0 px-3.5 py-1.5 text-xs font-mono bg-bg-elevated">
+                <div className="border border-[#e5e7eb] border-t-0 px-3.5 py-1.5 text-xs font-mono bg-[#f9fafb]">
                   N = boundary-fresh value
                 </div>
-                <div className="border border-border-subtle border-t-0 px-3.5 py-1.5 text-xs font-mono bg-bg-elevated">
+                <div className="border border-[#e5e7eb] border-t-0 px-3.5 py-1.5 text-xs font-mono bg-[#f9fafb]">
                   boundary_id, epoch, policy
                 </div>
-                <div className="border border-border-subtle border-t-0 px-3.5 py-1.5 text-xs font-mono bg-bg-elevated">
+                <div className="border border-[#e5e7eb] border-t-0 px-3.5 py-1.5 text-xs font-mono bg-[#f9fafb]">
                   &sigma; = Sign<sub>sk</sub>(H, N, metadata)
                 </div>
               </div>
-              <div className="flex flex-col items-center justify-center pt-16 text-text-tertiary">
+              <div className="flex flex-col items-center justify-center pt-16 text-[#9ca3af]">
                 &rarr;
               </div>
               <div className="min-w-[220px] pt-1">
-                <div className="font-bold text-xs text-center text-text-tertiary mb-2.5 tracking-wider">
+                <div className="font-bold text-xs text-center text-[#9ca3af] mb-2.5 tracking-wider">
                   Verifier
                 </div>
-                <div className="border border-border-subtlepx-3.5 py-2 text-xs mb-1.5">
+                <div className="border border-[#e5e7eb]px-3.5 py-2 text-xs mb-1.5">
                   1. Recompute hash of content
                 </div>
-                <div className="border border-border-subtlepx-3.5 py-2 text-xs mb-1.5">
+                <div className="border border-[#e5e7eb]px-3.5 py-2 text-xs mb-1.5">
                   2. Verify H matches recomputed hash
                 </div>
-                <div className="border border-border-subtlepx-3.5 py-2 text-xs mb-1.5">
+                <div className="border border-[#e5e7eb]px-3.5 py-2 text-xs mb-1.5">
                   3. Validate signature under trusted key
                 </div>
-                <div className="border border-border-subtlepx-3.5 py-2 text-xs mb-2.5">
+                <div className="border border-[#e5e7eb]px-3.5 py-2 text-xs mb-2.5">
                   4. Check policy constraints
                 </div>
-                <div className="text-center text-text-tertiary">&darr;</div>
-                <div className="border border-text-tertiarypx-3.5 py-2 text-sm font-bold text-center mt-1 bg-bg-elevated">
+                <div className="text-center text-[#9ca3af]">&darr;</div>
+                <div className="border border-text-tertiarypx-3.5 py-2 text-sm font-bold text-center mt-1 bg-[#f9fafb]">
                   Accept / Reject
                 </div>
               </div>
             </div>
             {/* Mobile layout */}
             <div className="flex sm:hidden flex-col text-sm">
-              <div className="font-bold text-xs uppercase text-text-tertiary bg-bg-elevated border border-border-subtle px-3.5 py-2 text-center tracking-wider">
+              <div className="font-bold text-xs uppercase text-[#9ca3af] bg-[#f9fafb] border border-[#e5e7eb] px-3.5 py-2 text-center tracking-wider">
                 Authenticated Artifact
               </div>
-              <div className="border border-border-subtle border-t-0 px-3.5 py-2 text-xs">
+              <div className="border border-[#e5e7eb] border-t-0 px-3.5 py-2 text-xs">
                 content bytes
               </div>
-              <div className="font-bold text-xs uppercase text-text-tertiary bg-bg-elevated border border-border-subtle border-t-0 px-3.5 py-2 text-center tracking-wider">
+              <div className="font-bold text-xs uppercase text-[#9ca3af] bg-[#f9fafb] border border-[#e5e7eb] border-t-0 px-3.5 py-2 text-center tracking-wider">
                 Verification Material
               </div>
-              <div className="border border-border-subtle border-t-0 px-3.5 py-1.5 text-xs font-mono bg-bg-elevated">
+              <div className="border border-[#e5e7eb] border-t-0 px-3.5 py-1.5 text-xs font-mono bg-[#f9fafb]">
                 H = hash(content)
               </div>
-              <div className="border border-border-subtle border-t-0 px-3.5 py-1.5 text-xs font-mono bg-bg-elevated">
+              <div className="border border-[#e5e7eb] border-t-0 px-3.5 py-1.5 text-xs font-mono bg-[#f9fafb]">
                 N = boundary-fresh value
               </div>
-              <div className="border border-border-subtle border-t-0 px-3.5 py-1.5 text-xs font-mono bg-bg-elevated">
+              <div className="border border-[#e5e7eb] border-t-0 px-3.5 py-1.5 text-xs font-mono bg-[#f9fafb]">
                 boundary_id, epoch, policy
               </div>
-              <div className="border border-border-subtle border-t-0 px-3.5 py-1.5 text-xs font-mono bg-bg-elevated">
+              <div className="border border-[#e5e7eb] border-t-0 px-3.5 py-1.5 text-xs font-mono bg-[#f9fafb]">
                 &sigma; = Sign<sub>sk</sub>(H, N, metadata)
               </div>
-              <div className="text-center text-text-tertiary my-3">
+              <div className="text-center text-[#9ca3af] my-3">
                 &darr; verify
               </div>
-              <div className="font-bold text-xs text-center text-text-tertiary mb-2.5 tracking-wider">
+              <div className="font-bold text-xs text-center text-[#9ca3af] mb-2.5 tracking-wider">
                 Verifier
               </div>
-              <div className="border border-border-subtlepx-3.5 py-2 text-xs mb-1.5">
+              <div className="border border-[#e5e7eb]px-3.5 py-2 text-xs mb-1.5">
                 1. Recompute hash of content
               </div>
-              <div className="border border-border-subtlepx-3.5 py-2 text-xs mb-1.5">
+              <div className="border border-[#e5e7eb]px-3.5 py-2 text-xs mb-1.5">
                 2. Verify H matches recomputed hash
               </div>
-              <div className="border border-border-subtlepx-3.5 py-2 text-xs mb-1.5">
+              <div className="border border-[#e5e7eb]px-3.5 py-2 text-xs mb-1.5">
                 3. Validate signature under trusted key
               </div>
-              <div className="border border-border-subtlepx-3.5 py-2 text-xs mb-2.5">
+              <div className="border border-[#e5e7eb]px-3.5 py-2 text-xs mb-2.5">
                 4. Check policy constraints
               </div>
-              <div className="border border-text-tertiarypx-3.5 py-2 text-sm font-bold text-center bg-bg-elevated">
+              <div className="border border-text-tertiarypx-3.5 py-2 text-sm font-bold text-center bg-[#f9fafb]">
                 Accept / Reject
               </div>
             </div>
-            <p className="text-xs text-text-tertiary text-center mt-4">
+            <p className="text-xs text-[#9ca3af] text-center mt-4">
               <strong>Figure 5.</strong> Verification structure (portable proof
               model). In this depiction, an authenticated artifact carries its
               verification material. In the reference-based model (Figure 4),
@@ -1179,11 +1179,11 @@ export default function Sections7to9() {
         {/* 9.6 */}
         <section id="sec-boundary-compromise">
           <h3 className="text-lg font-semibold mt-8 mb-3">
-            <span className="text-text-tertiary mr-2">9.6</span> Boundary
+            <span className="text-[#9ca3af] mr-2">9.6</span> Boundary
             Compromise and Recovery
           </h3>
 
-          <p className="text-sm text-text-secondary leading-relaxed mb-4">
+          <p className="text-sm text-[#374151] leading-relaxed mb-4">
             If the atomic execution boundary or its signing keys are
             compromised, the system cannot distinguish forged authenticated
             artifacts from legitimate ones under that boundary identity. Trust
@@ -1194,7 +1194,7 @@ export default function Sections7to9() {
             registry or retroactive correction mechanism is required.
           </p>
 
-          <p className="text-sm text-text-secondary leading-relaxed mb-6">
+          <p className="text-sm text-[#374151] leading-relaxed mb-6">
             The critical architectural property is that{" "}
             <em>enforcement strength scales with key isolation strength</em>.
             Software boundaries provide enforcement convenience and deployment
@@ -1208,20 +1208,20 @@ export default function Sections7to9() {
         {/* 9.7 */}
         <section id="sec-security-properties">
           <h3 className="text-lg font-semibold mt-8 mb-3">
-            <span className="text-text-tertiary mr-2">9.7</span> Security
+            <span className="text-[#9ca3af] mr-2">9.7</span> Security
             Properties
           </h3>
 
-          <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
-            <p className="text-sm text-text leading-relaxed">
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-[#f9fafb] p-5">
+            <p className="text-sm text-[#111827] leading-relaxed">
               <strong>Property 9.1</strong> (Non-Retroactivity). Authenticated
               durable state cannot be produced after the fact for pre-existing
               data.
             </p>
           </div>
 
-          <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
-            <p className="text-sm text-text leading-relaxed">
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-[#f9fafb] p-5">
+            <p className="text-sm text-[#111827] leading-relaxed">
               <strong>Property 9.2</strong> (Creation-Path Exclusivity).
               Authenticated durable state is structurally reachable only through
               the protected commit interface and cannot be produced by any
@@ -1229,15 +1229,15 @@ export default function Sections7to9() {
             </p>
           </div>
 
-          <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
-            <p className="text-sm text-text leading-relaxed">
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-[#f9fafb] p-5">
+            <p className="text-sm text-[#111827] leading-relaxed">
               <strong>Property 9.3</strong> (Content Integrity). Verification
               material binds authenticated state to specific content bytes.
             </p>
           </div>
 
-          <div className="my-5 border-l-[3px] border-text-tertiary bg-bg-elevated p-5">
-            <p className="text-sm text-text leading-relaxed">
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-[#f9fafb] p-5">
+            <p className="text-sm text-[#111827] leading-relaxed">
               <strong>Property 9.4</strong> (Replay Resistance). Boundary-fresh
               cryptographic output prevents reuse of prior authorization events.
             </p>

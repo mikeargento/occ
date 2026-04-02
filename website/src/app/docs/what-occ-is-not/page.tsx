@@ -9,7 +9,7 @@ export default function WhatOCCIsNotPage() {
   return (
     <article className="prose-doc">
       <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-6">What OCC is Not</h1>
-      <p className="text-text-secondary mb-10">
+      <p className="text-[#374151] mb-10">
         Precise distinctions matter for a protocol that makes specific
         cryptographic claims. Here is what OCC does not claim and does not do.
       </p>
@@ -49,9 +49,9 @@ export default function WhatOCCIsNotPage() {
             body: "Traditional notarization involves a trusted third party witnessing a signing event. OCC is a self-contained proof system. The proof is verifiable offline using only the public key and the original bytes. No trusted third party is required for core verification. TSA timestamps are optional, advisory evidence.",
           },
         ].map((item) => (
-          <div key={item.title} className="border-l-2 border-l-text-tertiary pl-6">
+          <div key={item.title} className="border-l-2 border-l-[#1A73E8] pl-6">
             <h2 className="text-base font-semibold mb-3">{item.title}</h2>
-            <p className="text-sm text-text-secondary leading-relaxed">{item.body}</p>
+            <p className="text-sm text-[#374151] leading-relaxed">{item.body}</p>
           </div>
         ))}
       </div>
