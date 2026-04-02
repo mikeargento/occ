@@ -380,21 +380,25 @@ export default function OCCPage() {
                   </div>
                   {item.proof && (
                     <button
-                      onClick={async () => {
-                        try {
-                          const buf = await item.file.arrayBuffer();
-                          const db = await new Promise<IDBDatabase>((resolve, reject) => {
-                            const req = indexedDB.open("occ-files", 1);
-                            req.onupgradeneeded = () => req.result.createObjectStore("files");
-                            req.onsuccess = () => resolve(req.result);
-                            req.onerror = () => reject(req.error);
-                          });
-                          const tx = db.transaction("files", "readwrite");
-                          tx.objectStore("files").put({ name: item.file.name, data: buf }, item.digestB64);
-                          await new Promise((r, j) => { tx.oncomplete = r; tx.onerror = j; });
-                          db.close();
-                        } catch (e) { console.error("[occ] cache error:", e); }
+                      onClick={() => {
+                        // Open immediately (synchronous) so mobile browsers don't block the popup
                         window.open(`/proof/${encodeURIComponent(toUrlSafeB64(item.digestB64))}`, "_blank");
+                        // Cache file to IndexedDB in the background
+                        (async () => {
+                          try {
+                            const buf = await item.file.arrayBuffer();
+                            const db = await new Promise<IDBDatabase>((resolve, reject) => {
+                              const req = indexedDB.open("occ-files", 1);
+                              req.onupgradeneeded = () => req.result.createObjectStore("files");
+                              req.onsuccess = () => resolve(req.result);
+                              req.onerror = () => reject(req.error);
+                            });
+                            const tx = db.transaction("files", "readwrite");
+                            tx.objectStore("files").put({ name: item.file.name, data: buf }, item.digestB64);
+                            await new Promise((r, j) => { tx.oncomplete = r; tx.onerror = j; });
+                            db.close();
+                          } catch (e) { console.error("[occ] cache error:", e); }
+                        })();
                       }}
                       style={{
                         fontSize: 13, fontWeight: 600, color: "#ffffff", textDecoration: "none",
