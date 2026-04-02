@@ -94,13 +94,13 @@ export function FileDrop({
       onDragLeave={() => setDragover(false)}
       onDrop={handleDrop}
       className={`
-        h-full relative border transition-all duration-300 cursor-pointer flex items-center
+        h-full relative border-2 rounded-2xl transition-all duration-300 cursor-pointer flex items-center
         ${disabled ? "opacity-50 cursor-not-allowed" : ""}
         ${dragover
           ? "border-[#1A73E8] bg-[#f0f6ff] ring-2 ring-[#1A73E8]/20 ring-offset-2 ring-offset-white scale-[1.01]"
           : hasFiles
-          ? "border-[#d0d5dd] bg-white"
-          : "border-[#d0d5dd] bg-white hover:border-[#9ca3af] hover:bg-[#f9fafb]"
+          ? "border-[#c3c8cf] bg-white"
+          : "border-[#c3c8cf] bg-white hover:border-[#1A73E8] hover:bg-[#f9fafb]"
         }
       `}
     >
@@ -202,8 +202,8 @@ export function FileDrop({
         </div>
       ) : (
         <div className="flex flex-col items-center py-20 px-6 w-full">
-          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6" style={{ background: "#f3f4f6", border: "1px solid #e5e7eb" }}>
-            <svg width="28" height="28" viewBox="0 0 20 20" fill="none" stroke="#1A73E8" strokeWidth="1.2">
+          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6" style={{ background: "#eef4ff", border: "1px solid #bfd4f2" }}>
+            <svg width="28" height="28" viewBox="0 0 20 20" fill="none" stroke="#1A73E8" strokeWidth="1.5">
               <path d="M10 3v10M6 7l4-4 4 4" />
               <path d="M3 14v2a1 1 0 001 1h12a1 1 0 001-1v-2" />
             </svg>
