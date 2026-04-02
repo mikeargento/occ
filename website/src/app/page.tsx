@@ -238,7 +238,7 @@ export default function OCCPage() {
     <div style={{ background: "var(--bg)", color: "var(--c-text)", display: "flex", flexDirection: "column" }}>
       <style>{`
         .occ-wrap { width: 90%; max-width: 640px; margin: 0 auto; padding: 0; display: flex; flex-direction: column; align-items: stretch; justify-content: center; gap: 24px; min-height: calc(100dvh - 57px); }
-        .occ-wrap.occ-results { padding-top: 10vh; }
+        .occ-wrap.occ-results { justify-content: flex-start; padding-top: 20vh; }
         .occ-wrap .file-drop-container { height: 360px; }
         @media (max-width: 640px) { .occ-wrap .file-drop-container { height: 280px; } }
         @keyframes countPop { 0% { transform: scale(0.5); opacity: 0 } 50% { transform: scale(1.15) } 100% { transform: scale(1); opacity: 1 } }
@@ -248,7 +248,7 @@ export default function OCCPage() {
       `}</style>
       {/* Nav is in root layout */}
 
-      <div className={`occ-wrap${step === "results" ? " occ-results" : ""}`}>
+      <div className={`occ-wrap${step !== "drop" ? " occ-results" : ""}`}>
 
         {/* ── Drop zone or Chat ── */}
         {step === "drop" && !chatOpen && (
@@ -306,7 +306,7 @@ export default function OCCPage() {
           <div style={{ animation: "slideIn 0.3s ease-out" }}>
 
             {/* Big animated counter */}
-            <div style={{ textAlign: "center", marginBottom: 40, paddingTop: 16 }}>
+            <div style={{ textAlign: "center", marginBottom: 40, marginTop: -18 }}>
               <div style={{
                 fontSize: 96, fontWeight: 800, letterSpacing: "-0.06em",
                 color: allDone ? "#1A73E8" : "var(--c-text)",

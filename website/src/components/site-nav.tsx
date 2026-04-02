@@ -17,7 +17,7 @@ export function SiteNav() {
           fontSize: 20, fontWeight: 900, color: "#111827",
           textDecoration: "none", letterSpacing: "-0.02em",
         }}>
-          VOTO
+          GRAPHY
         </Link>
         <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
           <Link href="/docs" style={{
