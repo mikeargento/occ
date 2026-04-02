@@ -87,7 +87,7 @@ export function FileDrop({
 
   return (
     <div
-      onClick={() => { if (!disabled && !hasFiles) inputRef.current?.click(); }}
+      onClick={(e) => { if (!disabled && !hasFiles && e.target === e.currentTarget) inputRef.current?.click(); }}
       onDragOver={(e) => {
         e.preventDefault();
         if (!disabled) setDragover(true);
