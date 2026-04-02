@@ -103,6 +103,7 @@ const DEFAULT_BRIDGE_PORT = 9000;
 export class VsockClient implements EnclaveClient {
   readonly #host: string;
   readonly #port: number;
+  #queue: Promise<unknown> = Promise.resolve();
 
   constructor(opts?: { host?: string; port?: number }) {
     this.#host = opts?.host
@@ -113,6 +114,15 @@ export class VsockClient implements EnclaveClient {
   }
 
   async send(request: EnclaveRequest): Promise<EnclaveResponse> {
+    // Serialize all requests — only one in-flight at a time.
+    // This prevents counter race conditions when multiple callers
+    // (user proofs + ETH anchors) hit the TEE concurrently.
+    const result = this.#queue.then(() => this.#doSend(request));
+    this.#queue = result.catch(() => {}); // swallow errors in queue chain
+    return result;
+  }
+
+  #doSend(request: EnclaveRequest): Promise<EnclaveResponse> {
     return new Promise((resolve, reject) => {
       const sock: Socket = connect({ host: this.#host, port: this.#port }, () => {
         // Map { type: "commit", ... } → { action: "commit", ... } to match
