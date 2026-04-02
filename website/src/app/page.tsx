@@ -239,7 +239,7 @@ export default function OCCPage() {
       <style>{`
         .occ-wrap { width: 90%; max-width: 640px; margin: 0 auto; padding: 0; display: flex; flex-direction: column; align-items: stretch; justify-content: center; gap: 24px; min-height: calc(100dvh - 57px); }
         .occ-wrap .file-drop-container { height: 360px; }
-        @media (max-width: 640px) { .occ-wrap .file-drop-container { height: 280px; } }
+        @media (max-width: 640px) { .occ-wrap .file-drop-container { height: 280px; } .proof-actions { flex-direction: column; } }
         @keyframes countPop { 0% { transform: scale(0.5); opacity: 0 } 50% { transform: scale(1.15) } 100% { transform: scale(1); opacity: 1 } }
         @keyframes slideIn { from { opacity: 0; transform: translateY(12px) } to { opacity: 1; transform: translateY(0) } }
         @keyframes pulse { 0%, 100% { opacity: 1 } 50% { opacity: 0.4 } }
@@ -322,7 +322,7 @@ export default function OCCPage() {
             </div>
 
             {/* Actions — above list so they're always visible */}
-            <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
+            <div className="proof-actions" style={{ display: "flex", gap: 12, marginBottom: 16 }}>
               {unproven.length > 0 && (
                 <button onClick={proveRemaining} style={{ ...btnFill, background: "var(--c-accent)", color: "#ffffff" }}>
                   Prove {unproven.length} remaining
