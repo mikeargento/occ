@@ -314,7 +314,7 @@ export default function OCCPage() {
               }}>
                 {animCount}
               </div>
-              <div style={{ fontSize: 16, color: "#9ca3af", marginTop: 12, fontWeight: 500, letterSpacing: "0.02em" }}>
+              <div style={{ fontSize: 16, color: "#111827", marginTop: 12, fontWeight: 500, letterSpacing: "0.02em" }}>
                 {allDone
                   ? `of ${items.length} proven`
                   : `of ${items.length} found`}
