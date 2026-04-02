@@ -4,7 +4,7 @@ import Link from "next/link";
 
 export function SiteNav() {
   return (
-    <div style={{
+    <div id="site-nav" style={{
       borderBottom: "1px solid #e5e7eb",
       background: "#f9fafb",
       position: "sticky", top: 0, zIndex: 50,

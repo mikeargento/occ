@@ -22,6 +22,12 @@ export default function ProofPage() {
   const [cachedFile, setCachedFile] = useState<{ name: string; data: ArrayBuffer } | null>(null);
 
   useEffect(() => {
+    const nav = document.getElementById("site-nav");
+    if (nav) nav.style.display = "none";
+    return () => { if (nav) nav.style.display = ""; };
+  }, []);
+
+  useEffect(() => {
     (async () => {
       try {
         const resp = await fetch(`/api/proofs/digest/${digestParam}`);
