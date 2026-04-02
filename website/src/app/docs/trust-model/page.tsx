@@ -10,7 +10,7 @@ export default function TrustModelPage() {
     <article className="prose-doc">
       <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-6">Trust Model</h1>
 
-      <div className="border-l-2 border-l-[#1A73E8] pl-6 mb-8">
+      <div className="border-l-2 border-l-[#d0d5dd] pl-6 mb-8">
         <p className="text-sm text-[#111827] italic leading-relaxed">
           OCC guarantees single-successor semantics within the verifier-accepted
           measurement and monotonicity domain of the enforcing boundary.
@@ -71,7 +71,7 @@ export default function TrustModelPage() {
           { threat: "Counter position forgery", mitigation: "Causal slot pre-allocation: slotHashB64 binding + slotCounter < counter ordering proves pre-allocation" },
           { threat: "Agency replay across batches", mitigation: "Single-use challenge consumed on first validation; batch context scoped to declared digests" },
         ].map((t) => (
-          <div key={t.threat} className="flex gap-4 border-l-2 border-l-[#1A73E8] pl-4 py-1">
+          <div key={t.threat} className="flex gap-4 border-l-2 border-l-[#d0d5dd] pl-4 py-1">
             <div className="text-sm font-medium text-[#111827] shrink-0 w-44">{t.threat}</div>
             <div className="text-sm text-[#374151]">{t.mitigation}</div>
           </div>

@@ -46,9 +46,9 @@ export default function VerificationPage() {
             desc: "If a VerificationPolicy is provided, enforce its constraints: enforcement tier, allowed measurements, allowed public keys, attestation requirements, counter range, time range, epoch requirements.",
           },
         ].map((item) => (
-          <div key={item.step} className="border-l-2 border-l-[#1A73E8] pl-6">
+          <div key={item.step} className="border-l-2 border-l-[#d0d5dd] pl-6">
             <div className="flex items-center gap-3 mb-3">
-              <span className="inline-flex w-7 h-7 items-center justify-center bg-[#1A73E8]/10 text-[#1A73E8] text-xs font-mono font-semibold">
+              <span className="inline-flex w-7 h-7 items-center justify-center bg-[#f3f4f6] text-[#111827] text-xs font-mono font-semibold">
                 {item.step}
               </span>
               <h3 className="text-base font-semibold">{item.title}</h3>
@@ -82,15 +82,15 @@ export default function VerificationPage() {
 
       <h3 className="text-lg font-semibold mt-8 mb-4">Trust anchor hierarchy</h3>
       <div className="space-y-3 mb-8">
-        <div className="border-l-2 border-l-[#1A73E8] pl-4 py-1">
+        <div className="border-l-2 border-l-[#d0d5dd] pl-4 py-1">
           <code className="text-xs font-mono text-[#d97706]">requireEnforcement</code>
           <span className="text-sm text-[#374151] ml-2">alone - prevents in-transit downgrade only</span>
         </div>
-        <div className="border-l-2 border-l-[#1A73E8] pl-4 py-1">
+        <div className="border-l-2 border-l-[#d0d5dd] pl-4 py-1">
           <code className="text-xs font-mono text-[#1A73E8]">requireEnforcement + allowedMeasurements</code>
           <span className="text-sm text-[#374151] ml-2">- pins to specific enclave image</span>
         </div>
-        <div className="border-l-2 border-l-[#1A73E8] pl-4 py-1">
+        <div className="border-l-2 border-l-[#d0d5dd] pl-4 py-1">
           <code className="text-xs font-mono text-[#059669]">+ requireAttestation</code>
           <span className="text-sm text-[#374151] ml-2">- full trust (vendor-attested hardware boundary)</span>
         </div>

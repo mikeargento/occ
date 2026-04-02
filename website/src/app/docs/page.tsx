@@ -40,11 +40,11 @@ export default function DocsPage() {
           <ScrollReveal key={p.href} delay={i * 60}>
             <Link href={p.href} className="doc-card">
               <div style={{ display: "flex", alignItems: "flex-start", gap: 20 }}>
-                <span style={{ fontSize: 12, fontFamily: "monospace", color: "#1A73E8", marginTop: 4, flexShrink: 0, opacity: 0.6 }}>
+                <span style={{ fontSize: 12, fontFamily: "monospace", color: "#9ca3af", marginTop: 4, flexShrink: 0 }}>
                   {String(i + 1).padStart(2, "0")}
                 </span>
                 <div>
-                  <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8, color: "#1A73E8" }}>{p.title}</h2>
+                  <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8, color: "#111827" }}>{p.title}</h2>
                   <p style={{ fontSize: 14, color: "#6b7280", lineHeight: 1.6, margin: 0 }}>{p.desc}</p>
                 </div>
               </div>

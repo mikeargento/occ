@@ -138,11 +138,11 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   color: #111827;
 }
 .prose-doc a {
-  color: #1A73E8;
-  text-decoration: none;
+  color: #111827;
+  text-decoration: underline;
 }
 .prose-doc a:hover {
-  text-decoration: underline;
+  color: #374151;
 }
 .prose-doc h2 {
   margin-top: 3rem;

@@ -25,7 +25,7 @@ function SidebarNav({ pathname, onNavigate }: { pathname: string; onNavigate?: (
         <Link key={s.href} href={s.href} onClick={onNavigate} style={{
           display: "block", padding: "6px 12px", fontSize: 14,
           fontWeight: pathname === s.href ? 600 : 400,
-          color: "#1A73E8",
+          color: pathname === s.href ? "#111827" : "#6b7280",
           textDecoration: "none", borderRadius: 6,
           background: pathname === s.href ? "#f3f4f6" : "transparent",
         }}>

@@ -310,7 +310,7 @@ export default function Sections4Through6() {
                 </span>
               </div>
               <div className="text-[#9ca3af] text-lg">&darr;</div>
-              <div className="border-2 border-[#1A73E8]/20 bg-[#f9fafb] rounded-none p-4 my-1">
+              <div className="border-2 border-[#d0d5dd] bg-[#f9fafb] rounded-none p-4 my-1">
                 <div className="border border-[#e5e7eb] rounded-none px-3.5 py-1.5 text-[13px] text-[#374151] mb-2">
                   Consume T<sub>k</sub>
                 </div>
@@ -356,7 +356,7 @@ export default function Sections4Through6() {
                 <span className="text-[#9ca3af] text-[11px]">CSPRNG</span>
               </div>
               <div className="text-[#9ca3af] text-lg">&darr;</div>
-              <div className="border-2 border-[#1A73E8]/20 bg-[#f9fafb] rounded-none p-4 my-1">
+              <div className="border-2 border-[#d0d5dd] bg-[#f9fafb] rounded-none p-4 my-1">
                 <div className="border border-[#e5e7eb] rounded-none px-3.5 py-1.5 text-[13px] text-[#374151] mb-2">
                   Generate N
                 </div>
@@ -393,7 +393,7 @@ export default function Sections4Through6() {
               </span>
             </div>
             <div className="text-[#9ca3af]">&darr;</div>
-            <div className="w-full border-2 border-[#1A73E8]/20 bg-[#f9fafb] rounded-none p-3 text-center">
+            <div className="w-full border-2 border-[#d0d5dd] bg-[#f9fafb] rounded-none p-3 text-center">
               <div className="text-[13px] text-[#374151] mb-1.5">
                 Consume T<sub>k</sub>
               </div>
@@ -429,7 +429,7 @@ export default function Sections4Through6() {
               <span className="text-[#9ca3af] text-[11px]">CSPRNG</span>
             </div>
             <div className="text-[#9ca3af]">&darr;</div>
-            <div className="w-full border-2 border-[#1A73E8]/20 bg-[#f9fafb] rounded-none p-3 text-center">
+            <div className="w-full border-2 border-[#d0d5dd] bg-[#f9fafb] rounded-none p-3 text-center">
               <div className="text-[13px] text-[#374151] mb-1.5">
                 Generate N
               </div>
@@ -532,7 +532,7 @@ export default function Sections4Through6() {
                 <div className="font-semibold text-[13px] mb-3 text-text">
                   OCC: Atomic Causality
                 </div>
-                <div className="border-2 border-[#1A73E8]/20 bg-[#f9fafb] rounded-none p-4">
+                <div className="border-2 border-[#d0d5dd] bg-[#f9fafb] rounded-none p-4">
                   <div className="border border-text-tertiary rounded-none px-5 py-2 text-[13px] text-[#374151] mb-2">
                     1. Authorize
                   </div>
@@ -593,7 +593,7 @@ export default function Sections4Through6() {
                 <div className="font-semibold text-[13px] mb-3 text-text">
                   OCC: Atomic Causality
                 </div>
-                <div className="border-2 border-[#1A73E8]/20 bg-[#f9fafb] rounded-none p-4">
+                <div className="border-2 border-[#d0d5dd] bg-[#f9fafb] rounded-none p-4">
                   <div className="border border-text-tertiary rounded-none px-5 py-2 text-[13px] text-[#374151] mb-2">
                     1. Authorize
                   </div>

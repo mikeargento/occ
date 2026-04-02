@@ -57,9 +57,9 @@ export function CommitPathDiagram() {
       {equations.map((eq) => (
         <div
           key={eq.label}
-          className="border border-[#e5e7eb] border-l-[3px] border-l-[#1A73E8] bg-[#f9fafb] p-4 sm:p-5"
+          className="border border-[#e5e7eb] border-l-[3px] border-l-[#d0d5dd] bg-[#f9fafb] p-4 sm:p-5"
         >
-          <div className="text-[10px] font-medium uppercase tracking-wider text-[#1A73E8] mb-3">
+          <div className="text-[10px] font-medium uppercase tracking-wider text-[#111827] mb-3">
             {eq.label}
           </div>
           {eq.math}
