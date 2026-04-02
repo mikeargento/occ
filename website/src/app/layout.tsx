@@ -41,7 +41,6 @@ export const metadata: Metadata = {
 };
 
 import { SiteNav } from "@/components/site-nav";
-import { Footer } from "@/components/footer";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -52,7 +51,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body style={{ fontFamily: "var(--font-inter), -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif", margin: 0 }}>
         <SiteNav />
         <main>{children}</main>
-        <Footer />
       </body>
     </html>
   );

@@ -53,12 +53,8 @@ export default function OCCPage() {
   };
 
   useEffect(() => {
-    // Hide footer on homepage — it causes scroll
-    const footer = document.querySelector("footer");
-    if (footer) footer.style.display = "none";
     document.body.style.overflow = "hidden";
     return () => {
-      if (footer) footer.style.display = "";
       document.body.style.overflow = "";
       if (countdownRef.current) clearInterval(countdownRef.current);
     };

@@ -2,6 +2,53 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 
+function PlayButton({ text }: { text: string }) {
+  const [playing, setPlaying] = useState(false);
+  const utterRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  function toggle() {
+    if (playing) {
+      speechSynthesis.cancel();
+      setPlaying(false);
+      return;
+    }
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.rate = 1.0;
+    utter.onend = () => setPlaying(false);
+    utter.onerror = () => setPlaying(false);
+    utterRef.current = utter;
+    setPlaying(true);
+    speechSynthesis.speak(utter);
+  }
+
+  useEffect(() => {
+    return () => { speechSynthesis.cancel(); };
+  }, []);
+
+  return (
+    <button
+      onClick={toggle}
+      style={{
+        background: "none", border: "none", cursor: "pointer",
+        padding: "4px 0", fontSize: 13, color: "#1A73E8", fontWeight: 500,
+        display: "flex", alignItems: "center", gap: 4, marginTop: 6,
+      }}
+    >
+      {playing ? (
+        <>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="#1A73E8"><rect x="6" y="4" width="4" height="16" rx="1" /><rect x="14" y="4" width="4" height="16" rx="1" /></svg>
+          Stop
+        </>
+      ) : (
+        <>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="#1A73E8"><path d="M8 5v14l11-7z" /></svg>
+          Listen
+        </>
+      )}
+    </button>
+  );
+}
+
 interface Message {
   role: "user" | "assistant";
   content: string;
@@ -283,7 +330,10 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
               }}
             >
               {msg.role === "assistant" ? (
-                <div className="occ-chat-md"><ReactMarkdown>{msg.content}</ReactMarkdown></div>
+                <>
+                  <div className="occ-chat-md"><ReactMarkdown>{msg.content}</ReactMarkdown></div>
+                  {!streaming && <PlayButton text={msg.content} />}
+                </>
               ) : msg.content}
               {streaming && i === messages.length - 1 && msg.role === "assistant" && (
                 <span
@@ -380,7 +430,7 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
             position: fixed !important;
             inset: 56px 0 0 0 !important;
             width: 100% !important;
-            height: auto !important;
+            height: calc(100dvh - 56px) !important;
             aspect-ratio: unset !important;
             max-height: none !important;
             border-radius: 0 !important;

@@ -60,36 +60,6 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
         {/* Content */}
         <div style={{ minWidth: 0, flex: 1 }}>
           {children}
-
-          {/* Mobile nav — at bottom of content */}
-          <div className="visible-mobile" style={{ marginTop: 40, borderTop: "1px solid #e5e7eb", paddingTop: 24 }}>
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              style={{
-                background: "#1A73E8",
-                border: "none",
-                borderRadius: 8,
-                padding: "12px 16px",
-                color: "#fff",
-                fontSize: 14,
-                fontWeight: 600,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                width: "100%",
-                justifyContent: "center",
-              }}
-            >
-              {mobileMenuOpen ? "Close" : `Navigate · ${currentLabel}`}
-            </button>
-
-            {mobileMenuOpen && (
-              <div style={{ marginTop: 12, padding: "8px 0" }}>
-                <SidebarNav pathname={pathname} onNavigate={() => setMobileMenuOpen(false)} />
-              </div>
-            )}
-          </div>
         </div>
       </div>
     </div>
