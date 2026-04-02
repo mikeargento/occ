@@ -53,12 +53,12 @@ export default function OCCPage() {
   };
 
   useEffect(() => {
-    document.body.style.overflow = "hidden";
+    document.body.style.overflow = step === "drop" ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
       if (countdownRef.current) clearInterval(countdownRef.current);
     };
-  }, []);
+  }, [step]);
 
   const found = items.filter(i => i.status === "found" || i.status === "proved");
   const unproven = items.filter(i => i.status === "new");
@@ -239,7 +239,8 @@ export default function OCCPage() {
   return (
     <div style={{ background: "var(--bg)", color: "var(--c-text)", display: "flex", flexDirection: "column" }}>
       <style>{`
-        .occ-wrap { width: 90%; max-width: 640px; margin: 0 auto; padding: 24px 0; display: flex; flex-direction: column; align-items: stretch; justify-content: center; height: calc(100dvh - 57px); gap: 24px; }
+        .occ-wrap { width: 90%; max-width: 640px; margin: 0 auto; padding: 24px 0; display: flex; flex-direction: column; align-items: stretch; gap: 24px; }
+        .occ-wrap.occ-drop { justify-content: center; height: calc(100dvh - 57px); }
         .occ-wrap .file-drop-container { flex: 1; max-height: 60vh; }
         @keyframes countPop { 0% { transform: scale(0.5); opacity: 0 } 50% { transform: scale(1.15) } 100% { transform: scale(1); opacity: 1 } }
         @keyframes slideIn { from { opacity: 0; transform: translateY(12px) } to { opacity: 1; transform: translateY(0) } }
@@ -248,7 +249,7 @@ export default function OCCPage() {
       `}</style>
       {/* Nav is in root layout */}
 
-      <div className="occ-wrap occ-home">
+      <div className={`occ-wrap${step === "drop" ? " occ-drop" : ""}`}>
 
         {/* ── Drop zone or Chat ── */}
         {step === "drop" && !chatOpen && (
