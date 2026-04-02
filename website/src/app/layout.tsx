@@ -48,7 +48,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="stylesheet" href="https://use.typekit.net/svq0oqy.css" />
       </head>
-      <body style={{ fontFamily: "var(--font-inter), -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif", margin: 0 }}>
+      <body style={{ fontFamily: "acumin-pro, -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif", margin: 0 }}>
         <SiteNav />
         <main>{children}</main>
       </body>
