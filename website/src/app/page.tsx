@@ -336,7 +336,7 @@ export default function OCCPage() {
                     ...(anchorCountdown > 0 ? { ...btnOut, opacity: 0.5, cursor: "default" } : allDone ? btnFill : btnOut),
                   }}
                 >
-                  {anchorCountdown > 0 ? `Sealing with Ethereum... ${anchorCountdown}s` : "Download .zip"}
+                  {anchorCountdown > 0 ? <span style={{ fontSize: 13 }}>{`Sealing with Ethereum... ${anchorCountdown}s`}</span> : "Download .zip"}
                 </button>
               )}
               <button onClick={reset} style={btnOut}>
