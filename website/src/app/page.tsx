@@ -39,24 +39,26 @@ export default function OCCPage() {
 
   // Start 12s countdown when proofs finish (waiting for next ETH anchor)
   const endTimeRef = useRef<number>(0);
+  const rafRef = useRef<number>(0);
   const startAnchorCountdown = () => {
     endTimeRef.current = Date.now() + 12000;
     setAnchorCountdown(12);
-    if (countdownRef.current) clearInterval(countdownRef.current);
-    countdownRef.current = setInterval(() => {
+    cancelAnimationFrame(rafRef.current);
+    const tick = () => {
       const remaining = Math.ceil((endTimeRef.current - Date.now()) / 1000);
       if (remaining <= 0) {
         setAnchorCountdown(0);
-        if (countdownRef.current) clearInterval(countdownRef.current);
       } else {
         setAnchorCountdown(remaining);
+        rafRef.current = requestAnimationFrame(tick);
       }
-    }, 250);
+    };
+    rafRef.current = requestAnimationFrame(tick);
   };
 
   useEffect(() => {
     if (step !== "drop") window.scrollTo(0, 0);
-    return () => { if (countdownRef.current) clearInterval(countdownRef.current); };
+    return () => { cancelAnimationFrame(rafRef.current); };
   }, [step]);
 
   const found = items.filter(i => i.status === "found" || i.status === "proved");
