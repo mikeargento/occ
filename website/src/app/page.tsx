@@ -239,13 +239,7 @@ export default function OCCPage() {
       <style>{`
         .occ-wrap { width: 90%; max-width: 640px; margin: 0 auto; padding: 0; display: flex; flex-direction: column; align-items: stretch; justify-content: center; gap: 24px; min-height: calc(100dvh - 57px); }
         .occ-wrap .file-drop-container { height: 360px; }
-        @media (max-width: 640px) {
-          .occ-wrap .file-drop-container { height: 280px; }
-          .proof-actions { flex-direction: column !important; }
-          .proof-actions button { width: 100% !important; }
-          .proof-item { flex-direction: column !important; align-items: flex-start !important; }
-          .proof-item .view-btn { align-self: center; margin-top: 8px; }
-        }
+        @media (max-width: 640px) { .occ-wrap .file-drop-container { height: 280px; } }
         @keyframes countPop { 0% { transform: scale(0.5); opacity: 0 } 50% { transform: scale(1.15) } 100% { transform: scale(1); opacity: 1 } }
         @keyframes slideIn { from { opacity: 0; transform: translateY(12px) } to { opacity: 1; transform: translateY(0) } }
         @keyframes pulse { 0%, 100% { opacity: 1 } 50% { opacity: 0.4 } }
@@ -328,7 +322,7 @@ export default function OCCPage() {
             </div>
 
             {/* Actions — above list so they're always visible */}
-            <div className="proof-actions" style={{ display: "flex", gap: 12, marginBottom: 16 }}>
+            <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
               {unproven.length > 0 && (
                 <button onClick={proveRemaining} style={{ ...btnFill, background: "var(--c-accent)", color: "#ffffff" }}>
                   Prove {unproven.length} remaining
@@ -352,7 +346,7 @@ export default function OCCPage() {
             {/* File list */}
             <div style={card}>
               {items.map((item, i) => (
-                <div key={item.file.name + i} className="proof-item" style={{
+                <div key={item.file.name + i} style={{
                   padding: "12px 0", borderTop: i > 0 ? "1px solid #d0d5dd" : "none",
                   display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
                   animation: `slideIn 0.2s ease-out ${i * 0.05}s both`,
@@ -412,7 +406,6 @@ export default function OCCPage() {
                           } catch (e) { console.error("[occ] cache error:", e); }
                         })();
                       }}
-                      className="view-btn"
                       style={{
                         fontSize: 15, fontWeight: 600, color: "#ffffff", textDecoration: "none",
                         flexShrink: 0, padding: "12px 28px", borderRadius: 980,
