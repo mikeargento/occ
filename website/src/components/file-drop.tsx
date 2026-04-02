@@ -94,7 +94,7 @@ export function FileDrop({
       onDragLeave={() => setDragover(false)}
       onDrop={handleDrop}
       className={`
-        h-full relative border transition-all duration-300 cursor-pointer aspect-[4/3] flex items-center
+        h-full relative border transition-all duration-300 cursor-pointer flex items-center
         ${disabled ? "opacity-50 cursor-not-allowed" : ""}
         ${dragover
           ? "border-[#1A73E8] bg-[#f0f6ff] ring-2 ring-[#1A73E8]/20 ring-offset-2 ring-offset-white scale-[1.01]"
