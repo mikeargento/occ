@@ -240,7 +240,6 @@ export default function ProofPage() {
               fgColor="#111827"
               bgColor="#ffffff"
             />
-            <span style={{ fontSize: 12, color: "#9ca3af" }}>Scan to verify</span>
           </div>
 
           {attr && (
