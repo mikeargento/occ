@@ -233,7 +233,7 @@ export default function OCCPage() {
   const btnOut: React.CSSProperties = { height: 52, fontSize: 15, fontWeight: 500, borderRadius: 12, cursor: "pointer", flex: 1, border: "1px solid #d1d5db", background: "#fff", color: "#111827" };
 
   return (
-    <div style={{ height: "calc(100vh - 100px)", background: "var(--bg)", color: "var(--c-text)", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+    <div style={{ minHeight: step === "drop" ? "calc(100vh - 100px)" : undefined, maxHeight: step === "drop" ? "calc(100vh - 100px)" : undefined, background: "var(--bg)", color: "var(--c-text)", display: "flex", flexDirection: "column", overflow: step === "drop" ? "hidden" : undefined }}>
       <style>{`
         .occ-wrap { width: 90%; max-width: 640px; margin: 0 auto; padding: 0; flex: 1; display: flex; flex-direction: column; justify-content: center; }
         @keyframes countPop { 0% { transform: scale(0.5); opacity: 0 } 50% { transform: scale(1.15) } 100% { transform: scale(1); opacity: 1 } }
