@@ -58,8 +58,12 @@ export default function OCCPage() {
 
   useEffect(() => {
     if (step !== "drop") window.scrollTo(0, 0);
-    return () => { cancelAnimationFrame(rafRef.current); };
   }, [step]);
+
+  // Cleanup rAF on unmount only
+  useEffect(() => {
+    return () => { cancelAnimationFrame(rafRef.current); };
+  }, []);
 
   const found = items.filter(i => i.status === "found" || i.status === "proved");
   const unproven = items.filter(i => i.status === "new");
