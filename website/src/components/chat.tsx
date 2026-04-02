@@ -174,7 +174,7 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
     <div className="occ-chat-panel"
       style={{
         width: "100%",
-        aspectRatio: "1",
+        maxHeight: "calc(100dvh - 200px)",
         background: "#ffffff",
         borderRadius: 12,
         border: "1px solid #d0d5dd",
