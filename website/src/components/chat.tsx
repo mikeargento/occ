@@ -95,7 +95,9 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
   const questions = preloadedQuestions || DEFAULT_QUESTIONS;
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messages.length > 0) {
+      endRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [messages]);
 
   const sendMessage = useCallback(
