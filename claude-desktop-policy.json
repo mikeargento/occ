@@ -1,5 +1,0 @@
-{
-  "allowedTools": ["read_file", "list_directory", "get_file_info"],
-  "blockedTools": ["write_file", "edit_file", "create_directory", "move_file", "delete_file"],
-  "maxCallsPerMinute": 60
-}

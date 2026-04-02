@@ -3,13 +3,13 @@
   "configurations": [
     {
       "name": "occ-docs",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["serve", "docs", "-l", "3000"],
+      "runtimeExecutable": "/bin/sh",
+      "runtimeArgs": ["-c", "cd '/Users/argento/Desktop/Claude Code/occ/website' && /usr/local/bin/node /usr/local/lib/node_modules/npm/bin/npm-cli.js run dev"],
       "port": 3000
     },
     {
       "name": "occ-website",
-      "runtimeExecutable": "npm",
+      "runtimeExecutable": "/usr/local/bin/npm",
       "runtimeArgs": ["run", "dev", "--", "--port", "3001"],
       "port": 3001,
       "cwd": "website"

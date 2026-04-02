@@ -1,7 +1,0 @@
-{
-  "proxyId": "occ-cloud-1",
-  "signerMode": "occ-cloud",
-  "teeUrl": "https://nitro.occproof.com/commit",
-  "managementPort": 9100,
-  "mcpTransport": "stdio"
-}
