@@ -105,7 +105,10 @@ export default function ProofPage() {
 
   return (
     <Shell>
-      <style>{`@keyframes fadeIn { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:translateY(0) } }`}</style>
+      <style>{`
+        @keyframes fadeIn { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:translateY(0) } }
+        .proof-fields > div:last-child { border-bottom: none !important; }
+      `}</style>
 
       <div style={{ width: "90%", maxWidth: 800, margin: "0 auto", padding: "24px 0 60px", animation: "fadeIn .3s ease-out" }}>
 
@@ -262,7 +265,7 @@ function Card({ title, children }: { title: string; accent?: string; children: R
       }}>
         {title}
       </div>
-      <div style={{ padding: "4px 0" }}>
+      <div className="proof-fields" style={{ padding: "4px 0" }}>
         {children}
       </div>
     </div>
