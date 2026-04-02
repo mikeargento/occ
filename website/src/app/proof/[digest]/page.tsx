@@ -21,11 +21,7 @@ export default function ProofPage() {
   const [error, setError] = useState("");
   const [cachedFile, setCachedFile] = useState<{ name: string; data: ArrayBuffer } | null>(null);
 
-  useEffect(() => {
-    const nav = document.getElementById("site-nav");
-    if (nav) nav.style.display = "none";
-    return () => { if (nav) nav.style.display = ""; };
-  }, []);
+  // Nav visible on proof pages, hidden only in print CSS
 
   useEffect(() => {
     (async () => {
@@ -113,6 +109,11 @@ export default function ProofPage() {
       <style>{`
         @keyframes fadeIn { from { opacity:0; transform:translateY(6px) } to { opacity:1; transform:translateY(0) } }
         .proof-fields > div:last-child { border-bottom: none !important; }
+        @media print {
+          body { background: #fff !important; }
+          #site-nav, .no-print { display: none !important; }
+          div { break-inside: avoid; }
+        }
       `}</style>
 
       <div style={{ width: "90%", maxWidth: 800, margin: "0 auto", padding: "24px 0 60px", animation: "fadeIn .3s ease-out" }}>
@@ -125,8 +126,9 @@ export default function ProofPage() {
               <span style={{ color: "var(--c-accent)" }}>{isEth ? "Anchor" : "Proof"} #{commit.counter}</span>
             </span>
           </div>
-          <div style={{ display: "flex", gap: 8 }}>
+          <div className="no-print" style={{ display: "flex", gap: 8 }}>
             <button onClick={exportZip} style={btnStyle}>Export Proof</button>
+            <button onClick={() => window.print()} style={btnStyle}>Export PDF</button>
             <JsonToggle proof={proof} />
           </div>
         </div>
