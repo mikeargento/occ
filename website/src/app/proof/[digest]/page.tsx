@@ -21,7 +21,11 @@ export default function ProofPage() {
   const [error, setError] = useState("");
   const [cachedFile, setCachedFile] = useState<{ name: string; data: ArrayBuffer } | null>(null);
 
-  // Nav visible on proof pages, hidden only in print CSS
+  useEffect(() => {
+    const nav = document.getElementById("site-nav");
+    if (nav) nav.style.display = "none";
+    return () => { if (nav) nav.style.display = ""; };
+  }, []);
 
   useEffect(() => {
     (async () => {
