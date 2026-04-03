@@ -116,88 +116,92 @@ export default function ProofPage() {
       <div style={{ width: "90%", maxWidth: 800, margin: "0 auto", padding: "24px 0 60px", animation: "fadeIn .3s ease-out" }}>
 
 
-        {/* Title bar */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
-            <span style={{ fontSize: 28, fontWeight: 900, fontFamily: 'var(--font-sans)' }}>
-              <span style={{ color: "var(--c-accent)" }}>{isEth ? "Anchor" : "Proof"} #{commit.counter}</span>
-            </span>
-          </div>
+        {/* Title + actions */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32, flexWrap: "wrap", gap: 12 }}>
+          <span style={{ fontSize: 28, fontWeight: 900, color: "var(--c-accent)" }}>
+            {isEth ? "Anchor" : "Proof"} #{commit.counter}
+          </span>
           <div style={{ display: "flex", gap: 8 }}>
             <button onClick={exportZip} style={btnStyle}>Export Proof</button>
             <JsonToggle proof={proof} />
           </div>
         </div>
 
-        {/* No separate causal window or ethereum link — consolidated into Ethereum Seal card below */}
+        {/* Hero stats — the stuff that matters */}
+        <div style={{
+          display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16,
+          marginBottom: 32, padding: "24px", background: "#fff", borderRadius: 14, border: "1px solid #d0d5dd",
+        }}>
+          <div>
+            <div style={{ fontSize: 12, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Counter</div>
+            <div style={{ fontSize: 28, fontWeight: 800, color: "#111827" }}>#{commit.counter}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 12, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Slot</div>
+            <div style={{ fontSize: 28, fontWeight: 800, color: "#111827" }}>#{commit.slotCounter}</div>
+          </div>
+          {isEth && attr?.title ? (
+            <div>
+              <div style={{ fontSize: 12, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Ethereum Block</div>
+              <a href={attr.title} target="_blank" rel="noopener" style={{ fontSize: 28, fontWeight: 800, color: "var(--c-accent)", textDecoration: "none" }}>
+                #{attr.title.match(/\/block\/(\d+)/)?.[1] || "?"}
+              </a>
+            </div>
+          ) : causalWindow?.anchorAfter ? (
+            <div>
+              <div style={{ fontSize: 12, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Sealed By</div>
+              <a href={causalWindow.anchorAfter.etherscanUrl || "#"} target="_blank" rel="noopener" style={{ fontSize: 28, fontWeight: 800, color: "var(--c-accent)", textDecoration: "none" }}>
+                Block #{causalWindow.anchorAfter.blockNumber}
+              </a>
+              {causalWindow.anchorAfter.blockTime && (
+                <div style={{ fontSize: 13, color: "#6b7280", marginTop: 4 }}>
+                  {new Date(causalWindow.anchorAfter.blockTime).toLocaleString()}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div>
+              <div style={{ fontSize: 12, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Sealed By</div>
+              <div style={{ fontSize: 16, color: "#9ca3af" }}>Awaiting anchor...</div>
+            </div>
+          )}
+          <div>
+            <div style={{ fontSize: 12, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Environment</div>
+            <div style={{ fontSize: 16, fontWeight: 600, color: "#111827" }}>{isTee ? "Hardware Enclave" : "Software"}</div>
+            <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 2 }}>{isTee ? "AWS Nitro" : ""}</div>
+          </div>
+        </div>
 
-        {/* Cards grid */}
-        <div className="proof-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
+        {/* Details — single column, clean */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
           <Card title="Artifact">
             <Field label="Digest" value={proof.artifact.digestB64} mono />
             <Field label="Algorithm" value={proof.artifact.hashAlg.toUpperCase()} />
             {(proof as OCCProof & { proofHash?: string }).proofHash && (
-              <Field label="Proof Hash" value={(proof as OCCProof & { proofHash?: string }).proofHash!} mono highlight />
+              <Field label="Proof Hash" value={(proof as OCCProof & { proofHash?: string }).proofHash!} mono />
             )}
           </Card>
 
-          <Card title="Commit">
-            <Field label="Counter" value={`#${commit.counter}`} highlight />
-            {commit.epochId && <Field label="Epoch ID" value={String(commit.epochId)} mono />}
-            {commit.prevB64 && <Field label="Previous Hash" value={commit.prevB64} mono />}
+          <Card title="Chain">
+            {commit.epochId && <Field label="Epoch" value={String(commit.epochId)} mono />}
+            {commit.prevB64 && <Field label="Previous Proof" value={commit.prevB64} mono />}
             {commit.nonceB64 && <Field label="Nonce" value={commit.nonceB64} mono />}
-            {commit.slotCounter != null && <Field label="Slot Counter" value={`#${commit.slotCounter}`} />}
             {commit.slotHashB64 && <Field label="Slot Hash" value={commit.slotHashB64} mono />}
           </Card>
-
-          {slot && (
-            <Card title="Causal Slot">
-              <Field label="Counter" value={`#${slot.counter}`} highlight />
-              {slot.nonceB64 ? <Field label="Nonce" value={String(slot.nonceB64)} mono /> : null}
-              {slot.signatureB64 ? <Field label="Signature" value={String(slot.signatureB64)} mono /> : null}
-              {slot.epochId ? <Field label="Epoch ID" value={String(slot.epochId)} mono /> : null}
-            </Card>
-          )}
 
           <Card title="Signer">
             <Field label="Public Key" value={proof.signer.publicKeyB64} mono />
             <Field label="Signature" value={proof.signer.signatureB64} mono />
           </Card>
 
-          <Card title="Environment">
-            <Field label="Enforcement" value={isTee ? "Hardware Enclave (AWS Nitro)" : "Software"} />
-            {proof.environment?.measurement && <Field label="PCR0 Measurement" value={proof.environment.measurement} mono />}
-            {proof.environment?.attestation?.format && <Field label="Attestation Format" value={proof.environment.attestation.format} />}
-          </Card>
-
-          {/* Ethereum Seal */}
-          {/* Ethereum info — single card for both anchor proofs and user proofs */}
-          {isEth && attr?.title ? (
-            <Card title="Ethereum Block">
-              <Field label="Block" value={`#${attr.title.match(/\/block\/(\d+)/)?.[1] || "?"}`} highlight />
-              {attr.message && <Field label="Block Hash" value={attr.message} mono />}
-              <Field label="Etherscan" value={attr.title} link />
-            </Card>
-          ) : causalWindow?.anchorAfter ? (
-            <Card title="Sealed By">
-              <Field label="Ethereum Block" value={`#${causalWindow.anchorAfter.blockNumber}`} highlight />
-              {causalWindow.anchorAfter.blockTime && (
-                <Field label="Time" value={new Date(causalWindow.anchorAfter.blockTime).toLocaleString()} />
-              )}
-              {causalWindow.anchorAfter.etherscanUrl && (
-                <Field label="Etherscan" value={causalWindow.anchorAfter.etherscanUrl} link />
-              )}
-            </Card>
-          ) : (
-            <Card title="Sealed By">
-              <div style={{ padding: "16px 18px", fontSize: 13, color: "#9ca3af" }}>
-                Awaiting next anchor...
-              </div>
+          {proof.environment?.measurement && (
+            <Card title="Attestation">
+              <Field label="Measurement (PCR0)" value={proof.environment.measurement} mono />
+              {proof.environment?.attestation?.format && <Field label="Format" value={proof.environment.attestation.format} />}
             </Card>
           )}
 
-          {/* Attribution — only show for non-ETH proofs that have it */}
           {attr && !isEth && (
             <Card title="Attribution">
               {attr.name && <Field label="Name" value={attr.name} />}
@@ -210,7 +214,6 @@ export default function ProofPage() {
             <Card title="Timestamps">
               {ts.authority ? <Field label="Authority" value={String(ts.authority)} /> : null}
               {ts.time ? <Field label="TSA Time" value={String(ts.time)} /> : null}
-              {ts.digestAlg ? <Field label="Digest Algorithm" value={String(ts.digestAlg)} /> : null}
             </Card>
           )}
         </div>
