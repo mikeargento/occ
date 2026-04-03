@@ -127,55 +127,101 @@ export default function ProofPage() {
           </div>
         </div>
 
-        {/* Hero stats — the stuff that matters */}
+        {/* Causal flow diagram */}
         <div style={{
-          display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16,
-          marginBottom: 32, padding: "24px", background: "#fff", borderRadius: 14, border: "1px solid #d0d5dd",
+          marginBottom: 32, padding: "28px 24px", background: "#fff", borderRadius: 14, border: "1px solid #d0d5dd",
         }}>
-          <div>
-            <div style={{ fontSize: 12, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Slot</div>
-            <div style={{ fontSize: 28, fontWeight: 800, color: "#111827" }}>#{commit.slotCounter}</div>
-          </div>
-          <div>
-            <div style={{ fontSize: 12, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Commit</div>
-            <div style={{ fontSize: 28, fontWeight: 800, color: "#111827" }}>#{commit.counter}</div>
-          </div>
-          {isEth && attr?.title ? (
-            <div>
-              <div style={{ fontSize: 12, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Ethereum Block</div>
-              <div style={{ fontSize: 28, fontWeight: 800, color: "#111827" }}>#{attr.title.match(/\/block\/(\d+)/)?.[1] || "?"}</div>
-              <a href={attr.title} target="_blank" rel="noopener" style={{ fontSize: 13, color: "var(--c-accent)", textDecoration: "none", marginTop: 4, display: "inline-block" }}>
-                View on Etherscan &rarr;
-              </a>
+          <div style={{ display: "flex", alignItems: "stretch", gap: 0 }}>
+
+            {/* Step 1: Slot */}
+            <div style={{ flex: 1, textAlign: "center" }}>
+              <div style={{ width: 48, height: 48, borderRadius: "50%", background: "#f3f4f6", border: "2px solid #d0d5dd", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto", fontSize: 18 }}>
+                🔒
+              </div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: "#111827", marginTop: 8 }}>#{commit.slotCounter}</div>
+              <div style={{ fontSize: 11, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", marginTop: 2 }}>Slot Reserved</div>
+              <div style={{ fontSize: 11, color: "#6b7280", marginTop: 4 }}>Nonce generated</div>
             </div>
-          ) : causalWindow?.anchorAfter ? (
-            <div>
-              <div style={{ fontSize: 12, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Sealed By</div>
-              <div style={{ fontSize: 28, fontWeight: 800, color: "#111827" }}>#{causalWindow.anchorAfter.counter}</div>
-              <div style={{ display: "flex", gap: 12, marginTop: 6, flexWrap: "wrap" }}>
-                {(causalWindow.anchorAfter as { digestB64?: string | null }).digestB64 && (
-                  <a href={`/proof/${encodeURIComponent(((causalWindow.anchorAfter as { digestB64?: string | null }).digestB64 || "").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""))}`} target="_blank" rel="noopener" style={{ fontSize: 13, color: "var(--c-accent)", textDecoration: "none" }}>
-                    View anchor proof &rarr;
-                  </a>
-                )}
-                {causalWindow.anchorAfter.etherscanUrl && (
-                  <a href={causalWindow.anchorAfter.etherscanUrl} target="_blank" rel="noopener" style={{ fontSize: 13, color: "var(--c-accent)", textDecoration: "none" }}>
-                    Block #{causalWindow.anchorAfter.blockNumber} &rarr;
-                  </a>
+
+            {/* Arrow 1 */}
+            <div style={{ display: "flex", alignItems: "center", paddingTop: 0 }}>
+              <div style={{ width: 40, height: 2, background: "#d0d5dd", position: "relative" }}>
+                <div style={{ position: "absolute", right: -4, top: -4, width: 0, height: 0, borderTop: "5px solid transparent", borderBottom: "5px solid transparent", borderLeft: "8px solid #d0d5dd" }} />
+              </div>
+            </div>
+
+            {/* Step 2: Commit */}
+            <div style={{ flex: 1, textAlign: "center" }}>
+              <div style={{ width: 48, height: 48, borderRadius: "50%", background: "#eef4ff", border: "2px solid var(--c-accent)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto", fontSize: 18 }}>
+                ✍️
+              </div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: "#111827", marginTop: 8 }}>#{commit.counter}</div>
+              <div style={{ fontSize: 11, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", marginTop: 2 }}>Committed</div>
+              <div style={{ fontSize: 11, color: "#6b7280", marginTop: 4 }}>Signed in enclave</div>
+            </div>
+
+            {/* Arrow 2 */}
+            <div style={{ display: "flex", alignItems: "center", paddingTop: 0 }}>
+              <div style={{ width: 40, height: 2, background: "#d0d5dd", position: "relative", borderStyle: "dashed" }}>
+                <div style={{ position: "absolute", right: -4, top: -4, width: 0, height: 0, borderTop: "5px solid transparent", borderBottom: "5px solid transparent", borderLeft: "8px solid #d0d5dd" }} />
+              </div>
+            </div>
+
+            {/* Step 3: Sealed */}
+            {isEth && attr?.title ? (
+              <div style={{ flex: 1, textAlign: "center" }}>
+                <div style={{ width: 48, height: 48, borderRadius: "50%", background: "#f0fdf4", border: "2px solid #22c55e", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto", fontSize: 18 }}>
+                  ⛓️
+                </div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: "#111827", marginTop: 8 }}>#{attr.title.match(/\/block\/(\d+)/)?.[1] || "?"}</div>
+                <div style={{ fontSize: 11, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", marginTop: 2 }}>Ethereum Block</div>
+                <a href={attr.title} target="_blank" rel="noopener" style={{ fontSize: 11, color: "var(--c-accent)", textDecoration: "none", marginTop: 4, display: "inline-block" }}>
+                  Etherscan &rarr;
+                </a>
+              </div>
+            ) : causalWindow?.anchorAfter ? (
+              <div style={{ flex: 1, textAlign: "center" }}>
+                <div style={{ width: 48, height: 48, borderRadius: "50%", background: "#f0fdf4", border: "2px solid #22c55e", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto", fontSize: 18 }}>
+                  ⛓️
+                </div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: "#111827", marginTop: 8 }}>#{causalWindow.anchorAfter.counter}</div>
+                <div style={{ fontSize: 11, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", marginTop: 2 }}>Sealed</div>
+                <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 4, flexWrap: "wrap" }}>
+                  {(causalWindow.anchorAfter as { digestB64?: string | null }).digestB64 && (
+                    <a href={`/proof/${encodeURIComponent(((causalWindow.anchorAfter as { digestB64?: string | null }).digestB64 || "").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""))}`} target="_blank" rel="noopener" style={{ fontSize: 11, color: "var(--c-accent)", textDecoration: "none" }}>
+                      Proof &rarr;
+                    </a>
+                  )}
+                  {causalWindow.anchorAfter.etherscanUrl && (
+                    <a href={causalWindow.anchorAfter.etherscanUrl} target="_blank" rel="noopener" style={{ fontSize: 11, color: "var(--c-accent)", textDecoration: "none" }}>
+                      Block #{causalWindow.anchorAfter.blockNumber} &rarr;
+                    </a>
+                  )}
+                </div>
+                {causalWindow.anchorAfter.blockTime && (
+                  <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>
+                    {new Date(causalWindow.anchorAfter.blockTime).toLocaleString()}
+                  </div>
                 )}
               </div>
-              {causalWindow.anchorAfter.blockTime && (
-                <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 4 }}>
-                  {new Date(causalWindow.anchorAfter.blockTime).toLocaleString()}
+            ) : (
+              <div style={{ flex: 1, textAlign: "center" }}>
+                <div style={{ width: 48, height: 48, borderRadius: "50%", background: "#f9fafb", border: "2px dashed #d0d5dd", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto", fontSize: 18 }}>
+                  ⏳
                 </div>
-              )}
+                <div style={{ fontSize: 14, color: "#9ca3af", marginTop: 8 }}>Awaiting anchor</div>
+              </div>
+            )}
+          </div>
+
+          {/* Atomic bracket */}
+          <div style={{ display: "flex", justifyContent: "center", marginTop: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <div style={{ width: 120, height: 1, background: "#d0d5dd" }} />
+              <span style={{ fontSize: 10, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.08em", whiteSpace: "nowrap" }}>Atomic</span>
+              <div style={{ width: 120, height: 1, background: "#d0d5dd" }} />
             </div>
-          ) : (
-            <div>
-              <div style={{ fontSize: 12, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Sealed By</div>
-              <div style={{ fontSize: 16, color: "#9ca3af" }}>Awaiting anchor...</div>
-            </div>
-          )}
+          </div>
         </div>
 
         {/* Details */}
