@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 // Nav is in root layout
 import type { OCCProof } from "@/lib/occ";
 import { zipSync, strToU8 } from "fflate";
+import ChainCarousel from "@/components/chain-carousel";
 // QR code removed — replaced with Ethereum Seal card
 
 const mono = "var(--font-mono), 'SF Mono', SFMono-Regular, monospace";
@@ -126,6 +127,11 @@ export default function ProofPage() {
             <JsonToggle proof={proof} />
           </div>
         </div>
+
+        {/* Chain carousel */}
+        {commit.epochId && commit.counter && (
+          <ChainCarousel epochId={commit.epochId} currentCounter={parseInt(commit.counter, 10)} />
+        )}
 
         {/* Causal flow diagram */}
         <div style={{
