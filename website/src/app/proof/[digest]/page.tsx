@@ -134,23 +134,7 @@ export default function ProofPage() {
         {/* Cards grid */}
         <div className="proof-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
 
-          <Card title="Artifact">
-            <Field label="Digest" value={proof.artifact.digestB64} mono />
-            <Field label="Algorithm" value={proof.artifact.hashAlg.toUpperCase()} />
-            {(proof as OCCProof & { proofHash?: string }).proofHash && (
-              <Field label="Proof Hash" value={(proof as OCCProof & { proofHash?: string }).proofHash!} mono highlight />
-            )}
-          </Card>
-
-          <Card title="Commit">
-            <Field label="Counter" value={`#${commit.counter}`} highlight />
-            {commit.epochId && <Field label="Epoch ID" value={String(commit.epochId)} mono />}
-            {commit.prevB64 && <Field label="Previous Hash" value={commit.prevB64} mono />}
-            {commit.nonceB64 && <Field label="Nonce" value={commit.nonceB64} mono />}
-            {commit.slotCounter != null && <Field label="Slot Counter" value={`#${commit.slotCounter}`} />}
-            {commit.slotHashB64 && <Field label="Slot Hash" value={commit.slotHashB64} mono />}
-          </Card>
-
+          {/* 1. Slot — reserved first, before anything else */}
           {slot && (
             <Card title="Causal Slot">
               <Field label="Counter" value={`#${slot.counter}`} highlight />
@@ -160,11 +144,32 @@ export default function ProofPage() {
             </Card>
           )}
 
+          {/* 2. Artifact — file hashed, digest computed */}
+          <Card title="Artifact">
+            <Field label="Digest" value={proof.artifact.digestB64} mono />
+            <Field label="Algorithm" value={proof.artifact.hashAlg.toUpperCase()} />
+            {(proof as OCCProof & { proofHash?: string }).proofHash && (
+              <Field label="Proof Hash" value={(proof as OCCProof & { proofHash?: string }).proofHash!} mono highlight />
+            )}
+          </Card>
+
+          {/* 3. Commit — slot consumed, proof signed atomically */}
+          <Card title="Commit">
+            <Field label="Counter" value={`#${commit.counter}`} highlight />
+            {commit.epochId && <Field label="Epoch ID" value={String(commit.epochId)} mono />}
+            {commit.prevB64 && <Field label="Previous Hash" value={commit.prevB64} mono />}
+            {commit.nonceB64 && <Field label="Nonce" value={commit.nonceB64} mono />}
+            {commit.slotCounter != null && <Field label="Slot Counter" value={`#${commit.slotCounter}`} />}
+            {commit.slotHashB64 && <Field label="Slot Hash" value={commit.slotHashB64} mono />}
+          </Card>
+
+          {/* 4. Signer — who signed it */}
           <Card title="Signer">
             <Field label="Public Key" value={proof.signer.publicKeyB64} mono />
             <Field label="Signature" value={proof.signer.signatureB64} mono />
           </Card>
 
+          {/* 5. Environment — where it was signed */}
           <Card title="Environment">
             <Field label="Enforcement" value={isTee ? "Hardware Enclave (AWS Nitro)" : "Software"} />
             {proof.environment?.measurement && <Field label="PCR0 Measurement" value={proof.environment.measurement} mono />}
