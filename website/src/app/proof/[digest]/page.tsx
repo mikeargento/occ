@@ -5,7 +5,6 @@ import { useParams } from "next/navigation";
 // Nav is in root layout
 import type { OCCProof } from "@/lib/occ";
 import { zipSync, strToU8 } from "fflate";
-import ChainCarousel from "@/components/chain-carousel";
 // QR code removed — replaced with Ethereum Seal card
 
 const mono = "var(--font-mono), 'SF Mono', SFMono-Regular, monospace";
@@ -117,160 +116,88 @@ export default function ProofPage() {
       <div style={{ width: "90%", maxWidth: 800, margin: "0 auto", padding: "24px 0 60px", animation: "fadeIn .3s ease-out" }}>
 
 
-        {/* Title + actions */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32, flexWrap: "wrap", gap: 12 }}>
-          <span style={{ fontSize: 28, fontWeight: 900, color: "var(--c-accent)" }}>
-            {isEth ? "Anchor" : "Proof"} #{commit.counter}
-          </span>
+        {/* Title bar */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+            <span style={{ fontSize: 28, fontWeight: 900, fontFamily: 'var(--font-sans)' }}>
+              <span style={{ color: "var(--c-accent)" }}>{isEth ? "Anchor" : "Proof"} #{commit.counter}</span>
+            </span>
+          </div>
           <div style={{ display: "flex", gap: 8 }}>
             <button onClick={exportZip} style={btnStyle}>Export Proof</button>
             <JsonToggle proof={proof} />
           </div>
         </div>
 
-        {/* Chain carousel */}
-        {commit.epochId && commit.counter && (
-          <ChainCarousel epochId={commit.epochId} currentCounter={parseInt(commit.counter, 10)} />
-        )}
+        {/* No separate causal window or ethereum link — consolidated into Ethereum Seal card below */}
 
-        {/* Causal flow diagram */}
-        <div style={{
-          marginBottom: 32, padding: "28px 24px", background: "#fff", borderRadius: 14, border: "1px solid #d0d5dd",
-        }}>
-          <div style={{ display: "flex", alignItems: "stretch", gap: 0 }}>
-
-            {/* Step 1: Slot */}
-            <div style={{ flex: 1, textAlign: "center" }}>
-              <div style={{ width: 48, height: 48, borderRadius: "50%", background: "#f3f4f6", border: "2px solid #d0d5dd", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto", fontSize: 18 }}>
-                🔒
-              </div>
-              <div style={{ fontSize: 24, fontWeight: 800, color: "#111827", marginTop: 8 }}>#{commit.slotCounter}</div>
-              <div style={{ fontSize: 11, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", marginTop: 2 }}>Slot Reserved</div>
-              <div style={{ fontSize: 11, color: "#6b7280", marginTop: 4 }}>Nonce generated</div>
-            </div>
-
-            {/* Arrow 1 */}
-            <div style={{ display: "flex", alignItems: "center", paddingTop: 0 }}>
-              <div style={{ width: 40, height: 2, background: "#d0d5dd", position: "relative" }}>
-                <div style={{ position: "absolute", right: -4, top: -4, width: 0, height: 0, borderTop: "5px solid transparent", borderBottom: "5px solid transparent", borderLeft: "8px solid #d0d5dd" }} />
-              </div>
-            </div>
-
-            {/* Step 2: Commit */}
-            <div style={{ flex: 1, textAlign: "center" }}>
-              <div style={{ width: 48, height: 48, borderRadius: "50%", background: "#eef4ff", border: "2px solid var(--c-accent)", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto", fontSize: 18 }}>
-                ✍️
-              </div>
-              <div style={{ fontSize: 24, fontWeight: 800, color: "#111827", marginTop: 8 }}>#{commit.counter}</div>
-              <div style={{ fontSize: 11, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", marginTop: 2 }}>Committed</div>
-              <div style={{ fontSize: 11, color: "#6b7280", marginTop: 4 }}>Signed in enclave</div>
-            </div>
-
-            {/* Arrow 2 */}
-            <div style={{ display: "flex", alignItems: "center", paddingTop: 0 }}>
-              <div style={{ width: 40, height: 2, background: "#d0d5dd", position: "relative", borderStyle: "dashed" }}>
-                <div style={{ position: "absolute", right: -4, top: -4, width: 0, height: 0, borderTop: "5px solid transparent", borderBottom: "5px solid transparent", borderLeft: "8px solid #d0d5dd" }} />
-              </div>
-            </div>
-
-            {/* Step 3: Sealed */}
-            {isEth && attr?.title ? (
-              <div style={{ flex: 1, textAlign: "center" }}>
-                <div style={{ width: 48, height: 48, borderRadius: "50%", background: "#f0fdf4", border: "2px solid #22c55e", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto", fontSize: 18 }}>
-                  ⛓️
-                </div>
-                <div style={{ fontSize: 24, fontWeight: 800, color: "#111827", marginTop: 8 }}>#{attr.title.match(/\/block\/(\d+)/)?.[1] || "?"}</div>
-                <div style={{ fontSize: 11, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", marginTop: 2 }}>Ethereum Block</div>
-                <a href={attr.title} target="_blank" rel="noopener" style={{ fontSize: 11, color: "var(--c-accent)", textDecoration: "none", marginTop: 4, display: "inline-block" }}>
-                  Etherscan &rarr;
-                </a>
-              </div>
-            ) : causalWindow?.anchorAfter ? (
-              <div style={{ flex: 1, textAlign: "center" }}>
-                <div style={{ width: 48, height: 48, borderRadius: "50%", background: "#f0fdf4", border: "2px solid #22c55e", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto", fontSize: 18 }}>
-                  ⛓️
-                </div>
-                <div style={{ fontSize: 24, fontWeight: 800, color: "#111827", marginTop: 8 }}>#{causalWindow.anchorAfter.counter}</div>
-                <div style={{ fontSize: 11, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", marginTop: 2 }}>Sealed</div>
-                <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 4, flexWrap: "wrap" }}>
-                  {(causalWindow.anchorAfter as { digestB64?: string | null }).digestB64 && (
-                    <a href={`/proof/${encodeURIComponent(((causalWindow.anchorAfter as { digestB64?: string | null }).digestB64 || "").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""))}`} target="_blank" rel="noopener" style={{ fontSize: 11, color: "var(--c-accent)", textDecoration: "none" }}>
-                      Proof &rarr;
-                    </a>
-                  )}
-                  {causalWindow.anchorAfter.etherscanUrl && (
-                    <a href={causalWindow.anchorAfter.etherscanUrl} target="_blank" rel="noopener" style={{ fontSize: 11, color: "var(--c-accent)", textDecoration: "none" }}>
-                      Block #{causalWindow.anchorAfter.blockNumber} &rarr;
-                    </a>
-                  )}
-                </div>
-                {causalWindow.anchorAfter.blockTime && (
-                  <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>
-                    {new Date(causalWindow.anchorAfter.blockTime).toLocaleString()}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div style={{ flex: 1, textAlign: "center" }}>
-                <div style={{ width: 48, height: 48, borderRadius: "50%", background: "#f9fafb", border: "2px dashed #d0d5dd", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto", fontSize: 18 }}>
-                  ⏳
-                </div>
-                <div style={{ fontSize: 14, color: "#9ca3af", marginTop: 8 }}>Awaiting anchor</div>
-              </div>
-            )}
-          </div>
-
-          {/* Atomic bracket */}
-          <div style={{ display: "flex", justifyContent: "center", marginTop: 16 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <div style={{ width: 120, height: 1, background: "#d0d5dd" }} />
-              <span style={{ fontSize: 10, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.08em", whiteSpace: "nowrap" }}>Atomic</span>
-              <div style={{ width: 120, height: 1, background: "#d0d5dd" }} />
-            </div>
-          </div>
-        </div>
-
-        {/* Details */}
-        <div className="proof-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16 }}>
+        {/* Cards grid */}
+        <div className="proof-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
 
           <Card title="Artifact">
             <Field label="Digest" value={proof.artifact.digestB64} mono />
             <Field label="Algorithm" value={proof.artifact.hashAlg.toUpperCase()} />
             {(proof as OCCProof & { proofHash?: string }).proofHash && (
-              <Field label="Proof Hash" value={(proof as OCCProof & { proofHash?: string }).proofHash!} mono />
+              <Field label="Proof Hash" value={(proof as OCCProof & { proofHash?: string }).proofHash!} mono highlight />
             )}
           </Card>
 
-          <Card title="Chain">
-            {commit.epochId && <Field label="Epoch" value={String(commit.epochId)} mono />}
-            {commit.prevB64 && <Field label="Previous Proof" value={commit.prevB64} mono />}
+          <Card title="Commit">
+            <Field label="Counter" value={`#${commit.counter}`} highlight />
+            {commit.epochId && <Field label="Epoch ID" value={String(commit.epochId)} mono />}
+            {commit.prevB64 && <Field label="Previous Hash" value={commit.prevB64} mono />}
             {commit.nonceB64 && <Field label="Nonce" value={commit.nonceB64} mono />}
+            {commit.slotCounter != null && <Field label="Slot Counter" value={`#${commit.slotCounter}`} />}
             {commit.slotHashB64 && <Field label="Slot Hash" value={commit.slotHashB64} mono />}
           </Card>
+
+          {slot && (
+            <Card title="Causal Slot">
+              <Field label="Counter" value={`#${slot.counter}`} highlight />
+              {slot.nonceB64 ? <Field label="Nonce" value={String(slot.nonceB64)} mono /> : null}
+              {slot.signatureB64 ? <Field label="Signature" value={String(slot.signatureB64)} mono /> : null}
+              {slot.epochId ? <Field label="Epoch ID" value={String(slot.epochId)} mono /> : null}
+            </Card>
+          )}
 
           <Card title="Signer">
             <Field label="Public Key" value={proof.signer.publicKeyB64} mono />
             <Field label="Signature" value={proof.signer.signatureB64} mono />
           </Card>
 
-          <Card title="Trusted Execution Environment">
+          <Card title="Environment">
             <Field label="Enforcement" value={isTee ? "Hardware Enclave (AWS Nitro)" : "Software"} />
-            {proof.environment?.measurement && <Field label="Measurement (PCR0)" value={proof.environment.measurement} mono />}
+            {proof.environment?.measurement && <Field label="PCR0 Measurement" value={proof.environment.measurement} mono />}
             {proof.environment?.attestation?.format && <Field label="Attestation Format" value={proof.environment.attestation.format} />}
-            {isTee && <Field label="Attestation Report" value={proof.environment?.attestation?.reportB64 ? "Included in proof (AWS Nitro COSE)" : "Not available"} />}
-            {isTee && (
-              <div style={{ padding: "12px 18px", borderBottom: "1px solid #e2e5e9" }}>
-                <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 4, fontWeight: 500 }}>Verify</div>
-                <div style={{ fontSize: 13, color: "#6b7280", lineHeight: 1.5 }}>
-                  The PCR0 measurement identifies the exact enclave image. The attestation report is signed by AWS Nitro hardware and can be verified independently using the{" "}
-                  <a href="https://docs.aws.amazon.com/enclaves/latest/user/verify-root.html" target="_blank" rel="noopener" style={{ color: "var(--c-accent)", textDecoration: "none" }}>
-                    AWS Nitro root certificate
-                  </a>.
-                </div>
-              </div>
-            )}
           </Card>
 
+          {/* Ethereum Seal */}
+          {/* Ethereum info — single card for both anchor proofs and user proofs */}
+          {isEth && attr?.title ? (
+            <Card title="Ethereum Block">
+              <Field label="Block" value={`#${attr.title.match(/\/block\/(\d+)/)?.[1] || "?"}`} highlight />
+              {attr.message && <Field label="Block Hash" value={attr.message} mono />}
+              <Field label="Etherscan" value={attr.title} link />
+            </Card>
+          ) : causalWindow?.anchorAfter ? (
+            <Card title="Sealed By">
+              <Field label="Ethereum Block" value={`#${causalWindow.anchorAfter.blockNumber}`} highlight />
+              {causalWindow.anchorAfter.blockTime && (
+                <Field label="Time" value={new Date(causalWindow.anchorAfter.blockTime).toLocaleString()} />
+              )}
+              {causalWindow.anchorAfter.etherscanUrl && (
+                <Field label="Etherscan" value={causalWindow.anchorAfter.etherscanUrl} link />
+              )}
+            </Card>
+          ) : (
+            <Card title="Sealed By">
+              <div style={{ padding: "16px 18px", fontSize: 13, color: "#9ca3af" }}>
+                Awaiting next anchor...
+              </div>
+            </Card>
+          )}
+
+          {/* Attribution — only show for non-ETH proofs that have it */}
           {attr && !isEth && (
             <Card title="Attribution">
               {attr.name && <Field label="Name" value={attr.name} />}
@@ -283,6 +210,7 @@ export default function ProofPage() {
             <Card title="Timestamps">
               {ts.authority ? <Field label="Authority" value={String(ts.authority)} /> : null}
               {ts.time ? <Field label="TSA Time" value={String(ts.time)} /> : null}
+              {ts.digestAlg ? <Field label="Digest Algorithm" value={String(ts.digestAlg)} /> : null}
             </Card>
           )}
         </div>
@@ -332,24 +260,22 @@ function Field({ label, value, mono: isMono, highlight, link }: { label: string;
     <div
       onClick={() => { navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
       style={{
-        display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 16,
+        display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12,
         padding: "10px 18px", borderBottom: "1px solid #e2e5e9", cursor: "pointer",
-        minHeight: 40,
       }}
     >
-      <span style={{ fontSize: 13, color: "#6b7280", fontWeight: 500, flexShrink: 0, whiteSpace: "nowrap" }}>{label}</span>
+      <span style={{ fontSize: 13, color: "#374151", fontWeight: 500, flexShrink: 0, minWidth: 80 }}>{label}</span>
       {link ? (
         <a href={value} target="_blank" rel="noopener" onClick={(e) => e.stopPropagation()} style={{
-          fontSize: 13, color: "var(--c-accent)", textDecoration: "none",
-          textAlign: "right", wordBreak: "break-all", minWidth: 0,
-        }}>{value.replace("https://", "")}</a>
+          fontSize: 12, color: "var(--c-accent)", textDecoration: "none", wordBreak: "break-all", textAlign: "right",
+        }}>{value}</a>
       ) : (
         <span style={{
-          fontSize: isMono ? 12 : 14,
+          fontSize: isMono ? 11 : 13,
           fontFamily: isMono ? mono : "inherit",
-          color: copied ? "#1A73E8" : highlight ? "var(--c-accent)" : "#111827",
-          fontWeight: highlight ? 600 : 400,
-          textAlign: "right", wordBreak: "break-all", minWidth: 0,
+          color: copied ? "#1A73E8" : highlight ? "var(--c-accent)" : "#1f2937",
+          fontWeight: highlight ? 700 : 400,
+          wordBreak: "break-all", textAlign: "right",
           transition: "color .2s", lineHeight: 1.4,
         }}>
           {copied ? "Copied!" : value}
