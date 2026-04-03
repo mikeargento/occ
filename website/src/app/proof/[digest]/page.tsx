@@ -192,9 +192,10 @@ export default function ProofPage() {
                 <div style={{ padding: "10px 18px", borderBottom: "1px solid #e2e5e9" }}>
                   <a
                     href={`/proof/${encodeURIComponent((causalWindow.anchorAfter.digestB64 || "").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""))}`}
+                    target="_blank" rel="noopener"
                     style={{ fontSize: 14, fontWeight: 600, color: "var(--c-accent)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6 }}
                   >
-                    Anchor #{causalWindow.anchorAfter.counter} &rarr;
+                    View Anchor Proof &rarr;
                   </a>
                 </div>
               )}
