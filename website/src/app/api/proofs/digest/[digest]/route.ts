@@ -40,8 +40,6 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ dig
               }
             } catch (_) { /* non-critical */ }
           }
-          const anchorArtifact = anchor.artifact as { digestB64?: string } | undefined;
-          const anchorDigest = anchorArtifact?.digestB64 || null;
           causalWindow = {
             anchorBefore: null,
             anchorAfter: {
@@ -51,7 +49,6 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ dig
               blockHash: anchorAttr?.message || null,
               etherscanUrl: anchorAttr?.title || null,
               blockTime,
-              digestB64: anchorDigest,
             },
           };
         }
