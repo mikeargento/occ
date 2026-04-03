@@ -152,13 +152,20 @@ export default function ProofPage() {
             <div>
               <div style={{ fontSize: 12, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Sealed By</div>
               <div style={{ fontSize: 28, fontWeight: 800, color: "#111827" }}>#{causalWindow.anchorAfter.counter}</div>
-              {causalWindow.anchorAfter.etherscanUrl && (
-                <a href={causalWindow.anchorAfter.etherscanUrl} target="_blank" rel="noopener" style={{ fontSize: 13, color: "var(--c-accent)", textDecoration: "none", marginTop: 4, display: "inline-block" }}>
-                  Block #{causalWindow.anchorAfter.blockNumber} &rarr;
-                </a>
-              )}
+              <div style={{ display: "flex", gap: 12, marginTop: 6, flexWrap: "wrap" }}>
+                {(causalWindow.anchorAfter as { digestB64?: string | null }).digestB64 && (
+                  <a href={`/proof/${encodeURIComponent(((causalWindow.anchorAfter as { digestB64?: string | null }).digestB64 || "").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""))}`} target="_blank" rel="noopener" style={{ fontSize: 13, color: "var(--c-accent)", textDecoration: "none" }}>
+                    View anchor proof &rarr;
+                  </a>
+                )}
+                {causalWindow.anchorAfter.etherscanUrl && (
+                  <a href={causalWindow.anchorAfter.etherscanUrl} target="_blank" rel="noopener" style={{ fontSize: 13, color: "var(--c-accent)", textDecoration: "none" }}>
+                    Block #{causalWindow.anchorAfter.blockNumber} &rarr;
+                  </a>
+                )}
+              </div>
               {causalWindow.anchorAfter.blockTime && (
-                <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 2 }}>
+                <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 4 }}>
                   {new Date(causalWindow.anchorAfter.blockTime).toLocaleString()}
                 </div>
               )}
@@ -169,11 +176,6 @@ export default function ProofPage() {
               <div style={{ fontSize: 16, color: "#9ca3af" }}>Awaiting anchor...</div>
             </div>
           )}
-          <div>
-            <div style={{ fontSize: 12, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Environment</div>
-            <div style={{ fontSize: 16, fontWeight: 600, color: "#111827" }}>{isTee ? "Hardware Enclave" : "Software"}</div>
-            <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 2 }}>{isTee ? "AWS Nitro" : ""}</div>
-          </div>
         </div>
 
         {/* Details — single column, clean */}
@@ -199,12 +201,23 @@ export default function ProofPage() {
             <Field label="Signature" value={proof.signer.signatureB64} mono />
           </Card>
 
-          {proof.environment?.measurement && (
-            <Card title="Attestation">
-              <Field label="Measurement (PCR0)" value={proof.environment.measurement} mono />
-              {proof.environment?.attestation?.format && <Field label="Format" value={proof.environment.attestation.format} />}
-            </Card>
-          )}
+          <Card title="Trusted Execution Environment">
+            <Field label="Enforcement" value={isTee ? "Hardware Enclave (AWS Nitro)" : "Software"} />
+            {proof.environment?.measurement && <Field label="Measurement (PCR0)" value={proof.environment.measurement} mono />}
+            {proof.environment?.attestation?.format && <Field label="Attestation Format" value={proof.environment.attestation.format} />}
+            {isTee && <Field label="Attestation Report" value={proof.environment?.attestation?.reportB64 ? "Included in proof (AWS Nitro COSE)" : "Not available"} />}
+            {isTee && (
+              <div style={{ padding: "12px 18px", borderBottom: "1px solid #e2e5e9" }}>
+                <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 4, fontWeight: 500 }}>Verify</div>
+                <div style={{ fontSize: 13, color: "#6b7280", lineHeight: 1.5 }}>
+                  The PCR0 measurement identifies the exact enclave image. The attestation report is signed by AWS Nitro hardware and can be verified independently using the{" "}
+                  <a href="https://docs.aws.amazon.com/enclaves/latest/user/verify-root.html" target="_blank" rel="noopener" style={{ color: "var(--c-accent)", textDecoration: "none" }}>
+                    AWS Nitro root certificate
+                  </a>.
+                </div>
+              </div>
+            )}
+          </Card>
 
           {attr && !isEth && (
             <Card title="Attribution">
