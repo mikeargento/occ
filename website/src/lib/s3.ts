@@ -195,38 +195,57 @@ export async function getAnchorsAfterCounter(proofCounter: number, epochId: stri
     const safeEpoch = toSafe(epochId);
     const startCounter = String(proofCounter + 1).padStart(12, "0");
 
-    // Anchors are proofs on the same chain — paginate until we find one
-    const prefix = `proofs/${safeEpoch}/`;
-    let continuationToken: string | undefined;
-    const anchors: Array<Record<string, unknown>> = [];
+    // Scan anchors/{epoch}/ — counter-indexed, only contains anchors.
+    // One S3 LIST + one GET per anchor found. No user proofs to skip.
+    // Falls back to proofs/ scan if anchors/ index isn't populated yet.
+    const anchorPrefix = `anchors/${safeEpoch}/`;
+    let result = await s3.send(new ListObjectsV2Command({
+      Bucket: bucket,
+      Prefix: anchorPrefix,
+      StartAfter: `${anchorPrefix}${startCounter}`,
+      MaxKeys: limit,
+    }));
 
-    // Paginate in batches of 100, fetch each to check if it's an anchor
-    // Stop after finding enough or scanning 5 pages (500 keys max)
-    for (let page = 0; page < 5 && anchors.length < limit; page++) {
-      const result = await s3.send(new ListObjectsV2Command({
-        Bucket: bucket,
-        Prefix: prefix,
-        StartAfter: page === 0 ? `${prefix}${startCounter}` : undefined,
-        ContinuationToken: continuationToken,
-        MaxKeys: 100,
-      }));
+    let keys = (result.Contents || []).map(o => o.Key!).filter(Boolean);
 
-      for (const obj of result.Contents || []) {
-        if (!obj.Key || anchors.length >= limit) break;
-        try {
-          const getResult = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: obj.Key }));
-          const body = await getResult.Body?.transformToString();
-          if (!body) continue;
-          const p = JSON.parse(body);
-          const attr = p.attribution as { name?: string } | undefined;
-          if (attr?.name === "Ethereum Anchor") {
-            anchors.push(p);
-          }
-        } catch { /* skip */ }
+    // Fallback: if anchors/ index is empty, scan proofs/ (slower but works)
+    if (keys.length === 0) {
+      const proofPrefix = `proofs/${safeEpoch}/`;
+      let continuationToken: string | undefined;
+      const foundAnchors: Array<Record<string, unknown>> = [];
+      for (let page = 0; page < 5 && foundAnchors.length < limit; page++) {
+        const r = await s3.send(new ListObjectsV2Command({
+          Bucket: bucket,
+          Prefix: proofPrefix,
+          StartAfter: page === 0 ? `${proofPrefix}${startCounter}` : undefined,
+          ContinuationToken: continuationToken,
+          MaxKeys: 100,
+        }));
+        for (const obj of r.Contents || []) {
+          if (!obj.Key || foundAnchors.length >= limit) break;
+          try {
+            const gr = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: obj.Key }));
+            const body = await gr.Body?.transformToString();
+            if (!body) continue;
+            const p = JSON.parse(body);
+            if ((p.attribution as { name?: string })?.name === "Ethereum Anchor") foundAnchors.push(p);
+          } catch { /* skip */ }
+        }
+        if (!r.IsTruncated) break;
+        continuationToken = r.NextContinuationToken;
       }
+      return foundAnchors;
+    }
 
-      if (!result.IsTruncated) break;
-      continuationToken = result.NextContinuationToken;
+    // Fetch from anchors/ index
+    const anchors: Array<Record<string, unknown>> = [];
+    for (const key of keys.slice(0, limit)) {
+      try {
+        const getResult = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+        const body = await getResult.Body?.transformToString();
+        if (!body) continue;
+        anchors.push(JSON.parse(body));
+      } catch { /* skip */ }
     }
     return anchors;
   } catch (err) {

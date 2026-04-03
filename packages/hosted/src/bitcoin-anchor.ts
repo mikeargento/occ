@@ -95,10 +95,21 @@ async function persistAnchor(
 
     // Anchor index (time-ordered for causal window queries)
     const ts = new Date().toISOString().replace(/[:.]/g, "-");
+    const anchorBody = JSON.stringify({ ...stored, ethereum }, null, 2);
     await s3.send(new PutObjectCommand({
       Bucket: bucket,
       Key: `anchors-by-time/${ts}-${ethereum.blockNumber}.json`,
-      Body: JSON.stringify({ ...stored, ethereum }, null, 2),
+      Body: anchorBody,
+      ContentType: "application/json",
+    }));
+
+    // Counter-indexed anchor (for fast "next anchor after counter N" lookups)
+    const safeEpoch = (commit.epochId || "").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+    const paddedCounter = String(commit.counter).padStart(12, "0");
+    await s3.send(new PutObjectCommand({
+      Bucket: bucket,
+      Key: `anchors/${safeEpoch}/${paddedCounter}.json`,
+      Body: anchorBody,
       ContentType: "application/json",
     }));
 
