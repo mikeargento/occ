@@ -195,7 +195,7 @@ export default function ProofPage() {
                     target="_blank" rel="noopener"
                     style={{ fontSize: 14, fontWeight: 600, color: "var(--c-accent)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6 }}
                   >
-                    View Anchor Proof &rarr;
+                    View Anchor Proof #{causalWindow.anchorAfter.counter} &rarr;
                   </a>
                 </div>
               )}
