@@ -189,7 +189,14 @@ export default function ProofPage() {
                 <Field label="Etherscan" value={causalWindow.anchorAfter.etherscanUrl} link />
               )}
               {causalWindow.anchorAfter.digestB64 && (
-                <Field label="Anchor Proof" value={`/proof/${encodeURIComponent((causalWindow.anchorAfter.digestB64 || "").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""))}`} link />
+                <div style={{ padding: "10px 18px", borderBottom: "1px solid #e2e5e9" }}>
+                  <a
+                    href={`/proof/${encodeURIComponent((causalWindow.anchorAfter.digestB64 || "").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""))}`}
+                    style={{ fontSize: 14, fontWeight: 600, color: "var(--c-accent)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6 }}
+                  >
+                    Anchor #{causalWindow.anchorAfter.counter} &rarr;
+                  </a>
+                </div>
               )}
             </Card>
           ) : (
