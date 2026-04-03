@@ -129,59 +129,7 @@ export default function ProofPage() {
           </div>
         </div>
 
-        {/* Ethereum link */}
-        {isEth && attr?.title && (
-          <a href={attr.title} target="_blank" rel="noopener" style={{
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-            padding: "14px 16px", marginBottom: 20, borderRadius: 12,
-            background: "rgba(108,180,240,.05)", border: "1px solid rgba(108,180,240,.15)",
-            textDecoration: "none", color: "var(--c-accent)", fontSize: 14, fontWeight: 500,
-          }}>
-            <span>{attr.name}</span>
-            <span>View on Etherscan &rarr;</span>
-          </a>
-        )}
-
-        {/* Causal Window */}
-        {causalWindow && (causalWindow.anchorBefore || causalWindow.anchorAfter) && (
-          <div style={{
-            marginBottom: 20, padding: "16px 20px", borderRadius: 12,
-            background: "rgba(26,115,232,.04)", border: "1px solid rgba(26,115,232,.15)",
-          }}>
-            <div style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em", color: "#1A73E8", marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{ width: 3, height: 12, borderRadius: 1, background: "#1A73E8" }} />
-              Causal Window
-            </div>
-            <div style={{ fontSize: 13, color: "var(--c-text-secondary)", lineHeight: 1.7 }}>
-              {causalWindow.anchorBefore && causalWindow.anchorAfter ? (
-                <>Between <a href={causalWindow.anchorBefore.etherscanUrl || "#"} target="_blank" rel="noopener" style={{ color: "#1A73E8", textDecoration: "none", fontWeight: 600 }}>Ethereum #{causalWindow.anchorBefore.blockNumber}</a> and <a href={causalWindow.anchorAfter.etherscanUrl || "#"} target="_blank" rel="noopener" style={{ color: "#1A73E8", textDecoration: "none", fontWeight: 600 }}>Ethereum #{causalWindow.anchorAfter.blockNumber}</a></>
-              ) : causalWindow.anchorAfter ? (
-                <>Sealed by <a href={causalWindow.anchorAfter.etherscanUrl || "#"} target="_blank" rel="noopener" style={{ color: "#1A73E8", textDecoration: "none", fontWeight: 600 }}>Ethereum #{causalWindow.anchorAfter.blockNumber}</a></>
-              ) : causalWindow.anchorBefore ? (
-                <>After <a href={causalWindow.anchorBefore.etherscanUrl || "#"} target="_blank" rel="noopener" style={{ color: "#1A73E8", textDecoration: "none", fontWeight: 600 }}>Ethereum #{causalWindow.anchorBefore.blockNumber}</a> — awaiting next anchor</>
-              ) : null}
-            </div>
-            <div style={{ marginTop: 12, display: "flex", alignItems: "center", fontSize: 11, fontFamily: mono }}>
-              {causalWindow.anchorBefore && (
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#1A73E8", flexShrink: 0 }} />
-                  <span style={{ color: "var(--c-text-tertiary)" }}>#{causalWindow.anchorBefore.counter}</span>
-                </div>
-              )}
-              <div style={{ flex: 1, height: 1, background: "rgba(26,115,232,.25)", margin: "0 8px", position: "relative" }}>
-                <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: 10, height: 10, borderRadius: "50%", background: "var(--c-accent)", border: "2px solid var(--bg-elevated)" }} />
-              </div>
-              {causalWindow.anchorAfter ? (
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <span style={{ color: "var(--c-text-tertiary)" }}>#{causalWindow.anchorAfter.counter}</span>
-                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#1A73E8", flexShrink: 0 }} />
-                </div>
-              ) : (
-                <span style={{ color: "var(--c-text-tertiary)" }}>pending</span>
-              )}
-            </div>
-          </div>
-        )}
+        {/* No separate causal window or ethereum link — consolidated into Ethereum Seal card below */}
 
         {/* Cards grid */}
         <div className="proof-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
@@ -224,23 +172,31 @@ export default function ProofPage() {
           </Card>
 
           {/* Ethereum Seal */}
-          {causalWindow?.anchorAfter ? (
-            <Card title="Ethereum Seal">
-              <Field label="Block" value={`#${causalWindow.anchorAfter.blockNumber}`} highlight />
+          {/* Ethereum info — single card for both anchor proofs and user proofs */}
+          {isEth && attr?.title ? (
+            <Card title="Ethereum Block">
+              <Field label="Block" value={`#${attr.title.match(/\/block\/(\d+)/)?.[1] || "?"}`} highlight />
+              {attr.message && <Field label="Block Hash" value={attr.message} mono />}
+              <Field label="Etherscan" value={attr.title} link />
+            </Card>
+          ) : causalWindow?.anchorAfter ? (
+            <Card title="Sealed By">
+              <Field label="Ethereum Block" value={`#${causalWindow.anchorAfter.blockNumber}`} highlight />
               <Field label="Chain Position" value={`Proof #${causalWindow.anchorAfter.counter}`} />
               {causalWindow.anchorAfter.etherscanUrl && (
                 <Field label="Etherscan" value={causalWindow.anchorAfter.etherscanUrl} link />
               )}
             </Card>
           ) : (
-            <Card title="Ethereum Seal">
+            <Card title="Sealed By">
               <div style={{ padding: "16px 18px", fontSize: 13, color: "#9ca3af" }}>
                 Awaiting next anchor...
               </div>
             </Card>
           )}
 
-          {attr && (
+          {/* Attribution — only show for non-ETH proofs that have it */}
+          {attr && !isEth && (
             <Card title="Attribution">
               {attr.name && <Field label="Name" value={attr.name} />}
               {attr.message && <Field label="Data" value={attr.message} mono />}
