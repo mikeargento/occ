@@ -113,11 +113,10 @@ export default function ProofPage() {
         }
       `}</style>
 
-      <div style={{ width: "90%", maxWidth: 800, margin: "0 auto", padding: "24px 0 60px", animation: "fadeIn .3s ease-out" }}>
-
+      <div style={{ width: "90%", maxWidth: 640, margin: "0 auto", padding: "40px 0 80px", animation: "fadeIn .3s ease-out" }}>
 
         {/* Title bar */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 40, flexWrap: "wrap", gap: 12 }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
             <span style={{ fontSize: 28, fontWeight: 900, fontFamily: 'var(--font-sans)' }}>
               <span style={{ color: "var(--c-accent)" }}>{isEth ? "Anchor" : "Proof"} #{commit.counter}</span>
@@ -132,7 +131,7 @@ export default function ProofPage() {
         {/* No separate causal window or ethereum link — consolidated into Ethereum Seal card below */}
 
         {/* Cards grid */}
-        <div className="proof-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 16 }}>
+        <div className="proof-grid" style={{ display: "grid", gridTemplateColumns: "1fr", gap: 24 }}>
 
           {/* 1. Slot — reserved first, before anything else */}
           {slot && (
@@ -194,7 +193,7 @@ export default function ProofPage() {
                 <Field label="Etherscan" value={causalWindow.anchorAfter.etherscanUrl} link />
               )}
               {causalWindow.anchorAfter.digestB64 && (
-                <div style={{ padding: "10px 18px", borderBottom: "1px solid #e2e5e9" }}>
+                <div style={{ padding: "14px 24px", borderBottom: "1px solid #e2e5e9" }}>
                   <a
                     href={`/proof/${encodeURIComponent((causalWindow.anchorAfter.digestB64 || "").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""))}`}
                     target="_blank" rel="noopener"
@@ -207,7 +206,7 @@ export default function ProofPage() {
             </Card>
           ) : (
             <Card title="Sealed By">
-              <div style={{ padding: "16px 18px", fontSize: 13, color: "#9ca3af" }}>
+              <div style={{ padding: "18px 24px", fontSize: 14, color: "#9ca3af" }}>
                 Awaiting next anchor...
               </div>
             </Card>
@@ -254,7 +253,7 @@ function Card({ title, children }: { title: string; accent?: string; children: R
     <div style={{ background: "#fff", border: "1px solid #d0d5dd", borderRadius: 14, overflow: "hidden" }}>
       <div style={{
         fontSize: 14, fontWeight: 700, letterSpacing: "0.04em",
-        color: "#1A73E8", padding: "14px 18px",
+        color: "#1A73E8", padding: "18px 24px",
         background: "rgba(26,115,232,0.04)",
         borderBottom: "1px solid #e2e5e9",
       }}>
@@ -276,18 +275,18 @@ function Field({ label, value, mono: isMono, highlight, link }: { label: string;
     <div
       onClick={() => { navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
       style={{
-        display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12,
-        padding: "10px 18px", borderBottom: "1px solid #e2e5e9", cursor: "pointer",
+        display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 16,
+        padding: "14px 24px", borderBottom: "1px solid #e2e5e9", cursor: "pointer",
       }}
     >
-      <span style={{ fontSize: 13, color: "#374151", fontWeight: 500, flexShrink: 0, minWidth: 80 }}>{label}</span>
+      <span style={{ fontSize: 14, color: "#374151", fontWeight: 500, flexShrink: 0, minWidth: 80 }}>{label}</span>
       {link ? (
         <a href={value} target="_blank" rel="noopener" onClick={(e) => e.stopPropagation()} style={{
-          fontSize: 12, color: "var(--c-accent)", textDecoration: "none", wordBreak: "break-all", textAlign: "right",
+          fontSize: 13, color: "var(--c-accent)", textDecoration: "none", wordBreak: "break-all", textAlign: "right",
         }}>{value}</a>
       ) : (
         <span style={{
-          fontSize: isMono ? 11 : 13,
+          fontSize: isMono ? 12 : 14,
           fontFamily: isMono ? mono : "inherit",
           color: copied ? "#1A73E8" : highlight ? "var(--c-accent)" : "#1f2937",
           fontWeight: highlight ? 700 : 400,

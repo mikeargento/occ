@@ -18,24 +18,16 @@ interface ChatProps {
 const DEFAULT_QUESTIONS = [
   "What does OCC prove?",
   "What problem does OCC solve?",
-  "Why does causal order matter?",
   "How is this different from a timestamp?",
   "Why not just hash a file?",
-  "What makes this impossible to fake?",
+  "What makes this hard to fake?",
   "Does OCC prove when something happened?",
-  "Why is this better than a blockchain?",
-  "What is OCC NOT?",
-  "Why is this called Origin Controlled Computing?",
-  "What is a hardware enclave?",
-  "What is a causal slot?",
-  "What is atomic causality?",
-  "What are Ethereum anchors?",
-  "Why are future anchors needed?",
-  "What is an epoch?",
-  "How are proofs chained together?",
   "How do I verify a proof?",
   "Is my file ever uploaded?",
+  "What are Ethereum anchors?",
   "What happens if the server disappears?",
+  "Why is this better than a blockchain?",
+  "What is a causal slot?",
 ];
 
 export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOpen }: ChatProps) {
@@ -166,7 +158,7 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
           >
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
-          Ask about OCC
+          How it works
         </button>
       </div>
     );
@@ -196,7 +188,7 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
           justifyContent: "space-between",
         }}
       >
-        <span style={{ fontWeight: 600, fontSize: 16, color: "#111827" }}>Ask about OCC</span>
+        <span style={{ fontWeight: 600, fontSize: 16, color: "#111827" }}>How it works</span>
         <button
           onClick={() => { setOpen(false); onOpenChange?.(false); }}
           style={{
