@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 // Nav is in root layout
 import type { OCCProof } from "@/lib/occ";
 import { zipSync, strToU8 } from "fflate";
-import { QRCodeSVG } from "qrcode.react";
+// QR code removed — replaced with Ethereum Seal card
 
 const mono = "var(--font-mono), 'SF Mono', SFMono-Regular, monospace";
 
@@ -227,20 +227,22 @@ export default function ProofPage() {
             {proof.environment?.attestation?.format && <Field label="Attestation Format" value={proof.environment.attestation.format} />}
           </Card>
 
-          {/* QR Code */}
-          <div style={{
-            background: "#fff", border: "1px solid #d0d5dd", borderRadius: 14,
-            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-            padding: 24, gap: 12,
-          }}>
-            <QRCodeSVG
-              value={typeof window !== "undefined" ? window.location.href : `https://occ.wtf/proof/${digestParam}`}
-              size={120}
-              level="M"
-              fgColor="#111827"
-              bgColor="#ffffff"
-            />
-          </div>
+          {/* Ethereum Seal */}
+          {causalWindow?.anchorAfter ? (
+            <Card title="Ethereum Seal">
+              <Field label="Block" value={`#${causalWindow.anchorAfter.blockNumber}`} highlight />
+              <Field label="Chain Position" value={`Proof #${causalWindow.anchorAfter.counter}`} />
+              {causalWindow.anchorAfter.etherscanUrl && (
+                <Field label="Etherscan" value={causalWindow.anchorAfter.etherscanUrl} link />
+              )}
+            </Card>
+          ) : (
+            <Card title="Ethereum Seal">
+              <div style={{ padding: "16px 18px", fontSize: 13, color: "#9ca3af" }}>
+                Awaiting next anchor...
+              </div>
+            </Card>
+          )}
 
           {attr && (
             <Card title="Attribution">
