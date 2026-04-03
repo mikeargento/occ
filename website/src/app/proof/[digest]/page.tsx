@@ -143,18 +143,22 @@ export default function ProofPage() {
           {isEth && attr?.title ? (
             <div>
               <div style={{ fontSize: 12, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Ethereum Block</div>
-              <a href={attr.title} target="_blank" rel="noopener" style={{ fontSize: 28, fontWeight: 800, color: "var(--c-accent)", textDecoration: "none" }}>
-                #{attr.title.match(/\/block\/(\d+)/)?.[1] || "?"}
+              <div style={{ fontSize: 28, fontWeight: 800, color: "#111827" }}>#{attr.title.match(/\/block\/(\d+)/)?.[1] || "?"}</div>
+              <a href={attr.title} target="_blank" rel="noopener" style={{ fontSize: 13, color: "var(--c-accent)", textDecoration: "none", marginTop: 4, display: "inline-block" }}>
+                View on Etherscan &rarr;
               </a>
             </div>
           ) : causalWindow?.anchorAfter ? (
             <div>
               <div style={{ fontSize: 12, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Sealed By</div>
-              <a href={causalWindow.anchorAfter.etherscanUrl || "#"} target="_blank" rel="noopener" style={{ fontSize: 28, fontWeight: 800, color: "var(--c-accent)", textDecoration: "none" }}>
-                Block #{causalWindow.anchorAfter.blockNumber}
-              </a>
+              <div style={{ fontSize: 28, fontWeight: 800, color: "#111827" }}>#{causalWindow.anchorAfter.counter}</div>
+              {causalWindow.anchorAfter.etherscanUrl && (
+                <a href={causalWindow.anchorAfter.etherscanUrl} target="_blank" rel="noopener" style={{ fontSize: 13, color: "var(--c-accent)", textDecoration: "none", marginTop: 4, display: "inline-block" }}>
+                  Block #{causalWindow.anchorAfter.blockNumber} &rarr;
+                </a>
+              )}
               {causalWindow.anchorAfter.blockTime && (
-                <div style={{ fontSize: 13, color: "#6b7280", marginTop: 4 }}>
+                <div style={{ fontSize: 12, color: "#9ca3af", marginTop: 2 }}>
                   {new Date(causalWindow.anchorAfter.blockTime).toLocaleString()}
                 </div>
               )}
