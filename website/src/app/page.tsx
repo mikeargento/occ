@@ -389,7 +389,9 @@ export default function OCCPage() {
                     <button
                       onClick={() => {
                         // Open immediately (synchronous) so mobile browsers don't block the popup
-                        window.open(`/proof/${encodeURIComponent(toUrlSafeB64(item.digestB64))}`, "_blank");
+                        // Use the proof's digest (from TEE) for the URL, not the browser-computed hash
+                        const proofDigest = item.proof!.artifact.digestB64;
+                        window.open(`/proof/${encodeURIComponent(toUrlSafeB64(proofDigest))}`, "_blank");
                         // Cache file to IndexedDB in the background
                         (async () => {
                           try {
@@ -401,7 +403,7 @@ export default function OCCPage() {
                               req.onerror = () => reject(req.error);
                             });
                             const tx = db.transaction("files", "readwrite");
-                            tx.objectStore("files").put({ name: item.file.name, data: buf }, item.digestB64);
+                            tx.objectStore("files").put({ name: item.file.name, data: buf }, proofDigest);
                             await new Promise((r, j) => { tx.oncomplete = r; tx.onerror = j; });
                             db.close();
                           } catch (e) { console.error("[occ] cache error:", e); }
