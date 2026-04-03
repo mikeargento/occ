@@ -21,13 +21,13 @@ export function SiteNav() {
         </Link>
         <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
           <Link href="/docs" style={{
-            fontSize: 14, fontWeight: 500, color: "#1A73E8",
+            fontSize: 14, fontWeight: 600, color: "#111827",
             textDecoration: "none",
           }}>
             Docs
           </Link>
           <a href="https://github.com/mikeargento/occ" target="_blank" rel="noopener" style={{
-            fontSize: 14, fontWeight: 500, color: "#1A73E8",
+            fontSize: 14, fontWeight: 600, color: "#111827",
             textDecoration: "none",
           }}>
             GitHub

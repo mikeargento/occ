@@ -25,7 +25,7 @@ export default function DocsPage() {
     <div>
       <style>{`
         .doc-card { border: 1px solid #e5e7eb; background: #fff; padding: 32px; border-radius: 12px; text-decoration: none; display: block; transition: border-color 0.15s, box-shadow 0.15s; }
-        .doc-card:hover { border-color: #1A73E8; box-shadow: 0 1px 4px rgba(26,115,232,0.1); }
+        .doc-card:hover { border-color: #9ca3af; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
       `}</style>
       <h1 style={{ fontSize: 32, fontWeight: 600, letterSpacing: "-0.03em", marginBottom: 20, color: "#111827" }}>
         OCC Documentation
