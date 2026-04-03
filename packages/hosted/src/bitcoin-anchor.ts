@@ -104,11 +104,9 @@ async function persistAnchor(
     }));
 
     // Counter-indexed anchor (for fast "next anchor after counter N" lookups)
-    const safeEpoch = (commit.epochId || "").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-    const paddedCounter = String(commit.counter).padStart(12, "0");
     await s3.send(new PutObjectCommand({
       Bucket: bucket,
-      Key: `anchors/${safeEpoch}/${paddedCounter}.json`,
+      Key: `anchors/${safeEpoch}/${counter}.json`,
       Body: anchorBody,
       ContentType: "application/json",
     }));
