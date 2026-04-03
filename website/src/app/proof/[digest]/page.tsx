@@ -14,8 +14,8 @@ export default function ProofPage() {
   const digestParam = params.digest as string;
   const [proof, setProof] = useState<OCCProof | null>(null);
   const [causalWindow, setCausalWindow] = useState<{
-    anchorBefore: { counter: string; attrName: string; blockNumber: number | null; blockHash: string | null; etherscanUrl: string | null } | null;
-    anchorAfter: { counter: string; attrName: string; blockNumber: number | null; blockHash: string | null; etherscanUrl: string | null } | null;
+    anchorBefore: { counter: string; attrName: string; blockNumber: number | null; blockHash: string | null; etherscanUrl: string | null; blockTime?: string | null } | null;
+    anchorAfter: { counter: string; attrName: string; blockNumber: number | null; blockHash: string | null; etherscanUrl: string | null; blockTime?: string | null } | null;
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -182,7 +182,9 @@ export default function ProofPage() {
           ) : causalWindow?.anchorAfter ? (
             <Card title="Sealed By">
               <Field label="Ethereum Block" value={`#${causalWindow.anchorAfter.blockNumber}`} highlight />
-              <Field label="Chain Position" value={`Proof #${causalWindow.anchorAfter.counter}`} />
+              {causalWindow.anchorAfter.blockTime && (
+                <Field label="Time" value={new Date(causalWindow.anchorAfter.blockTime).toLocaleString()} />
+              )}
               {causalWindow.anchorAfter.etherscanUrl && (
                 <Field label="Etherscan" value={causalWindow.anchorAfter.etherscanUrl} link />
               )}

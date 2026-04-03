@@ -25,6 +25,21 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ dig
           const anchorCommit = anchor.commit as { counter?: string } | undefined;
           const anchorAttr = anchor.attribution as { name?: string; title?: string; message?: string } | undefined;
           const blockNumber = anchorAttr?.title?.match(/\/block\/(\d+)/)?.[1];
+          // Fetch block timestamp from Ethereum RPC
+          let blockTime: string | null = null;
+          if (blockNumber) {
+            try {
+              const rpcRes = await fetch("https://ethereum-rpc.publicnode.com", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ jsonrpc: "2.0", method: "eth_getBlockByNumber", params: ["0x" + parseInt(blockNumber, 10).toString(16), false], id: 1 }),
+              });
+              const rpcData = await rpcRes.json() as { result?: { timestamp?: string } };
+              if (rpcData.result?.timestamp) {
+                blockTime = new Date(parseInt(rpcData.result.timestamp, 16) * 1000).toISOString();
+              }
+            } catch (_) { /* non-critical */ }
+          }
           causalWindow = {
             anchorBefore: null,
             anchorAfter: {
@@ -33,6 +48,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ dig
               blockNumber: blockNumber ? parseInt(blockNumber, 10) : null,
               blockHash: anchorAttr?.message || null,
               etherscanUrl: anchorAttr?.title || null,
+              blockTime,
             },
           };
         }
