@@ -195,12 +195,13 @@ export async function getAnchorsAfterCounter(proofCounter: number, epochId: stri
     const safeEpoch = toSafe(epochId);
     const startCounter = String(proofCounter + 1).padStart(12, "0");
 
-    // Anchors are stored under anchors/ prefix, not proofs/
+    // Anchors are proofs on the same chain — scan proofs/ prefix
+    // Use larger scan window since user proofs can push counters up fast
     const result = await s3.send(new ListObjectsV2Command({
       Bucket: bucket,
-      Prefix: `anchors/${safeEpoch}/`,
-      StartAfter: `anchors/${safeEpoch}/${startCounter}`,
-      MaxKeys: limit,
+      Prefix: `proofs/${safeEpoch}/`,
+      StartAfter: `proofs/${safeEpoch}/${startCounter}`,
+      MaxKeys: 100,
     }));
 
     const anchors: Array<Record<string, unknown>> = [];
@@ -210,7 +211,11 @@ export async function getAnchorsAfterCounter(proofCounter: number, epochId: stri
         const getResult = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: obj.Key }));
         const body = await getResult.Body?.transformToString();
         if (!body) continue;
-        anchors.push(JSON.parse(body));
+        const p = JSON.parse(body);
+        const attr = p.attribution as { name?: string } | undefined;
+        if (attr?.name === "Ethereum Anchor") {
+          anchors.push(p);
+        }
       } catch { /* skip */ }
     }
     return anchors;
