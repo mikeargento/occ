@@ -195,28 +195,38 @@ export async function getAnchorsAfterCounter(proofCounter: number, epochId: stri
     const safeEpoch = toSafe(epochId);
     const startCounter = String(proofCounter + 1).padStart(12, "0");
 
-    // Anchors are proofs on the same chain — scan proofs/ prefix
-    // Use larger scan window since user proofs can push counters up fast
-    const result = await s3.send(new ListObjectsV2Command({
-      Bucket: bucket,
-      Prefix: `proofs/${safeEpoch}/`,
-      StartAfter: `proofs/${safeEpoch}/${startCounter}`,
-      MaxKeys: 100,
-    }));
-
+    // Anchors are proofs on the same chain — paginate until we find one
+    const prefix = `proofs/${safeEpoch}/`;
+    let continuationToken: string | undefined;
     const anchors: Array<Record<string, unknown>> = [];
-    for (const obj of result.Contents || []) {
-      if (!obj.Key || anchors.length >= limit) break;
-      try {
-        const getResult = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: obj.Key }));
-        const body = await getResult.Body?.transformToString();
-        if (!body) continue;
-        const p = JSON.parse(body);
-        const attr = p.attribution as { name?: string } | undefined;
-        if (attr?.name === "Ethereum Anchor") {
-          anchors.push(p);
-        }
-      } catch { /* skip */ }
+
+    // Paginate in batches of 100, fetch each to check if it's an anchor
+    // Stop after finding enough or scanning 5 pages (500 keys max)
+    for (let page = 0; page < 5 && anchors.length < limit; page++) {
+      const result = await s3.send(new ListObjectsV2Command({
+        Bucket: bucket,
+        Prefix: prefix,
+        StartAfter: page === 0 ? `${prefix}${startCounter}` : undefined,
+        ContinuationToken: continuationToken,
+        MaxKeys: 100,
+      }));
+
+      for (const obj of result.Contents || []) {
+        if (!obj.Key || anchors.length >= limit) break;
+        try {
+          const getResult = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: obj.Key }));
+          const body = await getResult.Body?.transformToString();
+          if (!body) continue;
+          const p = JSON.parse(body);
+          const attr = p.attribution as { name?: string } | undefined;
+          if (attr?.name === "Ethereum Anchor") {
+            anchors.push(p);
+          }
+        } catch { /* skip */ }
+      }
+
+      if (!result.IsTruncated) break;
+      continuationToken = result.NextContinuationToken;
     }
     return anchors;
   } catch (err) {
