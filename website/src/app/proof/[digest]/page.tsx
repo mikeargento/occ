@@ -113,7 +113,7 @@ export default function ProofPage() {
         }
       `}</style>
 
-      <div style={{ width: "90%", maxWidth: 640, margin: "0 auto", padding: "40px 0 80px", animation: "fadeIn .3s ease-out" }}>
+      <div style={{ width: "90%", maxWidth: 800, margin: "0 auto", padding: "40px 0 80px", animation: "fadeIn .3s ease-out" }}>
 
         {/* Title bar */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 40, flexWrap: "wrap", gap: 12 }}>
