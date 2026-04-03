@@ -137,6 +137,56 @@ export async function getProofsAroundCounter(
   }
 }
 
+/**
+ * Get the most recent ETH anchor BEFORE a given counter on the same chain.
+ * Scans backwards from the counter to find the latest anchor.
+ */
+export async function getAnchorBeforeCounter(proofCounter: number, epochId: string): Promise<Record<string, unknown> | null> {
+  try {
+    const s3 = getClient();
+    const bucket = getBucket();
+    const safeEpoch = toSafe(epochId);
+    const prefix = `proofs/${safeEpoch}/`;
+
+    // List keys before this counter — we need to scan backwards
+    // S3 only lists forward, so list from start up to our counter and take the tail
+    const endKey = String(proofCounter).padStart(12, "0");
+
+    // List last 30 keys before this counter
+    const result = await s3.send(new ListObjectsV2Command({
+      Bucket: bucket,
+      Prefix: prefix,
+      MaxKeys: 1000,
+    }));
+
+    const allKeys = (result.Contents || [])
+      .map(o => o.Key!)
+      .filter(k => {
+        if (!k) return false;
+        const filename = k.split("/").pop() || "";
+        const c = parseInt(filename.split("-")[0], 10);
+        return !isNaN(c) && c < proofCounter;
+      });
+
+    // Scan from the end (most recent first) to find the last anchor
+    const keysToCheck = allKeys.slice(-30).reverse();
+    for (const key of keysToCheck) {
+      try {
+        const getResult = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+        const body = await getResult.Body?.transformToString();
+        if (!body) continue;
+        const p = JSON.parse(body);
+        const attr = p.attribution as { name?: string } | undefined;
+        if (attr?.name === "Ethereum Anchor") return p;
+      } catch { /* skip */ }
+    }
+    return null;
+  } catch (err) {
+    console.error("[s3] getAnchorBeforeCounter failed:", (err as Error).message);
+    return null;
+  }
+}
+
 export async function getAnchorsAfterCounter(proofCounter: number, epochId: string, limit = 2): Promise<Array<Record<string, unknown>>> {
   try {
     const s3 = getClient();
@@ -145,13 +195,12 @@ export async function getAnchorsAfterCounter(proofCounter: number, epochId: stri
     const safeEpoch = toSafe(epochId);
     const startCounter = String(proofCounter + 1).padStart(12, "0");
 
-    // List proofs in the same epoch after this counter
-    // Scan up to 20 proofs to find anchors (at 12s intervals, anchors are dense)
+    // Anchors are stored under anchors/ prefix, not proofs/
     const result = await s3.send(new ListObjectsV2Command({
       Bucket: bucket,
-      Prefix: `proofs/${safeEpoch}/`,
-      StartAfter: `proofs/${safeEpoch}/${startCounter}`,
-      MaxKeys: 20,
+      Prefix: `anchors/${safeEpoch}/`,
+      StartAfter: `anchors/${safeEpoch}/${startCounter}`,
+      MaxKeys: limit,
     }));
 
     const anchors: Array<Record<string, unknown>> = [];
@@ -161,17 +210,12 @@ export async function getAnchorsAfterCounter(proofCounter: number, epochId: stri
         const getResult = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: obj.Key }));
         const body = await getResult.Body?.transformToString();
         if (!body) continue;
-        const p = JSON.parse(body);
-        // Ethereum anchors have attribution.name === "Ethereum Anchor"
-        const attr = p.attribution as { name?: string } | undefined;
-        if (attr?.name === "Ethereum Anchor") {
-          anchors.push(p);
-        }
+        anchors.push(JSON.parse(body));
       } catch { /* skip */ }
     }
     return anchors;
   } catch (err) {
-    console.error("[s3] getAnchorsAfterProof failed:", (err as Error).message);
+    console.error("[s3] getAnchorsAfterCounter failed:", (err as Error).message);
     return [];
   }
 }
