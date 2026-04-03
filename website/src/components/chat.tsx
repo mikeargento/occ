@@ -20,13 +20,13 @@ const DEFAULT_QUESTIONS = [
   "What problem does OCC solve?",
   "How is this different from a timestamp?",
   "Why not just hash a file?",
-  "What makes this hard to fake?",
+  "What makes this impossible to fake?",
   "Does OCC prove when something happened?",
   "How do I verify a proof?",
   "Is my file ever uploaded?",
   "What are Ethereum anchors?",
   "What happens if the server disappears?",
-  "Why is this better than a blockchain?",
+  "Why not use a blockchain?",
   "What is a causal slot?",
 ];
 
