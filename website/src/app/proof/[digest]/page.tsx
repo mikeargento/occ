@@ -255,30 +255,38 @@ function Card({ title, children }: { title: string; accent?: string; children: R
 
 function Field({ label, value, mono: isMono, highlight, link }: { label: string; value: string; mono?: boolean; highlight?: boolean; link?: boolean }) {
   const [copied, setCopied] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const isLong = value.length > 30;
+  const display = copied ? "Copied!" : (isLong && !expanded && !link) ? value.slice(0, 24) + "..." : value;
 
   return (
     <div
-      onClick={() => { navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
+      onClick={() => {
+        if (isLong && !expanded && !link) { setExpanded(true); return; }
+        navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 1500);
+      }}
       style={{
-        display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12,
-        padding: "10px 18px", borderBottom: "1px solid #e2e5e9", cursor: "pointer",
+        display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 16,
+        padding: "12px 18px", borderBottom: "1px solid #e2e5e9", cursor: "pointer",
       }}
     >
-      <span style={{ fontSize: 13, color: "#374151", fontWeight: 500, flexShrink: 0, minWidth: 80 }}>{label}</span>
+      <span style={{ fontSize: 14, color: "#374151", fontWeight: 500, flexShrink: 0 }}>{label}</span>
       {link ? (
         <a href={value} target="_blank" rel="noopener" onClick={(e) => e.stopPropagation()} style={{
-          fontSize: 12, color: "var(--c-accent)", textDecoration: "none", wordBreak: "break-all", textAlign: "right",
-        }}>{value}</a>
+          fontSize: 13, color: "var(--c-accent)", textDecoration: "none",
+          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "right", maxWidth: "60%",
+        }}>{value.replace("https://", "")}</a>
       ) : (
         <span style={{
-          fontSize: isMono ? 11 : 13,
+          fontSize: isMono ? 12 : 14,
           fontFamily: isMono ? mono : "inherit",
           color: copied ? "#1A73E8" : highlight ? "var(--c-accent)" : "#1f2937",
           fontWeight: highlight ? 700 : 400,
-          wordBreak: "break-all", textAlign: "right",
-          transition: "color .2s", lineHeight: 1.4,
+          textAlign: "right",
+          transition: "color .2s", lineHeight: 1.5,
+          wordBreak: expanded ? "break-all" : "normal",
         }}>
-          {copied ? "Copied!" : value}
+          {display}
         </span>
       )}
     </div>
