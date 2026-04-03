@@ -21,11 +21,7 @@ export default function ProofPage() {
   const [error, setError] = useState("");
   const [cachedFile, setCachedFile] = useState<{ name: string; data: ArrayBuffer } | null>(null);
 
-  useEffect(() => {
-    const nav = document.getElementById("site-nav");
-    if (nav) nav.style.display = "none";
-    return () => { if (nav) nav.style.display = ""; };
-  }, []);
+  // Nav visible on proof pages
 
   useEffect(() => {
     (async () => {
