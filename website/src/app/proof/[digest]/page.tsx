@@ -133,12 +133,12 @@ export default function ProofPage() {
           marginBottom: 32, padding: "24px", background: "#fff", borderRadius: 14, border: "1px solid #d0d5dd",
         }}>
           <div>
-            <div style={{ fontSize: 12, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Counter</div>
-            <div style={{ fontSize: 28, fontWeight: 800, color: "#111827" }}>#{commit.counter}</div>
-          </div>
-          <div>
             <div style={{ fontSize: 12, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Slot</div>
             <div style={{ fontSize: 28, fontWeight: 800, color: "#111827" }}>#{commit.slotCounter}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 12, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>Commit</div>
+            <div style={{ fontSize: 28, fontWeight: 800, color: "#111827" }}>#{commit.counter}</div>
           </div>
           {isEth && attr?.title ? (
             <div>
@@ -258,39 +258,30 @@ function Card({ title, children }: { title: string; accent?: string; children: R
 
 function Field({ label, value, mono: isMono, highlight, link }: { label: string; value: string; mono?: boolean; highlight?: boolean; link?: boolean }) {
   const [copied, setCopied] = useState(false);
-  const [expanded, setExpanded] = useState(false);
-  const isLong = value.length > 30;
-  const display = copied ? "Copied!" : (isLong && !expanded && !link) ? value.slice(0, 24) + "..." : value;
 
   return (
     <div
-      onClick={() => {
-        if (isLong && !expanded && !link) { setExpanded(true); return; }
-        navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 1500);
-      }}
+      onClick={() => { navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
       style={{
-        display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 16,
         padding: "12px 18px", borderBottom: "1px solid #e2e5e9", cursor: "pointer",
       }}
     >
-      <span style={{ fontSize: 14, color: "#374151", fontWeight: 500, flexShrink: 0 }}>{label}</span>
+      <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 4, fontWeight: 500 }}>{label}</div>
       {link ? (
         <a href={value} target="_blank" rel="noopener" onClick={(e) => e.stopPropagation()} style={{
-          fontSize: 13, color: "var(--c-accent)", textDecoration: "none",
-          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "right", maxWidth: "60%",
-        }}>{value.replace("https://", "")}</a>
+          fontSize: 14, color: "var(--c-accent)", textDecoration: "none", wordBreak: "break-all",
+        }}>{value}</a>
       ) : (
-        <span style={{
-          fontSize: isMono ? 12 : 14,
+        <div style={{
+          fontSize: isMono ? 13 : 15,
           fontFamily: isMono ? mono : "inherit",
-          color: copied ? "#1A73E8" : highlight ? "var(--c-accent)" : "#1f2937",
+          color: copied ? "#1A73E8" : highlight ? "var(--c-accent)" : "#111827",
           fontWeight: highlight ? 700 : 400,
-          textAlign: "right",
-          transition: "color .2s", lineHeight: 1.5,
-          wordBreak: expanded ? "break-all" : "normal",
+          wordBreak: "break-all", lineHeight: 1.5,
+          transition: "color .2s",
         }}>
-          {display}
-        </span>
+          {copied ? "Copied!" : value}
+        </div>
       )}
     </div>
   );
