@@ -22,9 +22,13 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ dig
         const anchors = await getAnchorsAfterCounter(counter, commit.epochId, 1);
         if (anchors.length > 0) {
           const anchor = anchors[0];
-          const anchorCommit = anchor.commit as { counter?: string } | undefined;
-          const anchorAttr = anchor.attribution as { name?: string; title?: string; message?: string } | undefined;
-          const blockNumber = anchorAttr?.title?.match(/\/block\/(\d+)/)?.[1];
+          // Anchor format: { proof: { commit, attribution, artifact, ... }, ethereum, counter, epochId }
+          const anchorProof = anchor.proof as Record<string, unknown> | undefined;
+          const anchorCommit = (anchorProof?.commit || anchor.commit) as { counter?: string } | undefined;
+          const anchorAttr = (anchorProof?.attribution || anchor.attribution) as { name?: string; title?: string; message?: string } | undefined;
+          const anchorArtifact = (anchorProof?.artifact || anchor.artifact) as { digestB64?: string } | undefined;
+          const eth = anchor.ethereum as { blockNumber?: number; blockHash?: string } | undefined;
+          const blockNumber = eth?.blockNumber?.toString() || anchorAttr?.title?.match(/\/block\/(\d+)/)?.[1];
           // Fetch block timestamp from Ethereum RPC
           let blockTime: string | null = null;
           if (blockNumber) {
@@ -43,12 +47,13 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ dig
           causalWindow = {
             anchorBefore: null,
             anchorAfter: {
-              counter: anchorCommit?.counter || "?",
+              counter: anchor.counter as string || anchorCommit?.counter || "?",
               attrName: anchorAttr?.name || "Ethereum Anchor",
               blockNumber: blockNumber ? parseInt(blockNumber, 10) : null,
-              blockHash: anchorAttr?.message || null,
-              etherscanUrl: anchorAttr?.title || null,
+              blockHash: eth?.blockHash || anchorAttr?.message || null,
+              etherscanUrl: anchorAttr?.title || (blockNumber ? `https://etherscan.io/block/${blockNumber}` : null),
               blockTime,
+              digestB64: anchorArtifact?.digestB64 || null,
             },
           };
         }
