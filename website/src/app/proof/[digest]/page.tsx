@@ -178,8 +178,8 @@ export default function ProofPage() {
           )}
         </div>
 
-        {/* Details — single column, clean */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {/* Details */}
+        <div className="proof-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 16 }}>
 
           <Card title="Artifact">
             <Field label="Digest" value={proof.artifact.digestB64} mono />
@@ -280,25 +280,28 @@ function Field({ label, value, mono: isMono, highlight, link }: { label: string;
     <div
       onClick={() => { navigator.clipboard.writeText(value); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
       style={{
-        padding: "12px 18px", borderBottom: "1px solid #e2e5e9", cursor: "pointer",
+        display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 16,
+        padding: "10px 18px", borderBottom: "1px solid #e2e5e9", cursor: "pointer",
+        minHeight: 40,
       }}
     >
-      <div style={{ fontSize: 12, color: "#9ca3af", marginBottom: 4, fontWeight: 500 }}>{label}</div>
+      <span style={{ fontSize: 13, color: "#6b7280", fontWeight: 500, flexShrink: 0, whiteSpace: "nowrap" }}>{label}</span>
       {link ? (
         <a href={value} target="_blank" rel="noopener" onClick={(e) => e.stopPropagation()} style={{
-          fontSize: 14, color: "var(--c-accent)", textDecoration: "none", wordBreak: "break-all",
-        }}>{value}</a>
+          fontSize: 13, color: "var(--c-accent)", textDecoration: "none",
+          textAlign: "right", wordBreak: "break-all", minWidth: 0,
+        }}>{value.replace("https://", "")}</a>
       ) : (
-        <div style={{
-          fontSize: isMono ? 13 : 15,
+        <span style={{
+          fontSize: isMono ? 12 : 14,
           fontFamily: isMono ? mono : "inherit",
           color: copied ? "#1A73E8" : highlight ? "var(--c-accent)" : "#111827",
-          fontWeight: highlight ? 700 : 400,
-          wordBreak: "break-all", lineHeight: 1.5,
-          transition: "color .2s",
+          fontWeight: highlight ? 600 : 400,
+          textAlign: "right", wordBreak: "break-all", minWidth: 0,
+          transition: "color .2s", lineHeight: 1.4,
         }}>
           {copied ? "Copied!" : value}
-        </div>
+        </span>
       )}
     </div>
   );
