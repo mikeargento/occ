@@ -255,8 +255,7 @@ export default function OCCPage() {
           <>
             <div style={{ display: "flex", justifyContent: "center", marginBottom: 32, animation: "slideIn 0.3s ease-out" }}>
               <p style={{ fontSize: 24, fontWeight: 700, color: "#111827", whiteSpace: "nowrap" }}>
-                Prove the provenance of{" "}
-                <span style={{ display: "inline-block", width: "5.5em", textAlign: "left" }}><RotatingWord /></span>
+                Prove the provenance of anything digital.
               </p>
             </div>
             <div className="file-drop-container" style={{ animation: "slideIn 0.3s ease-out" }}>
