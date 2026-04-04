@@ -210,10 +210,8 @@ export function FileDrop({
             </svg>
           </div>
           <div className="text-[22px] font-semibold tracking-tight" style={{ color: "#111827" }}>
-            {multiple
-              ? <>Drop files or <label htmlFor="occ-file-input" className="cursor-pointer" onClick={(e) => e.stopPropagation()}>{browseLabel}</label></>
-              : <>Drop a file or <label htmlFor="occ-file-input" className="cursor-pointer" onClick={(e) => e.stopPropagation()}>{browseLabel}</label></>
-            }
+            <>Drop a file to create proof</>
+
           </div>
           <div className="text-xs mt-2 text-center" style={{ whiteSpace: "pre-line", color: "#6b7280" }}>
             {hint || "Any file type. Hashed locally in your browser"}
