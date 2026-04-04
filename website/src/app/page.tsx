@@ -253,9 +253,10 @@ export default function OCCPage() {
         {/* ── Drop zone or Chat ── */}
         {step === "drop" && !chatOpen && (
           <>
-            <div style={{ textAlign: "center", marginBottom: 32, animation: "slideIn 0.3s ease-out" }}>
-              <p style={{ fontSize: 16, fontWeight: 600, color: "#111827", whiteSpace: "nowrap" }}>
-                Proof of provenance for <RotatingWord />
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: 32, animation: "slideIn 0.3s ease-out" }}>
+              <p style={{ fontSize: 24, fontWeight: 700, color: "#111827", whiteSpace: "nowrap" }}>
+                Prove the provenance of{" "}
+                <span style={{ display: "inline-block", width: "5.5em", textAlign: "left" }}><RotatingWord /></span>
               </p>
             </div>
             <div className="file-drop-container" style={{ animation: "slideIn 0.3s ease-out" }}>
@@ -435,7 +436,7 @@ export default function OCCPage() {
   );
 }
 
-const ROTATING_WORDS = ["photos.", "videos.", "songs.", "PDFs.", "docs.", "images.", "audio.", "code.", "datasets.", "models."];
+const ROTATING_WORDS = ["photos.", "videos.", "songs.", "PDFs.", "docs.", "images.", "audio.", "code.", "data."];
 
 function RotatingWord() {
   const [index, setIndex] = useState(0);
@@ -455,8 +456,6 @@ function RotatingWord() {
   return (
     <span style={{
       display: "inline-block",
-      minWidth: "6em",
-      textAlign: "left",
       color: "var(--c-accent)",
       opacity: fade ? 1 : 0,
       transform: fade ? "translateY(0)" : "translateY(4px)",
