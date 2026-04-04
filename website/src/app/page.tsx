@@ -255,7 +255,7 @@ export default function OCCPage() {
           <>
             <div style={{ textAlign: "center", marginBottom: 32, animation: "slideIn 0.3s ease-out" }}>
               <h1 style={{ fontSize: 28, fontWeight: 800, color: "#111827", lineHeight: 1.3, marginBottom: 8 }}>
-                Prove nothing about your file has changed.
+                Prove nothing about your <RotatingWord /> has changed.
               </h1>
               <p style={{ fontSize: 16, color: "#6b7280", fontWeight: 400 }}>
                 Starting now.
@@ -435,5 +435,35 @@ export default function OCCPage() {
         {/* Footer is in root layout */}
       </div>
     </div>
+  );
+}
+
+const ROTATING_WORDS = ["photos", "videos", "audio", "code", "PDFs", "AI outputs", "documents", "logs", "data"];
+
+function RotatingWord() {
+  const [index, setIndex] = useState(0);
+  const [fade, setFade] = useState(true);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFade(false);
+      setTimeout(() => {
+        setIndex(i => (i + 1) % ROTATING_WORDS.length);
+        setFade(true);
+      }, 200);
+    }, 2400);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <span style={{
+      display: "inline-block",
+      color: "var(--c-accent)",
+      opacity: fade ? 1 : 0,
+      transform: fade ? "translateY(0)" : "translateY(4px)",
+      transition: "opacity 0.2s, transform 0.2s",
+    }}>
+      {ROTATING_WORDS[index]}
+    </span>
   );
 }
