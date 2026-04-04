@@ -253,10 +253,9 @@ export default function OCCPage() {
         {/* ── Drop zone or Chat ── */}
         {step === "drop" && !chatOpen && (
           <>
-            <div style={{ display: "flex", justifyContent: "center", marginBottom: 32, animation: "slideIn 0.3s ease-out" }}>
-              <p style={{ fontSize: 24, fontWeight: 700, color: "#111827", whiteSpace: "nowrap" }}>
-                Prove the provenance of{" "}
-                <span style={{ display: "inline-block", width: "5.5em", textAlign: "left" }}><RotatingWord /></span>
+            <div style={{ textAlign: "center", marginBottom: 32, animation: "slideIn 0.3s ease-out" }}>
+              <p style={{ fontSize: 28, fontWeight: 800, color: "#111827", whiteSpace: "nowrap" }}>
+                Prove the provenance of {""}<span style={{ display: "inline-block", width: "4.2em", textAlign: "left" }}><RotatingWord /></span>
               </p>
             </div>
             <div className="file-drop-container" style={{ animation: "slideIn 0.3s ease-out" }}>
@@ -436,7 +435,7 @@ export default function OCCPage() {
   );
 }
 
-const ROTATING_WORDS = ["photos.", "videos.", "songs.", "PDFs.", "docs.", "images.", "audio.", "code.", "data."];
+const ROTATING_WORDS = ["photos.", "videos.", "songs.", "PDFs.", "docs.", "audio.", "code.", "data."];
 
 function RotatingWord() {
   const [index, setIndex] = useState(0);
