@@ -254,7 +254,7 @@ export default function OCCPage() {
         {step === "drop" && !chatOpen && (
           <>
             <div style={{ textAlign: "center", marginBottom: 32, animation: "slideIn 0.3s ease-out" }}>
-              <p style={{ fontSize: 28, fontWeight: 800, color: "#111827", whiteSpace: "nowrap" }}>
+              <p style={{ fontSize: 22, fontWeight: 700, color: "#111827", whiteSpace: "nowrap" }}>
                 Prove the provenance of{" "}<span style={{ display: "inline-block", width: "5.5em", textAlign: "left" }}><RotatingWord /></span>
               </p>
             </div>
@@ -435,7 +435,7 @@ export default function OCCPage() {
   );
 }
 
-const ROTATING_WORDS = ["photos.", "videos.", "music.", "docs.", "code.", "data.", "designs.", "contracts.", "files."];
+const ROTATING_WORDS = ["photos.", "videos.", "music.", "docs.", "contracts.", "code.", "data.", "files."];
 
 function RotatingWord() {
   const [wordIndex, setWordIndex] = useState(0);
@@ -450,18 +450,18 @@ function RotatingWord() {
       if (displayed.length < word.length) {
         const timeout = setTimeout(() => {
           setDisplayed(word.slice(0, displayed.length + 1));
-        }, 80);
+        }, 50);
         return () => clearTimeout(timeout);
       } else {
         // Word fully typed — blink cursor then start erasing
-        const timeout = setTimeout(() => setTyping(false), 1800);
+        const timeout = setTimeout(() => setTyping(false), 1200);
         return () => clearTimeout(timeout);
       }
     } else {
       if (displayed.length > 0) {
         const timeout = setTimeout(() => {
           setDisplayed(displayed.slice(0, -1));
-        }, 40);
+        }, 30);
         return () => clearTimeout(timeout);
       } else {
         // Fully erased — next word
