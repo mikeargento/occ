@@ -253,7 +253,7 @@ export default function OCCPage() {
         {/* ── Drop zone or Chat ── */}
         {step === "drop" && !chatOpen && (
           <>
-            <div style={{ textAlign: "center", marginBottom: 42, animation: "slideIn 0.3s ease-out" }}>
+            <div style={{ textAlign: "center", marginBottom: 32, animation: "slideIn 0.3s ease-out" }}>
               <p style={{ fontSize: 26, fontWeight: 700, color: "#111827", whiteSpace: "nowrap" }}>
                 Prove the provenance of{" "}<span style={{ display: "inline-block", width: "4.5em", textAlign: "left" }}><RotatingWord /></span>
               </p>
