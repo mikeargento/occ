@@ -254,7 +254,7 @@ export default function OCCPage() {
         {step === "drop" && !chatOpen && (
           <>
             <div style={{ display: "flex", justifyContent: "center", marginBottom: 32, animation: "slideIn 0.3s ease-out" }}>
-              <p style={{ fontSize: 24, fontWeight: 700, color: "var(--c-accent)", whiteSpace: "nowrap" }}>
+              <p style={{ fontSize: 24, fontWeight: 700, color: "#111827", whiteSpace: "nowrap" }}>
                 Prove the provenance of{" "}
                 <span style={{ display: "inline-block", width: "5.5em", textAlign: "left" }}><RotatingWord /></span>
               </p>
@@ -456,7 +456,7 @@ function RotatingWord() {
   return (
     <span style={{
       display: "inline-block",
-      color: "#111827",
+      color: "var(--c-accent)",
       opacity: fade ? 1 : 0,
       transform: fade ? "translateY(0)" : "translateY(4px)",
       transition: "opacity 0.2s, transform 0.2s",
