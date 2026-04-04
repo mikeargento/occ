@@ -455,6 +455,8 @@ function RotatingWord() {
   return (
     <span style={{
       display: "inline-block",
+      minWidth: "6em",
+      textAlign: "left",
       color: "var(--c-accent)",
       opacity: fade ? 1 : 0,
       transform: fade ? "translateY(0)" : "translateY(4px)",
