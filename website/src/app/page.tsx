@@ -255,7 +255,7 @@ export default function OCCPage() {
           <>
             <div style={{ textAlign: "center", marginBottom: 32, animation: "slideIn 0.3s ease-out" }}>
               <p style={{ fontSize: 18, fontWeight: 600, color: "#111827" }}>
-                Causality as Consensus
+                Causality as consensus for provenance of <RotatingWord />.
               </p>
             </div>
             <div className="file-drop-container" style={{ animation: "slideIn 0.3s ease-out" }}>
@@ -435,7 +435,7 @@ export default function OCCPage() {
   );
 }
 
-const ROTATING_WORDS = ["photos", "videos", "audio", "code", "PDFs", "AI outputs", "documents", "logs", "data"];
+const ROTATING_WORDS = ["photos", "videos", "songs", "PDFs", "documents", "images", "audio", "code", "datasets", "models"];
 
 function RotatingWord() {
   const [index, setIndex] = useState(0);
