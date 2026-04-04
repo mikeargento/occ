@@ -254,7 +254,7 @@ export default function OCCPage() {
         {step === "drop" && !chatOpen && (
           <>
             <div style={{ textAlign: "center", marginBottom: 32, animation: "slideIn 0.3s ease-out" }}>
-              <p style={{ fontSize: 18, fontWeight: 600, color: "#111827" }}>
+              <p style={{ fontSize: 16, fontWeight: 600, color: "#111827", whiteSpace: "nowrap" }}>
                 Causality as consensus for provenance of <RotatingWord />.
               </p>
             </div>
