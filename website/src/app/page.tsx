@@ -37,12 +37,12 @@ export default function OCCPage() {
   const [anchorCountdown, setAnchorCountdown] = useState(0);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Start 12s countdown when proofs finish (waiting for next ETH anchor)
+  // Start 15s countdown when proofs finish (waiting for next ETH anchor)
   const endTimeRef = useRef<number>(0);
   const rafRef = useRef<number>(0);
   const startAnchorCountdown = () => {
-    endTimeRef.current = Date.now() + 12000;
-    setAnchorCountdown(12);
+    endTimeRef.current = Date.now() + 15000;
+    setAnchorCountdown(15);
     cancelAnimationFrame(rafRef.current);
     const tick = () => {
       const remaining = Math.ceil((endTimeRef.current - Date.now()) / 1000);
