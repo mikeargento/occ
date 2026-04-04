@@ -305,7 +305,7 @@ function ProofHashTitle({ proof }: { proof: OCCProof }) {
   const [copied, setCopied] = useState(false);
   const ph = (proof as OCCProof & { proofHash?: string });
   const full = ph.proofHash || "";
-  const short = full.replace(/[+/=]/g, "").slice(0, 7);
+  const short = full.replace(/[+/=]/g, "").slice(0, 12);
 
   return (
     <span
