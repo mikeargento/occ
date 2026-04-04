@@ -240,7 +240,7 @@ export default function OCCPage() {
         .occ-wrap { width: 90%; max-width: 640px; margin: 0 auto; padding: 0; display: flex; flex-direction: column; align-items: stretch; justify-content: center; gap: 24px; min-height: calc(100dvh - 57px); }
         .occ-wrap.occ-results { justify-content: flex-start; padding-top: 20vh; }
         .occ-wrap .file-drop-container { height: 360px; }
-        @media (max-width: 640px) { .occ-wrap .file-drop-container { height: 280px; } .hero-headline p { font-size: 18px !important; } }
+        @media (max-width: 640px) { .occ-wrap .file-drop-container { height: 280px; } .hero-headline p { font-size: 20px !important; } }
         .hero-headline p { font-size: 26px; }
         @keyframes countPop { 0% { transform: scale(0.5); opacity: 0 } 50% { transform: scale(1.15) } 100% { transform: scale(1); opacity: 1 } }
         @keyframes slideIn { from { opacity: 0; transform: translateY(12px) } to { opacity: 1; transform: translateY(0) } }
