@@ -16,6 +16,7 @@ interface ChatProps {
 }
 
 const DEFAULT_QUESTIONS = [
+  "What is provenance?",
   "What does OCC prove?",
   "What problem does OCC solve?",
   "How is this different from a timestamp?",
