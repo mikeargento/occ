@@ -210,7 +210,7 @@ export function FileDrop({
             </svg>
           </div>
           <div className="text-[22px] font-semibold tracking-tight" style={{ color: "#111827" }}>
-            <>Drop a file to create proof</>
+            <>Drop files to create proofs</>
 
           </div>
           <div className="text-xs mt-2 text-center" style={{ whiteSpace: "pre-line", color: "#6b7280" }}>
