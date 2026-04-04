@@ -253,14 +253,6 @@ export default function OCCPage() {
         {/* ── Drop zone or Chat ── */}
         {step === "drop" && !chatOpen && (
           <>
-            <div style={{ textAlign: "center", marginBottom: 32, animation: "slideIn 0.3s ease-out" }}>
-              <h1 style={{ fontSize: 28, fontWeight: 800, color: "#111827", lineHeight: 1.3, marginBottom: 8 }}>
-                Lock your <RotatingWord /> in time.
-              </h1>
-              <p style={{ fontSize: 16, color: "#6b7280", fontWeight: 400 }}>
-                Starting now.
-              </p>
-            </div>
             <div className="file-drop-container" style={{ animation: "slideIn 0.3s ease-out" }}>
               <FileDrop
                 multiple
