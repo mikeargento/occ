@@ -240,7 +240,8 @@ export default function OCCPage() {
         .occ-wrap { width: 90%; max-width: 640px; margin: 0 auto; padding: 0; display: flex; flex-direction: column; align-items: stretch; justify-content: center; gap: 24px; min-height: calc(100dvh - 57px); }
         .occ-wrap.occ-results { justify-content: flex-start; padding-top: 20vh; }
         .occ-wrap .file-drop-container { height: 360px; }
-        @media (max-width: 640px) { .occ-wrap .file-drop-container { height: 280px; } }
+        @media (max-width: 640px) { .occ-wrap .file-drop-container { height: 280px; } .hero-headline p { font-size: 18px !important; } }
+        .hero-headline p { font-size: 26px; }
         @keyframes countPop { 0% { transform: scale(0.5); opacity: 0 } 50% { transform: scale(1.15) } 100% { transform: scale(1); opacity: 1 } }
         @keyframes slideIn { from { opacity: 0; transform: translateY(12px) } to { opacity: 1; transform: translateY(0) } }
         @keyframes pulse { 0%, 100% { opacity: 1 } 50% { opacity: 0.4 } }
@@ -253,8 +254,8 @@ export default function OCCPage() {
         {/* ── Drop zone or Chat ── */}
         {step === "drop" && !chatOpen && (
           <>
-            <div style={{ textAlign: "center", marginBottom: 32, animation: "slideIn 0.3s ease-out" }}>
-              <p style={{ fontSize: 26, fontWeight: 700, color: "#111827", whiteSpace: "nowrap" }}>
+            <div className="hero-headline" style={{ textAlign: "center", marginBottom: 32, animation: "slideIn 0.3s ease-out" }}>
+              <p style={{ fontWeight: 700, color: "#111827", whiteSpace: "nowrap" }}>
                 <span style={{ display: "inline-block", width: "4em", textAlign: "right" }}><RotatingVerb /></span> the provenance of{" "}<span style={{ display: "inline-block", width: "4em", textAlign: "left" }}><RotatingWord /></span>
               </p>
             </div>
