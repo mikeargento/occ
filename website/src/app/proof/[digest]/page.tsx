@@ -119,7 +119,8 @@ export default function ProofPage() {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 40, flexWrap: "wrap", gap: 12 }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
             <span style={{ fontSize: 28, fontWeight: 900, fontFamily: 'var(--font-sans)' }}>
-              <span style={{ color: "var(--c-accent)" }}>{isEth ? "Anchor" : "Proof"} #{commit.counter}</span>
+              <span style={{ color: "var(--c-accent)" }}>{isEth ? "Anchor" : "Proof"} </span>
+              <ProofHashTitle proof={proof} />
             </span>
           </div>
           <div style={{ display: "flex", gap: 8 }}>
@@ -297,6 +298,27 @@ function Field({ label, value, mono: isMono, highlight, link }: { label: string;
         </span>
       )}
     </div>
+  );
+}
+
+function ProofHashTitle({ proof }: { proof: OCCProof }) {
+  const [copied, setCopied] = useState(false);
+  const ph = (proof as OCCProof & { proofHash?: string });
+  const full = ph.proofHash || "";
+  const short = full.replace(/[+/=]/g, "").slice(0, 7);
+
+  return (
+    <span
+      onClick={() => { navigator.clipboard.writeText(full); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
+      style={{
+        color: "#111827", cursor: "pointer", fontFamily: mono,
+        fontSize: 20, fontWeight: 700, letterSpacing: "-0.01em",
+        transition: "color 0.2s",
+      }}
+      title={`Click to copy: ${full}`}
+    >
+      {copied ? "Copied!" : short}
+    </span>
   );
 }
 
