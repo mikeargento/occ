@@ -438,48 +438,29 @@ export default function OCCPage() {
 const ROTATING_WORDS = ["photos.", "videos.", "music.", "docs.", "PDFs.", "code.", "data.", "files."];
 
 function RotatingWord() {
-  const [wordIndex, setWordIndex] = useState(0);
-  const [displayed, setDisplayed] = useState("");
-  const [typing, setTyping] = useState(true);
-  const [showCursor, setShowCursor] = useState(true);
+  const [index, setIndex] = useState(0);
+  const [fade, setFade] = useState(true);
 
   useEffect(() => {
-    const word = ROTATING_WORDS[wordIndex];
-
-    if (typing) {
-      if (displayed.length < word.length) {
-        const timeout = setTimeout(() => {
-          setDisplayed(word.slice(0, displayed.length + 1));
-        }, 50);
-        return () => clearTimeout(timeout);
-      } else {
-        // Word fully typed — blink cursor then start erasing
-        const timeout = setTimeout(() => setTyping(false), 1200);
-        return () => clearTimeout(timeout);
-      }
-    } else {
-      if (displayed.length > 0) {
-        const timeout = setTimeout(() => {
-          setDisplayed(displayed.slice(0, -1));
-        }, 30);
-        return () => clearTimeout(timeout);
-      } else {
-        // Fully erased — next word
-        setWordIndex(i => (i + 1) % ROTATING_WORDS.length);
-        setTyping(true);
-      }
-    }
-  }, [displayed, typing, wordIndex]);
-
-  // Cursor blink
-  useEffect(() => {
-    const interval = setInterval(() => setShowCursor(v => !v), 530);
+    const interval = setInterval(() => {
+      setFade(false);
+      setTimeout(() => {
+        setIndex(i => (i + 1) % ROTATING_WORDS.length);
+        setFade(true);
+      }, 200);
+    }, 2400);
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <span style={{ color: "var(--c-accent)" }}>
-      {displayed}
+    <span style={{
+      display: "inline-block",
+      color: "var(--c-accent)",
+      opacity: fade ? 1 : 0,
+      transform: fade ? "translateY(0)" : "translateY(4px)",
+      transition: "opacity 0.2s, transform 0.2s",
+    }}>
+      {ROTATING_WORDS[index]}
     </span>
   );
 }
