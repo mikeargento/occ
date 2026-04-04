@@ -37,12 +37,25 @@ function canonicalizeToString(obj: unknown): string {
 }
 
 /**
- * Compute canonical proof hash: SHA-256(canonicalize(proof)) → Base64.
- * Covers the ENTIRE proof object (recursive key sort, compact JSON, UTF-8).
+ * Compute canonical proof hash from the signed body subset.
+ * Must match the ledger's computation exactly.
  */
 function computeProofHash(proof: Record<string, unknown>): string {
-  const bytes = canonicalize(proof);
-  const hash = sha256(bytes);
+  const signer = proof.signer as { publicKeyB64: string } | undefined;
+  const env = proof.environment as { enforcement: string; measurement: string; attestation?: { format: string } } | undefined;
+
+  const signedBody: Record<string, unknown> = {
+    version: proof.version,
+    artifact: proof.artifact,
+    commit: proof.commit,
+    publicKeyB64: signer?.publicKeyB64,
+    enforcement: env?.enforcement,
+    measurement: env?.measurement,
+  };
+  if (proof.attribution) signedBody.attribution = proof.attribution;
+  if (env?.attestation) signedBody.attestationFormat = env.attestation.format;
+
+  const hash = sha256(canonicalize(signedBody));
   return Buffer.from(hash).toString("base64");
 }
 
