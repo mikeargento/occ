@@ -255,7 +255,7 @@ export default function OCCPage() {
           <>
             <div style={{ textAlign: "center", marginBottom: 32, animation: "slideIn 0.3s ease-out" }}>
               <p style={{ fontSize: 26, fontWeight: 700, color: "#111827", whiteSpace: "nowrap" }}>
-                <span style={{ display: "inline-block", width: "3.5em", textAlign: "right" }}><RotatingVerb /></span> the provenance of{" "}<span style={{ display: "inline-block", width: "4.5em", textAlign: "left" }}><RotatingWord /></span>
+                <span style={{ display: "inline-block", width: "4em", textAlign: "right" }}><RotatingVerb /></span> the provenance of{" "}<span style={{ display: "inline-block", width: "4em", textAlign: "left" }}><RotatingWord /></span>
               </p>
             </div>
             <div className="file-drop-container" style={{ animation: "slideIn 0.3s ease-out" }}>
