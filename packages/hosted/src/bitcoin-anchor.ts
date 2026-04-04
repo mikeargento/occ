@@ -15,7 +15,39 @@
  */
 
 import { sha256 } from "@noble/hashes/sha256";
-import { computeProofHash } from "occproof";
+
+/**
+ * Canonical proof hash — signed body only.
+ * MUST match computeProofHash() from occproof exactly.
+ * Inlined here because Railway can't resolve the monorepo package.
+ */
+function computeProofHash(proof: Record<string, unknown>): string {
+  const signer = proof.signer as { publicKeyB64: string } | undefined;
+  const env = proof.environment as { enforcement: string; measurement: string; attestation?: { format: string } } | undefined;
+  const signedBody: Record<string, unknown> = {
+    version: proof.version,
+    artifact: proof.artifact,
+    commit: proof.commit,
+    publicKeyB64: signer?.publicKeyB64,
+    enforcement: env?.enforcement,
+    measurement: env?.measurement,
+  };
+  if (proof.attribution) signedBody.attribution = proof.attribution;
+  if (env?.attestation) signedBody.attestationFormat = env.attestation.format;
+  const json = stableStringify(signedBody);
+  return Buffer.from(sha256(new TextEncoder().encode(json))).toString("base64");
+}
+
+/** Recursive key-sort JSON — matches occproof's canonicalize(). */
+function stableStringify(obj: unknown): string {
+  if (obj === null || typeof obj !== "object") return JSON.stringify(obj);
+  if (Array.isArray(obj)) return "[" + obj.map(stableStringify).join(",") + "]";
+  const sorted = Object.keys(obj as Record<string, unknown>).sort();
+  const entries = sorted
+    .filter(k => (obj as Record<string, unknown>)[k] !== undefined)
+    .map(k => JSON.stringify(k) + ":" + stableStringify((obj as Record<string, unknown>)[k]));
+  return "{" + entries.join(",") + "}";
+}
 
 /* ── S3 persistence ── */
 
