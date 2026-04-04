@@ -480,7 +480,6 @@ function RotatingWord() {
   return (
     <span style={{ color: "var(--c-accent)" }}>
       {displayed}
-      <span style={{ display: "inline-block", width: "0.6em", height: "0.12em", background: "var(--c-accent)", opacity: showCursor ? 1 : 0, verticalAlign: "baseline", marginLeft: 1 }} />
     </span>
   );
 }
