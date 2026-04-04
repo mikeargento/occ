@@ -255,7 +255,7 @@ export default function OCCPage() {
           <>
             <div style={{ textAlign: "center", marginBottom: 32, animation: "slideIn 0.3s ease-out" }}>
               <p style={{ fontSize: 28, fontWeight: 800, color: "#111827", whiteSpace: "nowrap" }}>
-                Prove the provenance of {""}<span style={{ display: "inline-block", width: "6em", textAlign: "left" }}><RotatingWord /></span>
+                Prove the provenance of <RotatingWord />
               </p>
             </div>
             <div className="file-drop-container" style={{ animation: "slideIn 0.3s ease-out" }}>
@@ -438,29 +438,49 @@ export default function OCCPage() {
 const ROTATING_WORDS = ["photos.", "videos.", "music.", "documents.", "AI outputs.", "code.", "data.", "designs.", "contracts.", "files."];
 
 function RotatingWord() {
-  const [index, setIndex] = useState(0);
-  const [fade, setFade] = useState(true);
+  const [wordIndex, setWordIndex] = useState(0);
+  const [displayed, setDisplayed] = useState("");
+  const [typing, setTyping] = useState(true);
+  const [showCursor, setShowCursor] = useState(true);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setFade(false);
-      setTimeout(() => {
-        setIndex(i => (i + 1) % ROTATING_WORDS.length);
-        setFade(true);
-      }, 200);
-    }, 2400);
+    const word = ROTATING_WORDS[wordIndex];
+
+    if (typing) {
+      if (displayed.length < word.length) {
+        const timeout = setTimeout(() => {
+          setDisplayed(word.slice(0, displayed.length + 1));
+        }, 80);
+        return () => clearTimeout(timeout);
+      } else {
+        // Word fully typed — blink cursor then start erasing
+        const timeout = setTimeout(() => setTyping(false), 1800);
+        return () => clearTimeout(timeout);
+      }
+    } else {
+      if (displayed.length > 0) {
+        const timeout = setTimeout(() => {
+          setDisplayed(displayed.slice(0, -1));
+        }, 40);
+        return () => clearTimeout(timeout);
+      } else {
+        // Fully erased — next word
+        setWordIndex(i => (i + 1) % ROTATING_WORDS.length);
+        setTyping(true);
+      }
+    }
+  }, [displayed, typing, wordIndex]);
+
+  // Cursor blink
+  useEffect(() => {
+    const interval = setInterval(() => setShowCursor(v => !v), 530);
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <span style={{
-      display: "inline-block",
-      color: "var(--c-accent)",
-      opacity: fade ? 1 : 0,
-      transform: fade ? "translateY(0)" : "translateY(4px)",
-      transition: "opacity 0.2s, transform 0.2s",
-    }}>
-      {ROTATING_WORDS[index]}
+    <span style={{ color: "var(--c-accent)" }}>
+      {displayed}
+      <span style={{ opacity: showCursor ? 1 : 0, fontWeight: 400, color: "var(--c-accent)" }}>|</span>
     </span>
   );
 }
