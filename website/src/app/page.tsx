@@ -255,7 +255,7 @@ export default function OCCPage() {
           <>
             <div style={{ textAlign: "center", marginBottom: 32, animation: "slideIn 0.3s ease-out" }}>
               <h1 style={{ fontSize: 22, fontWeight: 600, color: "#111827", lineHeight: 1.4, marginBottom: 4 }}>
-                Cryptographic proof of digital state.
+                Cryptographic digital history.
               </h1>
               <p style={{ fontSize: 16, color: "#6b7280", fontWeight: 400 }}>
                 No blockchain required.
