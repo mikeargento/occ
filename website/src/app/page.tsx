@@ -435,7 +435,7 @@ export default function OCCPage() {
   );
 }
 
-const ROTATING_WORDS = ["photos.", "videos.", "music.", "PDFs.", "code.", "data.", "files."];
+const ROTATING_WORDS = ["photos", "videos", "music", "PDFs", "code", "data", "files"];
 
 function RotatingWord() {
   const [index, setIndex] = useState(0);
