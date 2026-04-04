@@ -26,7 +26,7 @@ export async function persistProof(proof: Record<string, unknown>): Promise<Stor
   if (!ledger) return null;
   try {
     const stored = await ledger.storeProof(proof);
-    console.log(`[ledger] proof stored: counter=${stored.commit.counter} hash=${stored.proofHashB64.slice(0, 16)}...`);
+    console.log(`[ledger] proof stored: counter=${stored.commit.counter} hash=${stored.proofHash.slice(0, 16)}...`);
     return stored;
   } catch (err) {
     console.error("[ledger] failed to store proof:", (err as Error).message);

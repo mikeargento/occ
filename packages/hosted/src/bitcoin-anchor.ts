@@ -15,49 +15,7 @@
  */
 
 import { sha256 } from "@noble/hashes/sha256";
-
-/* ── Canonical proof hash ── */
-
-/**
- * Recursive key-sort canonicalization — matches the library's canonicalize().
- * Produces deterministic JSON with sorted keys at every nesting level.
- */
-function canonicalize(obj: unknown): Uint8Array {
-  return new TextEncoder().encode(canonicalizeToString(obj));
-}
-
-function canonicalizeToString(obj: unknown): string {
-  if (obj === null || typeof obj !== "object") return JSON.stringify(obj);
-  if (Array.isArray(obj)) return "[" + obj.map(canonicalizeToString).join(",") + "]";
-  const sorted = Object.keys(obj as Record<string, unknown>).sort();
-  const entries = sorted
-    .filter((k) => (obj as Record<string, unknown>)[k] !== undefined)
-    .map((k) => JSON.stringify(k) + ":" + canonicalizeToString((obj as Record<string, unknown>)[k]));
-  return "{" + entries.join(",") + "}";
-}
-
-/**
- * Compute canonical proof hash from the signed body subset.
- * Must match the ledger's computation exactly.
- */
-function computeProofHash(proof: Record<string, unknown>): string {
-  const signer = proof.signer as { publicKeyB64: string } | undefined;
-  const env = proof.environment as { enforcement: string; measurement: string; attestation?: { format: string } } | undefined;
-
-  const signedBody: Record<string, unknown> = {
-    version: proof.version,
-    artifact: proof.artifact,
-    commit: proof.commit,
-    publicKeyB64: signer?.publicKeyB64,
-    enforcement: env?.enforcement,
-    measurement: env?.measurement,
-  };
-  if (proof.attribution) signedBody.attribution = proof.attribution;
-  if (env?.attestation) signedBody.attestationFormat = env.attestation.format;
-
-  const hash = sha256(canonicalize(signedBody));
-  return Buffer.from(hash).toString("base64");
-}
+import { computeProofHash } from "occproof";
 
 /* ── S3 persistence ── */
 
@@ -76,15 +34,15 @@ async function persistAnchor(
 
     const s3 = new S3Client({ region: process.env.LEDGER_REGION || "us-east-2" });
     const commit = proof.commit as { counter: string; epochId: string };
-    const proofHashB64 = computeProofHash(proof);
+    const proofHash = computeProofHash(proof);
 
     const safeEpoch = commit.epochId.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-    const safeHash = proofHashB64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+    const safeHash = proofHash.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
     const counter = (commit.counter || "0").padStart(12, "0");
     const retention = new Date();
     retention.setDate(retention.getDate() + 3650);
 
-    const stored = { ...proof, proofHashB64 };
+    const stored = { ...proof, proofHash };
 
     // Store proof (same format as user proofs)
     await s3.send(new PutObjectCommand({

@@ -65,13 +65,13 @@ async function persistToLedger(proofs: OCCProof[]): Promise<void> {
 
     for (const proof of proofs) {
       // Canonical proof hash — uses library's recursive-sort canonicalize + SHA-256
-      const proofHashB64 = computeProofHash(proof);
+      const proofHash = computeProofHash(proof);
       const safeEpoch = (proof.commit.epochId ?? "unknown").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-      const safeHash = proofHashB64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+      const safeHash = proofHash.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
       const counter = (proof.commit.counter || "0").padStart(12, "0");
       const key = `proofs/${safeEpoch}/${counter}-${safeHash}.json`;
 
-      const stored = { ...proof, proofHashB64 };
+      const stored = { ...proof, proofHash };
 
       const retention = new Date();
       retention.setDate(retention.getDate() + 3650); // 10 years

@@ -76,7 +76,7 @@ export interface StoredProof {
   timestamps?: Record<string, unknown>;
 
   /** SHA-256 of canonicalize(signedBody). Deterministic address. */
-  proofHashB64: string;
+  proofHash: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -109,7 +109,7 @@ export interface StoredAnchor {
 /** A finalization record — proves a proof is bounded in a causal window. */
 export interface Finalization {
   /** The proof that was bounded. */
-  proofHashB64: string;
+  proofHash: string;
 
   /** The anchor AFTER this proof (front anchor / forward seal). */
   anchorAfterHashB64: string;

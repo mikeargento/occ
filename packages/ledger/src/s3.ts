@@ -16,7 +16,7 @@ import {
   ListObjectsV2Command,
 } from "@aws-sdk/client-s3";
 import { sha256 } from "@noble/hashes/sha256";
-import { canonicalize } from "occproof";
+import { canonicalize, computeProofHash } from "occproof";
 import {
   type StoredProof,
   type StoredAnchor,
@@ -56,33 +56,18 @@ export class Ledger {
 
   /**
    * Store a proof immutably.
-   * Computes proofHashB64, sets deterministic key, writes with Object Lock.
+   * Computes proofHash via canonical function, sets deterministic key, writes with Object Lock.
    */
   async storeProof(proof: Record<string, unknown>): Promise<StoredProof> {
-    // Compute proof hash from the signed body
-    const signedBody = {
-      version: proof.version,
-      artifact: proof.artifact,
-      commit: proof.commit,
-      publicKeyB64: (proof.signer as { publicKeyB64: string }).publicKeyB64,
-      enforcement: (proof.environment as { enforcement: string }).enforcement,
-      measurement: (proof.environment as { measurement: string }).measurement,
-      ...(proof.attribution ? { attribution: proof.attribution } : {}),
-      ...((proof.environment as Record<string, unknown>)?.attestation
-        ? { attestationFormat: ((proof.environment as Record<string, unknown>).attestation as { format: string }).format }
-        : {}),
-    };
-
-    const hashBytes = sha256(canonicalize(signedBody));
-    const proofHashB64 = Buffer.from(hashBytes).toString("base64");
+    const proofHash = computeProofHash(proof);
 
     const stored: StoredProof = {
-      ...(proof as unknown as Omit<StoredProof, "proofHashB64">),
-      proofHashB64,
+      ...(proof as unknown as Omit<StoredProof, "proofHash">),
+      proofHash,
     };
 
     const commit = proof.commit as { epochId: string; counter: string };
-    const key = proofKey(commit.epochId, commit.counter, proofHashB64);
+    const key = proofKey(commit.epochId, commit.counter, proofHash);
 
     await this.putImmutable(key, stored);
     return stored;
@@ -96,7 +81,7 @@ export class Ledger {
     ethereum: { blockNumber: number; blockHash: string }
   ): Promise<StoredAnchor> {
     const anchorBody = {
-      proofHashB64: proof.proofHashB64,
+      proofHash: proof.proofHash,
       epochId: proof.commit.epochId,
       counter: proof.commit.counter,
       blockNumber: ethereum.blockNumber,
@@ -123,7 +108,7 @@ export class Ledger {
    * Store a finalization record (proof bounded between anchors).
    */
   async storeFinalization(fin: Finalization): Promise<void> {
-    const key = finalizationKey(fin.proofHashB64);
+    const key = finalizationKey(fin.proofHash);
     await this.putImmutable(key, fin);
   }
 

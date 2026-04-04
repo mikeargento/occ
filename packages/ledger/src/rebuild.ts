@@ -40,10 +40,10 @@ async function rebuild() {
         : undefined
       : undefined;
 
-    const s3Key = proofKey(proof.commit.epochId, proof.commit.counter, proof.proofHashB64);
+    const s3Key = proofKey(proof.commit.epochId, proof.commit.counter, proof.proofHash);
 
     await index.indexProof({
-      proofHash: proof.proofHashB64,
+      proofHash: proof.proofHash,
       artifactDigest: proof.artifact.digestB64,
       counter: proof.commit.counter,
       epochId: proof.commit.epochId,
@@ -66,7 +66,7 @@ async function rebuild() {
     const s3Key = anchorKey(anchor.epochId, anchor.counter, anchor.anchorHashB64);
 
     await index.indexProof({
-      proofHash: anchor.proof.proofHashB64,
+      proofHash: anchor.proof.proofHash,
       artifactDigest: anchor.proof.artifact.digestB64,
       counter: anchor.counter,
       epochId: anchor.epochId,

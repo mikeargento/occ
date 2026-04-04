@@ -147,11 +147,9 @@ export default function ProofPage() {
           <Card title="Artifact">
             <Field label="Digest" value={proof.artifact.digestB64} mono />
             <Field label="Algorithm" value={proof.artifact.hashAlg.toUpperCase()} />
-            {(() => {
-              const ph = (proof as OCCProof & { proofHash?: string; proofHashB64?: string });
-              const hash = ph.proofHashB64 || ph.proofHash;
-              return hash ? <Field label="Proof Hash" value={hash} mono highlight /> : null;
-            })()}
+            {(proof as OCCProof & { proofHash?: string }).proofHash && (
+              <Field label="Proof Hash" value={(proof as OCCProof & { proofHash?: string }).proofHash!} mono highlight />
+            )}
           </Card>
 
           {/* 3. Commit — slot consumed, proof signed atomically */}

@@ -13,7 +13,7 @@
 
 import { sha256 } from "@noble/hashes/sha256";
 import { verifyAsync } from "@noble/ed25519";
-import { canonicalize } from "occproof";
+import { canonicalize, computeProofHash } from "occproof";
 import type { StoredProof, StoredAnchor, Finalization } from "./types.js";
 
 // ---------------------------------------------------------------------------
@@ -116,8 +116,8 @@ export async function verifyCausalPlacement(
   const afterBlockHash = anchorBefore?.ethereum.blockHash;
 
   // 5. Verify proof hash
-  const computedHash = Buffer.from(sha256(bodyBytes)).toString("base64");
-  const hashValid = computedHash === proof.proofHashB64;
+  const computedHash = computeProofHash(proof);
+  const hashValid = computedHash === proof.proofHash;
 
   const valid = signatureValid && slotBeforeCommit && slotBindingValid && hashValid;
 
