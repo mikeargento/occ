@@ -254,11 +254,8 @@ export default function OCCPage() {
         {step === "drop" && !chatOpen && (
           <>
             <div style={{ textAlign: "center", marginBottom: 32, animation: "slideIn 0.3s ease-out" }}>
-              <h1 style={{ fontSize: 22, fontWeight: 600, color: "#111827", lineHeight: 1.4, marginBottom: 4 }}>
-                Cryptographic digital history.
-              </h1>
-              <p style={{ fontSize: 16, color: "#6b7280", fontWeight: 400 }}>
-                No blockchain required.
+              <p style={{ fontSize: 18, fontWeight: 600, color: "#111827" }}>
+                Cryptographic digital history. No blockchain required.
               </p>
             </div>
             <div className="file-drop-container" style={{ animation: "slideIn 0.3s ease-out" }}>
