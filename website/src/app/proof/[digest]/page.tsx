@@ -259,8 +259,8 @@ function Card({ title, children }: { title: string; accent?: string; children: R
     <div style={{ background: "#fff", border: "1px solid #d0d5dd", borderRadius: 14, overflow: "hidden" }}>
       <div style={{
         fontSize: 14, fontWeight: 700, letterSpacing: "0.04em",
-        color: "#1A73E8", padding: "18px 24px",
-        background: "rgba(26,115,232,0.04)",
+        color: "#0065A4", padding: "18px 24px",
+        background: "rgba(0,101,164,0.04)",
         borderBottom: "1px solid #e2e5e9",
       }}>
         {title}
@@ -294,7 +294,7 @@ function Field({ label, value, mono: isMono, highlight, link }: { label: string;
         <span style={{
           fontSize: isMono ? 12 : 14,
           fontFamily: isMono ? mono : "inherit",
-          color: copied ? "#1A73E8" : highlight ? "var(--c-accent)" : "#1f2937",
+          color: copied ? "#0065A4" : highlight ? "var(--c-accent)" : "#1f2937",
           fontWeight: highlight ? 700 : 400,
           wordBreak: "break-all", textAlign: "right",
           transition: "color .2s", lineHeight: 1.4,
@@ -329,7 +329,7 @@ function ProofHashTitle({ proof }: { proof: OCCProof }) {
 
 const btnStyle: React.CSSProperties = {
   padding: "8px 16px", fontSize: 13, fontWeight: 600, color: "#ffffff",
-  background: "#1A73E8", border: "1px solid #1A73E8", borderRadius: 10, cursor: "pointer",
+  background: "#0065A4", border: "1px solid #0065A4", borderRadius: 10, cursor: "pointer",
 };
 
 function JsonToggle({ proof }: { proof: OCCProof }) {
@@ -347,7 +347,7 @@ function JsonToggle({ proof }: { proof: OCCProof }) {
       <div style={{ width: "100%", maxWidth: 700, maxHeight: "80vh", display: "flex", flexDirection: "column", background: "#fff", borderRadius: 16, border: "1px solid #d0d5dd", overflow: "hidden" }}
         onClick={(e) => e.stopPropagation()}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderBottom: "1px solid #e5e7eb" }}>
-          <span style={{ fontSize: 14, fontWeight: 600, color: "#1A73E8" }}>Proof JSON</span>
+          <span style={{ fontSize: 14, fontWeight: 600, color: "#0065A4" }}>Proof JSON</span>
           <div style={{ display: "flex", gap: 8 }}>
             <button onClick={() => { navigator.clipboard.writeText(json); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
               style={{ ...btnStyle, fontSize: 12, padding: "5px 12px" }}>

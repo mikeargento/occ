@@ -128,8 +128,8 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
         <button
           onClick={() => { setOpen(true); onOpenChange?.(true); }}
           style={{
-            background: "#1A73E8",
-            border: "1px solid #1A73E8",
+            background: "#0065A4",
+            border: "1px solid #0065A4",
             borderRadius: 980,
             padding: "12px 28px",
             color: "#ffffff",
@@ -141,10 +141,10 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
             transition: "all 0.2s",
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = "#1557b0";
+            e.currentTarget.style.background = "#004d7a";
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.background = "#1A73E8";
+            e.currentTarget.style.background = "#0065A4";
           }}
         >
           <svg
@@ -238,9 +238,9 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
                   transition: "all 0.15s",
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "rgba(26,115,232,0.1)";
-                  e.currentTarget.style.borderColor = "rgba(26,115,232,0.3)";
-                  e.currentTarget.style.color = "#1A73E8";
+                  e.currentTarget.style.background = "rgba(0,101,164,0.1)";
+                  e.currentTarget.style.borderColor = "rgba(0,101,164,0.3)";
+                  e.currentTarget.style.color = "#0065A4";
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.background = "#f9fafb";
@@ -266,7 +266,7 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
               style={{
                 background:
                   msg.role === "user"
-                    ? "#1A73E8"
+                    ? "#0065A4"
                     : "#f3f4f6",
                 color: msg.role === "user" ? "#ffffff" : "#1f2937",
                 borderRadius:
@@ -290,7 +290,7 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
                     display: "inline-block",
                     width: 6,
                     height: 14,
-                    background: "#1A73E8",
+                    background: "#0065A4",
                     marginLeft: 2,
                     animation: "blink 1s infinite",
                     verticalAlign: "text-bottom",
@@ -305,7 +305,7 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
             <button
               onClick={() => setMessages(prev => prev.length <= 2 ? [] : prev.slice(0, -2))}
               style={{
-                background: "none", border: "none", color: "#1A73E8", fontSize: 13,
+                background: "none", border: "none", color: "#0065A4", fontSize: 13,
                 fontWeight: 500, cursor: "pointer", padding: "2px 0",
               }}
             >
@@ -348,7 +348,7 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
           type="submit"
           disabled={!input.trim() || streaming}
           style={{
-            background: input.trim() && !streaming ? "#1A73E8" : "#e5e7eb",
+            background: input.trim() && !streaming ? "#0065A4" : "#e5e7eb",
             border: "none",
             borderRadius: 10,
             padding: "10px 14px",

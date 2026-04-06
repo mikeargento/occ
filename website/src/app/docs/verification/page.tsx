@@ -87,7 +87,7 @@ export default function VerificationPage() {
           <span className="text-sm text-[#374151] ml-2">alone - prevents in-transit downgrade only</span>
         </div>
         <div className="border-l-2 border-l-[#d0d5dd] pl-4 py-1">
-          <code className="text-xs font-mono text-[#1A73E8]">requireEnforcement + allowedMeasurements</code>
+          <code className="text-xs font-mono text-[#0065A4]">requireEnforcement + allowedMeasurements</code>
           <span className="text-sm text-[#374151] ml-2">- pins to specific enclave image</span>
         </div>
         <div className="border-l-2 border-l-[#d0d5dd] pl-4 py-1">

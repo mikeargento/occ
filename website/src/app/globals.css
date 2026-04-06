@@ -36,7 +36,7 @@
   --c-text: #111827;
   --c-text-secondary: #6b7280;
   --c-text-tertiary: #9ca3af;
-  --c-accent: #1A73E8;
+  --c-accent: #0065A4;
   --c-accent-dim: #4A90E2;
   --c-syntax-key: #2563eb;
   --c-syntax-string: #059669;
@@ -240,7 +240,7 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   top: 0.25rem;
   bottom: 0.25rem;
   width: 2px;
-  background: #1A73E8;
+  background: #0065A4;
 }
 
 /* Mobile menu slide transition */
