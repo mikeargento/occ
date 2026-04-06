@@ -56,23 +56,45 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
               Documentation
             </div>
             <SidebarNav pathname={pathname} />
-            {!chatOpen && (
-              <div style={{ marginTop: 24 }}>
-                <Chat onOpenChange={setChatOpen} />
-              </div>
-            )}
           </div>
         </aside>
 
         {/* Content */}
         <div style={{ minWidth: 0, flex: 1 }}>
-          {chatOpen ? (
-            <Chat defaultOpen onOpenChange={setChatOpen} />
-          ) : (
-            children
-          )}
+          {children}
         </div>
       </div>
+
+      {/* Floating chat */}
+      {chatOpen ? (
+        <div style={{
+          position: "fixed", bottom: 24, right: 24, zIndex: 100,
+          width: 400, maxWidth: "calc(100vw - 48px)",
+          maxHeight: "calc(100vh - 120px)",
+          borderRadius: 16, overflow: "hidden",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08)",
+        }}>
+          <Chat defaultOpen onOpenChange={setChatOpen} />
+        </div>
+      ) : (
+        <button
+          onClick={() => setChatOpen(true)}
+          style={{
+            position: "fixed", bottom: 24, right: 24, zIndex: 100,
+            width: 52, height: 52, borderRadius: 14,
+            background: "#0065A4", border: "none", cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "0 4px 12px rgba(0,101,164,0.3)",
+            transition: "transform 0.15s, box-shadow 0.15s",
+          }}
+          onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.05)"; e.currentTarget.style.boxShadow = "0 6px 16px rgba(0,101,164,0.4)"; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,101,164,0.3)"; }}
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+        </button>
+      )}
     </div>
   );
 }
