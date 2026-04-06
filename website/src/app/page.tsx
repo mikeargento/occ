@@ -240,8 +240,7 @@ export default function OCCPage() {
         .occ-wrap { width: 90%; max-width: 640px; margin: 0 auto; padding: 0; display: flex; flex-direction: column; align-items: stretch; justify-content: center; gap: 24px; min-height: calc(100dvh - 57px); }
         .occ-wrap.occ-results { justify-content: flex-start; padding-top: 20vh; }
         .occ-wrap .file-drop-container { height: 360px; }
-        @media (max-width: 640px) { .occ-wrap .file-drop-container { height: 280px; } .hero-headline p { font-size: 20px !important; } }
-        .hero-headline p { font-size: 26px; }
+        @media (max-width: 640px) { .occ-wrap .file-drop-container { height: 280px; } }
         @keyframes countPop { 0% { transform: scale(0.5); opacity: 0 } 50% { transform: scale(1.15) } 100% { transform: scale(1); opacity: 1 } }
         @keyframes slideIn { from { opacity: 0; transform: translateY(12px) } to { opacity: 1; transform: translateY(0) } }
         @keyframes pulse { 0%, 100% { opacity: 1 } 50% { opacity: 0.4 } }
@@ -254,9 +253,9 @@ export default function OCCPage() {
         {/* ── Drop zone or Chat ── */}
         {step === "drop" && !chatOpen && (
           <>
-            <div className="hero-headline" style={{ textAlign: "center", marginBottom: 32, animation: "slideIn 0.3s ease-out" }}>
-              <p style={{ fontWeight: 700, color: "#111827", whiteSpace: "nowrap" }}>
-                <span style={{ display: "inline-block", width: "4em", textAlign: "right" }}><RotatingVerb /></span> the provenance of{" "}<span style={{ display: "inline-block", width: "4em", textAlign: "left" }}><RotatingWord /></span>
+            <div style={{ textAlign: "center", marginBottom: 28, animation: "slideIn 0.3s ease-out", maxWidth: 520, margin: "0 auto 28px" }}>
+              <p style={{ fontSize: 15, fontWeight: 400, color: "#6b7280", lineHeight: 1.6 }}>
+                Create a provenance proof of any file without the file leaving your device. Each file&apos;s hash is paired with a JSON record that enables independent verification of its existence and causal order.
               </p>
             </div>
             <div className="file-drop-container" style={{ animation: "slideIn 0.3s ease-out" }}>
@@ -436,61 +435,3 @@ export default function OCCPage() {
   );
 }
 
-const ROTATING_VERBS = ["Prove", "Verify", "Record"];
-const ROTATING_WORDS = ["photos", "videos", "music", "PDFs", "code", "data", "files"];
-
-function RotatingVerb() {
-  const [index, setIndex] = useState(0);
-  const [fade, setFade] = useState(true);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setFade(false);
-      setTimeout(() => {
-        setIndex(i => (i + 1) % ROTATING_VERBS.length);
-        setFade(true);
-      }, 200);
-    }, 2400);
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <span style={{
-      display: "inline-block",
-      color: "var(--c-accent)",
-      opacity: fade ? 1 : 0,
-      transform: fade ? "translateY(0)" : "translateY(4px)",
-      transition: "opacity 0.2s, transform 0.2s",
-    }}>
-      {ROTATING_VERBS[index]}
-    </span>
-  );
-}
-
-function RotatingWord() {
-  const [index, setIndex] = useState(0);
-  const [fade, setFade] = useState(true);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setFade(false);
-      setTimeout(() => {
-        setIndex(i => (i + 1) % ROTATING_WORDS.length);
-        setFade(true);
-      }, 200);
-    }, 2400);
-    return () => clearInterval(interval);
-  }, []);
-
-  return (
-    <span style={{
-      display: "inline-block",
-      color: "var(--c-accent)",
-      opacity: fade ? 1 : 0,
-      transform: fade ? "translateY(0)" : "translateY(4px)",
-      transition: "opacity 0.2s, transform 0.2s",
-    }}>
-      {ROTATING_WORDS[index]}
-    </span>
-  );
-}
