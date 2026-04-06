@@ -310,47 +310,51 @@ export default function OCCPage() {
         {step === "results" && items.length > 0 && (
           <div style={{ animation: "slideIn 0.3s ease-out" }}>
 
-            {/* Big animated counter */}
-            <div style={{ textAlign: "center", marginBottom: 40, marginTop: -18 }}>
-              <div style={{
-                fontSize: 96, fontWeight: 800, letterSpacing: "-0.06em",
-                color: allDone ? "#0065A4" : "var(--c-text)",
-                fontFamily: "monospace", lineHeight: 1, animation: "countPop 0.4s ease-out",
-                textShadow: "none",
-              }}>
-                {animCount}
-              </div>
-              <div style={{ fontSize: 16, color: "#111827", marginTop: 12, fontWeight: 500, letterSpacing: "0.02em" }}>
-                {allDone
-                  ? `of ${items.length} proven`
-                  : `of ${items.length} found`}
-              </div>
-            </div>
-
-            {/* Actions — above list so they're always visible */}
-            <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
-              {unproven.length > 0 && (
-                <button onClick={proveRemaining} style={{ ...btnFill, background: "var(--c-accent)", color: "#ffffff" }}>
-                  Prove {unproven.length} remaining
-                </button>
-              )}
-              {found.length > 0 && (
-                <button
-                  onClick={anchorCountdown > 0 ? undefined : downloadZip}
-                  style={{
-                    ...(anchorCountdown > 0 ? { ...btnOut, opacity: 0.5, cursor: "default" } : allDone ? btnFill : btnOut),
-                  }}
-                >
-                  {anchorCountdown > 0 ? <span style={{ fontSize: 13 }}>{`Sealing with Ethereum... ${anchorCountdown}s`}</span> : "Download .zip"}
-                </button>
-              )}
-              <button onClick={reset} style={btnOut}>
-                {allDone ? "New" : "Start over"}
-              </button>
-            </div>
-
-            {/* File list */}
             <div style={card}>
+              {/* Big animated counter */}
+              <div style={{ textAlign: "center", padding: "32px 24px 24px" }}>
+                <div style={{
+                  fontSize: 96, fontWeight: 800, letterSpacing: "-0.06em",
+                  color: allDone ? "#0065A4" : "var(--c-text)",
+                  fontFamily: "monospace", lineHeight: 1, animation: "countPop 0.4s ease-out",
+                  textShadow: "none",
+                }}>
+                  {animCount}
+                </div>
+                <div style={{ fontSize: 16, color: "#111827", marginTop: 12, fontWeight: 500, letterSpacing: "0.02em" }}>
+                  {allDone
+                    ? `of ${items.length} proven`
+                    : `of ${items.length} found`}
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div style={{ display: "flex", gap: 12, padding: "0 24px 20px" }}>
+                {unproven.length > 0 && (
+                  <button onClick={proveRemaining} style={{ ...btnFill, background: "var(--c-accent)", color: "#ffffff" }}>
+                    Prove {unproven.length} remaining
+                  </button>
+                )}
+                {found.length > 0 && (
+                  <button
+                    onClick={anchorCountdown > 0 ? undefined : downloadZip}
+                    style={{
+                      ...(anchorCountdown > 0 ? { ...btnOut, opacity: 0.5, cursor: "default" } : allDone ? btnFill : btnOut),
+                    }}
+                  >
+                    {anchorCountdown > 0 ? <span style={{ fontSize: 13 }}>{`Sealing with Ethereum... ${anchorCountdown}s`}</span> : "Download .zip"}
+                  </button>
+                )}
+                <button onClick={reset} style={btnOut}>
+                  {allDone ? "New" : "Start over"}
+                </button>
+              </div>
+
+              {/* Divider */}
+              <div style={{ borderTop: "1px solid #d0d5dd" }} />
+
+              {/* File list */}
+              <div>
               {items.map((item, i) => (
                 <div key={item.file.name + i} style={{
                   padding: "12px 0", borderTop: i > 0 ? "1px solid #d0d5dd" : "none",
@@ -425,6 +429,7 @@ export default function OCCPage() {
                   )}
                 </div>
               ))}
+            </div>
             </div>
 
           </div>
