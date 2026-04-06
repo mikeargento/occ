@@ -40,6 +40,7 @@ function SidebarNav({ pathname, onNavigate }: { pathname: string; onNavigate?: (
 export default function DocsLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   const currentLabel = sections.find(s => s.href === pathname)?.label || "Docs";
 
   return (
@@ -55,15 +56,21 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
               Documentation
             </div>
             <SidebarNav pathname={pathname} />
-            <div style={{ marginTop: 24 }}>
-              <Chat />
-            </div>
+            {!chatOpen && (
+              <div style={{ marginTop: 24 }}>
+                <Chat onOpenChange={setChatOpen} />
+              </div>
+            )}
           </div>
         </aside>
 
         {/* Content */}
         <div style={{ minWidth: 0, flex: 1 }}>
-          {children}
+          {chatOpen ? (
+            <Chat defaultOpen onOpenChange={setChatOpen} />
+          ) : (
+            children
+          )}
         </div>
       </div>
     </div>
