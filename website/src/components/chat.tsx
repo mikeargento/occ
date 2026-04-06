@@ -130,7 +130,7 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
           style={{
             background: "#0065A4",
             border: "1px solid #0065A4",
-            borderRadius: 980,
+            borderRadius: 10,
             padding: "12px 28px",
             color: "#ffffff",
             fontSize: 16,
