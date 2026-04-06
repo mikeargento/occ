@@ -153,8 +153,9 @@ async function verifyProof(fileBytes, proof){
   const slot=proof.slotAllocation;const commit=proof.commit||{};
   let slotValid=false;
   if(slot&&commit.slotHashB64){
-    const slotBody={version:slot.version,nonceB64:slot.nonceB64,counter:slot.counter,epochId:slot.epochId,publicKeyB64:slot.publicKeyB64};
-    if(slot.chainId)slotBody.chainId=slot.chainId;
+    // Reconstruct slot body exactly as the enclave does — all fields except signatureB64
+    const slotBody={};
+    for(const k of Object.keys(slot)){if(k!=="signatureB64")slotBody[k]=slot[k];}
     const slotHash=toBase64(await sha256(canonicalize(slotBody)));
     slotValid=slotHash===commit.slotHashB64;
   }
