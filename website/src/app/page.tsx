@@ -312,7 +312,7 @@ export default function OCCPage() {
 
             <div style={card}>
               {/* Big animated counter */}
-              <div style={{ textAlign: "center", padding: "32px 24px 24px" }}>
+              <div style={{ textAlign: "center", padding: "12px 0 16px" }}>
                 <div style={{
                   fontSize: 96, fontWeight: 800, letterSpacing: "-0.06em",
                   color: allDone ? "#0065A4" : "var(--c-text)",
@@ -329,7 +329,7 @@ export default function OCCPage() {
               </div>
 
               {/* Actions */}
-              <div style={{ display: "flex", gap: 12, padding: "0 24px 20px" }}>
+              <div style={{ display: "flex", gap: 12, padding: "0 0 20px" }}>
                 {unproven.length > 0 && (
                   <button onClick={proveRemaining} style={{ ...btnFill, background: "var(--c-accent)", color: "#ffffff" }}>
                     Prove {unproven.length} remaining
