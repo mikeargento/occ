@@ -138,7 +138,7 @@ async function verifyProof(fileBytes, proof){
   // 1. File digest
   const fileHash=toBase64(await sha256(fileBytes));
   const digestMatch=fileHash===proof.artifact.digestB64;
-  checks.push({name:"File Digest",pass:digestMatch,detail:digestMatch?`SHA-256 matches: ${proof.artifact.digestB64.slice(0,24)}...`:`Expected ${proof.artifact.digestB64.slice(0,24)}... got ${fileHash.slice(0,24)}...`});
+  checks.push({name:"File Digest",pass:digestMatch,detail:digestMatch?`SHA-256 matches: ${proof.artifact.digestB64}`:`Expected ${proof.artifact.digestB64} got ${fileHash}`});
 
   // 2. Ed25519 signature
   const signer=proof.signer||{};const env=proof.environment||{};
@@ -178,7 +178,7 @@ async function verifyProof(fileBytes, proof){
   if(hashValid===null){
     checks.push({name:"Proof Hash",pass:null,detail:"No proofHash field present (pre-hash era proof)"});
   }else{
-    checks.push({name:"Proof Hash",pass:hashValid,detail:hashValid?`Hash consistent: ${storedHash.slice(0,20)}...`:"Computed hash does not match stored proofHash"});
+    checks.push({name:"Proof Hash",pass:hashValid,detail:hashValid?`Hash consistent: ${storedHash}`:"Computed hash does not match stored proofHash"});
   }
 
   // 6. TEE enforcement
