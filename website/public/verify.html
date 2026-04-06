@@ -9,9 +9,10 @@
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f5f5; color: #111827; min-height: 100vh; }
 .header { background: transparent; padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; max-width: 1120px; margin: 0 auto; }
 .logo { font-size: 20px; font-weight: 900; letter-spacing: -0.02em; text-decoration: none; color: #111827; }
+.wrap { width: 90%; max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; align-items: stretch; justify-content: center; min-height: calc(100vh - 56px); gap: 24px; padding: 0; }
 .container { max-width: 640px; margin: 0 auto; padding: 40px 20px 80px; }
-.description { text-align: center; font-size: 15px; color: #6b7280; line-height: 1.6; margin-bottom: 28px; text-wrap: balance; }
-.drop-zone { background: #fff; border: 2px solid #c3c8cf; border-radius: 16px; padding: 60px 20px; text-align: center; cursor: pointer; transition: all 0.3s; margin-bottom: 24px; }
+.drop-zone { background: #fff; border: 2px solid #c3c8cf; border-radius: 16px; height: 360px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; cursor: pointer; transition: all 0.3s; margin-bottom: 24px; }
+@media (max-width: 640px) { .drop-zone { height: 280px; } }
 .drop-zone:hover { border-color: #1A73E8; background: #f9fafb; }
 .drop-zone.over { border-color: #1A73E8; background: #f0f6ff; box-shadow: 0 0 0 3px rgba(26,115,232,0.15); }
 .drop-zone .icon { width: 48px; height: 48px; margin: 0 auto 16px; background: #eef4ff; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
@@ -43,11 +44,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-
   <span style="font-size: 13px; color: #9ca3af;">Offline Verifier</span>
 </div>
 
-<div class="container">
-  <p class="description">
-    Drop your original file and its proof.json to verify independently. Everything runs locally in your browser — no network requests.
-  </p>
-
+<div class="wrap">
   <div id="drop-zone" class="drop-zone">
     <div class="icon">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -55,13 +52,14 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-
       </svg>
     </div>
     <h2>Drop file + proof.json</h2>
-    <p>Or click to browse</p>
+    <p>Verify independently — everything runs locally in your browser</p>
   </div>
 
   <div id="files-loaded" class="files-loaded hidden"></div>
   <div id="status" class="status hidden"></div>
   <div id="results" class="hidden"></div>
 </div>
+
 
 <input type="file" id="file-input" multiple style="display:none">
 
