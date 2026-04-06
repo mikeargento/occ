@@ -152,14 +152,16 @@ async function verifyProof(fileBytes, proof){
   // 3. Slot binding
   const slot=proof.slotAllocation;const commit=proof.commit||{};
   let slotValid=false;
+  let slotDebug="";
   if(slot&&commit.slotHashB64){
-    // Reconstruct slot body exactly as the enclave does — all fields except signatureB64
-    const slotBody={};
-    for(const k of Object.keys(slot)){if(k!=="signatureB64")slotBody[k]=slot[k];}
-    const slotHash=toBase64(await sha256(canonicalize(slotBody)));
+    // Reconstruct slot body exactly as the enclave does — explicit fields only
+    const slotBody={version:slot.version,nonceB64:slot.nonceB64,counter:slot.counter,epochId:slot.epochId,publicKeyB64:slot.publicKeyB64};
+    const canonical=canonicalizeToString(slotBody);
+    const slotHash=toBase64(await sha256(new TextEncoder().encode(canonical)));
     slotValid=slotHash===commit.slotHashB64;
+    if(!slotValid)slotDebug=`\nComputed: ${slotHash.slice(0,24)}...\nExpected: ${commit.slotHashB64.slice(0,24)}...\nCanonical: ${canonical.slice(0,80)}...`;
   }
-  checks.push({name:"Slot Binding",pass:slotValid,detail:slotValid?`Slot #${slot?.counter} bound to commit`:"Slot hash does not match commit.slotHashB64"});
+  checks.push({name:"Slot Binding",pass:slotValid,detail:slotValid?`Slot #${slot?.counter} bound to commit`:"Slot hash does not match commit.slotHashB64"+slotDebug});
 
   // 4. Counter ordering
   const slotCounter=commit.slotCounter?BigInt(commit.slotCounter):null;
