@@ -259,7 +259,7 @@ export default function OCCPage() {
         {step === "drop" && !chatOpen && (
           <>
             <div style={{ textAlign: "center", marginBottom: 28, animation: "slideIn 0.3s ease-out", maxWidth: 520, margin: "0 auto 28px" }}>
-              <ol style={{ fontSize: 14, fontWeight: 400, color: "#6b7280", lineHeight: 1.8, textAlign: "left", margin: "0 auto", paddingLeft: 20, maxWidth: 420 }}>
+              <ol style={{ fontSize: 14, fontWeight: 400, color: "#6b7280", lineHeight: 1.8, textAlign: "left", margin: "0 auto", paddingLeft: 20, maxWidth: 420, listStyle: "decimal" }}>
                 <li>Your file is hashed locally in your browser</li>
                 <li>The hash is committed through a protected enclave</li>
                 <li>A JSON record is returned containing the proof</li>
