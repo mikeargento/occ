@@ -420,7 +420,7 @@ export default function OCCPage() {
                       }}
                       style={{
                         fontSize: 15, fontWeight: 600, color: "#ffffff", textDecoration: "none",
-                        flexShrink: 0, padding: "12px 28px", borderRadius: 980,
+                        flexShrink: 0, padding: "12px 28px", borderRadius: 10,
                         background: "#0065A4", border: "none", cursor: "pointer",
                         whiteSpace: "nowrap",
                       }}>
