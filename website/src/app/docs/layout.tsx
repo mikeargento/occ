@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { Chat } from "@/components/chat";
 
 const sections = [
   { href: "/docs", label: "Overview" },
@@ -54,6 +55,9 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
               Documentation
             </div>
             <SidebarNav pathname={pathname} />
+            <div style={{ marginTop: 24 }}>
+              <Chat />
+            </div>
           </div>
         </aside>
 
