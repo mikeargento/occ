@@ -211,6 +211,11 @@ export default function OCCPage() {
         }
       }
     } catch { /* non-critical */ }
+    // Include offline verifier
+    try {
+      const vResp = await fetch("/verify.html");
+      if (vResp.ok) z["verify.html"] = new TextEncoder().encode(await vResp.text());
+    } catch { /* non-critical */ }
 
     setExportProgress({ current: totalSteps - 1, total: totalSteps });
     const zipData = await new Promise<Uint8Array>((resolve, reject) => {

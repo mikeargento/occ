@@ -96,6 +96,11 @@ export default function ProofPage() {
         }
       }
     } catch (_) { /* ignore */ }
+    // Include offline verifier
+    try {
+      const vResp = await fetch("/verify.html");
+      if (vResp.ok) files["verify.html"] = strToU8(await vResp.text());
+    } catch (_) { /* non-critical */ }
     const zipped = zipSync(files, { level: 0 });
     const blob = new Blob([zipped as unknown as BlobPart], { type: "application/zip" });
     const url = URL.createObjectURL(blob);

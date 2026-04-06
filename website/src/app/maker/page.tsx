@@ -261,6 +261,11 @@ export default function MakerPage() {
         zipFiles["VERIFY.txt"] = new TextEncoder().encode(buildVerifyTxt(f.name, p));
       }
     }
+    // Include offline verifier
+    try {
+      const vResp = await fetch("/verify.html");
+      if (vResp.ok) zipFiles["verify.html"] = new TextEncoder().encode(await vResp.text());
+    } catch (_) { /* non-critical */ }
 
     const zipped = zipSync(zipFiles);
     const blob = new Blob([zipped.buffer as ArrayBuffer], { type: "application/zip" });

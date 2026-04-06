@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OCC Proof Verifier</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f5f5; color: #111827; min-height: 100vh; }
+.header { background: #f9fafb; padding: 0 24px; height: 56px; display: flex; align-items: center; justify-content: space-between; max-width: 1120px; margin: 0 auto; }
+.logo { font-size: 20px; font-weight: 900; letter-spacing: -0.02em; text-decoration: none; color: #111827; }
+.container { max-width: 640px; margin: 0 auto; padding: 40px 20px 80px; }
+.description { text-align: center; font-size: 15px; color: #6b7280; line-height: 1.6; margin-bottom: 28px; text-wrap: balance; }
+.drop-zone { background: #fff; border: 2px dashed #d0d5dd; border-radius: 20px; padding: 60px 20px; text-align: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; margin-bottom: 24px; }
+.drop-zone:hover, .drop-zone.over { border-color: #1A73E8; background: rgba(26,115,232,0.03); }
+.drop-zone .icon { width: 48px; height: 48px; margin: 0 auto 16px; background: #eef4ff; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+.drop-zone .icon svg { width: 24px; height: 24px; color: #1A73E8; }
+.drop-zone h2 { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+.drop-zone p { font-size: 13px; color: #6b7280; }
+.status { text-align: center; font-size: 14px; color: #6b7280; margin-bottom: 24px; }
+.card { background: #fff; border: 1px solid #d0d5dd; border-radius: 14px; overflow: hidden; margin-bottom: 20px; }
+.card-header { font-size: 14px; font-weight: 700; letter-spacing: 0.04em; color: #1A73E8; padding: 18px 24px; background: rgba(26,115,232,0.04); border-bottom: 1px solid #e2e5e9; }
+.check { display: flex; align-items: center; gap: 12px; padding: 14px 24px; border-bottom: 1px solid #e2e5e9; font-size: 14px; }
+.check:last-child { border-bottom: none; }
+.check .icon-pass { color: #22c55e; font-size: 18px; }
+.check .icon-fail { color: #ef4444; font-size: 18px; }
+.check .icon-info { color: #6b7280; font-size: 18px; }
+.check .label { color: #374151; font-weight: 500; }
+.check .detail { color: #6b7280; font-size: 12px; font-family: "SF Mono", SFMono-Regular, monospace; word-break: break-all; margin-top: 2px; }
+.files-loaded { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+.file-badge { background: #fff; border: 1px solid #d0d5dd; border-radius: 10px; padding: 10px 16px; font-size: 13px; color: #374151; display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+.file-badge .name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-badge .size { color: #9ca3af; white-space: nowrap; }
+.reset-btn { display: block; margin: 24px auto 0; padding: 10px 24px; font-size: 14px; font-weight: 600; color: #fff; background: #1A73E8; border: none; border-radius: 10px; cursor: pointer; }
+.hidden { display: none; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="logo">OCC</span>
+  <span style="font-size: 13px; color: #9ca3af;">Offline Verifier</span>
+</div>
+
+<div class="container">
+  <p class="description">
+    Drop your original file and its proof.json to verify independently. Everything runs locally in your browser — no network requests.
+  </p>
+
+  <div id="drop-zone" class="drop-zone">
+    <div class="icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+    </div>
+    <h2>Drop file + proof.json</h2>
+    <p>Or click to browse</p>
+  </div>
+
+  <div id="files-loaded" class="files-loaded hidden"></div>
+  <div id="status" class="status hidden"></div>
+  <div id="results" class="hidden"></div>
+</div>
+
+<input type="file" id="file-input" multiple style="display:none">
+
+<script type="module">
+// ── Noble Ed25519 (inlined, MIT License, Paul Miller) ──
+const B256=2n**256n,P=0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffedn,N=0x1000000000000000000000000000000014def9dea2f79cd65812631a5cf5d3edn,Gx=0x216936d3cd6e53fec0a4e231fdd6dc5c692cc7609525a7b2c9562d608f25d51an,Gy=0x6666666666666666666666666666666666666666666666666666666666666658n,_a=0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffecn,_d=0x52036cee2b6ffe738cc740797779e89800700a4d4141d8ab75eb4dca135978a3n;
+const err=(e="")=>{throw new Error(e)},M=(e,t=P)=>{const n=e%t;return n>=0n?n:t+n},modN=e=>M(e,N);
+const invert=(e,t)=>{let n=M(e,t),s=t,r=0n,i=1n,o=1n,f=0n;for(;0n!==n;){const e=s/n,t=s%n,a=r-o*e,c=i-f*e;s=n,n=t,r=o,i=f,o=a,f=c}return 1n===s?M(r,t):err("no inverse")};
+const padh=(e,t)=>e.toString(16).padStart(t,"0"),u8n=e=>new Uint8Array(e),u8fr=e=>Uint8Array.from(e);
+const bytesToHex=e=>Array.from(e).map(e=>padh(e,2)).join("");
+const hexToBytes=e=>{const n=e.length/2,s=u8n(n);for(let r=0;r<n;r++)s[r]=parseInt(e.slice(r*2,r*2+2),16);return s};
+const concatBytes=(...e)=>{const t=u8n(e.reduce((a,b)=>a+b.length,0));let n=0;e.forEach(e=>{t.set(e,n);n+=e.length});return t};
+const numTo32bLE=e=>hexToBytes(padh(e<0n?e+B256:e,64)).reverse();
+const bytesToNumLE=e=>BigInt("0x"+bytesToHex(u8fr(e).reverse()));
+const pow2=(e,t)=>{let n=e;for(;t-->0n;)n*=n,n%=P;return n};
+const pow_2_252_3=e=>{const t=e*e%P*e%P,n=pow2(t,2n)*t%P,s=pow2(n,1n)*e%P,r=pow2(s,5n)*s%P,i=pow2(r,10n)*r%P,o=pow2(i,20n)*i%P,f=pow2(o,40n)*o%P,a=pow2(f,80n)*f%P,c=pow2(a,80n)*f%P,y=pow2(c,10n)*r%P;return{pow_p_5_8:pow2(y,2n)*e%P,b2:t}};
+const RM1=0x2b8324804fc1df0b2b4d00993dfbd7a72f431806ad2fe478c4ee1b274a0ea0b0n;
+const uvRatio=(e,t)=>{const n=M(t*t*t),s=M(n*n*t),r=pow_2_252_3(e*s).pow_p_5_8;let i=M(e*n*r);const o=M(t*i*i),f=i,a=M(i*RM1),c=o===e,y=o===M(-e),d=o===M(-e*RM1);c&&(i=f);(y||d)&&(i=a);1n==(1n&M(i))&&(i=M(-i));return{isValid:c||y,value:i}};
+
+class Point{
+  constructor(x,y,z,t){this.ex=x;this.ey=y;this.ez=z;this.et=t;}
+  static ZERO;static BASE;
+  static fromBytes(e,t=!1){const s=u8fr(e.slice()),r=e[31];s[31]=-129&r;const i=bytesToNumLE(s);const o=M(i*i),f=M(o-1n),a=M(_d*o+1n);let{isValid:c,value:y}=uvRatio(f,a);c||err("bad y");const d=1n==(1n&y),u=!!(128&r);u!==d&&(y=M(-y));return new Point(y,i,1n,M(y*i));}
+  equals(e){return M(this.ex*e.ez)===M(e.ex*this.ez)&&M(this.ey*e.ez)===M(e.ey*this.ez);}
+  is0(){return this.equals(I);}
+  negate(){return new Point(M(-this.ex),this.ey,this.ez,M(-this.et));}
+  double(){const{ex:e,ey:t,ez:n}=this,r=M(e*e),i=M(t*t),o=M(2n*M(n*n)),f=M(_a*r),a=e+t,c=M(M(a*a)-r-i),y=f+i,d=y-o,u=f-i;return new Point(M(c*d),M(y*u),M(d*y),M(c*u));}
+  add(e){const{ex:t,ey:n,ez:s,et:r}=this,{ex:i,ey:o,ez:f,et:a}=e,d=M(t*i),u=M(n*o),h=M(r*_d*a),l=M(s*f),p=M((t+n)*(i+o)-d-u),b=M(l-h),x=M(l+h),g=M(u-_a*d);return new Point(M(p*b),M(x*g),M(b*x),M(p*g));}
+  multiply(e){if(e===0n)return I;if(e===1n)return this;let n=I,r=this;for(;e>0n;r=r.double(),e>>=1n)if(1n&e)n=n.add(r);return n;}
+  clearCofactor(){return this.multiply(8n);}
+  toBytes(){const i=invert(this.ez,P),x=M(this.ex*i),y=M(this.ey*i),n=numTo32bLE(y);n[31]|=1n&x?128:0;return n;}
+}
+const G=new Point(Gx,Gy,1n,M(Gx*Gy)),I=new Point(0n,1n,1n,0n);
+Point.BASE=G;Point.ZERO=I;
+
+async function sha512(data){const h=await crypto.subtle.digest("SHA-512",data);return new Uint8Array(h);}
+async function verifyEd25519(sig,msg,pub){
+  sig=u8fr(sig);msg=u8fr(msg);pub=u8fr(pub);
+  let R,A,S;
+  try{A=Point.fromBytes(pub);R=Point.fromBytes(sig.slice(0,32));S=bytesToNumLE(sig.slice(32,64));}catch{return false;}
+  const k=modN(bytesToNumLE(await sha512(concatBytes(R.toBytes(),A.toBytes(),msg))));
+  const sB=G.multiply(S);const kA=A.multiply(k);
+  return R.add(kA).clearCofactor().equals(sB.clearCofactor());
+}
+
+// ── Canonicalize (matches occproof exactly) ──
+function canonicalize(obj){return new TextEncoder().encode(canonicalizeToString(obj));}
+function canonicalizeToString(obj){return JSON.stringify(sortKeys(obj));}
+function sortKeys(v){
+  if(v===null||typeof v!=="object")return v;
+  if(Array.isArray(v))return v.map(sortKeys);
+  const s={};for(const k of Object.keys(v).sort()){if(v[k]===undefined)continue;s[k]=sortKeys(v[k]);}
+  return s;
+}
+
+// ── SHA-256 ──
+async function sha256(data){const h=await crypto.subtle.digest("SHA-256",data);return new Uint8Array(h);}
+function toBase64(bytes){let b="";for(let i=0;i<bytes.length;i++)b+=String.fromCharCode(bytes[i]);return btoa(b);}
+function fromBase64(str){const b=atob(str);const a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a;}
+
+// ── Compute proof hash (signed body only) ──
+function computeProofHash(proof){
+  const signer=proof.signer||{};const env=proof.environment||{};
+  const body={version:proof.version,artifact:proof.artifact,commit:proof.commit,publicKeyB64:signer.publicKeyB64,enforcement:env.enforcement,measurement:env.measurement};
+  if(proof.attribution)body.attribution=proof.attribution;
+  if(env.attestation)body.attestationFormat=env.attestation.format;
+  return sha256(canonicalize(body)).then(h=>toBase64(h));
+}
+
+// ── Verify ──
+async function verifyProof(fileBytes, proof){
+  const checks=[];
+
+  // 1. File digest
+  const fileHash=toBase64(await sha256(fileBytes));
+  const digestMatch=fileHash===proof.artifact.digestB64;
+  checks.push({name:"File Digest",pass:digestMatch,detail:digestMatch?`SHA-256 matches: ${proof.artifact.digestB64.slice(0,24)}...`:`Expected ${proof.artifact.digestB64.slice(0,24)}... got ${fileHash.slice(0,24)}...`});
+
+  // 2. Ed25519 signature
+  const signer=proof.signer||{};const env=proof.environment||{};
+  const body={version:proof.version,artifact:proof.artifact,commit:proof.commit,publicKeyB64:signer.publicKeyB64,enforcement:env.enforcement,measurement:env.measurement};
+  if(proof.attribution)body.attribution=proof.attribution;
+  if(env.attestation)body.attestationFormat=env.attestation.format;
+  const bodyBytes=canonicalize(body);
+  let sigValid=false;
+  try{sigValid=await verifyEd25519(fromBase64(signer.signatureB64),bodyBytes,fromBase64(signer.publicKeyB64));}catch(e){sigValid=false;}
+  checks.push({name:"Ed25519 Signature",pass:sigValid,detail:sigValid?"Signature verified against public key":"Signature verification failed"});
+
+  // 3. Slot binding
+  const slot=proof.slotAllocation;const commit=proof.commit||{};
+  let slotValid=false;
+  if(slot&&commit.slotHashB64){
+    const slotBody={version:slot.version,nonceB64:slot.nonceB64,counter:slot.counter,epochId:slot.epochId,publicKeyB64:slot.publicKeyB64};
+    if(slot.chainId)slotBody.chainId=slot.chainId;
+    const slotHash=toBase64(await sha256(canonicalize(slotBody)));
+    slotValid=slotHash===commit.slotHashB64;
+  }
+  checks.push({name:"Slot Binding",pass:slotValid,detail:slotValid?`Slot #${slot?.counter} bound to commit`:"Slot hash does not match commit.slotHashB64"});
+
+  // 4. Counter ordering
+  const slotCounter=commit.slotCounter?BigInt(commit.slotCounter):null;
+  const commitCounter=commit.counter?BigInt(commit.counter):null;
+  const counterValid=slotCounter!==null&&commitCounter!==null&&slotCounter<commitCounter;
+  checks.push({name:"Counter Order",pass:counterValid,detail:counterValid?`Slot #${commit.slotCounter} < Commit #${commit.counter}`:"Slot counter must precede commit counter"});
+
+  // 5. Proof hash
+  const computedHash=await computeProofHash(proof);
+  const storedHash=proof.proofHash||proof.proofHashB64;
+  const hashValid=storedHash?computedHash===storedHash:null;
+  if(hashValid===null){
+    checks.push({name:"Proof Hash",pass:null,detail:"No proofHash field present (pre-hash era proof)"});
+  }else{
+    checks.push({name:"Proof Hash",pass:hashValid,detail:hashValid?`Hash consistent: ${storedHash.slice(0,20)}...`:"Computed hash does not match stored proofHash"});
+  }
+
+  // 6. TEE enforcement
+  const isTee=env.enforcement==="measured-tee";
+  checks.push({name:"TEE Enforcement",pass:isTee?true:null,detail:isTee?"Hardware Enclave (AWS Nitro)":`Enforcement: ${env.enforcement||"unknown"}`});
+
+  return checks;
+}
+
+// ── UI ──
+const dropZone=document.getElementById("drop-zone");
+const fileInput=document.getElementById("file-input");
+const filesLoaded=document.getElementById("files-loaded");
+const statusEl=document.getElementById("status");
+const resultsEl=document.getElementById("results");
+
+let fileData=null,proofData=null;
+
+function handleFiles(files){
+  for(const f of files){
+    if(f.name.endsWith(".json")){
+      f.text().then(t=>{try{const p=JSON.parse(t);if(p.version==="occ/1"){proofData=p;updateUI();}}catch{}});
+    }else{
+      f.arrayBuffer().then(b=>{fileData={name:f.name,size:f.size,bytes:new Uint8Array(b)};updateUI();});
+    }
+  }
+}
+
+function updateUI(){
+  filesLoaded.innerHTML="";filesLoaded.classList.remove("hidden");
+  if(fileData){
+    const sz=fileData.size<1024?fileData.size+" B":fileData.size<1048576?(fileData.size/1024).toFixed(1)+" KB":(fileData.size/1048576).toFixed(1)+" MB";
+    filesLoaded.innerHTML+=`<div class="file-badge"><span class="name">${fileData.name}</span><span class="size">${sz}</span></div>`;
+  }
+  if(proofData){
+    filesLoaded.innerHTML+=`<div class="file-badge"><span class="name">proof.json</span><span class="size">#${proofData.commit?.counter||"?"}</span></div>`;
+  }
+  if(fileData&&proofData){
+    dropZone.classList.add("hidden");
+    statusEl.textContent="Verifying...";statusEl.classList.remove("hidden");
+    runVerification();
+  }else if(fileData||proofData){
+    statusEl.textContent=fileData?"Now drop proof.json":"Now drop the original file";
+    statusEl.classList.remove("hidden");
+  }
+}
+
+async function runVerification(){
+  const checks=await verifyProof(fileData.bytes,proofData);
+  statusEl.classList.add("hidden");
+  const allPass=checks.every(c=>c.pass===true||c.pass===null);
+  resultsEl.innerHTML=`<div class="card"><div class="card-header">${allPass?"Verification Passed":"Verification Failed"}</div>${checks.map(c=>`<div class="check"><span class="${c.pass===true?"icon-pass":c.pass===false?"icon-fail":"icon-info"}">${c.pass===true?"\u2713":c.pass===false?"\u2717":"\u2022"}</span><div><div class="label">${c.name}</div><div class="detail">${c.detail}</div></div></div>`).join("")}</div><button class="reset-btn" onclick="location.reload()">Verify Another</button>`;
+  resultsEl.classList.remove("hidden");
+}
+
+dropZone.addEventListener("dragover",e=>{e.preventDefault();dropZone.classList.add("over");});
+dropZone.addEventListener("dragleave",()=>dropZone.classList.remove("over"));
+dropZone.addEventListener("drop",e=>{e.preventDefault();dropZone.classList.remove("over");handleFiles(e.dataTransfer.files);});
+dropZone.addEventListener("click",()=>fileInput.click());
+fileInput.addEventListener("change",e=>{handleFiles(e.target.files);});
+</script>
+</body>
+</html>
