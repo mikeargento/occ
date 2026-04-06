@@ -67,13 +67,27 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
 
       {/* Floating chat */}
       {chatOpen ? (
-        <div style={{
+        <div className="docs-chat-container" style={{
           position: "fixed", bottom: 24, right: 24, zIndex: 100,
           width: 400, maxWidth: "calc(100vw - 48px)",
           maxHeight: "calc(100vh - 120px)",
           borderRadius: 16, overflow: "hidden",
           boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08)",
         }}>
+          <style>{`
+            @media (max-width: 640px) {
+              .docs-chat-container {
+                position: fixed !important;
+                inset: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                max-height: 100% !important;
+                border-radius: 0 !important;
+                bottom: 0 !important;
+                right: 0 !important;
+              }
+            }
+          `}</style>
           <Chat defaultOpen onOpenChange={setChatOpen} />
         </div>
       ) : (
