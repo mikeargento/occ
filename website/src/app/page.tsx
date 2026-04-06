@@ -254,7 +254,7 @@ export default function OCCPage() {
         {step === "drop" && !chatOpen && (
           <>
             <div style={{ textAlign: "center", marginBottom: 28, animation: "slideIn 0.3s ease-out", maxWidth: 520, margin: "0 auto 28px" }}>
-              <p style={{ fontSize: 15, fontWeight: 400, color: "#6b7280", lineHeight: 1.6 }}>
+              <p style={{ fontSize: 15, fontWeight: 400, color: "#6b7280", lineHeight: 1.6, textWrap: "balance" as never }}>
                 Create a provenance proof of any file without the file leaving your device. Each file&apos;s hash is paired with a JSON record that enables independent verification of its existence and causal order.
               </p>
             </div>
