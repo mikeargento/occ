@@ -298,7 +298,7 @@ export default function OCCPage() {
           <>
             <div style={{ textAlign: "left", animation: "slideIn 0.3s ease-out", maxWidth: 560, margin: "0 auto 28px", padding: "0 4px" }}>
               <p style={{ fontSize: 15, fontWeight: 400, color: "#111827", lineHeight: 1.65, textWrap: "pretty" as never }}>
-                In <strong>Origin Controlled Computing</strong>, proofs aren&apos;t labels or metadata added after the fact. They are new computations created when your file&apos;s hash <em>fills</em> a pre-existing cryptographic slot, meaning the commitment cannot be retroactively constructed. This occurs entirely off-chain and produces a proof file permanently bound to the original, establishing its immutable position in the causal chain.
+                <strong>Origin Controlled Computing</strong> proofs are not labels or metadata added after the fact. They are new computations created when your file&apos;s hash <em>fills</em> a pre-existing cryptographic slot, meaning the commitment cannot be retroactively constructed. This occurs entirely off-chain and produces a proof file permanently bound to the original, establishing its immutable position in the causal chain.
               </p>
             </div>
             <div className="file-drop-container" style={{ animation: "slideIn 0.3s ease-out" }}>
