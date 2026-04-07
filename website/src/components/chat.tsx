@@ -25,6 +25,7 @@ const DEFAULT_QUESTIONS = [
   "Does OCC prove when something happened?",
   "How do I verify a proof?",
   "Is my file ever uploaded?",
+  "What data does OCC store about me?",
   "What are Ethereum anchors?",
   "What happens if the server disappears?",
   "Why not use a blockchain?",

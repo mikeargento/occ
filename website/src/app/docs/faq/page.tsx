@@ -16,7 +16,11 @@ const faqs = [
   },
   {
     q: "What happens if the enclave restarts?",
-    a: "A new epoch begins: new Ed25519 keypair, new epochId, counter potentially resets. The first proof of the new epoch has no prevB64 (chain link). Cross-epoch counter continuity can be maintained via a DynamoDB anchor.",
+    a: "A new epoch begins. The enclave generates a fresh Ed25519 keypair from hardware entropy, derives a new epochId, and resets the monotonic counter to 1. The previous epoch's signing key is destroyed and exists nowhere outside the terminated enclave. The first proof of the new epoch has no prevB64. Restarting is also a containment action: any undetected compromise is quarantined to the bounded window of a single epoch.",
+  },
+  {
+    q: "If the TEE were compromised, would all my old proofs be invalid?",
+    a: "No. Each epoch is a sealed compartment with its own keypair. A compromise of the live epoch can only sign proofs under the live epoch's public key — it cannot retroactively forge proofs under any prior epoch's key, because that key was destroyed when its enclave terminated. Ethereum anchors tighten this further: every proof committed before an anchor is fixed in a public, immutable timeline. A breach is bounded on one side by the epoch boundary and on the other by the most recent Ethereum anchor that preceded it.",
   },
   {
     q: "Is this a blockchain?",
@@ -35,8 +39,8 @@ const faqs = [
     a: "For AWS Nitro Enclaves, it is the PCR0 value, a SHA-384 hash of the enclave image. It uniquely identifies the exact code running inside the boundary. Verifiers should pin allowedMeasurements to known-good values.",
   },
   {
-    q: "Are timestamps signed?",
-    a: "No. RFC 3161 timestamps are added post-signature by the parent server via an external Time Stamping Authority. They are independently verifiable (via the TSA certificate) but are not covered by the Ed25519 signature. Use them as advisory evidence, not as primary trust.",
+    q: "How does OCC establish time?",
+    a: "OCC does not claim to prove absolute time. It proves causal order: every commit pre-allocates a slot inside the enclave before the artifact hash is known, and the monotonic counter establishes sequencing within an epoch. For an external time anchor, the same enclave periodically seals its counter chain into an Ethereum block. Once anchored, every proof committed before that block is fixed in a public, immutable timeline. The optional RFC 3161 timestamp field in the schema is unsigned and advisory only — it is not the primary time mechanism.",
   },
   {
     q: "Can the same file produce different proofs?",

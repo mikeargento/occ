@@ -70,6 +70,8 @@ export default function TrustModelPage() {
           { threat: "Chain gap insertion", mitigation: "prevB64 chaining: any removed link breaks hash continuity" },
           { threat: "Counter position forgery", mitigation: "Causal slot pre-allocation: slotHashB64 binding + slotCounter < counter ordering proves pre-allocation" },
           { threat: "Agency replay across batches", mitigation: "Single-use challenge consumed on first validation; batch context scoped to declared digests" },
+          { threat: "Retroactive forgery after compromise", mitigation: "Per-epoch keypair destroyed on restart + Ethereum block anchors seal pre-anchor proofs against rewrite" },
+          { threat: "Cross-epoch identity confusion", mitigation: "epochId binds every proof to a specific compartment; verifiers pin allowed epochs" },
         ].map((t) => (
           <div key={t.threat} className="flex gap-4 border-l-2 border-l-[#d0d5dd] pl-4 py-1">
             <div className="text-sm font-medium text-[#111827] shrink-0 w-44">{t.threat}</div>
@@ -85,6 +87,105 @@ export default function TrustModelPage() {
         <li>• Weak verifier policy - caller responsibility</li>
         <li>• Physical access to enclave host - outside threat model</li>
       </ul>
+
+      <h2 className="text-xl font-semibold mt-12 mb-4">Ethereum front anchors</h2>
+      <p className="text-[#374151] leading-relaxed mb-4">
+        OCC does not require a blockchain to operate, but it uses Ethereum as
+        an external write-once timeline. The same TEE that signs user proofs
+        also periodically commits its current counter chain into an Ethereum
+        block. The on-chain payload contains the enclave&apos;s public key, the
+        epoch identifier, the current counter, and the latest proof hash —
+        nothing about any individual user or file.
+      </p>
+      <p className="text-[#374151] leading-relaxed mb-4">
+        Each anchor is itself an OCC proof signed by the enclave, so it
+        participates in the same counter chain as the user proofs that came
+        before it. When the anchor lands in a finalized Ethereum block, that
+        block&apos;s timestamp and ordering become an external witness to the
+        position the chain had reached. Every proof committed before the
+        anchor is then sealed against retroactive rewrite: any attempt to
+        produce an earlier proof under that key would have to also produce a
+        consistent chain that contradicts a value already written to a public
+        block.
+      </p>
+      <p className="text-[#374151] leading-relaxed mb-4">
+        This is the mechanism behind the phrase &quot;everything before me already
+        existed.&quot; An anchor seals backward, not forward. It does not prove
+        when individual proofs were created, only that they preceded the
+        anchor block. Combined with per-epoch keypairs, anchors give OCC a
+        bounded breach window: between one anchor and the next, a compromise
+        could in theory rewrite the live chain, but anything before the most
+        recent anchor is already fixed in the public Ethereum timeline.
+      </p>
+      <p className="text-[#374151] leading-relaxed mb-8">
+        Anchors are public, but they reveal no user-identifying information.
+        A verifier can fetch any anchor from Ethereum and use it to bound
+        when a proof must have existed by, without ever contacting OCC.
+      </p>
+
+      <h2 className="text-xl font-semibold mt-12 mb-4">Epoch isolation: blast-radius containment</h2>
+      <p className="text-[#374151] leading-relaxed mb-4">
+        OCC&apos;s strongest containment property is structural, not behavioral.
+        Each restart of the enclave generates a new Ed25519 keypair inside the
+        boundary, derives a new <code className="text-xs font-mono bg-[#f3f4f6] px-1.5 py-0.5">epochId</code> from
+        fresh hardware entropy, and resets the monotonic counter. This means
+        every epoch is a sealed compartment, identified by a key that exists
+        nowhere else in the world.
+      </p>
+      <p className="text-[#374151] leading-relaxed mb-4">
+        The consequence: a compromise can only forge proofs that carry the
+        live epoch&apos;s public key. It cannot retroactively produce valid proofs
+        under any prior epoch&apos;s key, because that key was destroyed when its
+        enclave terminated and never existed outside the boundary in the first
+        place. Past proofs remain verifiable because their signatures bind to
+        a public key that no surviving system can sign with.
+      </p>
+      <p className="text-[#374151] leading-relaxed mb-4">
+        Ethereum anchors tighten this further. Each epoch&apos;s counter chain is
+        periodically sealed into an Ethereum block by the same TEE. Once an
+        anchor is mined, every proof committed before that anchor is fixed in
+        a public, immutable timeline that the TEE cannot rewrite even if it
+        were later compromised. A breach window is therefore bounded on one
+        side by the epoch boundary and on the other side by the most recent
+        Ethereum anchor that preceded it.
+      </p>
+      <p className="text-[#374151] leading-relaxed mb-6">
+        Restarting the TEE is not just operational hygiene — it is a deliberate
+        containment action. Each restart closes one compartment and opens a
+        fresh one, so any undetected compromise is quarantined to the bounded
+        window of a single epoch. Verifiers can refuse to accept proofs from
+        any epoch they have not pinned, narrowing trust to known-good
+        compartments only.
+      </p>
+
+      <div className="overflow-x-auto mb-8">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-[#e5e7eb]">
+              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#9ca3af]">Containment property</th>
+              <th className="text-left py-2 text-xs font-medium uppercase tracking-wider text-[#9ca3af]">What it bounds</th>
+            </tr>
+          </thead>
+          <tbody className="text-[#374151]">
+            <tr className="border-b border-[#e5e7eb]">
+              <td className="py-2 pr-4">Per-epoch keypair</td>
+              <td className="py-2">A compromise of one epoch cannot sign as another epoch</td>
+            </tr>
+            <tr className="border-b border-[#e5e7eb]">
+              <td className="py-2 pr-4">Key destroyed on restart</td>
+              <td className="py-2">No surviving artifact can produce a valid signature under a closed epoch</td>
+            </tr>
+            <tr className="border-b border-[#e5e7eb]">
+              <td className="py-2 pr-4">Ethereum front anchors</td>
+              <td className="py-2">Pre-anchor proofs are sealed against retroactive rewrite</td>
+            </tr>
+            <tr>
+              <td className="py-2 pr-4">Verifier epoch pinning</td>
+              <td className="py-2">Trust scope can be restricted to known-good compartments only</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Non-goals</h2>
       <ul className="space-y-2 mb-8 text-sm text-[#374151]">

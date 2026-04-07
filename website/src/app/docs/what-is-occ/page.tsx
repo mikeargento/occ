@@ -73,7 +73,7 @@ export default function WhatIsOCCPage() {
         <li className="text-[#374151]"><strong className="text-text">slotAllocation</strong> - the pre-allocated causal slot record, independently signed by the enclave</li>
         <li className="text-[#374151]"><strong className="text-text">agency</strong> - optional actor-bound proof via device biometrics (passkey/WebAuthn), with batch support</li>
         <li className="text-[#374151]"><strong className="text-text">attribution</strong> - optional signed creator metadata (name, title, message)</li>
-        <li className="text-[#374151]"><strong className="text-text">timestamps</strong> - optional RFC 3161 TSA timestamps from an independent time authority</li>
+        <li className="text-[#374151]"><strong className="text-text">timestamps</strong> - optional, advisory-only timestamp field. Primary external time anchoring is provided by periodic Ethereum block anchors of the enclave&apos;s counter chain, not by this field.</li>
       </ul>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Key properties</h2>

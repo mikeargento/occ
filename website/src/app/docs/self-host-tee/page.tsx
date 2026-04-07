@@ -244,7 +244,7 @@ TEE_URL=https://your-tee-domain.com`}</pre>
         <li>Save the PCR0 measurement — this is your enclave&apos;s identity for verification</li>
         <li>Set up monitoring on <code>/health</code> endpoint</li>
         <li>Configure log rotation for parent server and socat logs</li>
-        <li>The enclave generates a new keypair on each restart — the epochId changes but the chain continues via prevB64</li>
+        <li>The enclave generates a new keypair on each restart — the epochId changes and the counter resets to 1. Cross-epoch sequencing is established by Ethereum anchors, not by an in-enclave chain.</li>
       </ul>
 
       <h2>Using the Deploy Script</h2>
@@ -300,11 +300,12 @@ TEE_URL=https://your-tee-domain.com`}</pre>
       <h2>Epoch Transitions</h2>
       <p>When the enclave restarts (deploy, crash, reboot):</p>
       <ul>
-        <li>A new keypair is generated → new <code>epochId</code></li>
-        <li>The first proof of the new epoch references the last proof of the previous epoch via <code>prevB64</code></li>
-        <li>The causal chain does not break — only the epochId changes</li>
-        <li>During restart, all actions are denied (fail closed)</li>
+        <li>A fresh Ed25519 keypair is generated inside the enclave from hardware entropy. The previous key is destroyed and exists nowhere outside the terminated enclave.</li>
+        <li>A new <code>epochId</code> is derived from the new public key plus a fresh boot nonce.</li>
+        <li>The monotonic counter resets to 1. The first proof of the new epoch has no <code>prevB64</code> — the prior chain is closed, and the new chain begins at genesis.</li>
+        <li>During restart, all commit requests fail closed.</li>
       </ul>
+      <p>This is a containment property, not a limitation. Each epoch is a sealed compartment: any compromise of the live epoch cannot retroactively forge proofs under a prior epoch&apos;s key. Cross-epoch sequencing is established externally by Ethereum anchors, not by an in-enclave chain.</p>
     </div>
   );
 }

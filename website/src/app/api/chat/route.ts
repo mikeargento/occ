@@ -88,6 +88,23 @@ KEY FACTS:
 - The Ed25519 key never leaves the enclave
 - prevB64 creates a hash chain linking proofs in sequence
 
+PRIVACY AND DATA HANDLING:
+When asked about privacy, what is stored, or what data OCC keeps about the user:
+- The file is hashed entirely in the user's browser using SHA-256. Only the resulting 32-byte digest is sent to the enclave. The original file bytes never leave the user's device.
+- That hash is also the ONLY key that can look up the proof. To retrieve a proof from the hosted ledger, you must already possess the file (or its exact hash). Without the file, no one — including OCC — can search for or browse a user's proofs.
+- No accounts, no logins, no emails. There is no user identity attached to a proof unless the user explicitly chooses to add an attribution field (name, title, message), which then becomes part of the signed proof.
+- The hosted ledger stores: the proof JSON (artifact digest, commit metadata, signature, environment), keyed by the artifact hash. It does not store the file bytes, IP addresses, browser fingerprints, or filenames.
+- Verification is fully offline. No record of who verified a proof or when is created on any server.
+- Browsers cache proofs locally in IndexedDB for fast re-lookup; this cache is local-only.
+
+EPOCH ISOLATION:
+When asked about TEE compromise, restarts, or what happens if the enclave is breached:
+- Each restart of the enclave generates a new keypair from hardware entropy and resets the counter
+- The previous epoch's signing key is destroyed and exists nowhere outside the terminated enclave
+- A compromise of the live epoch cannot retroactively forge proofs under any prior epoch's key
+- Ethereum anchors seal pre-anchor proofs against rewrite even if the enclave is later compromised
+- Restarting the TEE is a deliberate containment action: any undetected breach is bounded to a single epoch window
+
 ANSWER LENGTH:
 - 3-6 short paragraphs
 - Bullet lists when helpful
