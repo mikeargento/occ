@@ -259,7 +259,7 @@ export default function OCCPage() {
         {step === "drop" && !chatOpen && (
           <>
             <div style={{ textAlign: "left", marginBottom: 28, animation: "slideIn 0.3s ease-out", maxWidth: 560, margin: "0 auto 28px" }}>
-              <p style={{ fontSize: 15, fontWeight: 400, color: "#6b7280", lineHeight: 1.6 }}>
+              <p style={{ fontSize: 15, fontWeight: 400, color: "#6b7280", lineHeight: 1.6, textWrap: "pretty" as never }}>
                 In OCC, proofs aren&apos;t labels or metadata added after the fact. They are new computations created when your file&apos;s hash fills a pre-existing cryptographic slot — the commitment cannot be retroactively constructed. This happens entirely off-chain and produces a proof file permanently bound to the original, establishing its position in the causal chain.
               </p>
             </div>
