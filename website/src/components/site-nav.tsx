@@ -7,7 +7,7 @@ import Link from "next/link";
  */
 function ChromeDino() {
   // eslint-disable-next-line @next/next/no-img-element
-  return <img src="/dino.png" alt="OCC" width={36} height={36} style={{ display: "block" }} />;
+  return <img src="/dino.png" alt="OCC" width={48} height={48} style={{ display: "block" }} />;
 }
 
 export function SiteNav() {
