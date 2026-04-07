@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 // Nav is in root layout
 import type { OCCProof } from "@/lib/occ";
 import { zipSync, strToU8 } from "fflate";
+import { verifyNitroAttestation, type NitroVerifyResult } from "@/lib/nitro-verify";
 // QR code removed — replaced with Ethereum Seal card
 
 const mono = "var(--font-mono), 'SF Mono', SFMono-Regular, monospace";
@@ -179,6 +180,11 @@ export default function ProofPage() {
             <Field label="Enforcement" value={isTee ? "Hardware Enclave (AWS Nitro)" : "Software"} />
             {proof.environment?.measurement && <Field label="PCR0 Measurement" value={proof.environment.measurement} mono />}
             {proof.environment?.attestation?.format && <Field label="Attestation Format" value={proof.environment.attestation.format} />}
+            {proof.environment?.attestation?.reportB64 && proof.environment?.measurement && (
+              <div style={{ padding: "14px 24px", borderBottom: "1px solid #e2e5e9" }}>
+                <AttestationButton reportB64={proof.environment.attestation.reportB64} measurement={proof.environment.measurement} />
+              </div>
+            )}
           </Card>
 
           {/* Ethereum Seal */}
@@ -362,6 +368,170 @@ function JsonToggle({ proof }: { proof: OCCProof }) {
         }}>
           {json}
         </pre>
+      </div>
+    </div>
+  );
+}
+
+/* ── Attestation Verifier (modal) ── */
+
+function AttestationButton({ reportB64, measurement }: { reportB64: string; measurement: string }) {
+  const [open, setOpen] = useState(false);
+  const [running, setRunning] = useState(false);
+  const [result, setResult] = useState<NitroVerifyResult | null>(null);
+  const [copiedReport, setCopiedReport] = useState(false);
+
+  async function runVerify() {
+    setRunning(true);
+    setResult(null);
+    // Yield to allow UI repaint
+    await new Promise((r) => setTimeout(r, 50));
+    try {
+      const r = await verifyNitroAttestation(reportB64, measurement);
+      setResult(r);
+    } catch (e) {
+      setResult({
+        valid: false,
+        checks: [{ name: "Verification Error", pass: false, detail: e instanceof Error ? e.message : String(e) }],
+        pcrs: {},
+      });
+    }
+    setRunning(false);
+  }
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => { setOpen(true); runVerify(); }}
+        style={{
+          padding: "8px 16px", fontSize: 13, fontWeight: 600, color: "#ffffff",
+          background: "var(--c-accent)", border: "none", borderRadius: 10, cursor: "pointer",
+        }}
+      >
+        Verify Attestation
+      </button>
+    );
+  }
+
+  return (
+    <div
+      style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}
+      onClick={() => setOpen(false)}
+    >
+      <div
+        style={{ width: "100%", maxWidth: 720, maxHeight: "85vh", display: "flex", flexDirection: "column", background: "#fff", borderRadius: 16, border: "1px solid #d0d5dd", overflow: "hidden" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", borderBottom: "1px solid #e5e7eb" }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: "var(--c-accent)" }}>AWS Nitro Attestation Verification</span>
+          <button onClick={() => setOpen(false)} style={{ padding: "5px 12px", fontSize: 12, fontWeight: 600, color: "#fff", background: "var(--c-accent)", border: "none", borderRadius: 8, cursor: "pointer" }}>Close</button>
+        </div>
+
+        {/* Body */}
+        <div style={{ flex: 1, overflow: "auto", padding: "18px 20px" }}>
+          {running && (
+            <div style={{ padding: "40px 20px", textAlign: "center", color: "#6b7280", fontSize: 14 }}>
+              Verifying signature, certificate chain, and PCR0...
+            </div>
+          )}
+
+          {result && (
+            <>
+              {/* Overall status */}
+              <div style={{
+                padding: "14px 18px", marginBottom: 16, borderRadius: 10,
+                background: result.valid ? "#f0fdf4" : "#fef2f2",
+                border: `1px solid ${result.valid ? "#bbf7d0" : "#fecaca"}`,
+              }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: result.valid ? "#16a34a" : "#dc2626" }}>
+                  {result.valid ? "Attestation Verified" : "Verification Failed"}
+                </div>
+                <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>
+                  {result.valid
+                    ? "All checks passed. This proof was signed inside an AWS Nitro Enclave with the displayed PCR0."
+                    : "One or more verification steps failed. See details below."}
+                </div>
+              </div>
+
+              {/* Checks */}
+              <div style={{ marginBottom: 18 }}>
+                {result.checks.map((c, i) => (
+                  <div key={i} style={{ display: "flex", gap: 12, padding: "10px 0", borderBottom: i < result.checks.length - 1 ? "1px solid #f3f4f6" : "none" }}>
+                    <span style={{ fontSize: 16, color: c.pass ? "#16a34a" : "#dc2626", flexShrink: 0 }}>{c.pass ? "✓" : "✗"}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{c.name}</div>
+                      <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2, wordBreak: "break-all" }}>{c.detail}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Decoded fields */}
+              {(result.moduleId || result.timestamp || result.certChainLength) && (
+                <div style={{ marginBottom: 18, padding: "14px 18px", background: "#f9fafb", borderRadius: 10, border: "1px solid #e5e7eb" }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>Decoded from Attestation Document</div>
+                  {result.moduleId && (
+                    <div style={{ fontSize: 12, color: "#374151", marginBottom: 4, wordBreak: "break-all" }}>
+                      <span style={{ color: "#9ca3af" }}>Module ID: </span>{result.moduleId}
+                    </div>
+                  )}
+                  {result.timestamp && (
+                    <div style={{ fontSize: 12, color: "#374151", marginBottom: 4 }}>
+                      <span style={{ color: "#9ca3af" }}>Timestamp: </span>{new Date(result.timestamp).toLocaleString()}
+                    </div>
+                  )}
+                  {result.certChainLength && (
+                    <div style={{ fontSize: 12, color: "#374151" }}>
+                      <span style={{ color: "#9ca3af" }}>Certificate Chain: </span>{result.certChainLength} certificates
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Other PCRs */}
+              {Object.keys(result.pcrs).length > 1 && (
+                <div style={{ marginBottom: 18 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 8 }}>Other Active PCRs</div>
+                  {Object.entries(result.pcrs)
+                    .filter(([idx]) => idx !== "0")
+                    .map(([idx, hex]) => (
+                      <div key={idx} style={{ fontSize: 11, fontFamily: mono, color: "#6b7280", marginBottom: 4, wordBreak: "break-all" }}>
+                        <span style={{ color: "#9ca3af" }}>PCR{idx}: </span>{hex}
+                      </div>
+                    ))}
+                </div>
+              )}
+
+              {/* Reproducible build */}
+              <div style={{ padding: "14px 18px", background: "rgba(0,101,164,0.04)", border: "1px solid rgba(0,101,164,0.15)", borderRadius: 10, marginBottom: 12 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--c-accent)", marginBottom: 6 }}>Reproducible Build</div>
+                <div style={{ fontSize: 12, color: "#374151", lineHeight: 1.5, marginBottom: 8 }}>
+                  PCR0 is the SHA-384 hash of the exact enclave image that signed this proof. To independently confirm what code ran, build the enclave from source and check that you get the same PCR0.
+                </div>
+                <a href="/docs/self-host-tee" target="_blank" rel="noopener" style={{ fontSize: 12, fontWeight: 600, color: "var(--c-accent)", textDecoration: "none" }}>
+                  Build instructions →
+                </a>
+              </div>
+
+              {/* Raw report */}
+              <div style={{ padding: "12px 16px", background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.06em" }}>Raw Attestation Report</div>
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(reportB64); setCopiedReport(true); setTimeout(() => setCopiedReport(false), 1500); }}
+                    style={{ fontSize: 11, fontWeight: 600, color: "var(--c-accent)", background: "transparent", border: "none", cursor: "pointer", padding: 0 }}
+                  >
+                    {copiedReport ? "Copied!" : "Copy"}
+                  </button>
+                </div>
+                <div style={{ fontSize: 10, fontFamily: mono, color: "#9ca3af", wordBreak: "break-all", maxHeight: 60, overflow: "hidden" }}>
+                  {reportB64.slice(0, 200)}...
+                </div>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
