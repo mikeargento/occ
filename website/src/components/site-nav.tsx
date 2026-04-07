@@ -2,14 +2,6 @@
 
 import Link from "next/link";
 
-/**
- * Chrome offline T-Rex logo — uses the actual Chromium dino image.
- */
-function ChromeDino() {
-  // eslint-disable-next-line @next/next/no-img-element
-  return <img src="/dino.png" alt="OCC" width={48} height={48} style={{ display: "block" }} />;
-}
-
 export function SiteNav() {
   return (
     <div id="site-nav" style={{
@@ -21,10 +13,11 @@ export function SiteNav() {
         maxWidth: 1120, margin: "0 auto", padding: "0 24px",
         height: 56, display: "flex", alignItems: "center", justifyContent: "space-between",
       }}>
-        <Link href="/" aria-label="OCC home" style={{
-          display: "flex", alignItems: "center", textDecoration: "none",
+        <Link href="/" style={{
+          fontSize: 20, fontWeight: 900, color: "#111827",
+          textDecoration: "none", letterSpacing: "-0.02em",
         }}>
-          <ChromeDino />
+          OCC
         </Link>
         <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
           <Link href="/docs" style={{
