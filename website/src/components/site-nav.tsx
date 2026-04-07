@@ -3,41 +3,11 @@
 import Link from "next/link";
 
 /**
- * Chrome offline T-Rex logo, drawn as inline SVG rectangles.
- * Each rect = 1 pixel in the original 22x24 sprite.
- * Color: #535353 (the canonical Chrome dino gray).
+ * Chrome offline T-Rex logo — uses the actual Chromium dino image.
  */
 function ChromeDino() {
-  // Pixel coordinates for the dino body (x, y) — from the canonical Chrome sprite
-  const pixels: [number, number, number, number][] = [
-    // head
-    [14, 0, 7, 1], [14, 1, 1, 1], [16, 1, 5, 1], [14, 2, 7, 1],
-    [14, 3, 7, 1], [14, 4, 7, 1], [14, 5, 7, 1], [14, 6, 6, 1],
-    [14, 7, 4, 1], [14, 8, 7, 1], [14, 9, 7, 1],
-    // body & front leg
-    [0, 8, 1, 1], [0, 9, 2, 1],
-    [0, 10, 12, 1], [13, 10, 8, 1],
-    [0, 11, 13, 1], [13, 11, 6, 1],
-    [0, 12, 13, 1],
-    [1, 13, 12, 1],
-    [2, 14, 11, 1],
-    [3, 15, 10, 1],
-    [4, 16, 9, 1],
-    [4, 17, 8, 1],
-    [4, 18, 4, 1], [10, 18, 2, 1],
-    [4, 19, 3, 1], [10, 19, 2, 1],
-    [4, 20, 2, 1], [11, 20, 1, 1],
-    [4, 21, 2, 1], [11, 21, 1, 1],
-  ];
-  return (
-    <svg width="44" height="48" viewBox="0 0 22 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      {pixels.map(([x, y, w, h], i) => (
-        <rect key={i} x={x} y={y} width={w} height={h} fill="#535353" />
-      ))}
-      {/* eye (white pixel) */}
-      <rect x="19" y="2" width="1" height="1" fill="#fff" />
-    </svg>
-  );
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src="/dino.png" alt="OCC" width={36} height={36} style={{ display: "block" }} />;
 }
 
 export function SiteNav() {
