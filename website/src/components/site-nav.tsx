@@ -6,7 +6,7 @@ export function SiteNav() {
   return (
     <div id="site-nav" style={{
       borderBottom: "none",
-      background: "transparent",
+      background: "#f5f5f5",
       position: "sticky", top: 0, zIndex: 50,
     }}>
       <div style={{
