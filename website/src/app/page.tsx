@@ -14,7 +14,7 @@ import {
   type OCCProof,
 } from "@/lib/occ";
 import { toUrlSafeB64 } from "@/lib/explorer";
-import { zip } from "fflate";
+import { Zip, ZipPassThrough } from "fflate";
 
 type Step = "drop" | "scanning" | "results" | "proving" | "exporting";
 
@@ -178,20 +178,45 @@ export default function OCCPage() {
     setStep("exporting");
     const totalSteps = withProofs.length + 2; // files + anchors + zip
     setExportProgress({ current: 0, total: totalSteps });
-    const z: Record<string, Uint8Array> = {};
     const multi = withProofs.length > 1;
 
+    // Streaming zip — chunks accumulate as each file is added
+    const chunks: Uint8Array[] = [];
+    let zipDone = false;
+    let zipError: Error | null = null;
+    const z = new Zip((err, chunk, final) => {
+      if (err) { zipError = err; return; }
+      if (chunk) chunks.push(chunk);
+      if (final) zipDone = true;
+    });
+
+    // Helper: yield to event loop so React can repaint progress
+    const tick = () => new Promise(r => setTimeout(r, 0));
+
+    // Add files one at a time, updating progress between each
     for (let i = 0; i < withProofs.length; i++) {
       setExportProgress({ current: i + 1, total: totalSteps });
+      await tick();
       const { file: f, proof: p } = withProofs[i];
       const base = f.name.replace(/\.[^.]+$/, "");
       const prefix = multi ? `${base}/` : "";
-      z[`${prefix}${f.name}`] = new Uint8Array(await f.arrayBuffer());
-      z[`${prefix}proof.json`] = new TextEncoder().encode(JSON.stringify(p, null, 2));
+
+      // File entry
+      const fileBytes = new Uint8Array(await f.arrayBuffer());
+      const fileEntry = new ZipPassThrough(`${prefix}${f.name}`);
+      z.add(fileEntry);
+      fileEntry.push(fileBytes, true);
+
+      // Proof entry
+      const proofBytes = new TextEncoder().encode(JSON.stringify(p, null, 2));
+      const proofEntry = new ZipPassThrough(`${prefix}proof.json`);
+      z.add(proofEntry);
+      proofEntry.push(proofBytes, true);
     }
 
     // Fetch ETH anchors AFTER the last proof in the batch (highest counter = future boundary)
     setExportProgress({ current: withProofs.length + 1, total: totalSteps });
+    await tick();
     try {
       const last = withProofs.reduce((a, b) => {
         const ac = parseInt(a.proof?.commit?.counter || "0", 10);
@@ -207,22 +232,35 @@ export default function OCCPage() {
       if (resp.ok) {
         const data = await resp.json();
         if (data.anchors?.length > 0) {
-          z["ethereum-anchor.json"] = new TextEncoder().encode(JSON.stringify(data.anchors[0], null, 2));
+          const anchorEntry = new ZipPassThrough("ethereum-anchor.json");
+          z.add(anchorEntry);
+          anchorEntry.push(new TextEncoder().encode(JSON.stringify(data.anchors[0], null, 2)), true);
         }
       }
     } catch { /* non-critical */ }
     // Include offline verifier
     try {
       const vResp = await fetch("/verify.html");
-      if (vResp.ok) z["verify.html"] = new TextEncoder().encode(await vResp.text());
+      if (vResp.ok) {
+        const verifyEntry = new ZipPassThrough("verify.html");
+        z.add(verifyEntry);
+        verifyEntry.push(new TextEncoder().encode(await vResp.text()), true);
+      }
     } catch { /* non-critical */ }
 
     setExportProgress({ current: totalSteps - 1, total: totalSteps });
-    const zipData = await new Promise<Uint8Array>((resolve, reject) => {
-      zip(z, { level: 0 }, (err, data) => err ? reject(err) : resolve(data));
-    });
+    await tick();
+    z.end();
+    // Wait for streaming zip to finish (it's synchronous internally but need to drain)
+    while (!zipDone && !zipError) await tick();
+    if (zipError) throw zipError;
+
     setExportProgress({ current: totalSteps, total: totalSteps });
-    const blob = new Blob([zipData.buffer as ArrayBuffer], { type: "application/zip" });
+    const totalSize = chunks.reduce((s, c) => s + c.length, 0);
+    const merged = new Uint8Array(totalSize);
+    let offset = 0;
+    for (const c of chunks) { merged.set(c, offset); offset += c.length; }
+    const blob = new Blob([merged.buffer as ArrayBuffer], { type: "application/zip" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -304,8 +342,11 @@ export default function OCCPage() {
         {/* ── Exporting ── */}
         {step === "exporting" && (
           <div style={{ textAlign: "center", padding: "80px 24px", animation: "slideIn 0.3s ease-out" }}>
-            <div style={{ fontSize: 15, color: "var(--c-text-secondary)", marginBottom: 16, fontWeight: 500 }}>Packaging</div>
-            <div style={{ width: "40%", height: 2, borderRadius: 1, background: "var(--c-border-subtle)", overflow: "hidden", margin: "0 auto" }}>
+            <div style={{ fontSize: 64, fontWeight: 800, color: "var(--c-text)", marginBottom: 8, fontFamily: "monospace", animation: "pulse 1s ease-in-out infinite", letterSpacing: "-0.04em" }}>
+              {exportProgress.current}<span style={{ color: "#9ca3af" }}>/{exportProgress.total}</span>
+            </div>
+            <div style={{ fontSize: 15, color: "#9ca3af", fontWeight: 500 }}>Packaging</div>
+            <div style={{ width: "40%", height: 2, borderRadius: 1, background: "var(--c-border-subtle)", overflow: "hidden", margin: "20px auto 0" }}>
               <div style={{ width: `${(exportProgress.current / exportProgress.total) * 100}%`, height: "100%", background: "#0065A4", transition: "width 0.15s", boxShadow: "none" }} />
             </div>
           </div>
