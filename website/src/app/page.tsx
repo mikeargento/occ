@@ -260,7 +260,7 @@ export default function OCCPage() {
           <>
             <div style={{ textAlign: "center", marginBottom: 28, animation: "slideIn 0.3s ease-out", maxWidth: 560, margin: "0 auto 28px" }}>
               <p style={{ fontSize: 15, fontWeight: 400, color: "#6b7280", lineHeight: 1.6, textWrap: "balance" as never }}>
-                In OCC, proofs aren&apos;t generated after the fact. They are created when computation fills a pre-existing cryptographic slot, making the event irreversible. All of this occurs entirely off-chain.
+                In OCC, proofs aren&apos;t generated after the fact. They are created when your file&apos;s hash fills a pre-existing cryptographic slot, making the event irreversible. All of this occurs entirely off-chain.
               </p>
             </div>
             <div className="file-drop-container" style={{ animation: "slideIn 0.3s ease-out" }}>
