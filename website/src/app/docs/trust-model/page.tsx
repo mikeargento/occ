@@ -189,7 +189,7 @@ export default function TrustModelPage() {
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Non-goals</h2>
       <ul className="space-y-2 mb-8 text-sm text-[#374151]">
-        <li>• <strong className="text-text">Global ordering</strong> - no total ordering across independent boundaries</li>
+        <li>• <strong className="text-text">Global ordering from the counter alone</strong> - every TEE instance and every new epoch resets the counter to 1, so the counter by itself only orders proofs within a single epoch. Ordering relative to the outside world is established by Ethereum anchors: each anchor lands in a finalized block, and that block&apos;s position fixes where the anchored proofs sit in the public timeline — across epochs, across TEE instances, and against any other event in the world.</li>
         <li>• <strong className="text-text">Cross-boundary double-spend</strong> - same artifact can be submitted to separate boundaries</li>
         <li>• <strong className="text-text">Copy prevention</strong> - OCC does not prevent raw byte copying</li>
         <li>• <strong className="text-text">Consensus replacement</strong> - OCC constrains a single boundary, not distributed parties</li>
