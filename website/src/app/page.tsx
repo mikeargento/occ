@@ -389,13 +389,10 @@ export default function OCCPage() {
                     <p
                       style={{
                         margin: 0,
-                        fontSize: 13,
+                        fontSize: 16,
                         fontWeight: 400,
                         color: "#111827",
-                        lineHeight: 1.7,
-                        textWrap: "balance" as never,
-                        hyphens: "auto" as never,
-                        WebkitHyphens: "auto" as never,
+                        lineHeight: 1.65,
                       }}
                     >
                       <strong>Origin Controlled Computing</strong> is a protocol that can be applied across many domains. In this application, proofs are not labels or metadata added after the fact. They are new computations created when your file&apos;s hash <em>fills</em> a pre-existing cryptographic slot, constraining the commitment so it cannot be retroactively constructed. This occurs entirely off-chain and produces a proof file permanently bound to the original, establishing its immutable position in the causal chain.
