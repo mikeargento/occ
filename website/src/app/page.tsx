@@ -398,7 +398,7 @@ export default function OCCPage() {
                         WebkitHyphens: "auto" as never,
                       }}
                     >
-                      <strong>Origin Controlled Computing</strong> proofs are not labels or metadata added after the fact. They are new computations created when your file&apos;s hash <em>fills</em> a pre-existing cryptographic slot, constraining the commitment so it cannot be retroactively constructed. This occurs entirely off-chain and produces a proof file permanently bound to the original, establishing its immutable position in the causal chain.
+                      <strong>Origin Controlled Computing</strong> is a protocol that can be applied across many domains. In this application, proofs are not labels or metadata added after the fact. They are new computations created when your file&apos;s hash <em>fills</em> a pre-existing cryptographic slot, constraining the commitment so it cannot be retroactively constructed. This occurs entirely off-chain and produces a proof file permanently bound to the original, establishing its immutable position in the causal chain.
                     </p>
                   </div>
                 </>
