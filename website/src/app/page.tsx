@@ -296,8 +296,8 @@ export default function OCCPage() {
         {/* ── Drop zone or Chat ── */}
         {step === "drop" && !chatOpen && (
           <>
-            <div style={{ textAlign: "center", animation: "slideIn 0.3s ease-out", maxWidth: 560, margin: "0 auto 28px", padding: "0 4px" }}>
-              <p style={{ fontSize: 13, fontWeight: 400, color: "#111827", lineHeight: 1.65, textWrap: "balance" as never }}>
+            <div style={{ textAlign: "center", animation: "slideIn 0.3s ease-out", maxWidth: 480, margin: "0 auto 28px", padding: "0 8px" }}>
+              <p style={{ fontSize: 13, fontWeight: 400, color: "#111827", lineHeight: 1.7, textWrap: "balance" as never, hyphens: "auto" as never, WebkitHyphens: "auto" as never }}>
                 <strong>Origin Controlled Computing</strong> proofs are not labels or metadata added after the fact. They are new computations created when your file&apos;s hash <em>fills</em> a pre-existing cryptographic slot, constraining the commitment so it cannot be retroactively constructed. This occurs entirely off-chain and produces a proof file permanently bound to the original, establishing its immutable position in the causal chain.
               </p>
             </div>
