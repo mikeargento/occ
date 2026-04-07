@@ -34,6 +34,7 @@ export default function OCCPage() {
   const [exportProgress, setExportProgress] = useState({ current: 0, total: 0 });
   const [animCount, setAnimCount] = useState(0);
   const [chatOpen, setChatOpen] = useState(false);
+  const [infoOpen, setInfoOpen] = useState(false);
   const [anchorCountdown, setAnchorCountdown] = useState(0);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -286,6 +287,7 @@ export default function OCCPage() {
         @media (max-width: 640px) { .occ-wrap .file-drop-container { height: 280px; } }
         @keyframes countPop { 0% { transform: scale(0.5); opacity: 0 } 50% { transform: scale(1.15) } 100% { transform: scale(1); opacity: 1 } }
         @keyframes slideIn { from { opacity: 0; transform: translateY(12px) } to { opacity: 1; transform: translateY(0) } }
+        @keyframes popIn { from { opacity: 0 } to { opacity: 1 } }
         @keyframes pulse { 0%, 100% { opacity: 1 } 50% { opacity: 0.4 } }
         @keyframes glow { 0%, 100% { box-shadow: none } 50% { box-shadow: none } }
       `}</style>
@@ -296,10 +298,111 @@ export default function OCCPage() {
         {/* ── Drop zone or Chat ── */}
         {step === "drop" && !chatOpen && (
           <>
-            <div style={{ textAlign: "center", animation: "slideIn 0.3s ease-out", maxWidth: 480, margin: "0 auto 28px", padding: "0 8px" }}>
-              <p style={{ fontSize: 13, fontWeight: 400, color: "#111827", lineHeight: 1.7, textWrap: "balance" as never, hyphens: "auto" as never, WebkitHyphens: "auto" as never }}>
-                <strong>Origin Controlled Computing</strong> proofs are not labels or metadata added after the fact. They are new computations created when your file&apos;s hash <em>fills</em> a pre-existing cryptographic slot, constraining the commitment so it cannot be retroactively constructed. This occurs entirely off-chain and produces a proof file permanently bound to the original, establishing its immutable position in the causal chain.
-              </p>
+            <div style={{ position: "relative", display: "flex", justifyContent: "center", margin: "0 auto 20px", animation: "slideIn 0.3s ease-out" }}>
+              <button
+                type="button"
+                onClick={() => setInfoOpen((v) => !v)}
+                aria-label="About Origin Controlled Computing"
+                aria-expanded={infoOpen}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  background: "transparent",
+                  border: "1px solid #d0d5dd",
+                  borderRadius: 999,
+                  padding: "6px 12px",
+                  fontSize: 12,
+                  fontWeight: 500,
+                  color: "#374151",
+                  cursor: "pointer",
+                  transition: "border-color 0.15s, color 0.15s",
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = "#0065A4";
+                  (e.currentTarget as HTMLButtonElement).style.color = "#0065A4";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = "#d0d5dd";
+                  (e.currentTarget as HTMLButtonElement).style.color = "#374151";
+                }}
+              >
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: 14,
+                    height: 14,
+                    borderRadius: 999,
+                    border: "1.25px solid currentColor",
+                    fontSize: 10,
+                    fontWeight: 700,
+                    fontFamily: "Georgia, serif",
+                    fontStyle: "italic",
+                    lineHeight: 1,
+                  }}
+                >
+                  i
+                </span>
+                What is OCC?
+              </button>
+              {infoOpen && (
+                <>
+                  <div
+                    onClick={() => setInfoOpen(false)}
+                    style={{ position: "fixed", inset: 0, zIndex: 40 }}
+                    aria-hidden="true"
+                  />
+                  <div
+                    role="dialog"
+                    style={{
+                      position: "absolute",
+                      top: "calc(100% + 10px)",
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                      zIndex: 50,
+                      width: "min(480px, calc(100vw - 32px))",
+                      background: "#ffffff",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: 12,
+                      boxShadow: "0 10px 32px rgba(0,0,0,0.10)",
+                      padding: "18px 20px",
+                      animation: "popIn 0.18s ease-out",
+                    }}
+                  >
+                    <div
+                      aria-hidden="true"
+                      style={{
+                        position: "absolute",
+                        top: -6,
+                        left: "50%",
+                        marginLeft: -6,
+                        transform: "rotate(45deg)",
+                        width: 12,
+                        height: 12,
+                        background: "#ffffff",
+                        borderLeft: "1px solid #e5e7eb",
+                        borderTop: "1px solid #e5e7eb",
+                      }}
+                    />
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: 13,
+                        fontWeight: 400,
+                        color: "#111827",
+                        lineHeight: 1.7,
+                        textWrap: "balance" as never,
+                        hyphens: "auto" as never,
+                        WebkitHyphens: "auto" as never,
+                      }}
+                    >
+                      <strong>Origin Controlled Computing</strong> proofs are not labels or metadata added after the fact. They are new computations created when your file&apos;s hash <em>fills</em> a pre-existing cryptographic slot, constraining the commitment so it cannot be retroactively constructed. This occurs entirely off-chain and produces a proof file permanently bound to the original, establishing its immutable position in the causal chain.
+                    </p>
+                  </div>
+                </>
+              )}
             </div>
             <div className="file-drop-container" style={{ animation: "slideIn 0.3s ease-out" }}>
               <FileDrop
