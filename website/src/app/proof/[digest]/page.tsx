@@ -249,10 +249,18 @@ export default function ProofPage() {
               <Field label="Etherscan" value={attr.title} link />
             </Card>
           ) : causalWindow?.anchorAfter ? (
-            <Card title="Sealed By">
-              <Field label="Ethereum Block" value={`#${causalWindow.anchorAfter.blockNumber}`} highlight />
+            <Card title="Proven Before">
+              <Field
+                label="Ethereum Block"
+                value={
+                  causalWindow.anchorAfter.blockNumber !== null
+                    ? causalWindow.anchorAfter.blockNumber.toLocaleString()
+                    : "—"
+                }
+                highlight
+              />
               {causalWindow.anchorAfter.blockTime && (
-                <Field label="Time" value={new Date(causalWindow.anchorAfter.blockTime).toLocaleString()} />
+                <Field label="Block Time" value={new Date(causalWindow.anchorAfter.blockTime).toLocaleString()} />
               )}
               {causalWindow.anchorAfter.etherscanUrl && (
                 <Field label="Etherscan" value={causalWindow.anchorAfter.etherscanUrl} link />
@@ -270,9 +278,9 @@ export default function ProofPage() {
               )}
             </Card>
           ) : (
-            <Card title="Sealed By">
+            <Card title="Proven Before">
               <div style={{ padding: "18px 24px", fontSize: 14, color: "#9ca3af" }}>
-                Awaiting next anchor...
+                Awaiting next Ethereum block…
               </div>
             </Card>
           )}
