@@ -138,12 +138,34 @@ export default function ProofPage() {
 
         {/* Title bar */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 40, flexWrap: "wrap", gap: 12 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 28, fontWeight: 900, fontFamily: 'var(--font-sans)' }}>
-              <span style={{ color: "var(--c-accent)" }}>{isEth ? "Anchor" : "Proof"} </span>
-              <ProofHashTitle proof={proof} />
-            </span>
-            {!isEth && <VerifiedPill />}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+            {isEth ? (
+              <span style={{ fontSize: 28, fontWeight: 900, fontFamily: 'var(--font-sans)' }}>
+                <span style={{ color: "var(--c-accent)" }}>Anchor </span>
+                <ProofHashTitle proof={proof} />
+              </span>
+            ) : (
+              <span style={{ fontSize: 28, fontWeight: 900, fontFamily: 'var(--font-sans)', display: "inline-flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                <span
+                  aria-hidden="true"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: 32,
+                    height: 32,
+                    borderRadius: 999,
+                    background: "#16a34a",
+                  }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </span>
+                <span style={{ color: "#16a34a" }}>Verified Proof </span>
+                <ProofHashTitle proof={proof} />
+              </span>
+            )}
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
             {!isEth && (
@@ -648,46 +670,6 @@ function SimpleView({
         </p>
       </div>
     </div>
-  );
-}
-
-/* ── Verified pill — sits next to the proof title as an inline status mark ── */
-
-function VerifiedPill() {
-  return (
-    <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 7,
-        padding: "6px 12px 6px 8px",
-        borderRadius: 999,
-        background: "#16a34a",
-        color: "#ffffff",
-        fontSize: 13,
-        fontWeight: 700,
-        letterSpacing: "0.01em",
-        lineHeight: 1,
-        verticalAlign: "middle",
-      }}
-    >
-      <span
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          width: 18,
-          height: 18,
-          borderRadius: 999,
-          background: "rgba(255,255,255,0.20)",
-        }}
-      >
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
-          <polyline points="20 6 9 17 4 12" />
-        </svg>
-      </span>
-      Verified
-    </span>
   );
 }
 
