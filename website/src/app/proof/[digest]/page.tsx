@@ -22,20 +22,12 @@ export default function ProofPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [cachedFile, setCachedFile] = useState<{ name: string; data: ArrayBuffer; c2pa?: C2PAReadResult | null } | null>(null);
+  // Simple view is the default entry for every proof page. The toggle to
+  // technical view is intentionally ephemeral — it resets on navigation.
+  // Previously this was persisted to localStorage, which caused new proofs
+  // to silently skip the Simple view entirely once a user had clicked
+  // "See details" on any prior proof. That was confusing.
   const [simpleView, setSimpleView] = useState<boolean>(true);
-
-  // Persist view preference across visits
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem("occ-proof-view");
-      if (stored === "technical") setSimpleView(false);
-    } catch {}
-  }, []);
-  useEffect(() => {
-    try {
-      localStorage.setItem("occ-proof-view", simpleView ? "simple" : "technical");
-    } catch {}
-  }, [simpleView]);
 
   // Nav visible on proof pages
 
