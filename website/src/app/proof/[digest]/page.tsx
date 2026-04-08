@@ -513,19 +513,24 @@ function SimpleView({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       {imageSrc && (
-        /* Photo card — the card hugs the image so portrait and landscape
-            photos both get a tight frame, and the whole card is centered
-            on the page. Photo capped at 500px on its largest dimension. */
+        /* Photo card — fixed square frame so portrait and landscape
+            photos both show in a uniformly sized card. Image is centered
+            inside with object-fit: contain so its aspect ratio is
+            preserved; empty space around shorter sides reads as padding. */
         <div style={{ display: "flex", justifyContent: "center" }}>
           <div
             style={{
-              display: "inline-block",
+              width: "min(100%, 528px)",
+              aspectRatio: "1 / 1",
+              maxWidth: 528,
               background: "#ffffff",
               border: "1px solid #d0d5dd",
               borderRadius: 16,
               padding: 14,
-              maxWidth: "100%",
-              lineHeight: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxSizing: "border-box",
             }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -534,8 +539,8 @@ function SimpleView({
               alt={fileTitle}
               style={{
                 display: "block",
-                maxWidth: "min(100%, 500px)",
-                maxHeight: 500,
+                maxWidth: "100%",
+                maxHeight: "100%",
                 width: "auto",
                 height: "auto",
                 objectFit: "contain",
