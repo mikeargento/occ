@@ -158,7 +158,7 @@ export default function ProofPage() {
                     width: 32,
                     height: 32,
                     borderRadius: 999,
-                    background: "#16a34a",
+                    background: "#10b981",
                   }}
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
@@ -701,10 +701,10 @@ function C2PACard({ c2pa, prettyProofDate }: { c2pa: C2PAReadResult; prettyProof
           display: "inline-flex", alignItems: "center", gap: 6,
           fontSize: 11, fontWeight: 700, letterSpacing: "0.02em",
           color: "#ffffff",
-          background: sigClean ? "#16a34a" : "#b45309",
+          background: sigClean ? "#10b981" : "#b45309",
           padding: "5px 10px 5px 7px", borderRadius: 999,
           lineHeight: 1,
-          boxShadow: sigClean ? "0 1px 4px rgba(22,163,74,0.25)" : "none",
+          boxShadow: sigClean ? "0 1px 4px rgba(16,185,129,0.28)" : "none",
         }}>
           {sigClean && (
             <span
@@ -944,7 +944,7 @@ function AttestationButton({ reportB64, measurement }: { reportB64: string; meas
                 background: result.valid ? "#f0fdf4" : "#fef2f2",
                 border: `1px solid ${result.valid ? "#bbf7d0" : "#fecaca"}`,
               }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: result.valid ? "#16a34a" : "#dc2626" }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: result.valid ? "#10b981" : "#dc2626" }}>
                   {result.valid ? "Attestation Verified" : "Verification Failed"}
                 </div>
                 <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>
@@ -958,7 +958,7 @@ function AttestationButton({ reportB64, measurement }: { reportB64: string; meas
               <div style={{ marginBottom: 18 }}>
                 {result.checks.map((c, i) => (
                   <div key={i} style={{ display: "flex", gap: 12, padding: "10px 0", borderBottom: i < result.checks.length - 1 ? "1px solid #f3f4f6" : "none" }}>
-                    <span style={{ fontSize: 16, color: c.pass ? "#16a34a" : "#dc2626", flexShrink: 0 }}>{c.pass ? "✓" : "✗"}</span>
+                    <span style={{ fontSize: 16, color: c.pass ? "#10b981" : "#dc2626", flexShrink: 0 }}>{c.pass ? "✓" : "✗"}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{c.name}</div>
                       <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2, wordBreak: "break-all" }}>{c.detail}</div>
