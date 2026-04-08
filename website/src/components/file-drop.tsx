@@ -202,7 +202,7 @@ export function FileDrop({
           </button>
         </div>
       ) : (
-        <div className="flex flex-col items-center py-20 px-6 w-full">
+        <div className="flex flex-col items-center py-20 px-4 sm:px-6 w-full">
           <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6" style={{ background: "#eef4ff", border: "1px solid #bfd4f2" }}>
             <svg width="28" height="28" viewBox="0 0 20 20" fill="none" stroke="#0065A4" strokeWidth="1.5">
               <path d="M10 3v10M6 7l4-4 4 4" />
@@ -212,14 +212,13 @@ export function FileDrop({
           <div className="text-[16px] sm:text-[22px] font-semibold tracking-tight text-center px-2" style={{ color: "#111827" }}>
             Drop files to create or check proofs
           </div>
-          <div className="text-xs mt-2 text-center px-2" style={{ color: "#6b7280", maxWidth: 360 }}>
+          <div className="mt-2 text-center" style={{ color: "#6b7280", fontSize: 13, lineHeight: 1.5 }}>
             {hint ? (
               <span style={{ whiteSpace: "pre-line" }}>{hint}</span>
             ) : (
               <>
-                New files get a fresh proof.
-                <br />
-                Previously proved files are looked up.
+                <div style={{ whiteSpace: "nowrap" }}>New files get a fresh proof.</div>
+                <div style={{ whiteSpace: "nowrap" }}>Known files are looked up.</div>
               </>
             )}
           </div>
