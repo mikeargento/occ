@@ -209,11 +209,19 @@ export function FileDrop({
               <path d="M3 14v2a1 1 0 001 1h12a1 1 0 001-1v-2" />
             </svg>
           </div>
-          <div className="text-[22px] font-semibold tracking-tight" style={{ color: "#111827" }}>
+          <div className="text-[16px] sm:text-[22px] font-semibold tracking-tight text-center px-2" style={{ color: "#111827" }}>
             Drop files to create or check proofs
           </div>
-          <div className="text-xs mt-2 text-center" style={{ whiteSpace: "pre-line", color: "#6b7280", maxWidth: 360 }}>
-            {hint || "New files get a fresh proof. Previously proved files are looked up."}
+          <div className="text-xs mt-2 text-center px-2" style={{ color: "#6b7280", maxWidth: 360 }}>
+            {hint ? (
+              <span style={{ whiteSpace: "pre-line" }}>{hint}</span>
+            ) : (
+              <>
+                New files get a fresh proof.
+                <br />
+                Previously proved files are looked up.
+              </>
+            )}
           </div>
         </div>
       )}
