@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# c2pa assets are copied from node_modules at build time
+/public/c2pa/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

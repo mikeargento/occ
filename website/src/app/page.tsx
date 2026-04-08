@@ -547,10 +547,24 @@ export default function OCCPage() {
                         // Use the proof's digest (from TEE) for the URL, not the browser-computed hash
                         const proofDigest = item.proof!.artifact.digestB64;
                         window.open(`/proof/${encodeURIComponent(toUrlSafeB64(proofDigest))}`, "_blank");
-                        // Cache file to IndexedDB in the background
+                        // Cache file (and any embedded C2PA manifest) to
+                        // IndexedDB in the background so the proof page can
+                        // show them. C2PA parsing is best-effort and must
+                        // never block caching of the file itself.
                         (async () => {
                           try {
                             const buf = await item.file.arrayBuffer();
+
+                            // Try to read C2PA. Fails silently; null result
+                            // means "no manifest or unsupported file type."
+                            let c2pa = null;
+                            try {
+                              const { readC2PA } = await import("@/lib/c2pa-reader");
+                              c2pa = await readC2PA(item.file);
+                            } catch (e) {
+                              console.warn("[occ] c2pa read failed:", e);
+                            }
+
                             const db = await new Promise<IDBDatabase>((resolve, reject) => {
                               const req = indexedDB.open("occ-files", 1);
                               req.onupgradeneeded = () => req.result.createObjectStore("files");
@@ -558,7 +572,10 @@ export default function OCCPage() {
                               req.onerror = () => reject(req.error);
                             });
                             const tx = db.transaction("files", "readwrite");
-                            tx.objectStore("files").put({ name: item.file.name, data: buf }, proofDigest);
+                            tx.objectStore("files").put(
+                              { name: item.file.name, data: buf, c2pa },
+                              proofDigest
+                            );
                             await new Promise((r, j) => { tx.oncomplete = r; tx.onerror = j; });
                             db.close();
                           } catch (e) { console.error("[occ] cache error:", e); }

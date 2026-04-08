@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import type { OCCProof } from "@/lib/occ";
 import { zipSync, strToU8 } from "fflate";
 import { verifyNitroAttestation, type NitroVerifyResult } from "@/lib/nitro-verify";
+import type { C2PAReadResult } from "@/lib/c2pa-reader";
 // QR code removed — replaced with Ethereum Seal card
 
 const mono = "var(--font-mono), 'SF Mono', SFMono-Regular, monospace";
@@ -20,7 +21,7 @@ export default function ProofPage() {
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [cachedFile, setCachedFile] = useState<{ name: string; data: ArrayBuffer } | null>(null);
+  const [cachedFile, setCachedFile] = useState<{ name: string; data: ArrayBuffer; c2pa?: C2PAReadResult | null } | null>(null);
   const [simpleView, setSimpleView] = useState<boolean>(true);
 
   // Persist view preference across visits
@@ -35,6 +36,18 @@ export default function ProofPage() {
       localStorage.setItem("occ-proof-view", simpleView ? "simple" : "technical");
     } catch {}
   }, [simpleView]);
+
+  // The "See details" button inside the Verified box dispatches this event
+  // so SimpleView can stay decoupled from the parent's state setter.
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail === "technical") setSimpleView(false);
+      if (detail === "simple") setSimpleView(true);
+    };
+    window.addEventListener("occ-proof-view-change", handler);
+    return () => window.removeEventListener("occ-proof-view-change", handler);
+  }, []);
 
   // Nav visible on proof pages
 
@@ -58,7 +71,7 @@ export default function ProofPage() {
               req.onerror = () => reject(req.error);
             });
             const tx = db.transaction("files", "readonly");
-            const file = await new Promise<{ name: string; data: ArrayBuffer } | undefined>((resolve) => {
+            const file = await new Promise<{ name: string; data: ArrayBuffer; c2pa?: C2PAReadResult | null } | undefined>((resolve) => {
               const req = tx.objectStore("files").get(digestB64);
               req.onsuccess = () => resolve(req.result);
               req.onerror = () => resolve(undefined);
@@ -144,30 +157,32 @@ export default function ProofPage() {
             </span>
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-            <button
-              onClick={() => setSimpleView((v) => !v)}
-              style={{
-                padding: "8px 14px",
-                fontSize: 12,
-                fontWeight: 600,
-                color: "#374151",
-                background: "transparent",
-                border: "1px solid #d0d5dd",
-                borderRadius: 10,
-                cursor: "pointer",
-                transition: "border-color 0.15s, color 0.15s",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = "#0065A4";
-                e.currentTarget.style.color = "#0065A4";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = "#d0d5dd";
-                e.currentTarget.style.color = "#374151";
-              }}
-            >
-              {simpleView ? "Show technical details →" : "← Back to overview"}
-            </button>
+            {!simpleView && (
+              <button
+                onClick={() => setSimpleView(true)}
+                style={{
+                  padding: "8px 14px",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: "#374151",
+                  background: "transparent",
+                  border: "1px solid #d0d5dd",
+                  borderRadius: 10,
+                  cursor: "pointer",
+                  transition: "border-color 0.15s, color 0.15s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "#0065A4";
+                  e.currentTarget.style.color = "#0065A4";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "#d0d5dd";
+                  e.currentTarget.style.color = "#374151";
+                }}
+              >
+                ← Back to overview
+              </button>
+            )}
             <button onClick={exportZip} style={btnStyle}>Export Proof</button>
             <JsonToggle proof={proof} />
           </div>
@@ -179,6 +194,7 @@ export default function ProofPage() {
             attr={attr}
             causalWindow={causalWindow}
             cachedFile={cachedFile}
+            c2pa={cachedFile?.c2pa ?? null}
             isTee={isTee}
           />
         )}
@@ -430,6 +446,7 @@ function SimpleView({
   attr,
   causalWindow,
   cachedFile,
+  c2pa,
   isTee,
 }: {
   proof: OCCProof;
@@ -438,6 +455,7 @@ function SimpleView({
     anchorAfter: { counter: string; blockNumber: number | null; etherscanUrl: string | null; blockTime?: string | null } | null;
   } | null;
   cachedFile: { name: string; data: ArrayBuffer } | null;
+  c2pa?: C2PAReadResult | null;
   isTee: boolean;
 }) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -477,34 +495,40 @@ function SimpleView({
   const fullHash = ph.proofHash || "";
   const shortHash = fullHash.replace(/[+/=]/g, "").slice(0, 12);
 
-  // Creator / file info
-  // TODO: C2PA — when the file contains a C2PA manifest, populate creator,
-  // device, and tool fields from the manifest instead of falling back.
-  const creator = attr?.name?.trim() || "Anonymous";
+  // File info. Creator is intentionally not shown in the default Simple view
+  // unless we can source it from a verified channel (C2PA manifest or an
+  // agency/actor field). Self-attributed `attribution.name` is rendered in
+  // a clearly labelled "Submitter's note" block below the facts instead —
+  // the signed-caption semantics are preserved, the identity-claim framing
+  // is not.
   const fileTitle =
     cachedFile?.name ||
+    c2pa?.title ||
     (attr?.title && !attr.title.startsWith("http") ? attr.title : null) ||
     "Untitled file";
 
+  const hasC2PA = !!(c2pa && c2pa.present);
+  const hasSubmitterNote = !!(attr?.name?.trim() || attr?.message?.trim());
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
-      {/* Status badge */}
+    <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      {/* Verified box — minimal: icon + label + details toggle */}
       <div
         style={{
           background: "#ffffff",
           border: "1px solid #d0d5dd",
           borderRadius: 16,
-          padding: "32px 28px",
+          padding: "28px 28px",
           display: "flex",
           alignItems: "center",
-          gap: 24,
+          gap: 20,
           flexWrap: "wrap",
         }}
       >
         <div
           style={{
-            width: 72,
-            height: 72,
+            width: 64,
+            height: 64,
             borderRadius: 999,
             background: "rgba(0,101,164,0.08)",
             border: "2px solid #0065A4",
@@ -514,23 +538,20 @@ function SimpleView({
             flexShrink: 0,
           }}
         >
-          <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#0065A4" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#0065A4" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="20 6 9 17 4 12" />
           </svg>
         </div>
-        <div style={{ flex: 1, minWidth: 200 }}>
-          <div style={{ fontSize: 32, fontWeight: 800, color: "#111827", letterSpacing: "-0.02em", lineHeight: 1.1 }}>
+        <div style={{ flex: 1, minWidth: 180 }}>
+          <div style={{ fontSize: 28, fontWeight: 800, color: "#111827", letterSpacing: "-0.02em", lineHeight: 1.1 }}>
             Verified
           </div>
-          <div style={{ fontSize: 15, color: "#6b7280", marginTop: 6, lineHeight: 1.5 }}>
-            This file was cryptographically sealed inside a hardware enclave.
-            Any change to the file or the proof would be detectable.
-          </div>
         </div>
+        <SeeDetailsButton />
       </div>
 
-      {/* Image preview, if available */}
-      {previewUrl && (
+      {/* Image preview — C2PA thumbnail takes precedence over local preview */}
+      {(previewUrl || c2pa?.thumbnailDataUrl) && (
         <div
           style={{
             background: "#ffffff",
@@ -543,7 +564,7 @@ function SimpleView({
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={previewUrl}
+            src={previewUrl || c2pa?.thumbnailDataUrl || ""}
             alt={fileTitle}
             style={{
               maxWidth: "100%",
@@ -566,7 +587,6 @@ function SimpleView({
         }}
       >
         <BigField label="File" value={fileTitle} />
-        <BigField label="Creator" value={creator} />
         <BigField
           label="Proved on"
           value={prettyDate}
@@ -579,7 +599,7 @@ function SimpleView({
           copyValue={fullHash}
           hint="Click to copy the full proof hash"
         />
-        {anchored && blockNumber !== null && (
+        {anchored && blockNumber !== null ? (
           <BigField
             label="Sealed in"
             value={`Ethereum block #${blockNumber.toLocaleString()}`}
@@ -587,8 +607,7 @@ function SimpleView({
             linkLabel="View on Etherscan ↗"
             isLast
           />
-        )}
-        {!anchored && (
+        ) : (
           <BigField
             label="Sealed in"
             value="Ethereum (awaiting next anchor)"
@@ -598,14 +617,46 @@ function SimpleView({
         )}
       </div>
 
-      {/* Verify button */}
+      {/* C2PA card — only when the file actually contains a manifest */}
+      {hasC2PA && <C2PACard c2pa={c2pa!} prettyProofDate={anchored ? prettyDate : null} />}
+
+      {/* Submitter's note — self-attributed caption, clearly labelled */}
+      {hasSubmitterNote && (
+        <div
+          style={{
+            background: "#ffffff",
+            border: "1px solid #d0d5dd",
+            borderRadius: 16,
+            padding: "20px 24px",
+          }}
+        >
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>
+            Submitter&apos;s note
+          </div>
+          {attr?.name && (
+            <div style={{ fontSize: 15, color: "#111827", fontWeight: 600, marginBottom: 4 }}>
+              {attr.name}
+            </div>
+          )}
+          {attr?.message && (
+            <div style={{ fontSize: 14, color: "#4b5563", lineHeight: 1.55, fontStyle: "italic" }}>
+              &ldquo;{attr.message}&rdquo;
+            </div>
+          )}
+          <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 8 }}>
+            Self-attributed. Signed into the proof at commit time; identity is not verified.
+          </div>
+        </div>
+      )}
+
+      {/* Verify button — tighter copy */}
       {proof.environment?.attestation?.reportB64 && proof.environment?.measurement && (
         <div
           style={{
             background: "rgba(0,101,164,0.04)",
             border: "1px solid rgba(0,101,164,0.2)",
             borderRadius: 16,
-            padding: "24px 28px",
+            padding: "22px 28px",
             display: "flex",
             alignItems: "center",
             gap: 20,
@@ -613,13 +664,11 @@ function SimpleView({
           }}
         >
           <div style={{ flex: 1, minWidth: 220 }}>
-            <div style={{ fontSize: 17, fontWeight: 700, color: "#111827", marginBottom: 4 }}>
-              Verify this for yourself
+            <div style={{ fontSize: 16, fontWeight: 700, color: "#111827", marginBottom: 4 }}>
+              Verify this yourself
             </div>
             <div style={{ fontSize: 14, color: "#4b5563", lineHeight: 1.5 }}>
-              Runs a full hardware attestation check in your browser. Confirms
-              the proof was signed inside a real AWS Nitro Enclave running the
-              exact OCC code we publish — no network calls, no trust in us.
+              Runs the full check in your browser. No network, no trust in us.
             </div>
           </div>
           <div>
@@ -631,29 +680,175 @@ function SimpleView({
         </div>
       )}
 
-      {/* Plain-English explainer */}
+      {/* Tightened "What this means" — proofs are created at commit time,
+          causal ordering, sealed into Ethereum. Neutral, concise. */}
       <div
         style={{
           background: "#ffffff",
           border: "1px solid #d0d5dd",
           borderRadius: 16,
-          padding: "24px 28px",
+          padding: "22px 28px",
         }}
       >
-        <div style={{ fontSize: 13, fontWeight: 700, color: "#0065A4", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: "#0065A4", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>
           What this means
         </div>
-        <p style={{ fontSize: 15, color: "#374151", lineHeight: 1.65, margin: 0 }}>
-          OCC proofs are not metadata attached to a file after the fact. They
-          are new computations created when the file&apos;s hash fills a
-          pre-existing cryptographic slot inside {isTee ? "a hardware enclave" : "a signing boundary"}.
-          This proof anchors the file to a specific position in a causal
-          sequence, and the sequence is sealed into the Ethereum blockchain —
-          so the timing and ordering can&apos;t be rewritten later.
+        <p style={{ fontSize: 14, color: "#374151", lineHeight: 1.6, margin: 0 }}>
+          The proof was created at commit time, not attached afterward. It
+          fixes the file&apos;s position in a causal order and that order is
+          sealed into the Ethereum blockchain. The position cannot be
+          rewritten later.
         </p>
       </div>
     </div>
   );
+}
+
+/* ── "See details" button — toggles the full technical view ── */
+
+function SeeDetailsButton() {
+  // Reads the same localStorage key the parent component writes to.
+  // Clicking this flips to technical view, which in turn swaps the layout.
+  // Uses a full page reload via pushState + location — simpler than
+  // lifting state through a context just for this one button.
+  const handleClick = () => {
+    try { localStorage.setItem("occ-proof-view", "technical"); } catch {}
+    // Force re-render of the parent by dispatching a custom event.
+    window.dispatchEvent(new CustomEvent("occ-proof-view-change", { detail: "technical" }));
+  };
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      style={{
+        padding: "10px 18px",
+        fontSize: 13,
+        fontWeight: 600,
+        color: "#374151",
+        background: "transparent",
+        border: "1px solid #d0d5dd",
+        borderRadius: 10,
+        cursor: "pointer",
+        transition: "border-color 0.15s, color 0.15s",
+        whiteSpace: "nowrap",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = "#0065A4";
+        e.currentTarget.style.color = "#0065A4";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = "#d0d5dd";
+        e.currentTarget.style.color = "#374151";
+      }}
+    >
+      See details
+    </button>
+  );
+}
+
+/* ── C2PA card — top-level Content Credentials, shown when present ── */
+
+function C2PACard({ c2pa, prettyProofDate }: { c2pa: C2PAReadResult; prettyProofDate: string | null }) {
+  const claimGenerator =
+    c2pa.claimGeneratorInfo?.[0]?.name ||
+    c2pa.claimGenerator ||
+    undefined;
+  const claimGeneratorVersion = c2pa.claimGeneratorInfo?.[0]?.version;
+  const hasSignature = Boolean(c2pa.signatureIssuer);
+  const sigClean = c2pa.signatureValid !== false;
+
+  return (
+    <div
+      style={{
+        background: "#ffffff",
+        border: "1px solid #d0d5dd",
+        borderRadius: 16,
+        overflow: "hidden",
+      }}
+    >
+      <div style={{
+        display: "flex", alignItems: "baseline", justifyContent: "space-between",
+        gap: 12, padding: "18px 24px 10px 24px",
+      }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: "#0065A4", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+          Content Credentials (C2PA)
+        </div>
+        <div style={{
+          fontSize: 10, fontWeight: 700, letterSpacing: "0.05em",
+          color: sigClean ? "#0f766e" : "#b45309",
+          background: sigClean ? "rgba(15,118,110,0.08)" : "rgba(180,83,9,0.08)",
+          padding: "3px 8px", borderRadius: 999, textTransform: "uppercase",
+        }}>
+          {sigClean ? "Signed" : "Unverified"}
+        </div>
+      </div>
+
+      <div style={{ padding: "0 0 4px 0" }}>
+        {c2pa.creator && <BigField label="Creator" value={c2pa.creator} />}
+        {claimGenerator && (
+          <BigField
+            label="Produced with"
+            value={claimGeneratorVersion ? `${claimGenerator} ${claimGeneratorVersion}` : claimGenerator}
+          />
+        )}
+        {c2pa.signatureIssuer && (
+          <BigField label="Signed by" value={c2pa.signatureIssuer} />
+        )}
+        {c2pa.actions && c2pa.actions.length > 0 && (
+          <div style={{ padding: "18px 28px", borderBottom: "1px solid #e5e7eb" }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>
+              Actions
+            </div>
+            <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
+              {c2pa.actions.slice(0, 10).map((a, i) => (
+                <li key={i} style={{ fontSize: 14, color: "#374151", lineHeight: 1.5 }}>
+                  <span style={{ color: "#111827", fontWeight: 600 }}>
+                    {formatC2PAAction(a.action)}
+                  </span>
+                  {a.softwareAgent && (
+                    <span style={{ color: "#9ca3af" }}> · {a.softwareAgent}</span>
+                  )}
+                </li>
+              ))}
+              {c2pa.actions.length > 10 && (
+                <li style={{ fontSize: 12, color: "#9ca3af" }}>
+                  +{c2pa.actions.length - 10} more
+                </li>
+              )}
+            </ul>
+          </div>
+        )}
+        {(c2pa.ingredientCount ?? 0) > 0 && (
+          <BigField
+            label="Derived from"
+            value={`${c2pa.ingredientCount} source file${c2pa.ingredientCount === 1 ? "" : "s"}`}
+            isLast={!prettyProofDate}
+          />
+        )}
+      </div>
+
+      {prettyProofDate && (
+        <div style={{
+          padding: "14px 24px",
+          background: "rgba(0,101,164,0.04)",
+          borderTop: "1px solid #e5e7eb",
+          fontSize: 13,
+          color: "#374151",
+          lineHeight: 1.55,
+        }}>
+          OCC sealed this manifest into the file&apos;s proven state on {prettyProofDate}.
+          Stripping or modifying it after this point would be detectable.
+        </div>
+      )}
+    </div>
+  );
+}
+
+function formatC2PAAction(raw: string): string {
+  // c2pa.actions are dotted strings like "c2pa.edited", "c2pa.cropped".
+  // Render them as plain English for the reader.
+  const tail = raw.replace(/^c2pa\./, "").replace(/[_.]/g, " ");
+  return tail.charAt(0).toUpperCase() + tail.slice(1);
 }
 
 /* ── Big human-readable field (Simple view) ── */
