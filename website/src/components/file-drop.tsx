@@ -218,7 +218,7 @@ export function FileDrop({
             ) : (
               <>
                 <div style={{ whiteSpace: "nowrap" }}>New files get a fresh proof.</div>
-                <div style={{ whiteSpace: "nowrap" }}>Known files are looked up.</div>
+                <div style={{ whiteSpace: "nowrap" }}>Proven files are looked up.</div>
               </>
             )}
           </div>
