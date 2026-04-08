@@ -738,30 +738,6 @@ function C2PACard({ c2pa, prettyProofDate }: { c2pa: C2PAReadResult; prettyProof
         {c2pa.signatureIssuer && (
           <BigField label="Signed by" value={c2pa.signatureIssuer} />
         )}
-        {c2pa.actions && c2pa.actions.length > 0 && (
-          <div style={{ padding: "18px 28px", borderBottom: "1px solid #e5e7eb" }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>
-              Actions
-            </div>
-            <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
-              {c2pa.actions.slice(0, 10).map((a, i) => (
-                <li key={i} style={{ fontSize: 14, color: "#374151", lineHeight: 1.5 }}>
-                  <span style={{ color: "#111827", fontWeight: 600 }}>
-                    {formatC2PAAction(a.action)}
-                  </span>
-                  {a.softwareAgent && (
-                    <span style={{ color: "#9ca3af" }}> · {a.softwareAgent}</span>
-                  )}
-                </li>
-              ))}
-              {c2pa.actions.length > 10 && (
-                <li style={{ fontSize: 12, color: "#9ca3af" }}>
-                  +{c2pa.actions.length - 10} more
-                </li>
-              )}
-            </ul>
-          </div>
-        )}
         {(c2pa.ingredientCount ?? 0) > 0 && (
           <BigField
             label="Derived from"
@@ -788,12 +764,6 @@ function C2PACard({ c2pa, prettyProofDate }: { c2pa: C2PAReadResult; prettyProof
   );
 }
 
-function formatC2PAAction(raw: string): string {
-  // c2pa.actions are dotted strings like "c2pa.edited", "c2pa.cropped".
-  // Render them as plain English for the reader.
-  const tail = raw.replace(/^c2pa\./, "").replace(/[_.]/g, " ");
-  return tail.charAt(0).toUpperCase() + tail.slice(1);
-}
 
 /* ── Big human-readable field (Simple view) ── */
 

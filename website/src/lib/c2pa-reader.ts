@@ -27,8 +27,6 @@ export interface C2PAReadResult {
   signatureIssuer?: string;
   /** Signature timestamp (ISO) if present. */
   signatureTime?: string;
-  /** Assertion actions list — what edits were claimed. */
-  actions?: Array<{ action: string; softwareAgent?: string; when?: string }>;
   /** Thumbnail data URL if the manifest embeds one. */
   thumbnailDataUrl?: string;
   /** Count of ingredient parent manifests (derived / edited from …). */
@@ -103,25 +101,15 @@ export async function readC2PA(file: File | Blob, filename?: string): Promise<C2
       ingredients?: unknown[];
     };
 
-    // Actions assertion → flat list of actions
-    let actions: Array<{ action: string; softwareAgent?: string; when?: string }> | undefined;
     const assertions = active.assertions?.data ?? [];
-    const actionsAssertion = assertions.find((a) => a.label?.startsWith("c2pa.actions"));
-    if (actionsAssertion) {
-      const actionsData = (actionsAssertion.data ?? {}) as { actions?: Array<{ action?: string; softwareAgent?: string | { name?: string }; when?: string }> };
-      if (Array.isArray(actionsData.actions)) {
-        actions = actionsData.actions
-          .filter((a) => typeof a.action === "string")
-          .map((a) => ({
-            action: a.action as string,
-            softwareAgent:
-              typeof a.softwareAgent === "string"
-                ? a.softwareAgent
-                : a.softwareAgent?.name,
-            when: a.when,
-          }));
-      }
-    }
+
+    // NOTE: We deliberately do not render the c2pa.actions assertion.
+    // Lightroom (and most Adobe tools) emit one entry per edit tagged
+    // as the generic "c2pa.color_adjustments" with no parameter values,
+    // which produces lists like "Color adjustments ×10" with zero added
+    // signal. If a future C2PA producer starts including meaningful
+    // per-action detail (parameters / descriptions), we can re-add
+    // extraction and rendering here.
 
     // Creator assertion → first author's name
     let creator: string | undefined;
@@ -162,7 +150,6 @@ export async function readC2PA(file: File | Blob, filename?: string): Promise<C2
       format: active.format,
       signatureIssuer: active.signatureInfo?.issuer,
       signatureTime: active.signatureInfo?.time,
-      actions,
       thumbnailDataUrl,
       ingredientCount: Array.isArray(active.ingredients) ? active.ingredients.length : 0,
       validationStatus,
