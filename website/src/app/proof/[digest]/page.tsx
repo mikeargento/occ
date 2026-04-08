@@ -42,7 +42,18 @@ export default function ProofPage() {
   useEffect(() => {
     (async () => {
       try {
-        const resp = await fetch(`/api/proofs/digest/${digestParam}`);
+        // 15s timeout guards against a stuck API route (e.g. a slow
+        // Ethereum RPC inside the causal-window lookup). Without this the
+        // page can hang indefinitely on "Loading proof..." if anything
+        // downstream stalls.
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
+        let resp: Response;
+        try {
+          resp = await fetch(`/api/proofs/digest/${digestParam}`, { signal: controller.signal });
+        } finally {
+          clearTimeout(timeoutId);
+        }
         if (!resp.ok) { setError("Proof not found"); setLoading(false); return; }
         const data = await resp.json();
         if (data.proofs?.[0]?.proof) {
@@ -162,7 +173,7 @@ export default function ProofPage() {
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 </span>
-                <span style={{ color: "#16a34a" }}>Verified Proof </span>
+                <span style={{ color: "var(--c-accent)" }}>Verified Proof </span>
                 <ProofHashTitle proof={proof} />
               </span>
             )}

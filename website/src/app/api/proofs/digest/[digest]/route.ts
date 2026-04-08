@@ -29,20 +29,38 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ dig
           const anchorArtifact = (anchorProof?.artifact || anchor.artifact) as { digestB64?: string } | undefined;
           const eth = anchor.ethereum as { blockNumber?: number; blockHash?: string } | undefined;
           const blockNumber = eth?.blockNumber?.toString() || anchorAttr?.title?.match(/\/block\/(\d+)/)?.[1];
-          // Fetch block timestamp from Ethereum RPC
+          // Fetch block timestamp from Ethereum RPC.
+          //
+          // IMPORTANT: wrap in AbortSignal.timeout so a slow or unresponsive
+          // public node cannot hang the entire proof page. Block time is
+          // cosmetic (it populates the humanized "Proven before" field) — if
+          // the RPC is slow, we return the proof with blockTime: null rather
+          // than blocking the response indefinitely. Previously this caused
+          // intermittent "stuck on Loading proof..." symptoms when publicnode
+          // was flaky.
           let blockTime: string | null = null;
           if (blockNumber) {
-            try {
-              const rpcRes = await fetch("https://ethereum-rpc.publicnode.com", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ jsonrpc: "2.0", method: "eth_getBlockByNumber", params: ["0x" + parseInt(blockNumber, 10).toString(16), false], id: 1 }),
-              });
-              const rpcData = await rpcRes.json() as { result?: { timestamp?: string } };
-              if (rpcData.result?.timestamp) {
-                blockTime = new Date(parseInt(rpcData.result.timestamp, 16) * 1000).toISOString();
-              }
-            } catch (_) { /* non-critical */ }
+            const rpcEndpoints = [
+              "https://ethereum-rpc.publicnode.com",
+              "https://cloudflare-eth.com",
+              "https://rpc.ankr.com/eth",
+            ];
+            for (const endpoint of rpcEndpoints) {
+              try {
+                const rpcRes = await fetch(endpoint, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ jsonrpc: "2.0", method: "eth_getBlockByNumber", params: ["0x" + parseInt(blockNumber, 10).toString(16), false], id: 1 }),
+                  signal: AbortSignal.timeout(2500),
+                });
+                if (!rpcRes.ok) continue;
+                const rpcData = await rpcRes.json() as { result?: { timestamp?: string } };
+                if (rpcData.result?.timestamp) {
+                  blockTime = new Date(parseInt(rpcData.result.timestamp, 16) * 1000).toISOString();
+                  break;
+                }
+              } catch (_) { /* try next endpoint */ }
+            }
           }
           causalWindow = {
             anchorBefore: null,
