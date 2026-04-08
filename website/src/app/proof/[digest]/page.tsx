@@ -172,7 +172,8 @@ export default function ProofPage() {
               </button>
             )}
             <button onClick={exportZip} style={btnStyle}>Export Proof</button>
-            <JsonToggle proof={proof} />
+            {/* JSON is a developer action — hide it in Simple view */}
+            {!simpleView && <JsonToggle proof={proof} />}
           </div>
         </div>
 
@@ -510,109 +511,73 @@ function SimpleView({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-      {imageSrc ? (
-        /* Photo card — the card itself hugs the image so portrait and
-            landscape photos both get a tight frame, and the whole card
-            is centered on the page. A green "Verified" pill overlays the
-            top-right corner of the image. */
-        <div style={{ display: "flex", justifyContent: "center" }}>
-          <div
+      {/* Standalone "Verified" pill — floats above everything, centered.
+          Lives outside any card so it reads as a status banner for the
+          whole proof, not a tag on a single element. */}
+      <div style={{ display: "flex", justifyContent: "center" }}>
+        <div
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 10,
+            padding: "10px 18px 10px 12px",
+            borderRadius: 999,
+            background: "#16a34a",
+            color: "#ffffff",
+            fontSize: 15,
+            fontWeight: 700,
+            letterSpacing: "0.01em",
+            boxShadow: "0 2px 10px rgba(22,163,74,0.25)",
+            lineHeight: 1,
+          }}
+        >
+          <span
             style={{
-              position: "relative",
-              display: "inline-block",
-              background: "#f5f5f5",
-              border: "1px solid #d0d5dd",
-              borderRadius: 16,
-              overflow: "hidden",
-              lineHeight: 0,
-              maxWidth: "100%",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 24,
+              height: 24,
+              borderRadius: 999,
+              background: "rgba(255,255,255,0.18)",
             }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={imageSrc}
-              alt={fileTitle}
-              style={{
-                display: "block",
-                maxWidth: "min(100%, 500px)",
-                maxHeight: 500,
-                width: "auto",
-                height: "auto",
-                objectFit: "contain",
-              }}
-            />
-            <div
-              style={{
-                position: "absolute",
-                top: 16,
-                right: 16,
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "8px 14px 8px 10px",
-                borderRadius: 999,
-                background: "#16a34a",
-                color: "#ffffff",
-                fontSize: 13,
-                fontWeight: 700,
-                letterSpacing: "0.01em",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.20)",
-                lineHeight: 1,
-              }}
-            >
-              <span
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: 20,
-                  height: 20,
-                  borderRadius: 999,
-                  background: "rgba(255,255,255,0.18)",
-                }}
-              >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-              </span>
-              Verified
-            </div>
-          </div>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </span>
+          Verified
         </div>
-      ) : (
-        /* No image available — show a simple centered verified card instead */
+      </div>
+
+      {imageSrc && (
+        /* Photo card — white card with padding, photo centered inside and
+            constrained to 500px on its largest dimension. */
         <div
           style={{
             background: "#ffffff",
             border: "1px solid #d0d5dd",
             borderRadius: 16,
-            padding: "40px 24px",
+            padding: 20,
             display: "flex",
-            flexDirection: "column",
+            justifyContent: "center",
             alignItems: "center",
-            gap: 14,
-            textAlign: "center",
           }}
         >
-          <div
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={imageSrc}
+            alt={fileTitle}
             style={{
-              width: 64,
-              height: 64,
-              borderRadius: 999,
-              background: "rgba(22,163,74,0.10)",
-              border: "2px solid #16a34a",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
+              display: "block",
+              maxWidth: "min(100%, 500px)",
+              maxHeight: 500,
+              width: "auto",
+              height: "auto",
+              objectFit: "contain",
+              borderRadius: 10,
             }}
-          >
-            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          </div>
-          <div style={{ fontSize: 28, fontWeight: 800, color: "#111827", letterSpacing: "-0.02em", lineHeight: 1.1 }}>
-            Verified
-          </div>
+          />
         </div>
       )}
 
