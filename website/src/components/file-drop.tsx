@@ -212,13 +212,13 @@ export function FileDrop({
           <div className="text-[16px] sm:text-[22px] font-semibold tracking-tight text-center px-2" style={{ color: "#111827" }}>
             Drop files to create or check proofs
           </div>
-          <div className="mt-2 text-center" style={{ color: "#6b7280", fontSize: 13, lineHeight: 1.5 }}>
+          <div className="mt-2 text-center flex flex-col sm:flex-row sm:gap-1.5 justify-center items-center" style={{ color: "#6b7280", fontSize: 13, lineHeight: 1.5 }}>
             {hint ? (
               <span style={{ whiteSpace: "pre-line" }}>{hint}</span>
             ) : (
               <>
-                <div style={{ whiteSpace: "nowrap" }}>New files get a fresh proof.</div>
-                <div style={{ whiteSpace: "nowrap" }}>Proven files are looked up.</div>
+                <span style={{ whiteSpace: "nowrap" }}>New files get a fresh proof.</span>
+                <span style={{ whiteSpace: "nowrap" }}>Proven files are looked up.</span>
               </>
             )}
           </div>
