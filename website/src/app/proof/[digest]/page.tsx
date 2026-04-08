@@ -551,33 +551,36 @@ function SimpleView({
       </div>
 
       {imageSrc && (
-        /* Photo card — white card with padding, photo centered inside and
-            constrained to 500px on its largest dimension. */
-        <div
-          style={{
-            background: "#ffffff",
-            border: "1px solid #d0d5dd",
-            borderRadius: 16,
-            padding: 20,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={imageSrc}
-            alt={fileTitle}
+        /* Photo card — the card hugs the image so portrait and landscape
+            photos both get a tight frame, and the whole card is centered
+            on the page. Photo capped at 500px on its largest dimension. */
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <div
             style={{
-              display: "block",
-              maxWidth: "min(100%, 500px)",
-              maxHeight: 500,
-              width: "auto",
-              height: "auto",
-              objectFit: "contain",
-              borderRadius: 10,
+              display: "inline-block",
+              background: "#ffffff",
+              border: "1px solid #d0d5dd",
+              borderRadius: 16,
+              padding: 14,
+              maxWidth: "100%",
+              lineHeight: 0,
             }}
-          />
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={imageSrc}
+              alt={fileTitle}
+              style={{
+                display: "block",
+                maxWidth: "min(100%, 500px)",
+                maxHeight: 500,
+                width: "auto",
+                height: "auto",
+                objectFit: "contain",
+                borderRadius: 8,
+              }}
+            />
+          </div>
         </div>
       )}
 
