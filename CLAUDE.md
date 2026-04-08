@@ -1,98 +1,167 @@
 # OCC — Origin Controlled Computing
 
 ## What This Is
-A system where computations are only executable if they are authorized by a previously committed, cryptographically bound policy.
 
-Proof = authorization. No valid proof, no action executes. The proof that authorizes an action is the same object that proves it happened.
+A protocol for portable cryptographic proof of **causal ordering**. Drop a file through an authorized execution boundary and you get a self-contained proof that the file existed in this exact form at a specific position in a sequence, anchored to a public timeline via Ethereum.
 
-**One-liner**: "Control what your AI agents can do. Prove what they did."
+The current application on **occ.wtf** is photos-first file provenance: "drop a file to create or check a proof." The broader protocol can be applied to other domains, but the public site and the IPTC demo are about file provenance.
+
+**One-liner**: "OCC proofs are not labels or metadata added after the fact. They are new computations created when a file's hash fills a pre-existing cryptographic slot."
+
+**Tagline**: "Origin Controlled Computing — Patent Pending"
+
+## Core Concept
+
+- **Causal slots** — The TEE pre-allocates a slot (nonce + counter) from hardware entropy **before** the artifact hash is known. The slot reserves a position in a sequence.
+- **Commit** — The artifact digest is bound to the pre-allocated slot and signed with Ed25519 inside the TEE.
+- **Proven before** — The counter chain is periodically anchored to Ethereum. Once an anchor is mined, every proof committed before that anchor is fixed in the public timeline and cannot be rewritten.
+- **Epoch isolation** — Every TEE restart generates a new keypair and resets the counter. Each epoch is a sealed compartment, and a compromise of one epoch cannot retroactively forge proofs under a prior epoch's destroyed key.
+
+This is **not**:
+- A blockchain (no consensus, no tokens, no global ledger)
+- A watermark (nothing is embedded in the file bytes)
+- DRM (files are freely copyable; only the proof lineage is authoritative)
+- Proof of authorship or truth (OCC proves the commit event, not the content)
+- Identity verification (use C2PA or a passkey/agency flow for that)
+
+## Project State (April 2026)
+
+**IPTC Media Provenance Summit — April 16 2026.** All current work is aimed at that demo.
+
+Repo was cleaned up in the April 3 session — 1,600+ files deleted from the old agent-control era (MCP proxy, policy SDK, CLI, agent integrations, etc.). The current structure is narrow and photos-focused.
+
+## Repo Structure
+
+```
+occ/
+├── src/                          # Core library (npm: occproof v1.2.0)
+│   ├── proof-hash.ts             # Canonical proofHash computation
+│   ├── types.ts                  # OCCProof schema (occ/1)
+│   └── __tests__/                # Canonical + regression tests
+├── server/
+│   └── commit-service/           # TEE (AWS Nitro enclave) + parent HTTP server
+│       ├── src/enclave/          # Runs inside the enclave
+│       ├── src/parent/           # EC2 host, bridges TCP ↔ VSOCK to enclave
+│       └── deploy.sh             # nitro-cli build-enclave wrapper
+├── packages/
+│   ├── hosted/                   # ETH anchor service (Railway)
+│   ├── ledger/                   # S3 ledger read/write (occ-ledger-prod)
+│   └── adapter-nitro/            # Nitro NSM interface (PCR0, attestation)
+└── website/                      # Next.js app on Vercel (occ.wtf)
+    ├── src/app/                  # Routes — home, proof/[digest], docs, contact
+    ├── src/components/           # FileDrop, SiteNav, Chat, etc.
+    ├── src/lib/                  # occ client, s3, c2pa-reader, nitro-verify
+    └── public/                   # verify.html, c2pa/ WASM (copied at build)
+```
+
+## Key Infrastructure
+
+| Service | Location | Purpose |
+|---|---|---|
+| **TEE** | `nitro.occproof.com` (EC2, Nitro Enclave, Cloudflare tunnel) | Signs proofs inside the enclave, returns via VSOCK bridge |
+| **Anchor service** | `agent.occ.wtf` (Railway project `content-quietude`) | Seals counter chain into Ethereum blocks, writes anchors to S3 |
+| **S3 ledger** | `occ-ledger-prod` (us-east-2, Object Lock COMPLIANCE, 10-year retention) | Sole storage. Keys: `proofs/{epoch}/{counter}-{hash}.json`, `anchors/{epoch}/`, `by-digest/{digest}.json` |
+| **Website** | `occ.wtf` (Vercel project `occ-docs`) | Built from `website/` subdirectory. Linked via `.vercel/` at the repo root |
+| **Contact form** | `occ.wtf/contact` → Resend | `mikeargento@gmail.com` inbox. `RESEND_API_KEY` env var on Vercel |
+
+**SSH to EC2**: `ssh -i ~/Desktop/Keys/occ-nitro-test.pem ec2-user@3.151.121.225`
+
+### "Fire it up" shorthand
+
+When the user says **"fire it up"**, bring the TEE online with 12s Ethereum anchoring:
+
+1. SSH to EC2, `nitro-cli describe-enclaves` to check CID
+2. If no enclave: `nitro-cli run-enclave --eif-path /home/ec2-user/nsm-test/occ-enclave-v2.eif --cpu-count 2 --memory 1024`
+3. Kill old socat, start new: `sudo nohup socat TCP-LISTEN:9000,fork,reuseaddr VSOCK-CONNECT:{CID}:5000 > /dev/null 2>&1 &`
+4. `sudo fuser -k 8787/tcp` then `sudo systemctl restart occ-http-server`
+5. Verify: `curl https://nitro.occproof.com/health`
+6. Set 12s anchors: `curl -X POST https://agent.occ.wtf/api/anchor/interval -H "Content-Type: application/json" -d '{"seconds": 12}'`
+
+When the user says **"shut her down"**, set the anchor interval back to 3600s to minimize Railway cost.
 
 ## Build Commands
 
 ```bash
 # Core library (occproof)
 npm run build          # compiles src/ → dist/
-npm run test           # runs core + proxy + policy-sdk tests
-npm run test:core      # core tests only
+npm run test:core      # canonical + verifier tests
 
-# Website (Next.js)
-cd website && npm run dev    # localhost:3000
+# Website (Next.js 16, Turbopack)
+cd website && npm run dev    # localhost:3000 (copies c2pa WASM at start)
 cd website && npm run build  # production build
 
-# MCP Proxy
-cd packages/mcp-proxy && npm run build
-cd packages/mcp-proxy && npm test
-
-# Policy SDK
-cd packages/policy-sdk && npm run build
-cd packages/policy-sdk && npm test
-
-# CommandCentral Dashboard
-cd packages/commandcentral && npm run build  # static export
+# Vercel deploy must run from repo root (not website/) because
+# the Vercel project has rootDirectory: "website" configured
+cd occ && ./website/node_modules/.bin/vercel --prod --yes
 ```
 
-## Project Structure
+**Note**: the root `package.json`'s `test` script still references deleted `packages/mcp-proxy` and `packages/policy-sdk`. Use `npm run test:core` for now — the full `npm test` will fail on the missing sub-projects until that script is cleaned up.
+
+## Proof Format
+
+Canonical `proofHash` is SHA-256 of canonicalized signed-body subset:
 
 ```
-occ/
-├── src/              # Core library — Ed25519 signatures, proof construction, policy binding
-├── dist/             # Compiled output (npm package: occproof)
-├── website/          # Next.js app deployed to occ.wtf via Vercel
-├── cli/              # CLI tool
-├── docs/             # Documentation
-├── policies/         # Starter pack policy files (.md)
-│   └── starter-packs/
-├── packages/
-│   ├── mcp-proxy/        # MCP proxy — default-deny, per-agent policies, OCC proof signing
-│   ├── commandcentral/   # Dashboard UI — agents, policies, proof log, connections
-│   ├── policy-sdk/       # Policy enforcement engine
-│   ├── occ-agent/        # Agent SDK — wraps tool calls with cryptographic receipts
-│   ├── integrations/     # All 17 framework integrations (JS + Python)
-│   ├── adapter-nitro/    # AWS Nitro enclave adapter
-│   ├── paperclip/        # Forked Paperclip (MIT)
-│   └── stub/             # Stub package
-└── server/
-    └── commit-service/   # Enclave commit service
+{ version, artifact, commit, publicKeyB64, enforcement, measurement,
+  attribution?, attestationFormat? }
 ```
 
-## Key Packages
+Notably **not** in the signed body: `timestamps`, `metadata`, `claims`, `agency` (has its own P-256 signature), `slotAllocation` (has its own Ed25519 signature, bound via `commit.slotHashB64`).
 
-| Package | Registry | Description |
-|---------|----------|-------------|
-| `occproof` | npm v1.0.2 | Core proof library |
-| `occ-mcp-proxy` | npm | MCP proxy with default-deny policies |
-| `occ-anthropic` | npm + PyPI | Anthropic SDK integration |
-| `occ-openai` | npm | OpenAI integration |
-| `occ-vercel` | npm | Vercel AI SDK integration |
-| `occ-langgraph` | npm | LangGraph integration |
-| `occ-langchain` | PyPI | LangChain integration |
-| `occ-crewai` | PyPI | CrewAI integration |
-| `occ-gemini` | PyPI | Google Gemini integration |
-| `occ-google-adk` | PyPI | Google ADK integration |
+The `proofHash` field is added by the ledger at write time (see `packages/ledger/src/s3.ts`). The on-the-wire `occ/1` schema in `src/types.ts` does not include it.
 
-## Architecture Rules
+## Website Design System
 
-- **Default-deny**: empty `allowedTools` blocks everything. Faucet model — nothing flows unless explicitly allowed.
-- **Per-agent policies**: independent state per agent instance.
-- **Policy-in-proof**: rules are SHA-256 hashed and the hash is signed into every proof. A policy is not a "rule" until it has an OCC proof binding it.
-- **The policy proof is the key**: no valid policy proof = no agent operations.
-- **Causal chain**: each proof has a counter + prevB64 hash linking to the previous proof.
+- **Light mode only.** Dark mode attempted and reverted in the April 3 session.
+- **Background**: off-white `#f5f5f5`
+- **Brand accent**: blue `#0065A4` (changed from `#1A73E8` on April 7). Used for titles, links, primary buttons.
+- **Trust mark green**: emerald `#10b981` — verified check, C2PA "Signed" pill, attestation success states. Consistent across all trust indicators.
+- **Font**: Acumin Pro via Typekit (kit `svq0oqy`), fallback to Inter / system sans
+- **Nav**: solid `#f5f5f5` background, no border. Left: "OCC" text logo, `font-weight: 900`. Right: `Docs | Contact` (GitHub lives at the bottom of the docs sidebar, not in the nav)
+- **Drop zone**: 90% width, max 640px, 360px tall (280 mobile). Fluid typography: `min(22px, 4.25vw)` headline, `min(13px, 3vw)` subtitle so everything fits on one line at any viewport
+- **Proof pages**: 800px max width, single column. Simple view is the default; "See details" flips to the technical card grid (Slot → Artifact → Commit → Signer → Environment → Proven Before)
+- **Cards**: white `#ffffff`, 1px `#d0d5dd` border, 16px radius
 
-## Brand
+## Language & Tone Guardrails
 
-- **OCC.WTF** — no sub-brands. Not ProofStudio. Just OCC.
-- Website domain: occ.wtf (primary), proofstudio.xyz (legacy, don't use)
-- Tagline: "Cryptographic control for AI agents"
+The chat system prompt and docs enforce conservative, infrastructure-style language. **Use**:
+- "cryptographically bound"
+- "designed to prevent"
+- "detectably invalid if altered"
+- "cannot be retroactively constructed"
+- "proved before" / "causal order" / "causal position"
+
+**Do not use**:
+- "unforgeable", "impossible to fake"
+- "changes everything", "revolutionary"
+- "proves authorship", "proves who made this"
+- "proves absolute time", "proves when it was taken"
+- Marketing hype, emotional appeals, cosmic framing
+
+Any claim of identity should come from **verified** sources only — C2PA manifest creators (signed by a CA like Adobe CAI or Leica) or actor-bound agency proofs (passkey). Self-claimed `attribution.name` is rendered as "Submitter's note" with explicit "self-attributed, not verified" disclaimer — never as "Creator".
 
 ## Style Preferences
 
-- No generic card grids (AI slop pattern)
-- No emojis in code or docs unless explicitly asked
-- Keep messaging focused on CONTROL, not "proof" or "receipts"
-- Green accent color: emerald-400 / #34d399
+- **No generic card grids.** The AI-slop pattern of a 3-column grid of icon cards is banned. Use linear lists, single-column layouts, or deliberately asymmetric sections.
+- **No emojis** in code, docs, or commit messages unless the user explicitly asks.
+- **Photos-first product language**: camera, prove, verify, photo, file — not "agent", "tool call", "policy", "action".
+- Conservative by default. When in doubt, strip words out.
 
 ## Don't Touch
 
-- `server/commit-service/` — deployed enclave service, change carefully
-- `.env` files — never commit
-- `packages/paperclip/` — forked, rarely modified
+- `server/commit-service/` — deployed enclave service, the EIF is measured and changes require a rebuild + fresh PCR0
+- `.env*` files — gitignored, never commit
+- `website/public/c2pa/` — gitignored; copied from `node_modules` at dev/build time via `copy-c2pa-assets` script
+
+## Legacy / Removed (Do Not Reintroduce)
+
+The following were part of an older agent-control direction that was abandoned. If you see references in stale docs or old sessions, they do not apply to the current state:
+
+- `occ-mcp-proxy`, `occ-anthropic`, `occ-openai`, `occ-vercel`, `occ-langgraph`, `occ-langchain`, `occ-crewai`, `occ-gemini`, `occ-google-adk` — all deleted
+- Policy-in-proof / default-deny faucet model — removed
+- ProofStudio branding, `proofstudio.xyz` domain — legacy, do not use
+- Emerald-400 (`#34d399`) accent — wrong, current trust green is `#10b981`
+- "Cryptographic control for AI agents" tagline — wrong, see current tagline above
+- CommandCentral dashboard — deleted
+- DynamoDB anchor — replaced by S3 ledger
+- RFC 3161 TSA timestamps as primary time — Ethereum anchors are the time mechanism; the `timestamps` field exists in the schema as optional/advisory only
