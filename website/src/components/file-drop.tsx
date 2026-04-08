@@ -210,11 +210,10 @@ export function FileDrop({
             </svg>
           </div>
           <div className="text-[22px] font-semibold tracking-tight" style={{ color: "#111827" }}>
-            <>Drop files to create proofs</>
-
+            Drop files to create or check proofs
           </div>
-          <div className="text-xs mt-2 text-center" style={{ whiteSpace: "pre-line", color: "#6b7280" }}>
-            {hint || "Any file type. Hashed locally in your browser"}
+          <div className="text-xs mt-2 text-center" style={{ whiteSpace: "pre-line", color: "#6b7280", maxWidth: 360 }}>
+            {hint || "New files get a fresh proof. Previously proved files are looked up."}
           </div>
         </div>
       )}
