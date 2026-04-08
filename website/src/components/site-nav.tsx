@@ -26,6 +26,12 @@ export function SiteNav() {
           }}>
             Docs
           </Link>
+          <Link href="/contact" style={{
+            fontSize: 14, fontWeight: 600, color: "#111827",
+            textDecoration: "none",
+          }}>
+            Contact
+          </Link>
           <a href="https://github.com/mikeargento/occ" target="_blank" rel="noopener" style={{
             fontSize: 14, fontWeight: 600, color: "#111827",
             textDecoration: "none",

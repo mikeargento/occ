@@ -132,9 +132,10 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
             background: "#0065A4",
             border: "1px solid #0065A4",
             borderRadius: 10,
-            padding: "12px 28px",
+            padding: "10px 20px",
             color: "#ffffff",
-            fontSize: 16,
+            fontSize: 14,
+            fontWeight: 500,
             cursor: "pointer",
             display: "flex",
             alignItems: "center",
@@ -149,8 +150,8 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
           }}
         >
           <svg
-            width="18"
-            height="18"
+            width="16"
+            height="16"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
