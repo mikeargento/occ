@@ -751,7 +751,6 @@ function C2PACard({ c2pa, prettyProofDate }: { c2pa: C2PAReadResult; prettyProof
         <div style={{
           padding: "14px 24px",
           background: "rgba(0,101,164,0.04)",
-          borderTop: "1px solid #e5e7eb",
           fontSize: 13,
           color: "#374151",
           lineHeight: 1.55,
