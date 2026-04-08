@@ -37,18 +37,6 @@ export default function ProofPage() {
     } catch {}
   }, [simpleView]);
 
-  // The "See details" button inside the Verified box dispatches this event
-  // so SimpleView can stay decoupled from the parent's state setter.
-  useEffect(() => {
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent).detail;
-      if (detail === "technical") setSimpleView(false);
-      if (detail === "simple") setSimpleView(true);
-    };
-    window.addEventListener("occ-proof-view-change", handler);
-    return () => window.removeEventListener("occ-proof-view-change", handler);
-  }, []);
-
   // Nav visible on proof pages
 
   useEffect(() => {
@@ -157,9 +145,9 @@ export default function ProofPage() {
             </span>
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-            {!simpleView && (
+            {!isEth && (
               <button
-                onClick={() => setSimpleView(true)}
+                onClick={() => setSimpleView((v) => !v)}
                 style={{
                   padding: "8px 14px",
                   fontSize: 12,
@@ -180,7 +168,7 @@ export default function ProofPage() {
                   e.currentTarget.style.color = "#374151";
                 }}
               >
-                ← Back to overview
+                {simpleView ? "See details" : "← Back to overview"}
               </button>
             )}
             <button onClick={exportZip} style={btnStyle}>Export Proof</button>
@@ -510,61 +498,52 @@ function SimpleView({
   const hasC2PA = !!(c2pa && c2pa.present);
   const hasSubmitterNote = !!(attr?.name?.trim() || attr?.message?.trim());
 
+  const imageSrc = previewUrl || c2pa?.thumbnailDataUrl || "";
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-      {/* Verified box — minimal: icon + label + details toggle */}
+      {/* Verified card — check + label stacked and centered above the
+          image preview. All one card, no dividing border between the
+          label row and the image. */}
       <div
         style={{
           background: "#ffffff",
           border: "1px solid #d0d5dd",
           borderRadius: 16,
-          padding: "28px 28px",
+          padding: imageSrc ? "32px 24px 24px 24px" : "40px 24px",
           display: "flex",
+          flexDirection: "column",
           alignItems: "center",
-          gap: 20,
-          flexWrap: "wrap",
+          gap: imageSrc ? 24 : 16,
+          textAlign: "center",
         }}
       >
-        <div
-          style={{
-            width: 64,
-            height: 64,
-            borderRadius: 999,
-            background: "rgba(0,101,164,0.08)",
-            border: "2px solid #0065A4",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-          }}
-        >
-          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#0065A4" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-        </div>
-        <div style={{ flex: 1, minWidth: 180 }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
+          <div
+            style={{
+              width: 64,
+              height: 64,
+              borderRadius: 999,
+              background: "rgba(0,101,164,0.08)",
+              border: "2px solid #0065A4",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#0065A4" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
           <div style={{ fontSize: 28, fontWeight: 800, color: "#111827", letterSpacing: "-0.02em", lineHeight: 1.1 }}>
             Verified
           </div>
         </div>
-        <SeeDetailsButton />
-      </div>
 
-      {/* Image preview — C2PA thumbnail takes precedence over local preview */}
-      {(previewUrl || c2pa?.thumbnailDataUrl) && (
-        <div
-          style={{
-            background: "#ffffff",
-            border: "1px solid #d0d5dd",
-            borderRadius: 16,
-            padding: 16,
-            display: "flex",
-            justifyContent: "center",
-          }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
+        {imageSrc && (
+          /* eslint-disable-next-line @next/next/no-img-element */
           <img
-            src={previewUrl || c2pa?.thumbnailDataUrl || ""}
+            src={imageSrc}
             alt={fileTitle}
             style={{
               maxWidth: "100%",
@@ -574,8 +553,8 @@ function SimpleView({
               background: "#f5f5f5",
             }}
           />
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Key facts */}
       <div
@@ -649,36 +628,9 @@ function SimpleView({
         </div>
       )}
 
-      {/* Verify button — tighter copy */}
-      {proof.environment?.attestation?.reportB64 && proof.environment?.measurement && (
-        <div
-          style={{
-            background: "rgba(0,101,164,0.04)",
-            border: "1px solid rgba(0,101,164,0.2)",
-            borderRadius: 16,
-            padding: "22px 28px",
-            display: "flex",
-            alignItems: "center",
-            gap: 20,
-            flexWrap: "wrap",
-          }}
-        >
-          <div style={{ flex: 1, minWidth: 220 }}>
-            <div style={{ fontSize: 16, fontWeight: 700, color: "#111827", marginBottom: 4 }}>
-              Verify this yourself
-            </div>
-            <div style={{ fontSize: 14, color: "#4b5563", lineHeight: 1.5 }}>
-              Runs the full check in your browser. No network, no trust in us.
-            </div>
-          </div>
-          <div>
-            <AttestationButton
-              reportB64={proof.environment.attestation.reportB64}
-              measurement={proof.environment.measurement}
-            />
-          </div>
-        </div>
-      )}
+      {/* "Verify this yourself" attestation action lives in the technical
+          details view (inside the Environment card). Simple view stays
+          minimal — status, facts, C2PA, explainer. */}
 
       {/* Tightened "What this means" — proofs are created at commit time,
           causal ordering, sealed into Ethereum. Neutral, concise. */}
@@ -701,48 +653,6 @@ function SimpleView({
         </p>
       </div>
     </div>
-  );
-}
-
-/* ── "See details" button — toggles the full technical view ── */
-
-function SeeDetailsButton() {
-  // Reads the same localStorage key the parent component writes to.
-  // Clicking this flips to technical view, which in turn swaps the layout.
-  // Uses a full page reload via pushState + location — simpler than
-  // lifting state through a context just for this one button.
-  const handleClick = () => {
-    try { localStorage.setItem("occ-proof-view", "technical"); } catch {}
-    // Force re-render of the parent by dispatching a custom event.
-    window.dispatchEvent(new CustomEvent("occ-proof-view-change", { detail: "technical" }));
-  };
-  return (
-    <button
-      type="button"
-      onClick={handleClick}
-      style={{
-        padding: "10px 18px",
-        fontSize: 13,
-        fontWeight: 600,
-        color: "#374151",
-        background: "transparent",
-        border: "1px solid #d0d5dd",
-        borderRadius: 10,
-        cursor: "pointer",
-        transition: "border-color 0.15s, color 0.15s",
-        whiteSpace: "nowrap",
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = "#0065A4";
-        e.currentTarget.style.color = "#0065A4";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = "#d0d5dd";
-        e.currentTarget.style.color = "#374151";
-      }}
-    >
-      See details
-    </button>
   );
 }
 
