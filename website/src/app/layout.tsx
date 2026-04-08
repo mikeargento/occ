@@ -15,41 +15,27 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
-const SITE_URL = "https://occ.wtf";
-const SITE_DESCRIPTION =
-  "Origin Controlled Computing. Drop a file and get a portable cryptographic proof of its origin and causal position. Verify offline, anchored to Ethereum.";
-
 export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
   title: {
-    default: "OCC — Origin Controlled Computing",
+    default: "OCC",
     template: "%s | OCC",
   },
-  description: SITE_DESCRIPTION,
+  description:
+    "Live cryptographic proof chain. Create, verify, and explore OCC proofs.",
   keywords: [
-    "OCC",
-    "Origin Controlled Computing",
-    "cryptographic proof",
-    "file provenance",
-    "TEE",
-    "AWS Nitro Enclave",
-    "causal order",
-    "Ethereum anchor",
-    "C2PA alternative",
-    "photo provenance",
+    "OCC", "Origin Controlled Computing", "AI agent control", "AI safety",
+    "cryptographic policy", "AI governance", "default deny", "proof explorer",
   ],
   openGraph: {
-    title: "OCC — Origin Controlled Computing",
-    description: SITE_DESCRIPTION,
+    title: "OCC",
+    description: "Live cryptographic proof chain. Create, verify, and explore OCC proofs.",
     type: "website",
     siteName: "OCC",
-    url: SITE_URL,
-    locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "OCC — Origin Controlled Computing",
-    description: SITE_DESCRIPTION,
+    title: "OCC",
+    description: "Live cryptographic proof chain. Create, verify, and explore OCC proofs.",
   },
   robots: { index: true, follow: true },
 };
