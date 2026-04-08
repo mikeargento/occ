@@ -535,41 +535,35 @@ function SimpleView({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
       {imageSrc && (
-        /* Photo card — fixed square frame so portrait and landscape
-            photos both show in a uniformly sized card. Image is centered
-            inside with object-fit: contain so its aspect ratio is
-            preserved; empty space around shorter sides reads as padding. */
-        <div style={{ display: "flex", justifyContent: "center" }}>
-          <div
+        /* Photo card — full width so it matches the other fact cards
+            below. The photo itself sits centered inside, constrained to
+            500px on its largest dimension, with whatever whitespace on
+            the sides is necessary to preserve its aspect ratio. */
+        <div
+          style={{
+            background: "#ffffff",
+            border: "1px solid #d0d5dd",
+            borderRadius: 16,
+            padding: 24,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={imageSrc}
+            alt={fileTitle}
             style={{
-              width: "min(100%, 528px)",
-              aspectRatio: "1 / 1",
-              maxWidth: 528,
-              background: "#ffffff",
-              border: "1px solid #d0d5dd",
-              borderRadius: 16,
-              padding: 14,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              boxSizing: "border-box",
+              display: "block",
+              maxWidth: "min(100%, 500px)",
+              maxHeight: 500,
+              width: "auto",
+              height: "auto",
+              objectFit: "contain",
+              borderRadius: 8,
             }}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={imageSrc}
-              alt={fileTitle}
-              style={{
-                display: "block",
-                maxWidth: "100%",
-                maxHeight: "100%",
-                width: "auto",
-                height: "auto",
-                objectFit: "contain",
-                borderRadius: 8,
-              }}
-            />
-          </div>
+          />
         </div>
       )}
 
