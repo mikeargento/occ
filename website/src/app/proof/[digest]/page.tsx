@@ -502,36 +502,97 @@ function SimpleView({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-      {/* Verified card — check + label stacked and centered above the
-          image preview. All one card, no dividing border between the
-          label row and the image. */}
-      <div
-        style={{
-          background: "#ffffff",
-          border: "1px solid #d0d5dd",
-          borderRadius: 16,
-          padding: imageSrc ? "32px 24px 24px 24px" : "40px 24px",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: imageSrc ? 24 : 16,
-          textAlign: "center",
-        }}
-      >
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
+      {imageSrc ? (
+        /* Photo card — image fills the full card, with a green "Verified"
+            pill anchored to the top-right corner so it stands out against
+            the photo without shrinking it. */
+        <div
+          style={{
+            position: "relative",
+            background: "#f5f5f5",
+            border: "1px solid #d0d5dd",
+            borderRadius: 16,
+            overflow: "hidden",
+            lineHeight: 0,
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={imageSrc}
+            alt={fileTitle}
+            style={{
+              display: "block",
+              width: "100%",
+              height: "auto",
+              objectFit: "contain",
+              background: "#f5f5f5",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              top: 16,
+              right: 16,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "8px 14px 8px 10px",
+              borderRadius: 999,
+              background: "#16a34a",
+              color: "#ffffff",
+              fontSize: 13,
+              fontWeight: 700,
+              letterSpacing: "0.01em",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.20)",
+              lineHeight: 1,
+            }}
+          >
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 20,
+                height: 20,
+                borderRadius: 999,
+                background: "rgba(255,255,255,0.18)",
+              }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </span>
+            Verified
+          </div>
+        </div>
+      ) : (
+        /* No image available — show a simple centered verified card instead */
+        <div
+          style={{
+            background: "#ffffff",
+            border: "1px solid #d0d5dd",
+            borderRadius: 16,
+            padding: "40px 24px",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 14,
+            textAlign: "center",
+          }}
+        >
           <div
             style={{
               width: 64,
               height: 64,
               borderRadius: 999,
-              background: "rgba(0,101,164,0.08)",
-              border: "2px solid #0065A4",
+              background: "rgba(22,163,74,0.10)",
+              border: "2px solid #16a34a",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#0065A4" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="20 6 9 17 4 12" />
             </svg>
           </div>
@@ -539,22 +600,7 @@ function SimpleView({
             Verified
           </div>
         </div>
-
-        {imageSrc && (
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img
-            src={imageSrc}
-            alt={fileTitle}
-            style={{
-              maxWidth: "100%",
-              maxHeight: 420,
-              borderRadius: 10,
-              objectFit: "contain",
-              background: "#f5f5f5",
-            }}
-          />
-        )}
-      </div>
+      )}
 
       {/* Key facts */}
       <div
