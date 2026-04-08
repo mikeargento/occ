@@ -601,16 +601,16 @@ function SimpleView({
         />
         {anchored && blockNumber !== null ? (
           <BigField
-            label="Sealed in"
-            value={`Ethereum block #${blockNumber.toLocaleString()}`}
+            label="Proven before"
+            value={`Ethereum block ${blockNumber.toLocaleString()}`}
             linkHref={etherscanUrl || undefined}
             linkLabel="View on Etherscan ↗"
             isLast
           />
         ) : (
           <BigField
-            label="Sealed in"
-            value="Ethereum (awaiting next anchor)"
+            label="Proven before"
+            value="Awaiting next Ethereum block"
             muted
             isLast
           />
@@ -694,10 +694,10 @@ function SimpleView({
           What this means
         </div>
         <p style={{ fontSize: 14, color: "#374151", lineHeight: 1.6, margin: 0 }}>
-          The proof was created at commit time, not attached afterward. It
-          fixes the file&apos;s position in a causal order and that order is
-          sealed into the Ethereum blockchain. The position cannot be
-          rewritten later.
+          This proof was created at commit time, not attached afterward. It
+          fixes the file&apos;s position in a causal order. Ethereum later
+          proves this position existed before a specific block, making the
+          order impossible to rewrite.
         </p>
       </div>
     </div>
