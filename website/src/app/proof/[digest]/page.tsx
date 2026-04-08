@@ -21,6 +21,20 @@ export default function ProofPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [cachedFile, setCachedFile] = useState<{ name: string; data: ArrayBuffer } | null>(null);
+  const [simpleView, setSimpleView] = useState<boolean>(true);
+
+  // Persist view preference across visits
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("occ-proof-view");
+      if (stored === "technical") setSimpleView(false);
+    } catch {}
+  }, []);
+  useEffect(() => {
+    try {
+      localStorage.setItem("occ-proof-view", simpleView ? "simple" : "technical");
+    } catch {}
+  }, [simpleView]);
 
   // Nav visible on proof pages
 
@@ -129,15 +143,50 @@ export default function ProofPage() {
               <ProofHashTitle proof={proof} />
             </span>
           </div>
-          <div style={{ display: "flex", gap: 8 }}>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            <button
+              onClick={() => setSimpleView((v) => !v)}
+              style={{
+                padding: "8px 14px",
+                fontSize: 12,
+                fontWeight: 600,
+                color: "#374151",
+                background: "transparent",
+                border: "1px solid #d0d5dd",
+                borderRadius: 10,
+                cursor: "pointer",
+                transition: "border-color 0.15s, color 0.15s",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "#0065A4";
+                e.currentTarget.style.color = "#0065A4";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "#d0d5dd";
+                e.currentTarget.style.color = "#374151";
+              }}
+            >
+              {simpleView ? "Show technical details →" : "← Back to overview"}
+            </button>
             <button onClick={exportZip} style={btnStyle}>Export Proof</button>
             <JsonToggle proof={proof} />
           </div>
         </div>
 
+        {simpleView && !isEth && (
+          <SimpleView
+            proof={proof}
+            attr={attr}
+            causalWindow={causalWindow}
+            cachedFile={cachedFile}
+            isTee={isTee}
+          />
+        )}
+
         {/* No separate causal window or ethereum link — consolidated into Ethereum Seal card below */}
 
-        {/* Cards grid */}
+        {/* Cards grid — hidden in Simple view except on anchor proofs */}
+        {(!simpleView || isEth) && (
         <div className="proof-grid" style={{ display: "grid", gridTemplateColumns: "1fr", gap: 24 }}>
 
           {/* 1. Slot — reserved first, before anything else */}
@@ -241,6 +290,7 @@ export default function ProofPage() {
             </Card>
           )}
         </div>
+        )}
 
 
       </div>
@@ -368,6 +418,317 @@ function JsonToggle({ proof }: { proof: OCCProof }) {
         }}>
           {json}
         </pre>
+      </div>
+    </div>
+  );
+}
+
+/* ── Simple View — plain-English proof page for non-technical visitors ── */
+
+function SimpleView({
+  proof,
+  attr,
+  causalWindow,
+  cachedFile,
+  isTee,
+}: {
+  proof: OCCProof;
+  attr?: { name?: string; title?: string; message?: string };
+  causalWindow: {
+    anchorAfter: { counter: string; blockNumber: number | null; etherscanUrl: string | null; blockTime?: string | null } | null;
+  } | null;
+  cachedFile: { name: string; data: ArrayBuffer } | null;
+  isTee: boolean;
+}) {
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  // Build an object URL for image preview if the cached file is an image
+  useEffect(() => {
+    if (!cachedFile) { setPreviewUrl(null); return; }
+    const name = cachedFile.name.toLowerCase();
+    const isImage = /\.(jpe?g|png|gif|webp|heic|heif|avif|bmp|tiff?)$/i.test(name);
+    if (!isImage) { setPreviewUrl(null); return; }
+    const blob = new Blob([new Uint8Array(cachedFile.data)]);
+    const url = URL.createObjectURL(blob);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [cachedFile]);
+
+  // Pull the human-readable date from the Ethereum anchor block time when available
+  const blockTime = causalWindow?.anchorAfter?.blockTime ?? null;
+  const blockNumber = causalWindow?.anchorAfter?.blockNumber ?? null;
+  const etherscanUrl = causalWindow?.anchorAfter?.etherscanUrl ?? null;
+  const anchored = blockTime !== null;
+
+  const prettyDate = blockTime
+    ? new Date(blockTime).toLocaleString(undefined, {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        timeZoneName: "short",
+      })
+    : "Awaiting Ethereum anchor…";
+
+  // Short proofHash — matches the title pill
+  const ph = (proof as OCCProof & { proofHash?: string });
+  const fullHash = ph.proofHash || "";
+  const shortHash = fullHash.replace(/[+/=]/g, "").slice(0, 12);
+
+  // Creator / file info
+  // TODO: C2PA — when the file contains a C2PA manifest, populate creator,
+  // device, and tool fields from the manifest instead of falling back.
+  const creator = attr?.name?.trim() || "Anonymous";
+  const fileTitle =
+    cachedFile?.name ||
+    (attr?.title && !attr.title.startsWith("http") ? attr.title : null) ||
+    "Untitled file";
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
+      {/* Status badge */}
+      <div
+        style={{
+          background: "#ffffff",
+          border: "1px solid #d0d5dd",
+          borderRadius: 16,
+          padding: "32px 28px",
+          display: "flex",
+          alignItems: "center",
+          gap: 24,
+          flexWrap: "wrap",
+        }}
+      >
+        <div
+          style={{
+            width: 72,
+            height: 72,
+            borderRadius: 999,
+            background: "rgba(0,101,164,0.08)",
+            border: "2px solid #0065A4",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}
+        >
+          <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#0065A4" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        </div>
+        <div style={{ flex: 1, minWidth: 200 }}>
+          <div style={{ fontSize: 32, fontWeight: 800, color: "#111827", letterSpacing: "-0.02em", lineHeight: 1.1 }}>
+            Verified
+          </div>
+          <div style={{ fontSize: 15, color: "#6b7280", marginTop: 6, lineHeight: 1.5 }}>
+            This file was cryptographically sealed inside a hardware enclave.
+            Any change to the file or the proof would be detectable.
+          </div>
+        </div>
+      </div>
+
+      {/* Image preview, if available */}
+      {previewUrl && (
+        <div
+          style={{
+            background: "#ffffff",
+            border: "1px solid #d0d5dd",
+            borderRadius: 16,
+            padding: 16,
+            display: "flex",
+            justifyContent: "center",
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={previewUrl}
+            alt={fileTitle}
+            style={{
+              maxWidth: "100%",
+              maxHeight: 420,
+              borderRadius: 10,
+              objectFit: "contain",
+              background: "#f5f5f5",
+            }}
+          />
+        </div>
+      )}
+
+      {/* Key facts */}
+      <div
+        style={{
+          background: "#ffffff",
+          border: "1px solid #d0d5dd",
+          borderRadius: 16,
+          overflow: "hidden",
+        }}
+      >
+        <BigField label="File" value={fileTitle} />
+        <BigField label="Creator" value={creator} />
+        <BigField
+          label="Proved on"
+          value={prettyDate}
+          muted={!anchored}
+        />
+        <BigField
+          label="Fingerprint"
+          value={shortHash}
+          mono
+          copyValue={fullHash}
+          hint="Click to copy the full proof hash"
+        />
+        {anchored && blockNumber !== null && (
+          <BigField
+            label="Sealed in"
+            value={`Ethereum block #${blockNumber.toLocaleString()}`}
+            linkHref={etherscanUrl || undefined}
+            linkLabel="View on Etherscan ↗"
+            isLast
+          />
+        )}
+        {!anchored && (
+          <BigField
+            label="Sealed in"
+            value="Ethereum (awaiting next anchor)"
+            muted
+            isLast
+          />
+        )}
+      </div>
+
+      {/* Verify button */}
+      {proof.environment?.attestation?.reportB64 && proof.environment?.measurement && (
+        <div
+          style={{
+            background: "rgba(0,101,164,0.04)",
+            border: "1px solid rgba(0,101,164,0.2)",
+            borderRadius: 16,
+            padding: "24px 28px",
+            display: "flex",
+            alignItems: "center",
+            gap: 20,
+            flexWrap: "wrap",
+          }}
+        >
+          <div style={{ flex: 1, minWidth: 220 }}>
+            <div style={{ fontSize: 17, fontWeight: 700, color: "#111827", marginBottom: 4 }}>
+              Verify this for yourself
+            </div>
+            <div style={{ fontSize: 14, color: "#4b5563", lineHeight: 1.5 }}>
+              Runs a full hardware attestation check in your browser. Confirms
+              the proof was signed inside a real AWS Nitro Enclave running the
+              exact OCC code we publish — no network calls, no trust in us.
+            </div>
+          </div>
+          <div>
+            <AttestationButton
+              reportB64={proof.environment.attestation.reportB64}
+              measurement={proof.environment.measurement}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Plain-English explainer */}
+      <div
+        style={{
+          background: "#ffffff",
+          border: "1px solid #d0d5dd",
+          borderRadius: 16,
+          padding: "24px 28px",
+        }}
+      >
+        <div style={{ fontSize: 13, fontWeight: 700, color: "#0065A4", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>
+          What this means
+        </div>
+        <p style={{ fontSize: 15, color: "#374151", lineHeight: 1.65, margin: 0 }}>
+          OCC proofs are not metadata attached to a file after the fact. They
+          are new computations created when the file&apos;s hash fills a
+          pre-existing cryptographic slot inside {isTee ? "a hardware enclave" : "a signing boundary"}.
+          This proof anchors the file to a specific position in a causal
+          sequence, and the sequence is sealed into the Ethereum blockchain —
+          so the timing and ordering can&apos;t be rewritten later.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/* ── Big human-readable field (Simple view) ── */
+
+function BigField({
+  label,
+  value,
+  mono: isMono,
+  muted,
+  copyValue,
+  hint,
+  linkHref,
+  linkLabel,
+  isLast,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+  muted?: boolean;
+  copyValue?: string;
+  hint?: string;
+  linkHref?: string;
+  linkLabel?: string;
+  isLast?: boolean;
+}) {
+  const [copied, setCopied] = useState(false);
+  const clickable = Boolean(copyValue);
+
+  return (
+    <div
+      onClick={() => {
+        if (!clickable) return;
+        navigator.clipboard.writeText(copyValue!);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      }}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 6,
+        padding: "20px 28px",
+        borderBottom: isLast ? "none" : "1px solid #e5e7eb",
+        cursor: clickable ? "pointer" : "default",
+      }}
+      title={clickable ? hint : undefined}
+    >
+      <div style={{ fontSize: 11, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+        {label}
+      </div>
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
+        <span
+          style={{
+            fontSize: isMono ? 22 : 20,
+            fontFamily: isMono ? mono : "inherit",
+            fontWeight: isMono ? 700 : 600,
+            color: copied ? "#0065A4" : muted ? "#9ca3af" : "#111827",
+            letterSpacing: isMono ? "-0.01em" : "normal",
+            wordBreak: "break-word",
+            lineHeight: 1.3,
+            transition: "color .2s",
+          }}
+        >
+          {copied ? "Copied!" : value}
+        </span>
+        {linkHref && (
+          <a
+            href={linkHref}
+            target="_blank"
+            rel="noopener"
+            onClick={(e) => e.stopPropagation()}
+            style={{ fontSize: 13, fontWeight: 600, color: "#0065A4", textDecoration: "none", whiteSpace: "nowrap" }}
+          >
+            {linkLabel || linkHref}
+          </a>
+        )}
       </div>
     </div>
   );
