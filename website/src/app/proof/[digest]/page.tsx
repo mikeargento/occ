@@ -138,11 +138,12 @@ export default function ProofPage() {
 
         {/* Title bar */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 40, flexWrap: "wrap", gap: 12 }}>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
             <span style={{ fontSize: 28, fontWeight: 900, fontFamily: 'var(--font-sans)' }}>
               <span style={{ color: "var(--c-accent)" }}>{isEth ? "Anchor" : "Proof"} </span>
               <ProofHashTitle proof={proof} />
             </span>
+            {!isEth && <VerifiedPill />}
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
             {!isEth && (
@@ -511,45 +512,6 @@ function SimpleView({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-      {/* Standalone "Verified" pill — floats above everything, centered.
-          Lives outside any card so it reads as a status banner for the
-          whole proof, not a tag on a single element. */}
-      <div style={{ display: "flex", justifyContent: "center" }}>
-        <div
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 10,
-            padding: "10px 18px 10px 12px",
-            borderRadius: 999,
-            background: "#16a34a",
-            color: "#ffffff",
-            fontSize: 15,
-            fontWeight: 700,
-            letterSpacing: "0.01em",
-            boxShadow: "0 2px 10px rgba(22,163,74,0.25)",
-            lineHeight: 1,
-          }}
-        >
-          <span
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 24,
-              height: 24,
-              borderRadius: 999,
-              background: "rgba(255,255,255,0.18)",
-            }}
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          </span>
-          Verified
-        </div>
-      </div>
-
       {imageSrc && (
         /* Photo card — the card hugs the image so portrait and landscape
             photos both get a tight frame, and the whole card is centered
@@ -684,6 +646,46 @@ function SimpleView({
   );
 }
 
+/* ── Verified pill — sits next to the proof title as an inline status mark ── */
+
+function VerifiedPill() {
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 7,
+        padding: "6px 12px 6px 8px",
+        borderRadius: 999,
+        background: "#16a34a",
+        color: "#ffffff",
+        fontSize: 13,
+        fontWeight: 700,
+        letterSpacing: "0.01em",
+        lineHeight: 1,
+        verticalAlign: "middle",
+      }}
+    >
+      <span
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: 18,
+          height: 18,
+          borderRadius: 999,
+          background: "rgba(255,255,255,0.20)",
+        }}
+      >
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      </span>
+      Verified
+    </span>
+  );
+}
+
 /* ── C2PA card — top-level Content Credentials, shown when present ── */
 
 function C2PACard({ c2pa, prettyProofDate }: { c2pa: C2PAReadResult; prettyProofDate: string | null }) {
@@ -712,11 +714,31 @@ function C2PACard({ c2pa, prettyProofDate }: { c2pa: C2PAReadResult; prettyProof
           Content Credentials (C2PA)
         </div>
         <div style={{
-          fontSize: 10, fontWeight: 700, letterSpacing: "0.05em",
-          color: sigClean ? "#0f766e" : "#b45309",
-          background: sigClean ? "rgba(15,118,110,0.08)" : "rgba(180,83,9,0.08)",
-          padding: "3px 8px", borderRadius: 999, textTransform: "uppercase",
+          display: "inline-flex", alignItems: "center", gap: 6,
+          fontSize: 11, fontWeight: 700, letterSpacing: "0.02em",
+          color: "#ffffff",
+          background: sigClean ? "#16a34a" : "#b45309",
+          padding: "5px 10px 5px 7px", borderRadius: 999,
+          lineHeight: 1,
+          boxShadow: sigClean ? "0 1px 4px rgba(22,163,74,0.25)" : "none",
         }}>
+          {sigClean && (
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 14,
+                height: 14,
+                borderRadius: 999,
+                background: "rgba(255,255,255,0.22)",
+              }}
+            >
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </span>
+          )}
           {sigClean ? "Signed" : "Unverified"}
         </div>
       </div>
