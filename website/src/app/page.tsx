@@ -295,10 +295,18 @@ export default function OCCPage() {
 
       <div className={`occ-wrap${step !== "drop" ? " occ-results" : ""}`}>
 
-        {/* ── Drop zone or Chat ── */}
-        {step === "drop" && !chatOpen && (
+        {/* ── Drop zone + What is OCC button ── */}
+        {step === "drop" && (
           <>
-            <div style={{ position: "relative", display: "flex", justifyContent: "center", margin: "0 auto 20px", animation: "slideIn 0.3s ease-out" }}>
+            <div className="file-drop-container" style={{ animation: "slideIn 0.3s ease-out" }}>
+              <FileDrop
+                multiple
+                onFile={(f) => handleFiles([f])}
+                onFiles={handleFiles}
+                hint=""
+              />
+            </div>
+            <div style={{ position: "relative", display: "flex", justifyContent: "center", animation: "slideIn 0.3s ease-out" }}>
               <button
                 type="button"
                 onClick={() => setInfoOpen((v) => !v)}
@@ -358,7 +366,7 @@ export default function OCCPage() {
                     role="dialog"
                     style={{
                       position: "absolute",
-                      top: "calc(100% + 10px)",
+                      bottom: "calc(100% + 10px)",
                       left: "50%",
                       transform: "translateX(-50%)",
                       zIndex: 50,
@@ -375,15 +383,15 @@ export default function OCCPage() {
                       aria-hidden="true"
                       style={{
                         position: "absolute",
-                        top: -6,
+                        bottom: -6,
                         left: "50%",
                         marginLeft: -6,
                         transform: "rotate(45deg)",
                         width: 12,
                         height: 12,
                         background: "#ffffff",
-                        borderLeft: "1px solid #e5e7eb",
-                        borderTop: "1px solid #e5e7eb",
+                        borderRight: "1px solid #e5e7eb",
+                        borderBottom: "1px solid #e5e7eb",
                       }}
                     />
                     <p
@@ -401,19 +409,55 @@ export default function OCCPage() {
                 </>
               )}
             </div>
-            <div className="file-drop-container" style={{ animation: "slideIn 0.3s ease-out" }}>
-              <FileDrop
-                multiple
-                onFile={(f) => handleFiles([f])}
-                onFiles={handleFiles}
-                hint=""
-              />
-            </div>
-            <Chat onOpenChange={setChatOpen} />
           </>
         )}
-        {step === "drop" && chatOpen && (
-          <Chat defaultOpen onOpenChange={setChatOpen} />
+
+        {/* ── Floating chat bubble — matches the docs layout ── */}
+        {step === "drop" && (
+          chatOpen ? (
+            <div className="docs-chat-container" style={{
+              position: "fixed", bottom: 24, right: 24, zIndex: 100,
+              width: 400, maxWidth: "calc(100vw - 48px)",
+              maxHeight: "calc(100vh - 120px)",
+              borderRadius: 16, overflow: "hidden",
+              boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08)",
+            }}>
+              <style>{`
+                @media (max-width: 640px) {
+                  .docs-chat-container {
+                    position: fixed !important;
+                    inset: 0 !important;
+                    width: 100% !important;
+                    max-width: 100% !important;
+                    max-height: 100% !important;
+                    border-radius: 0 !important;
+                    bottom: 0 !important;
+                    right: 0 !important;
+                  }
+                }
+              `}</style>
+              <Chat defaultOpen onOpenChange={setChatOpen} />
+            </div>
+          ) : (
+            <button
+              onClick={() => setChatOpen(true)}
+              aria-label="Open chat"
+              style={{
+                position: "fixed", bottom: 24, right: 24, zIndex: 100,
+                width: 52, height: 52, borderRadius: 14,
+                background: "#0065A4", border: "none", cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                boxShadow: "0 4px 12px rgba(0,101,164,0.3)",
+                transition: "transform 0.15s, box-shadow 0.15s",
+              }}
+              onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.05)"; e.currentTarget.style.boxShadow = "0 6px 16px rgba(0,101,164,0.4)"; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,101,164,0.3)"; }}
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+              </svg>
+            </button>
+          )
         )}
 
         {/* ── Scanning ── */}
