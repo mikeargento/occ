@@ -503,8 +503,9 @@ function SimpleView({
 
     const isNative = /\.(jpe?g|png|gif|webp|avif|bmp|tiff?)$/i.test(name);
     const isHeic = /\.(heic|heif)$/i.test(name);
-    // RAW formats — recognized but not rendered natively. Fall through to
-    // C2PA thumbnail if one exists.
+    // RAW formats — browsers can't decode these, but they almost always
+    // contain an embedded JPEG preview (for the camera's LCD screen).
+    // We extract the largest JPEG block from the raw bytes.
     const isRaw = /\.(cr2|cr3|nef|arw|dng|raf|orf|rw2|pef|srw|raw|x3f)$/i.test(name);
 
     if (!isNative && !isHeic && !isRaw) {
@@ -512,9 +513,16 @@ function SimpleView({
       return;
     }
 
-    // RAW: don't even try a blob URL — no browser can render these.
-    // The imageSrc fallback chain will use the C2PA thumbnail instead.
     if (isRaw) {
+      // Extract the embedded JPEG preview from the RAW file bytes.
+      const rawData = new Uint8Array(cachedFile.data);
+      const jpegBlob = extractJpegFromRaw(rawData);
+      if (jpegBlob) {
+        const url = URL.createObjectURL(jpegBlob);
+        setPreviewUrl(url);
+        return () => URL.revokeObjectURL(url);
+      }
+      // No embedded JPEG found — fall through to C2PA thumbnail
       setPreviewUrl(null);
       return;
     }
@@ -736,6 +744,60 @@ function SimpleView({
       </div>
     </div>
   );
+}
+
+/* ── Extract embedded JPEG preview from RAW camera files ── */
+
+/**
+ * RAW camera files (CR2, NEF, ARW, DNG, RAF, etc.) embed one or more
+ * JPEG previews for the camera's LCD screen. This function scans the
+ * raw bytes for JPEG start (0xFF 0xD8) and end (0xFF 0xD9) markers
+ * and returns the largest JPEG block found — which is typically the
+ * full-resolution preview.
+ *
+ * No external dependency. Works for every major DSLR RAW format
+ * because they all embed JPEG previews the same way.
+ */
+function extractJpegFromRaw(data: Uint8Array): Blob | null {
+  // Find all JPEG SOI (Start of Image) markers
+  const starts: number[] = [];
+  for (let i = 0; i < data.length - 1; i++) {
+    if (data[i] === 0xFF && data[i + 1] === 0xD8) {
+      starts.push(i);
+    }
+  }
+  if (starts.length === 0) return null;
+
+  let bestStart = -1;
+  let bestEnd = -1;
+  let bestSize = 0;
+
+  for (let s = 0; s < starts.length; s++) {
+    const start = starts[s];
+    // Search boundary: next JPEG SOI or end of file
+    const boundary = s + 1 < starts.length ? starts[s + 1] : data.length;
+
+    // Find the last JPEG EOI (End of Image) marker before the boundary
+    let end = -1;
+    for (let j = boundary - 2; j >= start + 2; j--) {
+      if (data[j] === 0xFF && data[j + 1] === 0xD9) {
+        end = j + 2;
+        break;
+      }
+    }
+
+    if (end < 0) continue;
+    const size = end - start;
+    // Skip tiny thumbnails (< 10 KB) — we want the full-res preview
+    if (size > bestSize && size > 10000) {
+      bestStart = start;
+      bestEnd = end;
+      bestSize = size;
+    }
+  }
+
+  if (bestStart < 0) return null;
+  return new Blob([data.slice(bestStart, bestEnd)], { type: "image/jpeg" });
 }
 
 /* ── C2PA card — top-level Content Credentials, shown when present ── */
