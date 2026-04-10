@@ -858,7 +858,7 @@ function C2PACard({ c2pa, prettyProofDate }: { c2pa: C2PAReadResult; prettyProof
       </div>
 
       <div style={{ padding: "0 0 4px 0" }}>
-        {c2pa.creator && <BigField label="Creator" value={c2pa.creator} />}
+        {c2pa.creator && <BigField label="Author" value={c2pa.creator} />}
         {claimGenerator && (
           <BigField
             label="Produced with"
