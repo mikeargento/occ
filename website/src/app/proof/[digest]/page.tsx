@@ -482,17 +482,76 @@ function SimpleView({
   isTee: boolean;
 }) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewFailed, setPreviewFailed] = useState(false);
 
-  // Build an object URL for image preview if the cached file is an image
+  // Build an object URL for image preview if the cached file is an image.
+  //
+  // Three categories:
+  //   1. Browser-native formats (JPEG, PNG, GIF, WebP, AVIF, BMP) → blob URL
+  //   2. HEIC/HEIF → convert to JPEG via heic2any (lazy-loaded ~500 KB),
+  //      then use the converted blob. iPhones shoot HEIC by default.
+  //   3. RAW camera formats (CR2, CR3, NEF, ARW, DNG, RAF, ORF, RW2, PEF,
+  //      SRW) → skip blob URL entirely, fall through to C2PA thumbnail.
+  //      No good browser decoder exists for these.
+  //
+  // The <img> tag also has an onError handler that clears previewUrl so
+  // unsupported formats never render as a broken image — they gracefully
+  // fall back to the C2PA thumbnail or no image at all.
   useEffect(() => {
-    if (!cachedFile) { setPreviewUrl(null); return; }
+    if (!cachedFile) { setPreviewUrl(null); setPreviewFailed(false); return; }
     const name = cachedFile.name.toLowerCase();
-    const isImage = /\.(jpe?g|png|gif|webp|heic|heif|avif|bmp|tiff?)$/i.test(name);
-    if (!isImage) { setPreviewUrl(null); return; }
-    const blob = new Blob([new Uint8Array(cachedFile.data)]);
-    const url = URL.createObjectURL(blob);
-    setPreviewUrl(url);
-    return () => URL.revokeObjectURL(url);
+
+    const isNative = /\.(jpe?g|png|gif|webp|avif|bmp|tiff?)$/i.test(name);
+    const isHeic = /\.(heic|heif)$/i.test(name);
+    // RAW formats — recognized but not rendered natively. Fall through to
+    // C2PA thumbnail if one exists.
+    const isRaw = /\.(cr2|cr3|nef|arw|dng|raf|orf|rw2|pef|srw|raw|x3f)$/i.test(name);
+
+    if (!isNative && !isHeic && !isRaw) {
+      setPreviewUrl(null);
+      return;
+    }
+
+    // RAW: don't even try a blob URL — no browser can render these.
+    // The imageSrc fallback chain will use the C2PA thumbnail instead.
+    if (isRaw) {
+      setPreviewUrl(null);
+      return;
+    }
+
+    let revoke: (() => void) | null = null;
+
+    if (isHeic) {
+      // HEIC: convert to JPEG in the browser via heic2any (lazy-loaded).
+      // Safari can render HEIC natively, but Chrome/Firefox cannot.
+      (async () => {
+        try {
+          const heic2any = (await import("heic2any")).default;
+          const blob = new Blob([new Uint8Array(cachedFile.data)]);
+          const result = await heic2any({
+            blob,
+            toType: "image/jpeg",
+            quality: 0.85,
+          });
+          const jpegBlob = Array.isArray(result) ? result[0] : result;
+          const url = URL.createObjectURL(jpegBlob);
+          setPreviewUrl(url);
+          revoke = () => URL.revokeObjectURL(url);
+        } catch (e) {
+          console.warn("[occ] heic2any conversion failed:", e);
+          setPreviewUrl(null);
+        }
+      })();
+    } else {
+      // Browser-native format — direct blob URL.
+      const blob = new Blob([new Uint8Array(cachedFile.data)]);
+      const url = URL.createObjectURL(blob);
+      setPreviewUrl(url);
+      revoke = () => URL.revokeObjectURL(url);
+    }
+
+    setPreviewFailed(false);
+    return () => { revoke?.(); };
   }, [cachedFile]);
 
   // Pull the human-readable date from the Ethereum anchor block time when available
@@ -533,7 +592,11 @@ function SimpleView({
   const hasC2PA = !!(c2pa && c2pa.present);
   const hasSubmitterNote = !!(attr?.name?.trim() || attr?.message?.trim());
 
-  const imageSrc = previewUrl || c2pa?.thumbnailDataUrl || "";
+  // Image source fallback chain:
+  // 1. Local preview URL (converted if HEIC, blob if native)
+  // 2. C2PA embedded thumbnail (covers RAW + shared links without cached file)
+  // 3. Nothing — photo card is hidden entirely
+  const imageSrc = (!previewFailed && previewUrl) || c2pa?.thumbnailDataUrl || "";
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
@@ -557,6 +620,11 @@ function SimpleView({
           <img
             src={imageSrc}
             alt={fileTitle}
+            onError={() => {
+              // Browser can't render this blob — clear preview so imageSrc
+              // falls through to C2PA thumbnail or hides the card entirely.
+              if (previewUrl) setPreviewFailed(true);
+            }}
             style={{
               display: "block",
               maxWidth: "min(100%, 500px)",
