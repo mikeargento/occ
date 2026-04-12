@@ -610,7 +610,7 @@ export default function Sections7to9() {
           <div className="my-6 border border-[#e5e7eb] bg-[#f9fafb] p-5">
             {/* Desktop layout */}
             <div className="hidden sm:flex items-center justify-center gap-0 flex-wrap">
-              <div className="border border-[#e5e7eb]px-5 py-3 text-sm text-center bg-[#f9fafb]">
+              <div className="border border-[#e5e7eb] px-5 py-3 text-sm text-center bg-[#f9fafb]">
                 Candidate
                 <br />
                 Digital State
@@ -622,11 +622,11 @@ export default function Sections7to9() {
                 <div className="text-xs text-[#6b7280] mb-0.5">submit</div>
                 <div className="text-[#6b7280] text-lg">&rarr;</div>
               </div>
-              <div className="border-2 border-[#e5e7eb] bg-[#f9fafb]px-4 py-5 text-center">
+              <div className="border-2 border-[#e5e7eb] bg-[#f9fafb] px-4 py-5 text-center">
                 <div className="font-bold text-[11px] text-[#6b7280] mb-2 tracking-wider uppercase">
                   Atomic Execution Boundary
                 </div>
-                <div className="border border-[#e5e7eb]px-4 py-2.5 text-sm bg-[#f9fafb]">
+                <div className="border border-[#e5e7eb] px-4 py-2.5 text-sm bg-[#f9fafb]">
                   Protected Commit
                   <br />
                   Interface
@@ -638,7 +638,7 @@ export default function Sections7to9() {
                 </div>
                 <div className="text-[#6b7280] text-lg">&rarr;</div>
               </div>
-              <div className="border border-[#e5e7eb]px-5 py-3 text-sm text-center bg-[#f9fafb]">
+              <div className="border border-[#e5e7eb] px-5 py-3 text-sm text-center bg-[#f9fafb]">
                 Authenticated
                 <br />
                 Durable State
@@ -649,7 +649,7 @@ export default function Sections7to9() {
             </div>
             {/* Mobile layout */}
             <div className="flex sm:hidden flex-col items-center gap-2 text-sm">
-              <div className="border border-[#e5e7eb]px-5 py-3 bg-[#f9fafb] w-full text-center">
+              <div className="border border-[#e5e7eb] px-5 py-3 bg-[#f9fafb] w-full text-center">
                 Candidate Digital State
                 <br />
                 <span className="text-xs text-[#6b7280]">
@@ -657,18 +657,18 @@ export default function Sections7to9() {
                 </span>
               </div>
               <div className="text-xs text-[#6b7280]">submit &darr;</div>
-              <div className="border-2 border-[#e5e7eb] bg-[#f9fafb]p-4 w-full text-center">
+              <div className="border-2 border-[#e5e7eb] bg-[#f9fafb] p-4 w-full text-center">
                 <div className="font-bold text-[11px] text-[#6b7280] mb-2 tracking-wider uppercase">
                   Atomic Execution Boundary
                 </div>
-                <div className="border border-[#e5e7eb]px-2.5 py-2 text-sm bg-[#f9fafb]">
+                <div className="border border-[#e5e7eb] px-2.5 py-2 text-sm bg-[#f9fafb]">
                   Protected Commit Interface
                 </div>
               </div>
               <div className="text-xs text-[#6b7280]">
                 finalize &darr;
               </div>
-              <div className="border border-[#e5e7eb]px-5 py-3 bg-[#f9fafb] w-full text-center">
+              <div className="border border-[#e5e7eb] px-5 py-3 bg-[#f9fafb] w-full text-center">
                 Authenticated Durable State
                 <br />
                 <span className="text-xs text-[#6b7280]">
@@ -900,7 +900,7 @@ export default function Sections7to9() {
                   <div className="flex flex-col items-center">
                     <div className="text-xs text-[#6b7280]">finalize</div>
                     <div className="text-[#6b7280]">&darr;</div>
-                    <div className="border border-[#e5e7eb]px-3.5 py-2 text-xs">
+                    <div className="border border-[#e5e7eb] px-3.5 py-2 text-xs">
                       Artifact
                       <br />
                       <span className="text-xs text-[#6b7280]">
@@ -916,7 +916,7 @@ export default function Sections7to9() {
               </div>
               <div className="flex flex-col gap-2.5 pt-2.5">
                 <div className="flex items-center gap-2">
-                  <div className="border border-[#e5e7eb]px-3 py-1.5 text-xs">
+                  <div className="border border-[#e5e7eb] px-3 py-1.5 text-xs">
                     Copy (with proof)
                   </div>
                   <span className="text-[#6b7280]">&rarr;</span>
@@ -927,7 +927,7 @@ export default function Sections7to9() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="border border-[#e5e7eb]px-3 py-1.5 text-xs">
+                  <div className="border border-[#e5e7eb] px-3 py-1.5 text-xs">
                     Copy (stripped)
                   </div>
                   <span className="text-[#6b7280]">&rarr;</span>
@@ -961,7 +961,7 @@ export default function Sections7to9() {
                 <div className="flex-1 flex flex-col items-center gap-1">
                   <div className="text-xs text-[#6b7280]">finalize</div>
                   <div className="text-[#6b7280]">&darr;</div>
-                  <div className="border border-[#e5e7eb]p-2 text-xs text-center w-full">
+                  <div className="border border-[#e5e7eb] p-2 text-xs text-center w-full">
                     Artifact
                     <br />
                     <span className="text-xs text-[#6b7280]">
@@ -973,7 +973,7 @@ export default function Sections7to9() {
               <div className="text-xs text-[#6b7280]">&darr; distribute</div>
               <div className="flex flex-col gap-1.5 w-full">
                 <div className="flex items-center gap-1.5 text-xs">
-                  <div className="border border-[#e5e7eb]px-2 py-1.5 flex-1 text-center">
+                  <div className="border border-[#e5e7eb] px-2 py-1.5 flex-1 text-center">
                     Copy (with proof)
                   </div>
                   <span className="text-[#6b7280]">&rarr;</span>
@@ -984,7 +984,7 @@ export default function Sections7to9() {
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5 text-xs">
-                  <div className="border border-[#e5e7eb]px-2 py-1.5 flex-1 text-center">
+                  <div className="border border-[#e5e7eb] px-2 py-1.5 flex-1 text-center">
                     Copy (stripped)
                   </div>
                   <span className="text-[#6b7280]">&rarr;</span>
@@ -1103,16 +1103,16 @@ export default function Sections7to9() {
                 <div className="font-bold text-xs text-center text-[#6b7280] mb-2.5 tracking-wider">
                   Verifier
                 </div>
-                <div className="border border-[#e5e7eb]px-3.5 py-2 text-xs mb-1.5">
+                <div className="border border-[#e5e7eb] px-3.5 py-2 text-xs mb-1.5">
                   1. Recompute hash of content
                 </div>
-                <div className="border border-[#e5e7eb]px-3.5 py-2 text-xs mb-1.5">
+                <div className="border border-[#e5e7eb] px-3.5 py-2 text-xs mb-1.5">
                   2. Verify H matches recomputed hash
                 </div>
-                <div className="border border-[#e5e7eb]px-3.5 py-2 text-xs mb-1.5">
+                <div className="border border-[#e5e7eb] px-3.5 py-2 text-xs mb-1.5">
                   3. Validate signature under trusted key
                 </div>
-                <div className="border border-[#e5e7eb]px-3.5 py-2 text-xs mb-2.5">
+                <div className="border border-[#e5e7eb] px-3.5 py-2 text-xs mb-2.5">
                   4. Check policy constraints
                 </div>
                 <div className="text-center text-[#6b7280]">&darr;</div>
@@ -1150,16 +1150,16 @@ export default function Sections7to9() {
               <div className="font-bold text-xs text-center text-[#6b7280] mb-2.5 tracking-wider">
                 Verifier
               </div>
-              <div className="border border-[#e5e7eb]px-3.5 py-2 text-xs mb-1.5">
+              <div className="border border-[#e5e7eb] px-3.5 py-2 text-xs mb-1.5">
                 1. Recompute hash of content
               </div>
-              <div className="border border-[#e5e7eb]px-3.5 py-2 text-xs mb-1.5">
+              <div className="border border-[#e5e7eb] px-3.5 py-2 text-xs mb-1.5">
                 2. Verify H matches recomputed hash
               </div>
-              <div className="border border-[#e5e7eb]px-3.5 py-2 text-xs mb-1.5">
+              <div className="border border-[#e5e7eb] px-3.5 py-2 text-xs mb-1.5">
                 3. Validate signature under trusted key
               </div>
-              <div className="border border-[#e5e7eb]px-3.5 py-2 text-xs mb-2.5">
+              <div className="border border-[#e5e7eb] px-3.5 py-2 text-xs mb-2.5">
                 4. Check policy constraints
               </div>
               <div className="border border-text-tertiarypx-3.5 py-2 text-sm font-bold text-center bg-[#f9fafb]">
