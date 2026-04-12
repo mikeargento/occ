@@ -878,7 +878,7 @@ export default function Sections7to9() {
             {/* Desktop layout */}
             <div className="hidden sm:flex items-start justify-center gap-3 flex-wrap text-sm">
               <div className="text-center">
-                <div className="border border-text-tertiarypx-3.5 py-2.5 bg-[#f9fafb]">
+                <div className="border border-[#e5e7eb] px-3.5 py-2.5 bg-[#f9fafb]">
                   OCC Boundary
                   <br />
                   <span className="text-xs text-[#6b7280]">(genesis)</span>
@@ -889,7 +889,7 @@ export default function Sections7to9() {
                       store proof
                     </div>
                     <div className="text-[#6b7280]">&darr;</div>
-                    <div className="border border-text-tertiarypx-3 py-2 text-xs bg-[#f9fafb]">
+                    <div className="border border-[#e5e7eb] px-3 py-2 text-xs bg-[#f9fafb]">
                       Reference Point
                       <br />
                       <span className="font-mono text-xs">
@@ -920,7 +920,7 @@ export default function Sections7to9() {
                     Copy (with proof)
                   </div>
                   <span className="text-[#6b7280]">&rarr;</span>
-                  <div className="border border-text-tertiarypx-3 py-1.5 text-xs bg-[#f9fafb]">
+                  <div className="border border-[#e5e7eb] px-3 py-1.5 text-xs bg-[#f9fafb]">
                     Verify
                     <br />
                     <span className="text-[11px]">(portable proof)</span>
@@ -931,7 +931,7 @@ export default function Sections7to9() {
                     Copy (stripped)
                   </div>
                   <span className="text-[#6b7280]">&rarr;</span>
-                  <div className="border border-text-tertiarypx-3 py-1.5 text-xs bg-[#f9fafb]">
+                  <div className="border border-[#e5e7eb] px-3 py-1.5 text-xs bg-[#f9fafb]">
                     Verify
                     <br />
                     <span className="text-[11px]">(reference lookup)</span>
@@ -941,7 +941,7 @@ export default function Sections7to9() {
             </div>
             {/* Mobile layout */}
             <div className="flex sm:hidden flex-col items-center gap-2 text-sm">
-              <div className="border border-text-tertiarypx-3.5 py-2.5 bg-[#f9fafb] w-full text-center">
+              <div className="border border-[#e5e7eb] px-3.5 py-2.5 bg-[#f9fafb] w-full text-center">
                 OCC Boundary
                 <br />
                 <span className="text-xs text-[#6b7280]">(genesis)</span>
@@ -950,7 +950,7 @@ export default function Sections7to9() {
                 <div className="flex-1 flex flex-col items-center gap-1">
                   <div className="text-xs text-[#6b7280]">store proof</div>
                   <div className="text-[#6b7280]">&darr;</div>
-                  <div className="border border-text-tertiaryp-2 text-xs text-center w-full bg-[#f9fafb]">
+                  <div className="border border-[#e5e7eb] p-2 text-xs text-center w-full bg-[#f9fafb]">
                     Reference Point
                     <br />
                     <span className="font-mono text-xs">
@@ -977,7 +977,7 @@ export default function Sections7to9() {
                     Copy (with proof)
                   </div>
                   <span className="text-[#6b7280]">&rarr;</span>
-                  <div className="border border-text-tertiarypx-2 py-1.5 flex-1 text-center bg-[#f9fafb]">
+                  <div className="border border-[#e5e7eb] px-2 py-1.5 flex-1 text-center bg-[#f9fafb]">
                     Verify
                     <br />
                     <span className="text-[10px]">(portable)</span>
@@ -988,7 +988,7 @@ export default function Sections7to9() {
                     Copy (stripped)
                   </div>
                   <span className="text-[#6b7280]">&rarr;</span>
-                  <div className="border border-text-tertiarypx-2 py-1.5 flex-1 text-center bg-[#f9fafb]">
+                  <div className="border border-[#e5e7eb] px-2 py-1.5 flex-1 text-center bg-[#f9fafb]">
                     Verify
                     <br />
                     <span className="text-[10px]">(ref lookup)</span>
@@ -1116,7 +1116,7 @@ export default function Sections7to9() {
                   4. Check policy constraints
                 </div>
                 <div className="text-center text-[#6b7280]">&darr;</div>
-                <div className="border border-text-tertiarypx-3.5 py-2 text-sm font-bold text-center mt-1 bg-[#f9fafb]">
+                <div className="border border-[#e5e7eb] px-3.5 py-2 text-sm font-bold text-center mt-1 bg-[#f9fafb]">
                   Accept / Reject
                 </div>
               </div>
@@ -1162,7 +1162,7 @@ export default function Sections7to9() {
               <div className="border border-[#e5e7eb] px-3.5 py-2 text-xs mb-2.5">
                 4. Check policy constraints
               </div>
-              <div className="border border-text-tertiarypx-3.5 py-2 text-sm font-bold text-center bg-[#f9fafb]">
+              <div className="border border-[#e5e7eb] px-3.5 py-2 text-sm font-bold text-center bg-[#f9fafb]">
                 Accept / Reject
               </div>
             </div>
