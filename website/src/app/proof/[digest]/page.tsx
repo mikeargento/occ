@@ -199,7 +199,7 @@ export default function ProofPage() {
             )}
             <button onClick={exportZip} style={btnStyle}>Export Proof</button>
             {/* JSON is a developer action — hide it in Simple view */}
-            {!simpleView && <JsonToggle proof={proof} />}
+            {(!simpleView || isEth) && <JsonToggle proof={proof} />}
           </div>
         </div>
 
