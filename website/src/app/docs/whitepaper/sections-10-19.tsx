@@ -8,13 +8,13 @@ export default function Sections10to19() {
       {/* ================================================================ */}
       <section id="sec-related">
         <h2 className="text-xl font-semibold mt-12 mb-4">
-          10. Related Work
+          <span className="text-[#6b7280] mr-2">10</span> Related Work
         </h2>
 
         {/* 10.1 Trusted Execution and Remote Attestation */}
         <section id="sec-tee-attestation">
           <h3 className="text-lg font-semibold mt-8 mb-3">
-            10.1 Trusted Execution and Remote Attestation
+            <span className="text-[#6b7280] mr-2">10.1</span> Trusted Execution and Remote Attestation
           </h3>
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             Trusted Execution Environments (Intel SGX, ARM TrustZone, AMD SEV, RISC-V Keystone)
@@ -37,7 +37,7 @@ export default function Sections10to19() {
         {/* 10.2 Content Provenance and Credential Systems */}
         <section id="sec-provenance-systems">
           <h3 className="text-lg font-semibold mt-8 mb-3">
-            10.2 Content Provenance and Credential Systems
+            <span className="text-[#6b7280] mr-2">10.2</span> Content Provenance and Credential Systems
           </h3>
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             The Coalition for Content Provenance and Authenticity (C2PA) and related provenance
@@ -76,7 +76,7 @@ export default function Sections10to19() {
         {/* 10.3 Reference Monitors and Access Control */}
         <section id="sec-reference-monitors">
           <h3 className="text-lg font-semibold mt-8 mb-3">
-            10.3 Reference Monitors and Access Control
+            <span className="text-[#6b7280] mr-2">10.3</span> Reference Monitors and Access Control
           </h3>
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             The classical reference monitor concept (Anderson, 1972) mediates all operations on
@@ -106,7 +106,7 @@ export default function Sections10to19() {
         {/* 10.4 Capability-Based Security */}
         <section id="sec-capability">
           <h3 className="text-lg font-semibold mt-8 mb-3">
-            10.4 Capability-Based Security
+            <span className="text-[#6b7280] mr-2">10.4</span> Capability-Based Security
           </h3>
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             Object-capability models (Dennis &amp; Van Horn, 1966; Miller, 2006) enforce that access
@@ -126,7 +126,7 @@ export default function Sections10to19() {
         {/* 10.5 Information Flow Control */}
         <section id="sec-ifc">
           <h3 className="text-lg font-semibold mt-8 mb-3">
-            10.5 Information Flow Control
+            <span className="text-[#6b7280] mr-2">10.5</span> Information Flow Control
           </h3>
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             Mandatory information flow control (Goguen &amp; Meseguer, 1982; Myers &amp; Liskov,
@@ -142,7 +142,7 @@ export default function Sections10to19() {
         {/* 10.6 Blockchain and Distributed Consensus */}
         <section id="sec-blockchain">
           <h3 className="text-lg font-semibold mt-8 mb-3">
-            10.6 Blockchain and Distributed Consensus
+            <span className="text-[#6b7280] mr-2">10.6</span> Blockchain and Distributed Consensus
           </h3>
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             Blockchain systems enforce that state changes require consensus among distributed
@@ -159,7 +159,7 @@ export default function Sections10to19() {
         {/* 10.7 Delay-Tolerant Networking */}
         <section id="sec-dtn">
           <h3 className="text-lg font-semibold mt-8 mb-3">
-            10.7 Delay-Tolerant Networking and Interplanetary Protocols
+            <span className="text-[#6b7280] mr-2">10.7</span> Delay-Tolerant Networking and Interplanetary Protocols
           </h3>
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             The Bundle Protocol (RFC 9171) and DTN architecture provide store-and-forward transport
@@ -177,7 +177,7 @@ export default function Sections10to19() {
         {/* 10.8 Summary of Structural Distinctions */}
         <section id="sec-structural-distinctions">
           <h3 className="text-lg font-semibold mt-8 mb-3">
-            10.8 Summary of Structural Distinctions
+            <span className="text-[#6b7280] mr-2">10.8</span> Summary of Structural Distinctions
           </h3>
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             Table 1 summarizes the structural properties that distinguish OCC from related
@@ -187,8 +187,7 @@ export default function Sections10to19() {
             </a>{" "}
             and{" "}
             <a href="#sec-falsifiers" className="text-[#111827] underline decoration-border-subtle underline-offset-2">
-              8.3
-            </a>. Entries reflect architectural constraints, not implementation quality.
+              8.3</a>. Entries reflect architectural constraints, not implementation quality.
           </p>
 
           <div className="overflow-x-auto mb-4">
@@ -290,7 +289,7 @@ export default function Sections10to19() {
       {/* ================================================================ */}
       <section id="sec-examples">
         <h2 className="text-xl font-semibold mt-12 mb-4">
-          11. Worked Examples
+          <span className="text-[#6b7280] mr-2">11</span> Worked Examples
         </h2>
         <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           We present two worked examples demonstrating Origin Controlled Computing in distinct
@@ -302,7 +301,7 @@ export default function Sections10to19() {
         {/* 11.1 Secure Media Capture */}
         <section id="sec-media-capture">
           <h3 className="text-lg font-semibold mt-8 mb-3">
-            11.1 Secure Media Capture
+            <span className="text-[#6b7280] mr-2">11.1</span> Secure Media Capture
           </h3>
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             Consider a device capturing photos or video for evidentiary or provenance-sensitive use.
@@ -340,7 +339,7 @@ export default function Sections10to19() {
         {/* 11.2 AI Output Export Pipeline */}
         <section id="sec-ai-pipeline">
           <h3 className="text-lg font-semibold mt-8 mb-3">
-            11.2 AI Output Export Pipeline
+            <span className="text-[#6b7280] mr-2">11.2</span> AI Output Export Pipeline
           </h3>
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             Consider an AI inference service exporting model outputs to downstream consumers.
@@ -383,7 +382,7 @@ export default function Sections10to19() {
       {/* ================================================================ */}
       <section id="sec-instantiations">
         <h2 className="text-xl font-semibold mt-12 mb-4">
-          12. Instantiations of the Atomic Boundary
+          <span className="text-[#6b7280] mr-2">12</span> Instantiations of the Atomic Boundary
         </h2>
         <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           The atomic execution boundary is an architectural abstraction. Concrete implementations
@@ -435,7 +434,7 @@ export default function Sections10to19() {
         {/* 12.1 Enforcement Tier Semantics */}
         <section id="sec-enforcement-tiers">
           <h3 className="text-lg font-semibold mt-8 mb-3">
-            12.1 Enforcement Tier Semantics
+            <span className="text-[#6b7280] mr-2">12.1</span> Enforcement Tier Semantics
           </h3>
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             Concrete instantiations of the atomic execution boundary differ in the strength of the
@@ -564,7 +563,7 @@ export default function Sections10to19() {
       {/* ================================================================ */}
       <section id="sec-admission">
         <h2 className="text-xl font-semibold mt-12 mb-4">
-          13. Admission of Pre-Existing Data
+          <span className="text-[#6b7280] mr-2">13</span> Admission of Pre-Existing Data
         </h2>
         <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           Origin Controlled Computing defines authenticity in terms of enforced finalization events,
@@ -594,7 +593,7 @@ export default function Sections10to19() {
         {/* 13.1 Enforced Provenance Chains */}
         <section id="sec-provenance-chains">
           <h3 className="text-lg font-semibold mt-8 mb-3">
-            13.1 Enforced Provenance Chains
+            <span className="text-[#6b7280] mr-2">13.1</span> Enforced Provenance Chains
           </h3>
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             When content traverses multiple OCC-enforced boundaries, each boundary produces
@@ -700,7 +699,7 @@ export default function Sections10to19() {
       {/* ================================================================ */}
       <section id="sec-implementation">
         <h2 className="text-xl font-semibold mt-12 mb-4">
-          14. Implementation Considerations
+          <span className="text-[#6b7280] mr-2">14</span> Implementation Considerations
         </h2>
 
         <h3 className="text-base font-semibold mt-6 mb-2">Latency.</h3>
@@ -767,7 +766,7 @@ export default function Sections10to19() {
       {/* ================================================================ */}
       <section id="sec-deployment">
         <h2 className="text-xl font-semibold mt-12 mb-4">
-          15. Deployment and Adoption
+          <span className="text-[#6b7280] mr-2">15</span> Deployment and Adoption
         </h2>
         <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           Origin Controlled Computing is best understood as an enforcement primitive that can be
@@ -820,7 +819,7 @@ export default function Sections10to19() {
       {/* ================================================================ */}
       <section id="sec-applications">
         <h2 className="text-xl font-semibold mt-12 mb-4">
-          16. Applications
+          <span className="text-[#6b7280] mr-2">16</span> Applications
         </h2>
         <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           Origin Controlled Computing applies wherever systems must distinguish admissible durable
@@ -871,7 +870,7 @@ export default function Sections10to19() {
       {/* ================================================================ */}
       <section id="sec-birth-death">
         <h2 className="text-xl font-semibold mt-12 mb-4">
-          17. Birth&ndash;Death Semantics
+          <span className="text-[#6b7280] mr-2">17</span> Birth&ndash;Death Semantics
         </h2>
         <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           Origin Controlled Computing (OCC) enforces what we term <em>birth&ndash;death
@@ -1019,7 +1018,7 @@ export default function Sections10to19() {
         {/* 17.1 Construction */}
         <section id="sec-bd-construction">
           <h3 className="text-lg font-semibold mt-8 mb-3">
-            17.1 Construction
+            <span className="text-[#6b7280] mr-2">17.1</span> Construction
           </h3>
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             Within a verifier-accepted measured boundary (e.g., a Trusted Execution Environment or
@@ -1042,7 +1041,7 @@ export default function Sections10to19() {
         {/* 17.2 Single-Successor Property */}
         <section id="sec-bd-single-successor">
           <h3 className="text-lg font-semibold mt-8 mb-3">
-            17.2 Single-Successor Property
+            <span className="text-[#6b7280] mr-2">17.2</span> Single-Successor Property
           </h3>
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             Given correct enforcement of measurement and monotonicity within the boundary, OCC
@@ -1074,7 +1073,7 @@ export default function Sections10to19() {
         {/* 17.3 Relationship to Double-Spend */}
         <section id="sec-bd-double-spend">
           <h3 className="text-lg font-semibold mt-8 mb-3">
-            17.3 Relationship to Double-Spend
+            <span className="text-[#6b7280] mr-2">17.3</span> Relationship to Double-Spend
           </h3>
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             Birth&ndash;death semantics targets the core primitive underlying double-spend failures:
@@ -1093,7 +1092,7 @@ export default function Sections10to19() {
         {/* 17.4 Trust Envelope */}
         <section id="sec-bd-trust-envelope">
           <h3 className="text-lg font-semibold mt-8 mb-3">
-            17.4 Trust Envelope
+            <span className="text-[#6b7280] mr-2">17.4</span> Trust Envelope
           </h3>
           <p className="text-sm text-[#1f2937] leading-relaxed mb-2">
             The guarantees above hold only within the verifier-accepted measurement and monotonicity
@@ -1117,7 +1116,7 @@ export default function Sections10to19() {
       {/* ================================================================ */}
       <section id="sec-value-transfer">
         <h2 className="text-xl font-semibold mt-12 mb-4">
-          18. Single-Transfer Value Without Consensus
+          <span className="text-[#6b7280] mr-2">18</span> Single-Transfer Value Without Consensus
         </h2>
         <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           Origin Controlled Computing (OCC) enables single-transfer digital value by binding
@@ -1144,7 +1143,7 @@ export default function Sections10to19() {
       {/* ================================================================ */}
       <section id="sec-conclusion">
         <h2 className="text-xl font-semibold mt-12 mb-4">
-          19. Conclusion
+          <span className="text-[#6b7280] mr-2">19</span> Conclusion
         </h2>
         <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           The Trusted Origin Token Architecture demonstrates that origin control can be enforced by
@@ -1216,8 +1215,7 @@ export default function Sections10to19() {
           </p>
           <p className="pl-7 -indent-7">
             [9] IETF, &ldquo;Remote ATtestation procedureS (RATS) Architecture,&rdquo; RFC 9334,
-            2023.
-          </p>
+            2023.</p>
           <p className="pl-7 -indent-7">
             [10] C.&thinsp;B. Jones, &ldquo;Tentative steps toward a development method for
             interfering programs,&rdquo; <em>ACM Transactions on Programming Languages and
