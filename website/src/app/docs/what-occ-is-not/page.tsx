@@ -9,7 +9,7 @@ export default function WhatOCCIsNotPage() {
   return (
     <article className="prose-doc">
       <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-6">What OCC is Not</h1>
-      <p className="text-[#374151] mb-10">
+      <p className="text-[#1f2937] mb-10">
         Precise distinctions matter for a protocol that makes specific
         cryptographic claims. Here is what OCC does not claim and does not do.
       </p>
@@ -51,7 +51,7 @@ export default function WhatOCCIsNotPage() {
         ].map((item) => (
           <div key={item.title} className="border-l-2 border-l-[#d0d5dd] pl-6">
             <h2 className="text-base font-semibold mb-3">{item.title}</h2>
-            <p className="text-sm text-[#374151] leading-relaxed">{item.body}</p>
+            <p className="text-sm text-[#1f2937] leading-relaxed">{item.body}</p>
           </div>
         ))}
       </div>

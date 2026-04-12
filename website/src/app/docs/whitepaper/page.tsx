@@ -15,16 +15,16 @@ export default function WhitepaperPage() {
   return (
     <article className="prose-doc">
       <div className="mb-2">
-        <div className="text-[10px] font-medium uppercase tracking-[0.15em] text-[#9ca3af] mb-3">
+        <div className="text-[10px] font-medium uppercase tracking-[0.15em] text-[#6b7280] mb-3">
           Whitepaper
         </div>
         <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-3">
           Origin Controlled Computing
         </h1>
-        <p className="text-lg text-[#374151] mb-1">
+        <p className="text-lg text-[#1f2937] mb-1">
           Proof as a Reachability Property
         </p>
-        <p className="text-xs text-[#9ca3af] mb-8">
+        <p className="text-xs text-[#6b7280] mb-8">
           Michael James Argento &middot; Patent Pending
         </p>
       </div>

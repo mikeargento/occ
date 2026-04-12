@@ -77,7 +77,7 @@ export default function TocDropdown() {
     <div ref={ref} className="relative mb-8">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-4 py-3 border border-[#e5e7eb] bg-[#f9fafb] text-sm text-[#374151] hover:text-[#111827] hover:border-text-tertiary transition-colors"
+        className="w-full flex items-center justify-between px-4 py-3 border border-[#e5e7eb] bg-[#f9fafb] text-sm text-[#1f2937] hover:text-[#111827] hover:border-text-tertiary transition-colors"
       >
         <span className="font-medium">Table of Contents</span>
         <svg
@@ -98,11 +98,11 @@ export default function TocDropdown() {
               key={s.id}
               onClick={() => scrollTo(s.id)}
               className={`w-full text-left px-4 py-2 text-sm hover:bg-white/5 transition-colors flex gap-2 ${
-                s.indent ? "pl-8 text-[#9ca3af]" : "text-[#374151] font-medium"
+                s.indent ? "pl-8 text-[#6b7280]" : "text-[#1f2937] font-medium"
               }`}
             >
               {s.num && (
-                <span className="text-[#9ca3af] w-8 shrink-0 font-mono text-xs leading-5">
+                <span className="text-[#6b7280] w-8 shrink-0 font-mono text-xs leading-5">
                   {s.num}
                 </span>
               )}

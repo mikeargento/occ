@@ -22,11 +22,11 @@ export default function TrustModelPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[#e5e7eb]">
-              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#9ca3af]">Assumption</th>
-              <th className="text-left py-2 text-xs font-medium uppercase tracking-wider text-[#9ca3af]">If it fails</th>
+              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#6b7280]">Assumption</th>
+              <th className="text-left py-2 text-xs font-medium uppercase tracking-wider text-[#6b7280]">If it fails</th>
             </tr>
           </thead>
-          <tbody className="text-[#374151]">
+          <tbody className="text-[#1f2937]">
             <tr className="border-b border-[#e5e7eb]">
               <td className="py-2 pr-4">Boundary isolation - TEE prevents external key access</td>
               <td className="py-2">All guarantees collapse</td>
@@ -75,13 +75,13 @@ export default function TrustModelPage() {
         ].map((t) => (
           <div key={t.threat} className="flex gap-4 border-l-2 border-l-[#d0d5dd] pl-4 py-1">
             <div className="text-sm font-medium text-[#111827] shrink-0 w-44">{t.threat}</div>
-            <div className="text-sm text-[#374151]">{t.mitigation}</div>
+            <div className="text-sm text-[#1f2937]">{t.mitigation}</div>
           </div>
         ))}
       </div>
 
       <h3 className="text-base font-semibold mt-6 mb-3">Out-of-scope threats</h3>
-      <ul className="space-y-2 mb-8 text-sm text-[#374151]">
+      <ul className="space-y-2 mb-8 text-sm text-[#1f2937]">
         <li>• Signing key exfiltration - assumes boundary is secure</li>
         <li>• TEE firmware vulnerability - delegated to hardware vendor</li>
         <li>• Weak verifier policy - caller responsibility</li>
@@ -89,7 +89,7 @@ export default function TrustModelPage() {
       </ul>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Ethereum front anchors</h2>
-      <p className="text-[#374151] leading-relaxed mb-4">
+      <p className="text-[#1f2937] leading-relaxed mb-4">
         OCC does not require a blockchain to operate, but it uses Ethereum as
         an external write-once timeline. The same TEE that signs user proofs
         also periodically commits its current counter chain into an Ethereum
@@ -97,7 +97,7 @@ export default function TrustModelPage() {
         epoch identifier, the current counter, and the latest proof hash —
         nothing about any individual user or file.
       </p>
-      <p className="text-[#374151] leading-relaxed mb-4">
+      <p className="text-[#1f2937] leading-relaxed mb-4">
         Each anchor is itself an OCC proof signed by the enclave, so it
         participates in the same counter chain as the user proofs that came
         before it. When the anchor lands in a finalized Ethereum block, that
@@ -108,7 +108,7 @@ export default function TrustModelPage() {
         consistent chain that contradicts a value already written to a public
         block.
       </p>
-      <p className="text-[#374151] leading-relaxed mb-4">
+      <p className="text-[#1f2937] leading-relaxed mb-4">
         This is the mechanism behind the phrase &quot;everything before me already
         existed.&quot; An anchor seals backward, not forward. It does not prove
         when individual proofs were created, only that they preceded the
@@ -117,14 +117,14 @@ export default function TrustModelPage() {
         could in theory rewrite the live chain, but anything before the most
         recent anchor is already fixed in the public Ethereum timeline.
       </p>
-      <p className="text-[#374151] leading-relaxed mb-8">
+      <p className="text-[#1f2937] leading-relaxed mb-8">
         Anchors are public, but they reveal no user-identifying information.
         A verifier can fetch any anchor from Ethereum and use it to bound
         when a proof must have existed by, without ever contacting OCC.
       </p>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Epoch isolation: blast-radius containment</h2>
-      <p className="text-[#374151] leading-relaxed mb-4">
+      <p className="text-[#1f2937] leading-relaxed mb-4">
         OCC&apos;s strongest containment property is structural, not behavioral.
         Each restart of the enclave generates a new Ed25519 keypair inside the
         boundary, derives a new <code className="text-xs font-mono bg-[#f3f4f6] px-1.5 py-0.5">epochId</code> from
@@ -132,7 +132,7 @@ export default function TrustModelPage() {
         every epoch is a sealed compartment, identified by a key that exists
         nowhere else in the world.
       </p>
-      <p className="text-[#374151] leading-relaxed mb-4">
+      <p className="text-[#1f2937] leading-relaxed mb-4">
         The consequence: a compromise can only forge proofs that carry the
         live epoch&apos;s public key. It cannot retroactively produce valid proofs
         under any prior epoch&apos;s key, because that key was destroyed when its
@@ -140,7 +140,7 @@ export default function TrustModelPage() {
         place. Past proofs remain verifiable because their signatures bind to
         a public key that no surviving system can sign with.
       </p>
-      <p className="text-[#374151] leading-relaxed mb-4">
+      <p className="text-[#1f2937] leading-relaxed mb-4">
         Ethereum anchors tighten this further. Each epoch&apos;s counter chain is
         periodically sealed into an Ethereum block by the same TEE. Once an
         anchor is mined, every proof committed before that anchor is fixed in
@@ -149,7 +149,7 @@ export default function TrustModelPage() {
         side by the epoch boundary and on the other side by the most recent
         Ethereum anchor that preceded it.
       </p>
-      <p className="text-[#374151] leading-relaxed mb-6">
+      <p className="text-[#1f2937] leading-relaxed mb-6">
         Restarting the TEE is not just operational hygiene — it is a deliberate
         containment action. Each restart closes one compartment and opens a
         fresh one, so any undetected compromise is quarantined to the bounded
@@ -162,11 +162,11 @@ export default function TrustModelPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[#e5e7eb]">
-              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#9ca3af]">Containment property</th>
-              <th className="text-left py-2 text-xs font-medium uppercase tracking-wider text-[#9ca3af]">What it bounds</th>
+              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#6b7280]">Containment property</th>
+              <th className="text-left py-2 text-xs font-medium uppercase tracking-wider text-[#6b7280]">What it bounds</th>
             </tr>
           </thead>
-          <tbody className="text-[#374151]">
+          <tbody className="text-[#1f2937]">
             <tr className="border-b border-[#e5e7eb]">
               <td className="py-2 pr-4">Per-epoch keypair</td>
               <td className="py-2">A compromise of one epoch cannot sign as another epoch</td>
@@ -188,7 +188,7 @@ export default function TrustModelPage() {
       </div>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Non-goals</h2>
-      <ul className="space-y-2 mb-8 text-sm text-[#374151]">
+      <ul className="space-y-2 mb-8 text-sm text-[#1f2937]">
         <li>• <strong className="text-text">Global ordering from the counter alone</strong> - every TEE instance and every new epoch resets the counter to 1, so the counter by itself only orders proofs within a single epoch. Ordering relative to the outside world is established by Ethereum anchors: each anchor lands in a finalized block, and that block&apos;s position fixes where the anchored proofs sit in the public timeline — across epochs, across TEE instances, and against any other event in the world.</li>
         <li>• <strong className="text-text">Cross-boundary double-spend</strong> - same artifact can be submitted to separate boundaries</li>
         <li>• <strong className="text-text">Copy prevention</strong> - OCC does not prevent raw byte copying</li>

@@ -26,7 +26,7 @@ function SidebarNav({ pathname, onNavigate }: { pathname: string; onNavigate?: (
         <Link key={s.href} href={s.href} onClick={onNavigate} style={{
           display: "block", padding: "6px 12px", fontSize: 14,
           fontWeight: pathname === s.href ? 600 : 400,
-          color: pathname === s.href ? "#111827" : "#6b7280",
+          color: pathname === s.href ? "#111827" : "#4b5563",
           textDecoration: "none", borderRadius: 6,
           background: pathname === s.href ? "#f3f4f6" : "transparent",
         }}>
@@ -51,7 +51,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
           <div style={{ position: "sticky", top: 88 }}>
             <div style={{
               fontSize: 11, fontWeight: 500, textTransform: "uppercase",
-              letterSpacing: "0.1em", color: "#9ca3af", marginBottom: 16, paddingTop: 8,
+              letterSpacing: "0.1em", color: "#6b7280", marginBottom: 16, paddingTop: 8,
             }}>
               Documentation
             </div>
@@ -72,7 +72,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
                   padding: "6px 12px",
                   fontSize: 14,
                   fontWeight: 400,
-                  color: "#6b7280",
+                  color: "#4b5563",
                   textDecoration: "none",
                   borderRadius: 6,
                   transition: "color 0.15s, background 0.15s",
@@ -82,7 +82,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
                   e.currentTarget.style.background = "#f3f4f6";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.color = "#6b7280";
+                  e.currentTarget.style.color = "#4b5563";
                   e.currentTarget.style.background = "transparent";
                 }}
               >

@@ -6,10 +6,10 @@ export default function Sections1Through3() {
         id="abstract"
         className="border border-[#e5e7eb] bg-[#f9fafb] p-6 mb-10"
       >
-        <div className="text-xs font-bold uppercase tracking-wider text-[#9ca3af] mb-3">
+        <div className="text-xs font-bold uppercase tracking-wider text-[#6b7280] mb-3">
           Abstract
         </div>
-        <div className="space-y-4 text-sm text-[#374151] leading-relaxed">
+        <div className="space-y-4 text-sm text-[#1f2937] leading-relaxed">
           <p>
             Modern computing systems permit durable digital state to be created
             freely and attempt to establish trust only after that state already
@@ -59,7 +59,7 @@ export default function Sections1Through3() {
       {/* ================================================================ */}
       <section id="sec-introduction">
         <h2 className="text-xl font-semibold mt-12 mb-4">
-          <span className="text-[#9ca3af] mr-2">1</span> Introduction
+          <span className="text-[#6b7280] mr-2">1</span> Introduction
         </h2>
 
         <p>
@@ -142,7 +142,7 @@ export default function Sections1Through3() {
       {/* ================================================================ */}
       <section id="sec-the-problem">
         <h2 className="text-xl font-semibold mt-12 mb-4">
-          <span className="text-[#9ca3af] mr-2">2</span> The Problem:
+          <span className="text-[#6b7280] mr-2">2</span> The Problem:
           Uncontrolled Digital State Creation
         </h2>
 
@@ -212,7 +212,7 @@ export default function Sections1Through3() {
         {/* 2.1 */}
         <section id="sec-concrete-example">
           <h3 className="text-lg font-semibold mt-10 mb-3">
-            <span className="text-[#9ca3af] mr-2">2.1</span> A Concrete
+            <span className="text-[#6b7280] mr-2">2.1</span> A Concrete
             Example: Why Attestation Is Not Enough
           </h3>
 
@@ -272,7 +272,7 @@ export default function Sections1Through3() {
         {/* 2.2 */}
         <section id="sec-provenance-example">
           <h3 className="text-lg font-semibold mt-10 mb-3">
-            <span className="text-[#9ca3af] mr-2">2.2</span> A Second
+            <span className="text-[#6b7280] mr-2">2.2</span> A Second
             Example: Provenance Without Enforcement
           </h3>
 
@@ -308,7 +308,7 @@ export default function Sections1Through3() {
         {/* 2.3 */}
         <section id="sec-ledger-example">
           <h3 className="text-lg font-semibold mt-10 mb-3">
-            <span className="text-[#9ca3af] mr-2">2.3</span> A Third
+            <span className="text-[#6b7280] mr-2">2.3</span> A Third
             Example: Ledger Registration Without Creation Constraint
           </h3>
 
@@ -371,7 +371,7 @@ export default function Sections1Through3() {
       {/* ================================================================ */}
       <section id="sec-definitions">
         <h2 className="text-xl font-semibold mt-12 mb-4">
-          <span className="text-[#9ca3af] mr-2">3</span> Definitions and
+          <span className="text-[#6b7280] mr-2">3</span> Definitions and
           Terminology
         </h2>
 

@@ -30,7 +30,7 @@ export default function DocsPage() {
       <h1 style={{ fontSize: 32, fontWeight: 600, letterSpacing: "-0.03em", marginBottom: 20, color: "#111827" }}>
         OCC Documentation
       </h1>
-      <p style={{ color: "#6b7280", fontSize: 18, lineHeight: 1.6, marginBottom: 56, maxWidth: 560 }}>
+      <p style={{ color: "#4b5563", fontSize: 18, lineHeight: 1.6, marginBottom: 56, maxWidth: 560 }}>
         Technical documentation for the OCC Protocol. Start with the concepts
         or jump directly to integration.
       </p>
@@ -40,12 +40,12 @@ export default function DocsPage() {
           <ScrollReveal key={p.href} delay={i * 60}>
             <Link href={p.href} className="doc-card">
               <div style={{ display: "flex", alignItems: "flex-start", gap: 20 }}>
-                <span style={{ fontSize: 12, fontFamily: "monospace", color: "#9ca3af", marginTop: 4, flexShrink: 0 }}>
+                <span style={{ fontSize: 12, fontFamily: "monospace", color: "#6b7280", marginTop: 4, flexShrink: 0 }}>
                   {String(i + 1).padStart(2, "0")}
                 </span>
                 <div>
                   <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 8, color: "#111827" }}>{p.title}</h2>
-                  <p style={{ fontSize: 14, color: "#6b7280", lineHeight: 1.6, margin: 0 }}>{p.desc}</p>
+                  <p style={{ fontSize: 14, color: "#4b5563", lineHeight: 1.6, margin: 0 }}>{p.desc}</p>
                 </div>
               </div>
             </Link>

@@ -9,14 +9,14 @@ export default function ProofFormatPage() {
   return (
     <article className="prose-doc">
       <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-6">Proof Format: occ/1</h1>
-      <p className="text-[#374151] mb-10">
+      <p className="text-[#1f2937] mb-10">
         Normative specification for the <code className="text-xs font-mono bg-[#f3f4f6] px-1.5 py-0.5">occ/1</code> proof format. Derived from the reference implementation.
       </p>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Proof JSON schema</h2>
       <div className="code-block mb-8">
         <div className="code-block-header"><span>proof.json</span></div>
-        <pre className="text-[#374151]">{`{
+        <pre className="text-[#1f2937]">{`{
   "version": "occ/1",                // REQUIRED - exact value
   "artifact": {
     "hashAlg": "sha256",             // REQUIRED - "sha256" only in v1
@@ -76,12 +76,12 @@ export default function ProofFormatPage() {
       </div>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Signed body</h2>
-      <p className="text-[#374151] mb-4">
+      <p className="text-[#1f2937] mb-4">
         The Ed25519 signature covers the canonical serialization of a <code className="text-xs font-mono bg-[#f3f4f6] px-1.5 py-0.5">SignedBody</code> object:
       </p>
       <div className="code-block mb-4">
         <div className="code-block-header"><span>SignedBody</span></div>
-        <pre className="text-[#374151]">{`{
+        <pre className="text-[#1f2937]">{`{
   version:           proof.version,
   artifact:          proof.artifact,
   actor:             proof.agency?.actor,        // when present
@@ -99,11 +99,11 @@ export default function ProofFormatPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[#e5e7eb]">
-              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#9ca3af]">Field</th>
-              <th className="text-left py-2 text-xs font-medium uppercase tracking-wider text-[#9ca3af]">Reason</th>
+              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#6b7280]">Field</th>
+              <th className="text-left py-2 text-xs font-medium uppercase tracking-wider text-[#6b7280]">Reason</th>
             </tr>
           </thead>
-          <tbody className="text-[#374151]">
+          <tbody className="text-[#1f2937]">
             <tr className="border-b border-[#e5e7eb]">
               <td className="py-2 pr-4"><code className="text-xs font-mono">signatureB64</code></td>
               <td className="py-2">The seal -- cannot sign itself</td>
@@ -137,18 +137,18 @@ export default function ProofFormatPage() {
       </div>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Causal slot allocation</h2>
-      <p className="text-[#374151] mb-4">
+      <p className="text-[#1f2937] mb-4">
         Every proof is causally bound to a pre-allocated slot. The slot is created <em>before</em> the artifact hash is known, proving the enclave committed to a nonce and counter independently of the artifact content.
       </p>
       <div className="overflow-x-auto mb-4">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[#e5e7eb]">
-              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#9ca3af]">Binding</th>
-              <th className="text-left py-2 text-xs font-medium uppercase tracking-wider text-[#9ca3af]">How</th>
+              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#6b7280]">Binding</th>
+              <th className="text-left py-2 text-xs font-medium uppercase tracking-wider text-[#6b7280]">How</th>
             </tr>
           </thead>
-          <tbody className="text-[#374151]">
+          <tbody className="text-[#1f2937]">
             <tr className="border-b border-[#e5e7eb]">
               <td className="py-2 pr-4">Nonce binding</td>
               <td className="py-2"><code className="text-xs font-mono">commit.nonceB64 === slotAllocation.nonceB64</code></td>
@@ -168,45 +168,45 @@ export default function ProofFormatPage() {
           </tbody>
         </table>
       </div>
-      <p className="text-sm text-[#9ca3af] mb-8">
+      <p className="text-sm text-[#6b7280] mb-8">
         The slot has its own Ed25519 signature proving the enclave created it. The commit signature includes <code className="text-xs font-mono">slotHashB64</code>, cryptographically binding the proof to that exact slot.
       </p>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Canonical serialization</h2>
-      <p className="text-[#374151] mb-4">
+      <p className="text-[#1f2937] mb-4">
         The signed body is serialized to bytes using a deterministic algorithm:
       </p>
-      <ol className="space-y-2 mb-6 text-sm text-[#374151]">
+      <ol className="space-y-2 mb-6 text-sm text-[#1f2937]">
         <li>1. Recursively sort all object keys in Unicode code-point order</li>
         <li>2. Serialize with <code className="text-xs font-mono bg-[#f3f4f6] px-1">JSON.stringify()</code> -- no whitespace</li>
         <li>3. Encode the resulting string as UTF-8 (no BOM)</li>
       </ol>
-      <p className="text-[#374151] mb-4">Top-level key order after sort:</p>
+      <p className="text-[#1f2937] mb-4">Top-level key order after sort:</p>
       <div className="code-block mb-8">
-        <pre className="text-[#374151]">
+        <pre className="text-[#1f2937]">
           actor? &rarr; artifact &rarr; attestationFormat? &rarr; attribution? &rarr; commit &rarr; enforcement &rarr; measurement &rarr; publicKeyB64 &rarr; version
         </pre>
       </div>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Field classification</h2>
       <h3 className="text-base font-semibold mt-6 mb-3">Signed (security-critical)</h3>
-      <p className="text-sm text-[#374151] mb-2">
+      <p className="text-sm text-[#1f2937] mb-2">
         These fields are in the SignedBody. Tampering invalidates the signature:
       </p>
-      <div className="text-sm text-[#374151] mb-6">
+      <div className="text-sm text-[#1f2937] mb-6">
         <code className="font-mono text-xs">version</code>, <code className="font-mono text-xs">artifact.*</code>, <code className="font-mono text-xs">agency.actor</code> (when present), <code className="font-mono text-xs">attribution.*</code> (when present), <code className="font-mono text-xs">commit.*</code>, <code className="font-mono text-xs">signer.publicKeyB64</code>, <code className="font-mono text-xs">environment.enforcement</code>, <code className="font-mono text-xs">environment.measurement</code>, <code className="font-mono text-xs">attestation.format</code>
       </div>
 
       <h3 className="text-base font-semibold mt-6 mb-3">Self-authenticating</h3>
-      <p className="text-sm text-[#374151] mb-2">
+      <p className="text-sm text-[#1f2937] mb-2">
         Not in the signed body, but independently verifiable:
       </p>
-      <div className="text-sm text-[#374151] mb-6">
+      <div className="text-sm text-[#1f2937] mb-6">
         <code className="font-mono text-xs">signatureB64</code> (Ed25519), <code className="font-mono text-xs">attestation.reportB64</code> (vendor-signed), <code className="font-mono text-xs">slotAllocation</code> (own Ed25519 signature), <code className="font-mono text-xs">agency.authorization</code> (P-256)
       </div>
 
       <h3 className="text-base font-semibold mt-6 mb-3">Advisory (unsigned)</h3>
-      <p className="text-sm text-[#374151] mb-6">
+      <p className="text-sm text-[#1f2937] mb-6">
         Not signed. Must not be used for security decisions: <code className="font-mono text-xs">timestamps</code>, <code className="font-mono text-xs">metadata</code>, <code className="font-mono text-xs">claims</code>.
       </p>
 
@@ -215,12 +215,12 @@ export default function ProofFormatPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[#e5e7eb]">
-              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#9ca3af]">Purpose</th>
-              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#9ca3af]">Algorithm</th>
-              <th className="text-left py-2 text-xs font-medium uppercase tracking-wider text-[#9ca3af]">Details</th>
+              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#6b7280]">Purpose</th>
+              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#6b7280]">Algorithm</th>
+              <th className="text-left py-2 text-xs font-medium uppercase tracking-wider text-[#6b7280]">Details</th>
             </tr>
           </thead>
-          <tbody className="text-[#374151]">
+          <tbody className="text-[#1f2937]">
             <tr className="border-b border-[#e5e7eb]">
               <td className="py-2 pr-4">Proof signature</td>
               <td className="py-2 pr-4">Ed25519 (RFC 8032)</td>

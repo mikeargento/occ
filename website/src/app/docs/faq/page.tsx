@@ -76,7 +76,7 @@ export default function FAQPage() {
   return (
     <article className="prose-doc">
       <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-6">FAQ</h1>
-      <p className="text-[#374151] mb-10">
+      <p className="text-[#1f2937] mb-10">
         Common questions about the OCC Protocol.
       </p>
 
@@ -84,7 +84,7 @@ export default function FAQPage() {
         {faqs.map((faq) => (
           <div key={faq.q} className="border-b border-[#e5e7eb] pb-8">
             <h2 className="text-lg font-semibold mb-3">{faq.q}</h2>
-            <p className="text-sm text-[#374151] leading-relaxed">{faq.a}</p>
+            <p className="text-sm text-[#1f2937] leading-relaxed">{faq.a}</p>
           </div>
         ))}
       </div>

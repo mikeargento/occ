@@ -16,14 +16,14 @@ export default function Sections10to19() {
           <h3 className="text-lg font-semibold mt-8 mb-3">
             10.1 Trusted Execution and Remote Attestation
           </h3>
-          <p className="text-sm text-[#374151] leading-relaxed mb-4">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             Trusted Execution Environments (Intel SGX, ARM TrustZone, AMD SEV, RISC-V Keystone)
             and remote attestation protocols (DICE, RATS/RFC 9334) provide hardware-enforced
             isolation and cryptographic proof that specific code executed in a measured environment.
             These mechanisms establish that a particular software image ran on genuine hardware and
             that its outputs were produced by attested code.
           </p>
-          <p className="text-sm text-[#374151] leading-relaxed mb-4">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             These systems answer the question: <em>&ldquo;Did specific trusted code execute?&rdquo;</em>{" "}
             OCC asks a different question: <em>&ldquo;Is authenticated durable state reachable only
             through enforced commit paths?&rdquo;</em> Attestation authenticates a pipeline. OCC
@@ -39,14 +39,14 @@ export default function Sections10to19() {
           <h3 className="text-lg font-semibold mt-8 mb-3">
             10.2 Content Provenance and Credential Systems
           </h3>
-          <p className="text-sm text-[#374151] leading-relaxed mb-4">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             The Coalition for Content Provenance and Authenticity (C2PA) and related provenance
             standards define how to represent claims about an artifact&apos;s origin, edits, and
             attribution, and how to transport that information across tools and platforms. When a
             signed artifact is present, these standards make integrity and lineage verifiable and
             interoperable.
           </p>
-          <p className="text-sm text-[#374151] leading-relaxed mb-4">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             OCC targets a different architectural layer. Provenance standards are a{" "}
             <em>packaging and disclosure layer</em>: they define what claims look like and how to
             verify them. OCC is an <em>enforcement layer</em>: it determines whether authenticated
@@ -56,7 +56,7 @@ export default function Sections10to19() {
             injected into downstream systems that do not strictly require provenance at every
             boundary. Provenance improves traceability without guaranteeing exclusion.
           </p>
-          <p className="text-sm text-[#374151] leading-relaxed mb-4">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             OCC and provenance are complementary. OCC strengthens provenance by making provenance
             verifiability a prerequisite for admission into protected domains. Provenance remains the
             interoperability layer that carries claims across ecosystems; OCC supplies the mechanism
@@ -78,7 +78,7 @@ export default function Sections10to19() {
           <h3 className="text-lg font-semibold mt-8 mb-3">
             10.3 Reference Monitors and Access Control
           </h3>
-          <p className="text-sm text-[#374151] leading-relaxed mb-4">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             The classical reference monitor concept (Anderson, 1972) mediates all operations on
             existing objects: every access is checked against a policy before it is permitted. Origin
             Controlled Computing is strictly stronger in one dimension: it controls not merely which{" "}
@@ -87,15 +87,15 @@ export default function Sections10to19() {
             assumes object creation is uncontrolled and focuses on subsequent access. OCC constrains
             creation itself.
           </p>
-          <p className="text-sm text-[#374151] leading-relaxed mb-2">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-2">
             Formally, a reference monitor enforces:
           </p>
           <MBlock c={"\\forall\\, \\mathit{op} \\in \\mathit{Operations},\\; \\forall\\, \\mathit{obj} \\in \\mathit{Objects} : \\mathit{execute}(\\mathit{op}, \\mathit{obj}) \\Rightarrow \\mathit{authorized}(\\mathit{subject}, \\mathit{op}, \\mathit{obj})"} />
-          <p className="text-sm text-[#374151] leading-relaxed mb-2">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-2">
             A genesis monitor (OCC) enforces:
           </p>
           <MBlock c={"\\forall\\, \\mathit{obj} \\in \\Sigma_{\\text{auth}} : \\mathit{obj} \\in \\Sigma \\Rightarrow \\exists\\, e \\in E_{\\text{auth}} : \\mathit{genesis}(\\mathit{obj}) = \\mathcal{C}(e, \\mathit{data})"} />
-          <p className="text-sm text-[#374151] leading-relaxed mb-4">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             The key difference: a reference monitor assumes objects exist and mediates access. A
             genesis monitor constrains which authenticated objects can exist at all. This is{" "}
             <em>mandatory constructor security</em>, analogous to mandatory access control but
@@ -108,12 +108,12 @@ export default function Sections10to19() {
           <h3 className="text-lg font-semibold mt-8 mb-3">
             10.4 Capability-Based Security
           </h3>
-          <p className="text-sm text-[#374151] leading-relaxed mb-4">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             Object-capability models (Dennis &amp; Van Horn, 1966; Miller, 2006) enforce that access
             to objects requires possession of an unforgeable capability. Membrane patterns in
             capability systems create revocable boundaries around object graphs.
           </p>
-          <p className="text-sm text-[#374151] leading-relaxed mb-4">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             OCC shares the emphasis on structural enforcement through unforgeable references but
             applies it at a different layer. Capabilities control{" "}
             <em>reachability of existing objects</em>. OCC controls{" "}
@@ -128,7 +128,7 @@ export default function Sections10to19() {
           <h3 className="text-lg font-semibold mt-8 mb-3">
             10.5 Information Flow Control
           </h3>
-          <p className="text-sm text-[#374151] leading-relaxed mb-4">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             Mandatory information flow control (Goguen &amp; Meseguer, 1982; Myers &amp; Liskov,
             1997) constrains how information propagates through a system. OCC enforces a related but
             distinct property: it constrains how authenticated state is <em>generated</em>, not how
@@ -144,7 +144,7 @@ export default function Sections10to19() {
           <h3 className="text-lg font-semibold mt-8 mb-3">
             10.6 Blockchain and Distributed Consensus
           </h3>
-          <p className="text-sm text-[#374151] leading-relaxed mb-4">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             Blockchain systems enforce that state changes require consensus among distributed
             participants. The architectural parallel to OCC is real: both create structural
             bottlenecks through which state transitions must pass. However, blockchain achieves
@@ -161,7 +161,7 @@ export default function Sections10to19() {
           <h3 className="text-lg font-semibold mt-8 mb-3">
             10.7 Delay-Tolerant Networking and Interplanetary Protocols
           </h3>
-          <p className="text-sm text-[#374151] leading-relaxed mb-4">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             The Bundle Protocol (RFC 9171) and DTN architecture provide store-and-forward transport
             for environments with extreme latency and intermittent connectivity. Bundle security
             (BPSec, RFC 9172) provides integrity and confidentiality at the bundle layer but does not
@@ -179,7 +179,7 @@ export default function Sections10to19() {
           <h3 className="text-lg font-semibold mt-8 mb-3">
             10.8 Summary of Structural Distinctions
           </h3>
-          <p className="text-sm text-[#374151] leading-relaxed mb-4">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             Table 1 summarizes the structural properties that distinguish OCC from related
             approaches. Each property is defined by the system invariants and falsifiability tests in{" "}
             <a href="#sec-invariants" className="text-[#111827] underline decoration-border-subtle underline-offset-2">
@@ -192,21 +192,21 @@ export default function Sections10to19() {
           </p>
 
           <div className="overflow-x-auto mb-4">
-            <p className="text-xs text-[#9ca3af] italic mb-2">
+            <p className="text-xs text-[#6b7280] italic mb-2">
               Table 1: Structural property comparison across enforcement paradigms.
             </p>
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[#e5e7eb]">
-                  <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#9ca3af]">Property</th>
-                  <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#9ca3af]">Digital Signing</th>
-                  <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#9ca3af]">TEE / Attested Exec.</th>
-                  <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#9ca3af]">Provenance (C2PA)</th>
-                  <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#9ca3af]">Blockchain / Ledger</th>
-                  <th className="text-left py-2 text-xs font-medium uppercase tracking-wider text-[#9ca3af]">OCC</th>
+                  <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#6b7280]">Property</th>
+                  <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#6b7280]">Digital Signing</th>
+                  <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#6b7280]">TEE / Attested Exec.</th>
+                  <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#6b7280]">Provenance (C2PA)</th>
+                  <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#6b7280]">Blockchain / Ledger</th>
+                  <th className="text-left py-2 text-xs font-medium uppercase tracking-wider text-[#6b7280]">OCC</th>
                 </tr>
               </thead>
-              <tbody className="text-[#374151]">
+              <tbody className="text-[#1f2937]">
                 <tr className="border-b border-[#e5e7eb]">
                   <td className="py-2 pr-4">Enforces creation-path exclusivity</td>
                   <td className="py-2 pr-4">No</td>
@@ -259,7 +259,7 @@ export default function Sections10to19() {
             </table>
           </div>
 
-          <div className="text-xs text-[#9ca3af] leading-relaxed mb-8 space-y-1">
+          <div className="text-xs text-[#6b7280] leading-relaxed mb-8 space-y-1">
             <p>
               <sup>a</sup>&thinsp;TEEs attest that trusted code executed but do not close alternative
               commit paths to durable state (
@@ -292,7 +292,7 @@ export default function Sections10to19() {
         <h2 className="text-xl font-semibold mt-12 mb-4">
           11. Worked Examples
         </h2>
-        <p className="text-sm text-[#374151] leading-relaxed mb-4">
+        <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           We present two worked examples demonstrating Origin Controlled Computing in distinct
           domains. In each case, the same architectural pattern applies: candidate data is prepared
           freely; authenticated durable state is produced only through the protected commit interface;
@@ -304,30 +304,30 @@ export default function Sections10to19() {
           <h3 className="text-lg font-semibold mt-8 mb-3">
             11.1 Secure Media Capture
           </h3>
-          <p className="text-sm text-[#374151] leading-relaxed mb-4">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             Consider a device capturing photos or video for evidentiary or provenance-sensitive use.
           </p>
-          <p className="text-sm text-[#374151] leading-relaxed mb-4">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             Candidate image or video data is produced by the camera sensor and image processing
             pipeline. This data may exist in memory or temporary buffers. It is not authenticated.
           </p>
-          <p className="text-sm text-[#374151] leading-relaxed mb-2">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-2">
             When a capture is to be finalized, the device invokes the protected commit interface for
             media output. Inside the atomic execution boundary:
           </p>
-          <ol className="list-decimal list-outside ml-5 space-y-1 mb-4 text-sm text-[#374151]">
+          <ol className="list-decimal list-outside ml-5 space-y-1 mb-4 text-sm text-[#1f2937]">
             <li>A boundary-fresh value <M c="N" /> is generated.</li>
             <li>A hash <M c="H" /> of the media content is computed.</li>
             <li>Verification material is produced by signing over <M c="(H, N)" /> together with device identity and capture metadata.</li>
             <li>Authorization is performed using a boundary-held capability.</li>
             <li>The media file and verification material are committed to durable storage.</li>
           </ol>
-          <p className="text-sm text-[#374151] leading-relaxed mb-4">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             Downstream verifiers validate the content hash against the received media, check
             verification material under approved device or platform trust anchors, and enforce any
             applicable policy constraints on capture devices or environments.
           </p>
-          <p className="text-sm text-[#374151] leading-relaxed mb-4">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             Any media not finalized through this boundary cannot produce valid verification material
             and is rejected as unauthenticated&mdash;even if it is visually or byte-identical to an
             authenticated capture. Critically, the system architecture ensures that no other code
@@ -342,30 +342,30 @@ export default function Sections10to19() {
           <h3 className="text-lg font-semibold mt-8 mb-3">
             11.2 AI Output Export Pipeline
           </h3>
-          <p className="text-sm text-[#374151] leading-relaxed mb-4">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             Consider an AI inference service exporting model outputs to downstream consumers.
           </p>
-          <p className="text-sm text-[#374151] leading-relaxed mb-4">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             Candidate outputs are produced by model execution and may exist in memory or temporary
             buffers. They are not authenticated.
           </p>
-          <p className="text-sm text-[#374151] leading-relaxed mb-2">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-2">
             When an output is to be released, the system invokes the protected commit interface for
             output export. Inside the atomic execution boundary:
           </p>
-          <ol className="list-decimal list-outside ml-5 space-y-1 mb-4 text-sm text-[#374151]">
+          <ol className="list-decimal list-outside ml-5 space-y-1 mb-4 text-sm text-[#1f2937]">
             <li>A boundary-fresh value <M c="N" /> is generated.</li>
             <li>A hash <M c="H" /> of the output is computed.</li>
             <li>Verification material is produced by signing over <M c="(H, N)" /> together with model identity and policy metadata.</li>
             <li>Authorization is performed using a boundary-held capability.</li>
             <li>The output and verification material are committed.</li>
           </ol>
-          <p className="text-sm text-[#374151] leading-relaxed mb-4">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             Downstream verifiers validate the content hash, check verification material under
             approved trust anchors, and enforce policy constraints on acceptable model identities
             and metadata.
           </p>
-          <p className="text-sm text-[#374151] leading-relaxed mb-4">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             Any AI output not finalized through this boundary cannot produce valid verification
             material and is rejected as unauthenticated&mdash;even if it is byte-identical to an
             authenticated output. The system architecture ensures that no alternative export
@@ -385,12 +385,12 @@ export default function Sections10to19() {
         <h2 className="text-xl font-semibold mt-12 mb-4">
           12. Instantiations of the Atomic Boundary
         </h2>
-        <p className="text-sm text-[#374151] leading-relaxed mb-4">
+        <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           The atomic execution boundary is an architectural abstraction. Concrete implementations
           vary by platform, deployment environment, and assurance requirements. Possible
           instantiations include:
         </p>
-        <ul className="space-y-2 mb-4 text-sm text-[#374151]">
+        <ul className="space-y-2 mb-4 text-sm text-[#1f2937]">
           <li>&#8226; <strong className="text-text">Device-level TEEs or secure enclaves</strong> gating camera output, sensor release, or local file creation.</li>
           <li>&#8226; <strong className="text-text">Kernel-mediated commit paths</strong> controlling writes to protected namespaces.</li>
           <li>&#8226; <strong className="text-text">HSM-backed services</strong> finalizing logs, media, or datasets in backend systems.</li>
@@ -398,18 +398,18 @@ export default function Sections10to19() {
           <li>&#8226; <strong className="text-text">Gateway or pipeline enforcement</strong> at ingestion points where data enters trusted domains.</li>
           <li>&#8226; <strong className="text-text">Secure pipeline stages</strong> in CI/CD or regulated data ingestion workflows.</li>
         </ul>
-        <p className="text-sm text-[#374151] leading-relaxed mb-4">
+        <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           These mechanisms differ in construction, but the enforcement invariant is the same:
           authenticated durable state can be finalized only through a protected commit interface that
           performs boundary-fresh cryptographic binding and authorization inside an atomic execution
           boundary.
         </p>
-        <p className="text-sm text-[#374151] leading-relaxed mb-4">
+        <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           What is required is not a particular trust anchor or hardware feature, but structural
           enforcement of finalization ordering and exclusivity. The architecture does not prescribe
           implementations&mdash;it defines the invariant that implementations must satisfy.
         </p>
-        <p className="text-sm text-[#374151] leading-relaxed mb-4">
+        <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           In practical terms, the protected commit interface presents a narrow surface: the caller
           submits candidate content and policy metadata; the boundary performs hashing, binding,
           authorization, and signing internally; and the caller receives the authenticated artifact
@@ -419,14 +419,14 @@ export default function Sections10to19() {
           Whether this interface is realized as a system call, a hardware enclave entry point, an HSM
           API, or a cloud service endpoint, the enforcement properties are identical.
         </p>
-        <p className="text-sm text-[#374151] leading-relaxed mb-4">
+        <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           OCC does not prevent the construction of unauthorized boundaries. Any party can build a
           boundary and produce verification material. However, artifacts produced by unauthorized
           boundaries fail verification under accepted trust anchors, because those boundaries&apos;
           identities are not in the approved set. Trust is mediated by trust anchor policy, not by
           preventing the existence of alternative boundaries.
         </p>
-        <p className="text-sm text-[#374151] leading-relaxed mb-4">
+        <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           In practice, layered deployment is common. A device may generate creation-time verification
           material, while a gateway enforces admission policy and rejects unauthenticated artifacts.
           Both layers implement the same enforcement principle at different points in the system.
@@ -437,7 +437,7 @@ export default function Sections10to19() {
           <h3 className="text-lg font-semibold mt-8 mb-3">
             12.1 Enforcement Tier Semantics
           </h3>
-          <p className="text-sm text-[#374151] leading-relaxed mb-4">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             Concrete instantiations of the atomic execution boundary differ in the strength of the
             enforcement guarantee they provide. Not all boundaries are equivalent: a software
             boundary running in process memory and a hardware enclave with remote attestation both
@@ -445,7 +445,7 @@ export default function Sections10to19() {
             different assurance that the enforcement invariants actually held. This distinction must
             be made explicit in the proof structure itself.
           </p>
-          <p className="text-sm text-[#374151] leading-relaxed mb-4">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             OCC proofs carry two orthogonal attestations. The first is a{" "}
             <em>cryptographic attestation</em>: the signature and public key establish who signed and
             that the signed content was unaltered. This is machine-checkable by any party with the
@@ -458,7 +458,7 @@ export default function Sections10to19() {
             the enforcement context proves whether the creation-time constraints of OCC actually
             held.
           </p>
-          <p className="text-sm text-[#374151] leading-relaxed mb-4">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             Three enforcement tiers capture the practically relevant points in this assurance space:
           </p>
 
@@ -468,7 +468,7 @@ export default function Sections10to19() {
               implementation. The <em>enforcement tier</em> of <M c="B" /> is a declaration of the
               structural properties of its atomic execution boundary:
             </p>
-            <ul className="space-y-3 text-sm text-[#374151]">
+            <ul className="space-y-3 text-sm text-[#1f2937]">
               <li>
                 <strong className="text-text">Software-only</strong> (<M c={"\\tau_{\\text{sw}}"} />).
                 The commit gate, signing key, nonce source, and counter are all held in ordinary
@@ -505,7 +505,7 @@ export default function Sections10to19() {
             </ul>
           </div>
 
-          <p className="text-sm text-[#374151] leading-relaxed mb-4">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             A critical subtlety distinguishes tamper-evidence from self-authentication. The
             enforcement tier is included in the signed body of every OCC proof, making it
             tamper-evident in transit: an adversary who intercepts a proof and attempts to substitute
@@ -514,7 +514,7 @@ export default function Sections10to19() {
             declare any tier. The signed field prevents downgrade attacks during transmission; it
             does not prevent a lying producer.
           </p>
-          <p className="text-sm text-[#374151] leading-relaxed mb-4">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             Actual trust in a declared tier therefore requires independent corroboration.
             For <M c={"\\tau_{\\text{tee}}"} />, this means: (1) pinning acceptable measurements to
             a known-good enclave image hash published by the boundary operator or auditor, and (2)
@@ -530,7 +530,7 @@ export default function Sections10to19() {
           </p>
 
           <div className="my-5 border-l-[3px] border-text-tertiary bg-[#f9fafb] p-5">
-            <p className="text-sm text-[#374151] leading-relaxed">
+            <p className="text-sm text-[#1f2937] leading-relaxed">
               <strong className="text-text">Remark 12.2</strong> (Hardware-Bound Key is Not Causal
               Enforcement). The <M c={"\\tau_{\\text{hw}}"} /> tier corresponds to devices such as
               mobile Secure Enclaves, TPMs, or HSMs where the signing key is hardware-protected but
@@ -545,7 +545,7 @@ export default function Sections10to19() {
             </p>
           </div>
 
-          <p className="text-sm text-[#374151] leading-relaxed mb-4">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             This taxonomy is not a quality ranking among implementations&mdash;a{" "}
             <M c={"\\tau_{\\text{sw}}"} /> boundary is fully correct for development environments
             where the adversary model does not include privileged process access. It is a structural
@@ -566,27 +566,27 @@ export default function Sections10to19() {
         <h2 className="text-xl font-semibold mt-12 mb-4">
           13. Admission of Pre-Existing Data
         </h2>
-        <p className="text-sm text-[#374151] leading-relaxed mb-4">
+        <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           Origin Controlled Computing defines authenticity in terms of enforced finalization events,
           not in terms of historical existence of content bytes.
         </p>
-        <p className="text-sm text-[#374151] leading-relaxed mb-4">
+        <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           Candidate data may exist prior to authenticated finalization and may be externally sourced,
           duplicated, replayed, or synthesized. Such prior existence is outside the trust model and
           carries no authenticity semantics.
         </p>
-        <p className="text-sm text-[#374151] leading-relaxed mb-4">
+        <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           Authenticated durable state is created only when candidate data is finalized through the
           protected commit interface and bound to boundary-fresh cryptographic output produced inside
           the atomic execution boundary. Without this enforced finalization event, no artifact can
           enter authenticated state, regardless of its prior history or method of creation.
         </p>
-        <p className="text-sm text-[#374151] leading-relaxed mb-4">
+        <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           The same content may be finalized multiple times in separate authorization events, each
           producing distinct verification material. Each such event constitutes an independent
           origin&mdash;a distinct enforced admission into authenticated durable state.
         </p>
-        <p className="text-sm text-[#374151] leading-relaxed mb-4">
+        <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           Authenticity therefore reflects structural reachability through enforced commit paths, not
           claims about when or how content bytes first came into existence.
         </p>
@@ -596,7 +596,7 @@ export default function Sections10to19() {
           <h3 className="text-lg font-semibold mt-8 mb-3">
             13.1 Enforced Provenance Chains
           </h3>
-          <p className="text-sm text-[#374151] leading-relaxed mb-4">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             When content traverses multiple OCC-enforced boundaries, each boundary produces
             independent verification material for the same content. The result is a structurally
             enforced provenance chain: an ordered sequence of admission events, each
@@ -611,57 +611,57 @@ export default function Sections10to19() {
             {/* Desktop layout */}
             <div className="hidden sm:flex items-start justify-center gap-3 flex-wrap text-xs">
               <div className="text-center pt-2">
-                <div className="border border-[#e5e7eb] p-2.5 px-3.5 text-[#374151]">
+                <div className="border border-[#e5e7eb] p-2.5 px-3.5 text-[#1f2937]">
                   Pre-existing<br />content
                 </div>
-                <div className="text-[10px] text-[#9ca3af] mt-1">(unauthenticated)</div>
+                <div className="text-[10px] text-[#6b7280] mt-1">(unauthenticated)</div>
               </div>
-              <div className="pt-5 text-[#9ca3af]">&rarr;</div>
+              <div className="pt-5 text-[#6b7280]">&rarr;</div>
               <div className="text-center">
                 <div className="font-bold text-[11px] mb-1 text-text">Boundary A</div>
-                <div className="border-2 border-[#e5e7eb] bg-[#f9fafb] p-2.5 px-3.5 text-[#374151]">Ingest</div>
-                <div className="text-[#9ca3af] mt-1">&darr;</div>
-                <div className="bg-[#f9fafb] border border-text-tertiary p-1 px-2.5 text-[11px] font-mono text-[#374151]">
+                <div className="border-2 border-[#e5e7eb] bg-[#f9fafb] p-2.5 px-3.5 text-[#1f2937]">Ingest</div>
+                <div className="text-[#6b7280] mt-1">&darr;</div>
+                <div className="bg-[#f9fafb] border border-text-tertiary p-1 px-2.5 text-[11px] font-mono text-[#1f2937]">
                   (H, N<sub>1</sub>, <M c={"\\sigma_1"} />)
                 </div>
-                <div className="text-[10px] text-[#9ca3af]">origin<sub>1</sub></div>
+                <div className="text-[10px] text-[#6b7280]">origin<sub>1</sub></div>
               </div>
-              <div className="pt-5 text-[#9ca3af]">&rarr;</div>
+              <div className="pt-5 text-[#6b7280]">&rarr;</div>
               <div className="text-center">
                 <div className="font-bold text-[11px] mb-1 text-text">Boundary B</div>
-                <div className="border-2 border-[#e5e7eb] bg-[#f9fafb] p-2.5 px-3.5 text-[#374151]">Process</div>
-                <div className="text-[#9ca3af] mt-1">&darr;</div>
-                <div className="bg-[#f9fafb] border border-text-tertiary p-1 px-2.5 text-[11px] font-mono text-[#374151]">
+                <div className="border-2 border-[#e5e7eb] bg-[#f9fafb] p-2.5 px-3.5 text-[#1f2937]">Process</div>
+                <div className="text-[#6b7280] mt-1">&darr;</div>
+                <div className="bg-[#f9fafb] border border-text-tertiary p-1 px-2.5 text-[11px] font-mono text-[#1f2937]">
                   (H&prime;, N<sub>2</sub>, <M c={"\\sigma_2"} />)
                 </div>
-                <div className="text-[10px] text-[#9ca3af]">origin<sub>2</sub></div>
+                <div className="text-[10px] text-[#6b7280]">origin<sub>2</sub></div>
               </div>
-              <div className="pt-5 text-[#9ca3af]">&rarr;</div>
+              <div className="pt-5 text-[#6b7280]">&rarr;</div>
               <div className="text-center">
                 <div className="font-bold text-[11px] mb-1 text-text">Boundary C</div>
-                <div className="border-2 border-[#e5e7eb] bg-[#f9fafb] p-2.5 px-3.5 text-[#374151]">Publish</div>
-                <div className="text-[#9ca3af] mt-1">&darr;</div>
-                <div className="bg-[#f9fafb] border border-text-tertiary p-1 px-2.5 text-[11px] font-mono text-[#374151]">
+                <div className="border-2 border-[#e5e7eb] bg-[#f9fafb] p-2.5 px-3.5 text-[#1f2937]">Publish</div>
+                <div className="text-[#6b7280] mt-1">&darr;</div>
+                <div className="bg-[#f9fafb] border border-text-tertiary p-1 px-2.5 text-[11px] font-mono text-[#1f2937]">
                   (H&Prime;, N<sub>3</sub>, <M c={"\\sigma_3"} />)
                 </div>
-                <div className="text-[10px] text-[#9ca3af]">origin<sub>3</sub></div>
+                <div className="text-[10px] text-[#6b7280]">origin<sub>3</sub></div>
               </div>
-              <div className="pt-5 text-[#9ca3af]">&rarr;</div>
+              <div className="pt-5 text-[#6b7280]">&rarr;</div>
               <div className="text-center pt-2">
-                <div className="border border-[#e5e7eb] p-2.5 px-3.5 text-[#374151]">
+                <div className="border border-[#e5e7eb] p-2.5 px-3.5 text-[#1f2937]">
                   Authenticated<br />artifact
                 </div>
-                <div className="text-[10px] text-[#9ca3af] mt-1">(3 enforced origins)</div>
+                <div className="text-[10px] text-[#6b7280] mt-1">(3 enforced origins)</div>
               </div>
             </div>
 
             {/* Mobile layout */}
             <div className="flex sm:hidden flex-col items-center gap-1.5 text-xs">
-              <div className="border border-[#e5e7eb] p-2 px-3.5 w-full text-center text-[#374151]">
+              <div className="border border-[#e5e7eb] p-2 px-3.5 w-full text-center text-[#1f2937]">
                 Pre-existing content<br />
-                <span className="text-[10px] text-[#9ca3af]">(unauthenticated)</span>
+                <span className="text-[10px] text-[#6b7280]">(unauthenticated)</span>
               </div>
-              <div className="text-[#9ca3af]">&darr;</div>
+              <div className="text-[#6b7280]">&darr;</div>
               {[
                 { label: "Boundary A", action: "Ingest", tuple: "(H, N\u2081, \u03C3\u2081)", origin: "origin\u2081" },
                 { label: "Boundary B", action: "Process", tuple: "(H\u2032, N\u2082, \u03C3\u2082)", origin: "origin\u2082" },
@@ -670,21 +670,21 @@ export default function Sections10to19() {
                 <div key={i} className="w-full">
                   <div className="w-full border-2 border-[#e5e7eb] bg-[#f9fafb] p-2.5 px-3.5 text-center">
                     <div className="font-bold text-[11px] mb-1 text-text">{b.label} &rarr; {b.action}</div>
-                    <div className="bg-[#f9fafb] border border-text-tertiary p-1 px-2.5 text-[11px] font-mono text-[#374151] inline-block">
+                    <div className="bg-[#f9fafb] border border-text-tertiary p-1 px-2.5 text-[11px] font-mono text-[#1f2937] inline-block">
                       {b.tuple}
                     </div>
-                    <div className="text-[10px] text-[#9ca3af] mt-0.5">{b.origin}</div>
+                    <div className="text-[10px] text-[#6b7280] mt-0.5">{b.origin}</div>
                   </div>
-                  <div className="text-center text-[#9ca3af]">&darr;</div>
+                  <div className="text-center text-[#6b7280]">&darr;</div>
                 </div>
               ))}
-              <div className="border border-[#e5e7eb] p-2 px-3.5 w-full text-center text-[#374151]">
+              <div className="border border-[#e5e7eb] p-2 px-3.5 w-full text-center text-[#1f2937]">
                 Authenticated artifact<br />
-                <span className="text-[10px] text-[#9ca3af]">(3 enforced origins)</span>
+                <span className="text-[10px] text-[#6b7280]">(3 enforced origins)</span>
               </div>
             </div>
 
-            <p className="text-xs text-[#9ca3af] italic text-center mt-3">
+            <p className="text-xs text-[#6b7280] italic text-center mt-3">
               <strong>Figure 6.</strong> Enforced provenance chains. Pre-existing content traverses
               multiple OCC boundaries, each producing independent verification material. Each
               admission is a separate enforced finalization event. The resulting chain is structurally
@@ -704,7 +704,7 @@ export default function Sections10to19() {
         </h2>
 
         <h3 className="text-base font-semibold mt-6 mb-2">Latency.</h3>
-        <p className="text-sm text-[#374151] leading-relaxed mb-4">
+        <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           Creation-time enforcement must be fast enough to run on capture and export paths without
           degrading user experience or pipeline throughput. Efficient proof generation and
           verification are engineering constraints, not architectural limitations. Modern signing
@@ -712,7 +712,7 @@ export default function Sections10to19() {
         </p>
 
         <h3 className="text-base font-semibold mt-6 mb-2">Offline operation.</h3>
-        <p className="text-sm text-[#374151] leading-relaxed mb-4">
+        <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           Environments requiring offline creation can generate proofs locally and defer admission
           into trusted domains until connectivity is available. Trusted domains then enforce
           verification at ingestion. This provides bounded issuance guarantees rather than continuous
@@ -724,7 +724,7 @@ export default function Sections10to19() {
         </p>
 
         <h3 className="text-base font-semibold mt-6 mb-2">Failure handling.</h3>
-        <p className="text-sm text-[#374151] leading-relaxed mb-4">
+        <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           Systems must define failure behavior. For high-assurance domains, fail-closed behavior is
           required: if proof generation fails, finalization is blocked. For consumer deployments,
           staged enforcement may begin with fail-open at selected boundaries and evolve toward
@@ -732,7 +732,7 @@ export default function Sections10to19() {
         </p>
 
         <h3 className="text-base font-semibold mt-6 mb-2">Verification material formats and transport.</h3>
-        <p className="text-sm text-[#374151] leading-relaxed mb-4">
+        <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           Verification material may be embedded within the artifact, carried in a sidecar file,
           included in a bundle manifest, transmitted as an authenticated envelope, or held at a
           reference point for query-based verification (see{" "}
@@ -745,7 +745,7 @@ export default function Sections10to19() {
         </p>
 
         <h3 className="text-base font-semibold mt-6 mb-2">Key rotation and revocation.</h3>
-        <p className="text-sm text-[#374151] leading-relaxed mb-4">
+        <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           Operational deployments require key rotation policies and revocation mechanisms. When a
           boundary is compromised, trust anchors can be revoked or rotated, new boundary identities
           introduced, and epoch constraints enforced on acceptable verification material. No artifact
@@ -753,7 +753,7 @@ export default function Sections10to19() {
         </p>
 
         <h3 className="text-base font-semibold mt-6 mb-2">Interoperability with provenance systems.</h3>
-        <p className="text-sm text-[#374151] leading-relaxed mb-4">
+        <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           OCC coexists with provenance and credentialing systems that focus on post-creation
           traceability. Provenance chains can be attached to artifacts finalized under OCC, providing
           richer downstream traceability. The admission decision remains anchored in enforced
@@ -769,14 +769,14 @@ export default function Sections10to19() {
         <h2 className="text-xl font-semibold mt-12 mb-4">
           15. Deployment and Adoption
         </h2>
-        <p className="text-sm text-[#374151] leading-relaxed mb-4">
+        <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           Origin Controlled Computing is best understood as an enforcement primitive that can be
           introduced incrementally. Most environments cannot transition from fully permissive
           creation to strict admissibility in a single step.
         </p>
 
         <h3 className="text-base font-semibold mt-6 mb-2">Phased rollout.</h3>
-        <p className="text-sm text-[#374151] leading-relaxed mb-4">
+        <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           A practical deployment begins with visibility: attaching verification material when
           available and surfacing authenticated versus unauthenticated status. The next phase
           requires authenticated finalization for selected high-assurance workflows while allowing
@@ -787,7 +787,7 @@ export default function Sections10to19() {
         </p>
 
         <h3 className="text-base font-semibold mt-6 mb-2">Policy-driven boundaries.</h3>
-        <p className="text-sm text-[#374151] leading-relaxed mb-4">
+        <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           The decisive question in most deployments is not whether an artifact can be produced, but
           whether it can be admitted into a domain that confers legitimacy, downstream impact, or
           compliance standing. OCC can be applied selectively at these boundaries: ingestion into
@@ -796,7 +796,7 @@ export default function Sections10to19() {
         </p>
 
         <h3 className="text-base font-semibold mt-6 mb-2">Institutional adoption incentives.</h3>
-        <p className="text-sm text-[#374151] leading-relaxed mb-4">
+        <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           Adoption is accelerated when benefits are concrete: reduced downstream moderation burden,
           improved auditability, clearer liability boundaries, and the ability to define and enforce
           admissible content policies. In high-volume environments, the ability to reject
@@ -808,7 +808,7 @@ export default function Sections10to19() {
         </p>
 
         <h3 className="text-base font-semibold mt-6 mb-2">End state.</h3>
-        <p className="text-sm text-[#374151] leading-relaxed mb-4">
+        <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           The end state is not universal prevention of unauthenticated creation, but reliable
           exclusion of unauthenticated durable state from the systems and pipelines where legitimacy,
           compliance, and downstream impact are determined.
@@ -822,13 +822,13 @@ export default function Sections10to19() {
         <h2 className="text-xl font-semibold mt-12 mb-4">
           16. Applications
         </h2>
-        <p className="text-sm text-[#374151] leading-relaxed mb-4">
+        <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           Origin Controlled Computing applies wherever systems must distinguish admissible durable
           outputs from arbitrary durable outputs produced outside trusted pipelines. The common
           architectural pattern is a protected commit path that gates admission into authenticated
           durable state. The pattern arises across domains:
         </p>
-        <ol className="list-decimal list-outside ml-5 space-y-2 mb-4 text-sm text-[#374151]">
+        <ol className="list-decimal list-outside ml-5 space-y-2 mb-4 text-sm text-[#1f2937]">
           <li><strong className="text-text">AI training and inference pipelines</strong>, where only authenticated outputs may be admitted into datasets or downstream automation.</li>
           <li><strong className="text-text">Media capture and evidentiary systems</strong>, where admissibility depends on verified creation conditions.</li>
           <li><strong className="text-text">Compliance logging and telemetry</strong>, where audit records must resist post-hoc fabrication.</li>
@@ -859,7 +859,7 @@ export default function Sections10to19() {
             real-time protocols, centralized registries, and consensus mechanisms are infeasible.
           </li>
         </ol>
-        <p className="text-sm text-[#374151] leading-relaxed mb-4">
+        <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           Across these domains, trust derives from enforced admission into authenticated state at
           commit time, not from retrospective provenance reconstruction. When admissibility matters,
           origin enforcement necessarily moves into the creation and finalization paths of the system.
@@ -873,14 +873,14 @@ export default function Sections10to19() {
         <h2 className="text-xl font-semibold mt-12 mb-4">
           17. Birth&ndash;Death Semantics
         </h2>
-        <p className="text-sm text-[#374151] leading-relaxed mb-4">
+        <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           Origin Controlled Computing (OCC) enforces what we term <em>birth&ndash;death
           semantics</em> for digital state. Under this model, every authoritative state transition
           has exactly one verifiable moment of creation (birth), and every transfer or succession
           requires cryptographic evidence that the prior authority has been irreversibly consumed
           (death).
         </p>
-        <p className="text-sm text-[#374151] leading-relaxed mb-4">
+        <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           Traditional provenance systems operate in a <em>detect-after</em> model: artifacts are
           produced freely, and conflicts such as replay, duplication, or double-spend are identified
           retrospectively through logs, ledgers, or consensus. OCC instead constrains the execution
@@ -895,118 +895,118 @@ export default function Sections10to19() {
             {/* Detect-After Model */}
             <div className="text-center w-56">
               <div className="font-bold text-[13px] mb-3 text-text">Detect-After Model</div>
-              <div className="bg-[#f9fafb] border border-[#e5e7eb] p-2.5 px-4 text-[13px] text-[#374151] mb-2">
+              <div className="bg-[#f9fafb] border border-[#e5e7eb] p-2.5 px-4 text-[13px] text-[#1f2937] mb-2">
                 Authority S<sub>0</sub>
               </div>
               <div className="flex justify-center gap-10 my-1">
-                <span className="text-[#9ca3af] text-lg">&swarr;</span>
-                <span className="text-[#9ca3af] text-lg">&searr;</span>
+                <span className="text-[#6b7280] text-lg">&swarr;</span>
+                <span className="text-[#6b7280] text-lg">&searr;</span>
               </div>
               <div className="flex justify-center gap-3 my-1">
-                <div className="bg-[#f9fafb] border border-[#e5e7eb] p-2 px-3 text-xs text-[#374151]">
-                  S<sub>1</sub> <span className="text-[10px] text-[#9ca3af]">valid</span>
+                <div className="bg-[#f9fafb] border border-[#e5e7eb] p-2 px-3 text-xs text-[#1f2937]">
+                  S<sub>1</sub> <span className="text-[10px] text-[#6b7280]">valid</span>
                 </div>
-                <div className="bg-[#f9fafb] border border-[#e5e7eb] p-2 px-3 text-xs text-[#374151]">
-                  S<sub>1</sub>&prime; <span className="text-[10px] text-[#9ca3af]">valid</span>
+                <div className="bg-[#f9fafb] border border-[#e5e7eb] p-2 px-3 text-xs text-[#1f2937]">
+                  S<sub>1</sub>&prime; <span className="text-[10px] text-[#6b7280]">valid</span>
                 </div>
               </div>
-              <div className="text-[#9ca3af] text-lg my-1.5">&darr;</div>
-              <div className="bg-[#f9fafb] border border-dashed border-[#e5e7eb] p-2 px-3.5 text-xs text-[#9ca3af]">
+              <div className="text-[#6b7280] text-lg my-1.5">&darr;</div>
+              <div className="bg-[#f9fafb] border border-dashed border-[#e5e7eb] p-2 px-3.5 text-xs text-[#6b7280]">
                 Conflict detected<br />
                 <span className="text-[11px]">retrospective resolution</span>
               </div>
-              <div className="text-[#9ca3af] text-[11px] mt-2">fork now, detect later</div>
+              <div className="text-[#6b7280] text-[11px] mt-2">fork now, detect later</div>
             </div>
 
             {/* Arrow */}
             <div className="flex flex-col items-center justify-center pt-16">
-              <div className="text-[28px] font-light text-[#9ca3af]">&rarr;</div>
-              <div className="text-[11px] text-[#9ca3af] text-center mt-0.5">OCC<br />enforces</div>
+              <div className="text-[28px] font-light text-[#6b7280]">&rarr;</div>
+              <div className="text-[11px] text-[#6b7280] text-center mt-0.5">OCC<br />enforces</div>
             </div>
 
             {/* Birth-Death Semantics */}
             <div className="text-center w-56">
               <div className="font-bold text-[13px] mb-3 text-text">Birth&ndash;Death Semantics</div>
-              <div className="bg-[#f9fafb] border border-[#e5e7eb] p-2.5 px-4 text-[13px] text-[#374151] mb-2">
+              <div className="bg-[#f9fafb] border border-[#e5e7eb] p-2.5 px-4 text-[13px] text-[#1f2937] mb-2">
                 Authority S<sub>0</sub>
               </div>
-              <div className="text-[#9ca3af] text-lg">&darr;</div>
+              <div className="text-[#6b7280] text-lg">&darr;</div>
               <div className="border-2 border-[#e5e7eb] bg-[#f9fafb] p-3.5 my-1">
                 <div className="flex justify-center gap-2 items-center mb-1.5">
-                  <div className="bg-red-500/10 border border-red-500/30 p-1.5 px-2.5 text-xs text-[#9ca3af]">Death</div>
-                  <div className="text-[#9ca3af] text-[11px]">S<sub>0</sub> consumed</div>
+                  <div className="bg-red-500/10 border border-red-500/30 p-1.5 px-2.5 text-xs text-[#6b7280]">Death</div>
+                  <div className="text-[#6b7280] text-[11px]">S<sub>0</sub> consumed</div>
                 </div>
-                <div className="text-[#9ca3af] text-sm">&darr;</div>
+                <div className="text-[#6b7280] text-sm">&darr;</div>
                 <div className="flex justify-center gap-2 items-center mt-1.5">
-                  <div className="bg-green-600/10 border border-green-600/30 p-1.5 px-2.5 text-xs text-[#374151]">Birth</div>
-                  <div className="text-[#9ca3af] text-[11px]">S<sub>1</sub> committed</div>
+                  <div className="bg-green-600/10 border border-green-600/30 p-1.5 px-2.5 text-xs text-[#1f2937]">Birth</div>
+                  <div className="text-[#6b7280] text-[11px]">S<sub>1</sub> committed</div>
                 </div>
               </div>
               <div className="flex justify-center gap-10 my-1.5">
                 <div>
-                  <div className="text-[#374151] text-lg">&darr;</div>
-                  <div className="bg-[#f9fafb] border border-green-600/30 p-2 px-3 text-xs text-[#374151]">
-                    S<sub>1</sub> <span className="text-[10px] text-[#9ca3af]">valid</span>
+                  <div className="text-[#1f2937] text-lg">&darr;</div>
+                  <div className="bg-[#f9fafb] border border-green-600/30 p-2 px-3 text-xs text-[#1f2937]">
+                    S<sub>1</sub> <span className="text-[10px] text-[#6b7280]">valid</span>
                   </div>
                 </div>
                 <div>
-                  <div className="text-[#9ca3af] text-lg">&darr;</div>
-                  <div className="bg-[#f9fafb] border border-dashed border-[#e5e7eb] p-2 px-3 text-xs text-[#9ca3af] line-through">
+                  <div className="text-[#6b7280] text-lg">&darr;</div>
+                  <div className="bg-[#f9fafb] border border-dashed border-[#e5e7eb] p-2 px-3 text-xs text-[#6b7280] line-through">
                     S<sub>1</sub>&prime;
                   </div>
                 </div>
               </div>
-              <div className="text-[#9ca3af] text-[11px] mt-2">fork structurally unreachable</div>
+              <div className="text-[#6b7280] text-[11px] mt-2">fork structurally unreachable</div>
             </div>
           </div>
 
           {/* Mobile layout */}
           <div className="flex sm:hidden flex-col items-center gap-1.5 text-xs">
             <div className="font-bold text-[13px] mb-2 text-text">Detect-After Model</div>
-            <div className="bg-[#f9fafb] border border-[#e5e7eb] p-2 px-4 text-[13px] w-full text-center text-[#374151]">
+            <div className="bg-[#f9fafb] border border-[#e5e7eb] p-2 px-4 text-[13px] w-full text-center text-[#1f2937]">
               Authority S<sub>0</sub>
             </div>
             <div className="flex justify-center gap-3">
-              <span className="text-[#9ca3af]">&swarr;</span>
-              <span className="text-[#9ca3af]">&searr;</span>
+              <span className="text-[#6b7280]">&swarr;</span>
+              <span className="text-[#6b7280]">&searr;</span>
             </div>
             <div className="flex justify-center gap-2">
-              <div className="bg-[#f9fafb] border border-[#e5e7eb] p-1.5 px-2.5 text-xs text-[#374151]">S<sub>1</sub> valid</div>
-              <div className="bg-[#f9fafb] border border-[#e5e7eb] p-1.5 px-2.5 text-xs text-[#374151]">S<sub>1</sub>&prime; valid</div>
+              <div className="bg-[#f9fafb] border border-[#e5e7eb] p-1.5 px-2.5 text-xs text-[#1f2937]">S<sub>1</sub> valid</div>
+              <div className="bg-[#f9fafb] border border-[#e5e7eb] p-1.5 px-2.5 text-xs text-[#1f2937]">S<sub>1</sub>&prime; valid</div>
             </div>
-            <div className="text-[#9ca3af]">&darr;</div>
-            <div className="bg-[#f9fafb] border border-dashed border-[#e5e7eb] p-2 px-3.5 w-full text-center text-[#9ca3af]">
+            <div className="text-[#6b7280]">&darr;</div>
+            <div className="bg-[#f9fafb] border border-dashed border-[#e5e7eb] p-2 px-3.5 w-full text-center text-[#6b7280]">
               Conflict detected
             </div>
-            <div className="text-[11px] text-[#9ca3af]">fork now, detect later</div>
+            <div className="text-[11px] text-[#6b7280]">fork now, detect later</div>
 
-            <div className="text-[22px] font-light text-[#9ca3af] my-2">&darr;</div>
-            <div className="text-[11px] text-[#9ca3af] mb-3">OCC enforces</div>
+            <div className="text-[22px] font-light text-[#6b7280] my-2">&darr;</div>
+            <div className="text-[11px] text-[#6b7280] mb-3">OCC enforces</div>
 
             <div className="font-bold text-[13px] mb-2 text-text">Birth&ndash;Death Semantics</div>
-            <div className="bg-[#f9fafb] border border-[#e5e7eb] p-2 px-4 text-[13px] w-full text-center text-[#374151]">
+            <div className="bg-[#f9fafb] border border-[#e5e7eb] p-2 px-4 text-[13px] w-full text-center text-[#1f2937]">
               Authority S<sub>0</sub>
             </div>
-            <div className="text-[#9ca3af]">&darr;</div>
+            <div className="text-[#6b7280]">&darr;</div>
             <div className="border-2 border-[#e5e7eb] bg-[#f9fafb] p-3 w-full text-center">
-              <div className="text-xs text-[#9ca3af] mb-1">Death &mdash; S<sub>0</sub> consumed</div>
-              <div className="text-[#9ca3af]">&darr;</div>
-              <div className="text-xs text-[#374151] mt-1">Birth &mdash; S<sub>1</sub> committed</div>
+              <div className="text-xs text-[#6b7280] mb-1">Death &mdash; S<sub>0</sub> consumed</div>
+              <div className="text-[#6b7280]">&darr;</div>
+              <div className="text-xs text-[#1f2937] mt-1">Birth &mdash; S<sub>1</sub> committed</div>
             </div>
             <div className="flex justify-center gap-4">
               <div className="text-center">
-                <div className="text-[#374151]">&darr;</div>
-                <div className="bg-[#f9fafb] border border-green-600/30 p-1.5 px-2.5 text-xs text-[#374151]">S<sub>1</sub> valid</div>
+                <div className="text-[#1f2937]">&darr;</div>
+                <div className="bg-[#f9fafb] border border-green-600/30 p-1.5 px-2.5 text-xs text-[#1f2937]">S<sub>1</sub> valid</div>
               </div>
               <div className="text-center">
-                <div className="text-[#9ca3af]">&darr;</div>
-                <div className="bg-[#f9fafb] border border-dashed border-[#e5e7eb] p-1.5 px-2.5 text-xs text-[#9ca3af] line-through">S<sub>1</sub>&prime;</div>
+                <div className="text-[#6b7280]">&darr;</div>
+                <div className="bg-[#f9fafb] border border-dashed border-[#e5e7eb] p-1.5 px-2.5 text-xs text-[#6b7280] line-through">S<sub>1</sub>&prime;</div>
               </div>
             </div>
-            <div className="text-[11px] text-[#9ca3af]">fork structurally unreachable</div>
+            <div className="text-[11px] text-[#6b7280]">fork structurally unreachable</div>
           </div>
 
-          <p className="text-xs text-[#9ca3af] italic text-center mt-3">
+          <p className="text-xs text-[#6b7280] italic text-center mt-3">
             <strong>Figure 7.</strong> Detect-after vs. birth&ndash;death enforcement. Traditional
             systems (left) permit both successor states to be produced and detect conflicts
             retrospectively. Under birth&ndash;death semantics (right), the prior authority is
@@ -1021,18 +1021,18 @@ export default function Sections10to19() {
           <h3 className="text-lg font-semibold mt-8 mb-3">
             17.1 Construction
           </h3>
-          <p className="text-sm text-[#374151] leading-relaxed mb-4">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             Within a verifier-accepted measured boundary (e.g., a Trusted Execution Environment or
             equivalent protected constructor), a valid OCC commit requires the atomic execution of
             the following steps:
           </p>
-          <ul className="space-y-2 mb-4 text-sm text-[#374151]">
+          <ul className="space-y-2 mb-4 text-sm text-[#1f2937]">
             <li>&#8226; Policy authorization of the requested operation</li>
             <li>&#8226; Generation and atomic consumption of a fresh, non-replayable commitment value (either an unpredictable nonce or a strictly monotonic counter)</li>
             <li>&#8226; Collision-resistant binding of the artifact digest to the consumed value</li>
             <li>&#8226; Durable commit of the resulting signed proof</li>
           </ul>
-          <p className="text-sm text-[#374151] leading-relaxed mb-4">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             No intermediate state is externally observable, and partial completion yields no valid
             proof. The consumed value establishes a forward-only lineage: any valid successor must
             reference a strictly later state within the boundary&apos;s monotonic domain.
@@ -1044,7 +1044,7 @@ export default function Sections10to19() {
           <h3 className="text-lg font-semibold mt-8 mb-3">
             17.2 Single-Successor Property
           </h3>
-          <p className="text-sm text-[#374151] leading-relaxed mb-4">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             Given correct enforcement of measurement and monotonicity within the boundary, OCC
             guarantees:
           </p>
@@ -1055,17 +1055,17 @@ export default function Sections10to19() {
               monotonicity domain of the enforcing boundary.
             </p>
           </div>
-          <p className="text-sm text-[#374151] leading-relaxed mb-2">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-2">
             If two purported successors are observed downstream, at least one of the following must
             hold:
           </p>
-          <ul className="space-y-2 mb-4 text-sm text-[#374151]">
+          <ul className="space-y-2 mb-4 text-sm text-[#1f2937]">
             <li>&#8226; The enforcing boundary was compromised or misconfigured</li>
             <li>&#8226; Monotonic state or anti-rollback guarantees were violated</li>
             <li>&#8226; The verifier accepted an out-of-policy measurement</li>
             <li>&#8226; The usage context exceeded the declared trust model</li>
           </ul>
-          <p className="text-sm text-[#374151] leading-relaxed mb-4">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             This reframes failure analysis from probabilistic conflict resolution to deterministic
             boundary integrity verification.
           </p>
@@ -1076,13 +1076,13 @@ export default function Sections10to19() {
           <h3 className="text-lg font-semibold mt-8 mb-3">
             17.3 Relationship to Double-Spend
           </h3>
-          <p className="text-sm text-[#374151] leading-relaxed mb-4">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             Birth&ndash;death semantics targets the core primitive underlying double-spend failures:
             the ability to produce multiple valid successor states from a single authority. By making
             such forks structurally unreachable at commit time within the stated trust envelope, OCC
             reduces reliance on global ordering for single-holder and provenance-sensitive workflows.
           </p>
-          <p className="text-sm text-[#374151] leading-relaxed mb-4">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             OCC does not claim global uniqueness across mutually distrustful, permissionless
             environments without additional coordination. Instead, it provides strong local authority
             guarantees that higher-level systems may compose with federation or consensus where global
@@ -1095,17 +1095,17 @@ export default function Sections10to19() {
           <h3 className="text-lg font-semibold mt-8 mb-3">
             17.4 Trust Envelope
           </h3>
-          <p className="text-sm text-[#374151] leading-relaxed mb-2">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-2">
             The guarantees above hold only within the verifier-accepted measurement and monotonicity
             domain of the enforcing boundary. In particular:
           </p>
-          <ul className="space-y-2 mb-4 text-sm text-[#374151]">
+          <ul className="space-y-2 mb-4 text-sm text-[#1f2937]">
             <li>&#8226; A protected execution boundary is required for enforcement</li>
             <li>&#8226; Monotonic state must be resistant to rollback within that boundary</li>
             <li>&#8226; Verifiers must enforce measurement policy and counter monotonicity</li>
             <li>&#8226; OCC does not prevent byte-level copying of artifacts outside the authority model</li>
           </ul>
-          <p className="text-sm text-[#374151] leading-relaxed mb-4">
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             Within this envelope, birth&ndash;death semantics converts post-facto detection problems
             into construction-time exclusion properties.
           </p>
@@ -1119,7 +1119,7 @@ export default function Sections10to19() {
         <h2 className="text-xl font-semibold mt-12 mb-4">
           18. Single-Transfer Value Without Consensus
         </h2>
-        <p className="text-sm text-[#374151] leading-relaxed mb-4">
+        <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           Origin Controlled Computing (OCC) enables single-transfer digital value by binding
           authority to a consumptive, cryptographically enforced state transition rather than to a
           ledger entry. This is a concrete instantiation of the birth&ndash;death semantics
@@ -1146,26 +1146,26 @@ export default function Sections10to19() {
         <h2 className="text-xl font-semibold mt-12 mb-4">
           19. Conclusion
         </h2>
-        <p className="text-sm text-[#374151] leading-relaxed mb-4">
+        <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           The Trusted Origin Token Architecture demonstrates that origin control can be enforced by
           consuming authorization units at finalization. Origin Controlled Computing generalizes
           this result by showing that equivalent enforcement is achieved using boundary-fresh
           cryptographic computation and protected commit paths, without requiring tracked tokens.
         </p>
-        <p className="text-sm text-[#374151] leading-relaxed mb-4">
+        <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           Atomic Causality links authorization, cryptographic binding, and durable commit into a
           single indivisible event. Authenticated durable state is defined by structural
           reachability&mdash;by the state transitions that produced it&mdash;not by historical
           claims, metadata, or post-hoc annotation.
         </p>
-        <p className="text-sm text-[#374151] leading-relaxed mb-4">
+        <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           The formal model presented here shows that OCC defines a new enforcement primitive: a{" "}
           <em>genesis access control mechanism</em> that constrains which authenticated objects are
           permitted to exist, rather than mediating operations on objects that already exist. This is
           strictly stronger than classical reference monitors and formally distinct from attested
           execution, information flow control, and capability-based security.
         </p>
-        <p className="text-sm text-[#374151] leading-relaxed mb-4">
+        <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           By securing creation rather than history, Origin Controlled Computing establishes an
           architectural primitive for trustworthy digital systems. It does not replace provenance,
           verification, or access control. It provides the structural foundation that makes those
@@ -1180,7 +1180,7 @@ export default function Sections10to19() {
         <h2 className="text-xl font-semibold mt-12 mb-4">
           References
         </h2>
-        <div className="space-y-2.5 text-sm text-[#374151] leading-relaxed">
+        <div className="space-y-2.5 text-sm text-[#1f2937] leading-relaxed">
           <p className="pl-7 -indent-7">
             [1] J.&thinsp;P. Anderson, &ldquo;Computer security technology planning study,&rdquo;
             Tech. Rep. ESD-TR-73-51, Electronic Systems Division, AFSC, 1972.

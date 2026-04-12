@@ -9,12 +9,12 @@ export default function VerificationPage() {
   return (
     <article className="prose-doc">
       <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-6">Verification</h1>
-      <p className="text-[#374151] mb-10">
+      <p className="text-[#1f2937] mb-10">
         OCC verification is deterministic and runs offline. No network calls, no API keys, no accounts.
       </p>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Five-step algorithm</h2>
-      <p className="text-[#374151] mb-6">
+      <p className="text-[#1f2937] mb-6">
         Input: a proof (<code className="text-xs font-mono bg-[#f3f4f6] px-1">OCCProof</code>), the original bytes (<code className="text-xs font-mono bg-[#f3f4f6] px-1">Uint8Array</code>), and an optional verification policy.
       </p>
 
@@ -53,7 +53,7 @@ export default function VerificationPage() {
               </span>
               <h3 className="text-base font-semibold">{item.title}</h3>
             </div>
-            <p className="text-sm text-[#374151] leading-relaxed">{item.desc}</p>
+            <p className="text-sm text-[#1f2937] leading-relaxed">{item.desc}</p>
           </div>
         ))}
       </div>
@@ -61,7 +61,7 @@ export default function VerificationPage() {
       <h2 className="text-xl font-semibold mt-12 mb-4">Verification policy</h2>
       <div className="code-block mb-6">
         <div className="code-block-header"><span>VerificationPolicy</span></div>
-        <pre className="text-[#374151]">{`interface VerificationPolicy {
+        <pre className="text-[#1f2937]">{`interface VerificationPolicy {
   requireEnforcement?: "stub" | "hw-key" | "measured-tee";
   allowedMeasurements?: string[];     // exact match
   allowedPublicKeys?: string[];       // exact match
@@ -84,15 +84,15 @@ export default function VerificationPage() {
       <div className="space-y-3 mb-8">
         <div className="border-l-2 border-l-[#d0d5dd] pl-4 py-1">
           <code className="text-xs font-mono text-[#d97706]">requireEnforcement</code>
-          <span className="text-sm text-[#374151] ml-2">alone - prevents in-transit downgrade only</span>
+          <span className="text-sm text-[#1f2937] ml-2">alone - prevents in-transit downgrade only</span>
         </div>
         <div className="border-l-2 border-l-[#d0d5dd] pl-4 py-1">
           <code className="text-xs font-mono text-[#0065A4]">requireEnforcement + allowedMeasurements</code>
-          <span className="text-sm text-[#374151] ml-2">- pins to specific enclave image</span>
+          <span className="text-sm text-[#1f2937] ml-2">- pins to specific enclave image</span>
         </div>
         <div className="border-l-2 border-l-[#d0d5dd] pl-4 py-1">
           <code className="text-xs font-mono text-[#059669]">+ requireAttestation</code>
-          <span className="text-sm text-[#374151] ml-2">- full trust (vendor-attested hardware boundary)</span>
+          <span className="text-sm text-[#1f2937] ml-2">- full trust (vendor-attested hardware boundary)</span>
         </div>
       </div>
 
@@ -101,11 +101,11 @@ export default function VerificationPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[#e5e7eb]">
-              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#9ca3af]">Item</th>
-              <th className="text-left py-2 text-xs font-medium uppercase tracking-wider text-[#9ca3af]">Why</th>
+              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#6b7280]">Item</th>
+              <th className="text-left py-2 text-xs font-medium uppercase tracking-wider text-[#6b7280]">Why</th>
             </tr>
           </thead>
-          <tbody className="text-[#374151]">
+          <tbody className="text-[#1f2937]">
             <tr className="border-b border-[#e5e7eb]">
               <td className="py-2 pr-4">Attestation report content</td>
               <td className="py-2">Vendor-signed; platform-specific verification is caller responsibility</td>

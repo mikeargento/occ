@@ -162,7 +162,7 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .prose-doc p {
   margin-bottom: 1.25rem;
   line-height: 1.75;
-  color: #374151;
+  color: #1f2937;
 }
 .prose-doc ul, .prose-doc ol {
   margin-bottom: 1.5rem;
@@ -170,7 +170,7 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .prose-doc li {
   margin-bottom: 0.5rem;
   line-height: 1.75;
-  color: #374151;
+  color: #1f2937;
 }
 .prose-doc code {
   font-size: 0.75rem;
@@ -190,13 +190,13 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #9ca3af;
+  color: #6b7280;
   border-bottom: 1px solid #e5e7eb;
 }
 .prose-doc td {
   padding: 0.625rem 1rem 0.625rem 0;
   border-bottom: 1px solid #e5e7eb;
-  color: #374151;
+  color: #1f2937;
 }
 
 /* Code block container */
