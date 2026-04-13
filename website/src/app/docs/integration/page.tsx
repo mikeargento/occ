@@ -89,7 +89,7 @@ const proofs = await resp.json();
       <h2 className="text-xl font-semibold mt-12 mb-4">Verify a proof</h2>
       <div className="code-block">
         <div className="code-block-header"><span>TypeScript</span></div>
-        <pre className="text-xs font-mono leading-relaxed text-[#1f2937] overflow-x-auto">{`import { verify } from "occproof";
+        <pre className="text-xs font-mono leading-relaxed text-[#1f2937] overflow-x-auto">{`import { verify } from "@mikeargento/occproof";
 
 const result = await verify({
   proof: myProof,

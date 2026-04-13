@@ -21,7 +21,7 @@
     "heic2any": "^0.0.4",
     "katex": "^0.16.38",
     "next": "16.1.6",
-    "occproof": "^1.0.2",
+    "@mikeargento/occproof": "^1.2.1",
     "qrcode.react": "^4.2.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",

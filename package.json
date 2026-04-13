@@ -1,6 +1,7 @@
 {
-  "name": "occproof",
-  "version": "1.2.0",
+  "name": "@mikeargento/occproof",
+  "version": "1.2.1",
+  "description": "Portable cryptographic proof library for Origin Controlled Computing.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -21,7 +22,7 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "test:core": "tsc && node --test dist/__tests__/canonical.test.js dist/__tests__/constructor.test.js dist/__tests__/verifier.test.js",
-    "test": "npm run test:core && npm test --prefix packages/mcp-proxy && npm test --prefix packages/policy-sdk"
+    "test": "npm run test:core"
   },
   "dependencies": {
     "@noble/ed25519": "^2.1.0",
