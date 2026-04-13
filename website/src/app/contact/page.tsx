@@ -91,8 +91,7 @@ export default function ContactPage() {
           marginBottom: 40,
         }}
       >
-        Questions, press inquiries, collaboration ideas, bug reports — send
-        them here. Messages go directly to an inbox. No accounts, no tracking.
+        Research questions, licensing, integration partners, or anything else. Messages go directly to an inbox. No accounts, no tracking.
       </p>
 
       {status === "sent" ? (
