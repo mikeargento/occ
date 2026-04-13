@@ -15,7 +15,6 @@ const pages = [
   { href: "/docs/trust-model", title: "Trust Model", desc: "Assumptions, threat model, enforcement tiers, and trust anchor hierarchy." },
   { href: "/docs/self-host-tee", title: "Self-Host TEE", desc: "Run your own Trusted Execution Environment. Full blueprint for AWS Nitro enclave deployment." },
   { href: "/docs/integration", title: "Integration Guide", desc: "Commit artifacts, verify proofs, and integrate OCC into your application." },
-  { href: "/docs/agent-sdk", title: "Agent SDK", desc: "Wrap AI tool calls with cryptographic execution receipts. Install, define tools, get portable proofs." },
   { href: "/docs/what-occ-is-not", title: "What OCC is Not", desc: "Precise distinctions: not a blockchain, not a watermark, not DRM, not proof of truth or authorship." },
   { href: "/docs/faq", title: "FAQ", desc: "Common questions about the protocol, security model, and practical usage." },
 ];

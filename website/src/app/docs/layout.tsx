@@ -14,7 +14,6 @@ const sections = [
   { href: "/docs/trust-model", label: "Trust Model" },
   { href: "/docs/self-host-tee", label: "Self-Host TEE" },
   { href: "/docs/integration", label: "Integration Guide" },
-  { href: "/docs/agent-sdk", label: "Agent SDK" },
   { href: "/docs/what-occ-is-not", label: "What OCC is Not" },
   { href: "/docs/faq", label: "FAQ" },
 ];
