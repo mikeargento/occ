@@ -44,7 +44,7 @@ import { SiteNav } from "@/components/site-nav";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`}>
+    <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`} style={{ scrollbarGutter: "stable" }}>
       <head>
         <link rel="stylesheet" href="https://use.typekit.net/svq0oqy.css" />
       </head>
