@@ -1206,9 +1206,119 @@ export default function Sections7to9() {
         </section>
 
         {/* 9.7 */}
+        <section id="sec-convergent-witnessing">
+          <h3 className="text-lg font-semibold mt-8 mb-3">
+            <span className="text-[#6b7280] mr-2">9.7</span> Convergent
+            Independent Witnessing
+          </h3>
+
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
+            The single-boundary architecture described in Sections 9.1&ndash;9.6
+            establishes the atomic causality primitive: one boundary, one commit
+            path, one proof. A natural extension asks what happens when the same
+            candidate digital state is committed through <em>N</em> independent
+            boundaries simultaneously.
+          </p>
+
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
+            Each boundary independently allocates a causal slot from its own
+            hardware entropy, binds the same content-dependent value (the
+            artifact&apos;s digest), and signs with its own boundary-held key.
+            The resulting <em>N</em> proofs are produced without coordination
+            between boundaries. If all <em>N</em> proofs agree on the
+            content-dependent value and the causal ordering relative to their
+            respective counter chains, that agreement was not negotiated. It was
+            caused by the same input traversing the same deterministic
+            computation independently in each boundary. Agreement is a structural
+            consequence of the input, not a product of consensus.
+          </p>
+
+          <div className="my-5 border-l-[3px] border-text-tertiary bg-[#f9fafb] p-5">
+            <p className="text-sm text-[#111827] leading-relaxed">
+              <strong>Property 9.0</strong> (Convergence). If <em>N</em>&nbsp;
+              independent atomic execution boundaries each execute a
+              boundary-fresh cryptographic computation over the same
+              content-dependent value, and each produces verification material
+              that agrees on the content-dependent value, then the agreement is
+              caused by the input, not by coordination between boundaries. No
+              consensus protocol is required because there is nothing to
+              disagree about when the computation is deterministic and the
+              inputs are identical.
+            </p>
+          </div>
+
+          <h4 className="text-base font-semibold mt-6 mb-2">
+            Compromise detection through divergence.
+          </h4>
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
+            If one boundary among <em>N</em> produces verification material that
+            diverges from the others for the same candidate digital state, the
+            divergence is direct evidence of compromise or malfunction. In a
+            single-boundary deployment, a compromised boundary produces forged
+            proofs that are indistinguishable from legitimate ones (within that
+            boundary&apos;s trust domain). In a multi-boundary deployment,
+            forgery is immediately visible because the other <em>N</em>&minus;1
+            boundaries independently produced different verification material
+            for the same input. The compromised boundary outs itself by
+            diverging.
+          </p>
+
+          <h4 className="text-base font-semibold mt-6 mb-2">
+            Attack cost scaling.
+          </h4>
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
+            With a single boundary, an attacker who compromises the
+            boundary-held capability can forge proofs undetected (within the
+            trust domain of that boundary). With <em>N</em> independent
+            boundaries, an attacker must compromise all <em>N</em> to produce
+            a forgery that survives cross-boundary comparison. The cost of
+            attack scales multiplicatively with <em>N</em> while the reward
+            (a single forged proof) remains constant. A forged proof from a
+            single compromised boundary is dead on arrival because the
+            remaining boundaries contradict it. The rational strategy is to
+            not attempt compromise.
+          </p>
+
+          <h4 className="text-base font-semibold mt-6 mb-2">
+            Relationship to consensus systems.
+          </h4>
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
+            Distributed consensus protocols (Paxos, PBFT, Nakamoto consensus)
+            solve a fundamentally different problem: coordinating agreement
+            among nodes that may observe different inputs or hold different
+            state. This requires message exchange, quorum rules, and
+            mechanisms for resolving disagreement. Convergent independent
+            witnessing does not require coordination because the inputs are
+            identical and the computation is deterministic. There is no state
+            to synchronize, no leader to elect, no fork to resolve. Each
+            boundary independently witnesses the same causal event and
+            produces verification material that either agrees (confirming
+            authenticity) or diverges (identifying compromise).
+          </p>
+
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
+            For problems that require shared state coordination (ledgers,
+            registries, token transfers), consensus remains necessary.
+            For problems that require witnessing the origin of digital state,
+            convergent independent witnessing provides a stronger primitive
+            with lower cost: no mining, no energy expenditure, no network
+            latency, no transaction fees. The proof is produced locally within
+            each boundary and compared after the fact.
+          </p>
+
+          <p className="text-sm text-[#1f2937] leading-relaxed mb-6">
+            Ethereum anchoring remains useful in this model as an external
+            time reference. Each boundary&apos;s counter chain can be
+            independently anchored to the same public timeline, providing
+            cross-boundary temporal ordering without requiring the boundaries
+            to communicate with each other.
+          </p>
+        </section>
+
+        {/* 9.8 */}
         <section id="sec-security-properties">
           <h3 className="text-lg font-semibold mt-8 mb-3">
-            <span className="text-[#6b7280] mr-2">9.7</span> Security
+            <span className="text-[#6b7280] mr-2">9.8</span> Security
             Properties
           </h3>
 
