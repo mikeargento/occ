@@ -66,10 +66,6 @@ export default function ProofFormatPage() {
     "title":   "string",
     "message": "string"
   },
-  "timestamps": {                    // OPTIONAL - external timestamps
-    "artifact": { TsaToken },
-    "proof":    { TsaToken }
-  },
   "metadata": { },                   // OPTIONAL - NOT signed, advisory
   "claims": { }                      // OPTIONAL - NOT signed, advisory
 }`}</pre>
@@ -119,10 +115,6 @@ export default function ProofFormatPage() {
             <tr className="border-b border-[#e5e7eb]">
               <td className="py-2 pr-4"><code className="text-xs font-mono">agency</code></td>
               <td className="py-2">P-256 signature independently verifiable; actor identity IS in signed body</td>
-            </tr>
-            <tr className="border-b border-[#e5e7eb]">
-              <td className="py-2 pr-4"><code className="text-xs font-mono">timestamps</code></td>
-              <td className="py-2">Added post-signature by external TSA</td>
             </tr>
             <tr className="border-b border-[#e5e7eb]">
               <td className="py-2 pr-4"><code className="text-xs font-mono">metadata</code></td>

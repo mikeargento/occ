@@ -130,10 +130,6 @@ export default function VerificationPage() {
               <td className="py-2 pr-4">Batch context completeness</td>
               <td className="py-2">Verifying all proofs in a batch is application-layer logic</td>
             </tr>
-            <tr>
-              <td className="py-2 pr-4">Timestamp validity</td>
-              <td className="py-2">TSA token parsing is out of scope</td>
-            </tr>
           </tbody>
         </table>
       </div>
