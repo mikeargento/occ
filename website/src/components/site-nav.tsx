@@ -14,8 +14,9 @@ export function SiteNav() {
         height: 56, display: "flex", alignItems: "center", justifyContent: "space-between",
       }}>
         <Link href="/" style={{
-          fontSize: 20, fontWeight: 900, color: "#111827",
-          textDecoration: "none", letterSpacing: "-0.02em",
+          fontSize: 22, fontWeight: 900, color: "#111827",
+          textDecoration: "none", letterSpacing: "-0.03em",
+          WebkitTextStroke: "0.6px #111827",
         }}>
           OCC
         </Link>
