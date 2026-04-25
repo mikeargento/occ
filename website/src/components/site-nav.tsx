@@ -21,6 +21,12 @@ export function SiteNav() {
           OCC
         </Link>
         <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
+          <Link href="/overview" style={{
+            fontSize: 14, fontWeight: 600, color: "#111827",
+            textDecoration: "none",
+          }}>
+            Overview
+          </Link>
           <Link href="/docs" style={{
             fontSize: 14, fontWeight: 600, color: "#111827",
             textDecoration: "none",
