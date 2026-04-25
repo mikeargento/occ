@@ -52,7 +52,7 @@ export default function OverviewPage() {
         </blockquote>
 
         <p>
-          The atomicity is the whole guarantee. The slot is allocated and anchored before the hash is known. The slot can be consumed exactly once by a single binding operation. The artifact itself can be produced anywhere, by any process, using any tools. What matters is that when the hash arrives, the slot is already there waiting.
+          The atomicity is the whole guarantee. The slot is allocated and signed before the hash is known. The slot can be consumed exactly once by a single binding operation. The artifact itself can be produced anywhere, by any process, using any tools. What matters is that when the hash arrives, the slot is already there waiting.
         </p>
 
         <p>
@@ -130,7 +130,7 @@ export default function OverviewPage() {
         </ol>
 
         <p>
-          The artifact was committed after the TEE-created slot was anchored and before the next Ethereum block was knowable. That bounds the commitment in adversary-resistant entropy, witnessed in a public timeline anyone can check years later.
+          The artifact was committed after the TEE-created slot existed and before the later Ethereum block was knowable. That bounds the commitment in adversary-resistant entropy, witnessed in a public timeline anyone can check years later.
         </p>
 
         <p>
@@ -196,7 +196,7 @@ export default function OverviewPage() {
         </p>
 
         <p>
-          <strong>Legal and clinical records.</strong> Contracts, filings, telehealth session manifests, lab results, and consent forms with unforgeable causal ordering.
+          <strong>Legal and clinical records.</strong> Contracts, filings, telehealth session manifests, lab results, and consent forms with independently verifiable causal ordering.
         </p>
 
         <p>
