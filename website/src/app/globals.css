@@ -199,6 +199,105 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   color: #1f2937;
 }
 
+/* ── Overview: long-form explainer typography ── */
+.overview {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 64px 24px 120px;
+  color: #1f2937;
+}
+.overview h1 {
+  margin: 0;
+}
+.overview h2 {
+  margin-top: 3rem;
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: #111827;
+}
+.overview p {
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  margin-bottom: 1.25rem;
+  color: #1f2937;
+}
+.overview p.lede {
+  font-size: 1.1875rem;
+  font-weight: 500;
+  color: #111827;
+  letter-spacing: -0.01em;
+}
+.overview blockquote {
+  border-left: 2px solid #d0d5dd;
+  padding-left: 1.25rem;
+  margin: 1.5rem 0;
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  color: #111827;
+}
+.overview ul, .overview ol {
+  margin: 0 0 1.5rem 1.25rem;
+  padding: 0;
+}
+.overview li {
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  margin-bottom: 0.5rem;
+  color: #1f2937;
+}
+.overview a {
+  color: #0065A4;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.overview a:hover {
+  color: #004e7c;
+}
+.overview table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0 2rem;
+  font-size: 0.9375rem;
+}
+.overview th {
+  text-align: left;
+  padding: 0.625rem 1rem 0.625rem 0;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b7280;
+  border-bottom: 1px solid #d0d5dd;
+}
+.overview td {
+  padding: 0.75rem 1rem 0.75rem 0;
+  border-bottom: 1px solid #e5e7eb;
+  color: #1f2937;
+  vertical-align: top;
+  line-height: 1.55;
+}
+.overview td:first-child {
+  font-weight: 500;
+  color: #111827;
+  padding-right: 1.5rem;
+  white-space: nowrap;
+}
+.overview-footer {
+  margin-top: 5rem;
+  padding-top: 2rem;
+  border-top: 1px solid #d0d5dd;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+@media (max-width: 640px) {
+  .overview { padding: 40px 20px 80px; }
+  .overview p, .overview li { font-size: 1rem; }
+  .overview p.lede { font-size: 1.0625rem; }
+  .overview td:first-child { white-space: normal; }
+}
+
 /* Code block container */
 .code-block {
   border: 1px solid #e5e7eb;
