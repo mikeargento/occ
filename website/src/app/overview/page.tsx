@@ -258,7 +258,7 @@ export default function OverviewPage() {
         <h2>The simplest version</h2>
 
         <p>
-          A measured TEE creates a random unused slot before the artifact hash arrives. The hash arrives. The TEE binds it to the slot, consumes the slot, signs the result, and links it into an ordered chain. Three TEEs can run in parallel so silent compromise becomes visible. Ethereum periodically tethers the chain through a public backward seal.
+          A measured TEE creates a random unused slot before the artifact hash arrives. The hash arrives. The TEE binds it to the slot, consumes the slot, signs the result, and links it into an ordered chain. Three TEEs can run in parallel so silent compromise becomes visible. The same mechanism periodically commits an Ethereum block hash, sealing everything before it in a public timeline.
         </p>
 
         <p>
