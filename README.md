@@ -6,8 +6,6 @@
 [![Website](https://img.shields.io/badge/occ.wtf-live-0065A4)](https://occ.wtf)
 [![Docs](https://img.shields.io/badge/docs-0065A4)](https://occ.wtf/docs)
 
-Patent Pending.
-
 ---
 
 Origin can be enforced or it can be claimed. Most digital provenance systems claim it. They produce an artifact and then attach a signature, a timestamp, or a metadata block describing where the artifact came from. The claim arrives after the artifact already exists, which is the wrong end of the timeline.
