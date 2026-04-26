@@ -1,161 +1,173 @@
 # OCC — Origin Controlled Computing
 
-**Cryptographic proof of when digital objects came into existence.**
+**Portable cryptographic proof of construction for digital artifacts.**
 
-[![npm occproof](https://img.shields.io/npm/v/occproof?label=occproof&color=cb3837)](https://www.npmjs.com/package/occproof)
-[![Website](https://img.shields.io/badge/occ.wtf-live-1A73E8)](https://occ.wtf)
-[![Docs](https://img.shields.io/badge/docs-1A73E8)](https://occ.wtf/docs)
-
-OCC produces portable cryptographic proof when bytes are committed through a hardware-attested execution boundary. The proof is not added to the artifact — it is caused by the act of committing through the authorized path.
+[![npm @mikeargento/occproof](https://img.shields.io/npm/v/@mikeargento/occproof?label=%40mikeargento%2Foccproof&color=cb3837)](https://www.npmjs.com/package/@mikeargento/occproof)
+[![Website](https://img.shields.io/badge/occ.wtf-live-0065A4)](https://occ.wtf)
+[![Docs](https://img.shields.io/badge/docs-0065A4)](https://occ.wtf/docs)
 
 Patent Pending.
 
 ---
 
-## Try It
+Origin can be enforced or it can be claimed. Most digital provenance systems claim it. They produce an artifact and then attach a signature, a timestamp, or a metadata block describing where the artifact came from. The claim arrives after the artifact already exists, which is the wrong end of the timeline.
 
-1. Go to [occ.wtf](https://occ.wtf)
-2. Drop a file
-3. Get a proof
+OCC enforces origin. A measured trusted execution environment creates an unpredictable cryptographic slot before the artifact's hash is known. The artifact's hash arrives later and is bound into the slot. The slot is consumed and cannot be reused. What emerges is not a description of provenance but a proof of construction.
 
-Your file never leaves your device. Only the SHA-256 hash is sent to the enclave. The proof is signed inside an AWS Nitro Enclave and sealed by Ethereum anchors every 12 seconds.
+OCC turns randomness into one-time causal space: a nonce becomes origin space when a TEE can prove it was unused before and consumed once.
+
+> This exact digital state was committed through this measured process, in this order, under these constraints.
+
+## The primitive
+
+Nonce first. Hash second. Atomic binding third.
+
+The TEE generates hardware entropy inside the enclave. That entropy becomes a slot, signed with the enclave's key, with an identity no attacker could have precomputed. The slot exists as a cryptographic object before any artifact hash has been seen.
+
+The artifact hash arrives. The TEE binds the hash into the slot, signs the binding, and advances its internal order. The slot becomes consumed.
+
+> UNUSED slot exists first. Artifact hash enters later. TEE binds the hash to the slot. Slot becomes CONSUMED. Proof travels with the artifact.
+
+The atomicity is the whole guarantee. The slot is allocated and signed before the hash is known. The slot can be consumed exactly once by a single binding operation. The artifact itself can be produced anywhere, by any process, using any tools. What matters is that when the hash arrives, the slot is already there waiting.
+
+Most systems say: "Here is a file hash. Now let's sign it." OCC says: "Here is a pre-existing origin slot. Now this file hash has occupied it."
+
+## Why nonce-first matters
+
+If a nonce, timestamp, or credential is added after the hash is already witnessed, it is just a label. It can prove someone signed something. It can prove a record existed by some moment. It cannot constrain the artifact's origin, because the artifact already existed before the nonce entered the picture.
+
+That leaves a forgery window. A malicious actor can prepare old hashes, replay prior material, backfill records, or attach fresh randomness to something never produced through the claimed path. The label looks valid. The construction was never constrained.
+
+OCC closes the window by requiring the slot to exist first. The slot is not evidence added afterward. It is the condition the artifact must satisfy.
+
+## What an OCC proof contains
+
+An OCC proof is a portable proof object, typically JSON, that travels with the artifact. It can include:
+
+| Component | Purpose |
+|---|---|
+| Artifact hash | Identifies the exact file or digital state |
+| Nonce | The pre-existing causal slot |
+| Slot counter | Shows the slot was allocated before the commit |
+| Commit counter | Shows the artifact consumed the slot later |
+| Epoch ID | Groups an ordered run of commitments |
+| Previous hash link | Connects proofs into a chain |
+| Signer public key | Identifies the proof-signing authority |
+| Signature | Verifies the proof was issued by the enclave-controlled key |
+| TEE measurement | Shows what code and environment produced the proof |
+| Attestation | Shows the proof came from measured hardware |
+| Public anchor | Tethers OCC logical time to a public reference |
+
+The result is not "a file was signed." It is: this hash was committed into this causal slot, by this measured environment, at this position in logical order, under this signing identity.
+
+## Logical time
+
+Every proof has order. Every slot and commit has a position. The system can prove that this happened after that, that this slot existed before this hash was bound, that this proof came before the next, that this epoch has an internal cryptographic history.
+
+OCC proves causal order first. Clock time is optional.
+
+## Ethereum: the backward seal
+
+OCC's internal ordering does not require Ethereum. The chain creates internal order through slot allocation, consumption, counters, signatures, and chained proof history. Ethereum anchors add a different property on top: a public backward seal that any third party can independently verify.
+
+An Ethereum block hash that becomes available after the artifact has been committed could not have been known at the moment of commitment. This produces an entropy sandwich:
+
+1. Private TEE entropy before the artifact.
+2. Artifact commitment in the middle.
+3. Public blockchain entropy after it.
+
+The artifact was committed after the TEE-created slot existed and before the later Ethereum block was knowable. That bounds the commitment in adversary-resistant entropy, witnessed in a public timeline anyone can check years later.
+
+Ethereum is not asked to prove the artifact's origin. OCC does that. Ethereum provides the backward seal that makes the commitment publicly verifiable.
+
+## Multi-TEE breach detection
+
+OCC's architecture supports running three independent TEEs in parallel as a tripwire, not a consensus system. Three TEEs witness the same input and produce three individual proofs with different nonces, signatures, and attestations. They agree on the meaningful result: same artifact hash, same policy decision, valid measurements, valid signatures, expected ordering behavior.
+
+If one diverges, the system does not need to know which one is compromised. It only needs to know something is wrong. The batch is quarantined, the affected range is marked suspect, the epoch is rotated, and downstream verification accounts for the gap.
+
+This is not "trust this TEE forever." It is: compromise is assumed, silence is what gets eliminated.
+
+## The trust model
+
+OCC does not depend on blind trust in any single component. Not the operator, the TEE, Ethereum, the clock, a certificate authority, or a live server. Each layer adds an independently verifiable property.
+
+| Layer | What it contributes |
+|---|---|
+| TEE | Measured execution and protected key use |
+| Nonce-first slot | Causal precondition |
+| Atomic binding | Prevents post-hoc attachment |
+| Counters | Internal logical order |
+| Proof chain | Historical continuity |
+| Ethereum anchor | Public backward seal |
+| Multi-TEE redundancy | Breach visibility |
+| Epoch rotation | Damage containment |
+| Portable verification | Independence from the original server |
+
+## What OCC applies to
+
+OCC works on any digital state that can be hashed. The same primitive applies whether the artifact is a photograph, a contract, a model output, a dataset, or a software release.
+
+**Media.** Photos, videos, audio, edited files, generative outputs. The question shifts from "is this real?" to "what origin path does this artifact satisfy?"
+
+**AI outputs.** Model results bound to authenticated identity and causal position without requiring the model to run inside an enclave.
+
+**Software supply chain.** Build artifacts, releases, model weights, and deployment packages bound to a measured construction path.
+
+**Legal and clinical records.** Contracts, filings, telehealth session manifests, lab results, and consent forms with independently verifiable causal ordering.
+
+**Research and IP.** Datasets, experimental outputs, and possession proofs that commit to a hash without requiring the file to leave the user's device.
+
+## How OCC differs from existing approaches
+
+OCC is often confused with adjacent systems. The differences are structural:
+
+| System | Says | OCC says |
+|---|---|---|
+| Signatures | This key signed this data | This key was controlled by a measured environment that consumed an unused slot |
+| Timestamps | This hash existed by time T | This hash consumed a pre-existing slot at this position in causal order |
+| C2PA | Here are signed claims about this content | Here is the construction path this content satisfied |
+| Blockchains | Public ordering of shared transactions | Private origin coordinates with optional public anchoring |
+
+Signatures, timestamps, content credentials, and blockchains all answer "who claimed what, when?" OCC answers "what construction path did this exact artifact satisfy?" They are complementary, not competing. A signature can be inside an OCC proof. A timestamp can decorate one. Content credentials can ride alongside one. None of them, alone, do what OCC does.
+
+## Multiple copies of the same original
+
+Physical originality depends on singularity. There is one canvas, one negative, one signed paper. Digital files broke that because perfect copies are indistinguishable from the source.
+
+OCC introduces a different category. A digital artifact can be copied without losing its original provenance. The proof travels with the bytes or alongside them. Instead of every copy being a degraded copy, OCC allows multiple copies of the same original. Originality moves from physical container to causal proof. Singularity is no longer required for originality.
+
+## The simplest version
+
+A measured TEE creates a random unused slot before the artifact hash arrives. The hash arrives. The TEE binds it to the slot, consumes the slot, signs the result, and links it into an ordered chain. Three TEEs can run in parallel so silent compromise becomes visible. The same mechanism periodically commits an Ethereum block hash, sealing everything before it in a public timeline.
+
+The result is a provenance system that does not say "someone signed this." It says: this exact artifact occupied this origin coordinate.
 
 ---
 
-## What OCC Proves
+## Quickstart
 
-- **This specific digital state existed** — at this position in a monotonic causal chain
-- **It was committed through a hardware boundary** — AWS Nitro Enclave with attested measurement
-- **Everything before it already existed** — Ethereum front anchors seal backward
-- **The ordering is unforgeable** — atomic causality, not timestamps
+Try it live: drop a file at [occ.wtf](https://occ.wtf). The file never leaves your device; only its SHA-256 hash is sent to the enclave.
 
-Time is subjective. Causality isn't. OCC gives you causality directly.
+Verify a proof in code:
 
----
+```bash
+npm install @mikeargento/occproof
+```
 
-## How It Works
+```ts
+import { verify } from "@mikeargento/occproof";
 
-1. **Allocate** — The enclave pre-allocates a causal slot (nonce + counter) before the artifact hash is known
-2. **Bind** — The artifact's SHA-256 digest is bound to the pre-allocated slot and signed with Ed25519 inside the TEE
-3. **Commit** — The artifact and its proof are produced together. Fail-closed: if any step fails, nothing is produced
-4. **Anchor** — Every 12 seconds, an Ethereum block hash is committed to the same chain as a future causal boundary
-
-The slot exists before the artifact. The proof is caused by the commit. The Ethereum anchor proves everything before it existed before that block was mined.
-
----
-
-## Proof Format (`occ/1`)
-
-Every proof is a self-contained JSON document. No server needed to verify.
-
-```json
-{
-  "version": "occ/1",
-  "artifact": { "hashAlg": "sha256", "digestB64": "..." },
-  "commit": {
-    "counter": "48",
-    "slotCounter": "47",
-    "epochId": "...",
-    "prevB64": "...",
-    "chainId": "occ:main"
-  },
-  "signer": { "publicKeyB64": "...", "signatureB64": "..." },
-  "environment": {
-    "enforcement": "measured-tee",
-    "measurement": "638d655a...",
-    "attestation": { "format": "aws-nitro" }
-  },
-  "slotAllocation": { "counter": "47", "signatureB64": "..." },
-  "proofHash": "..."
+const result = await verify({ proof, bytes });
+if (result.ok) {
+  // signature, slot binding, attestation, and chain link all checked
 }
 ```
 
-Key fields:
-- `counter` — monotonic position in the causal chain (shared with Ethereum anchors)
-- `slotCounter` — the pre-allocated slot that preceded this commit
-- `prevB64` — hash of the previous proof (chain linking)
-- `proofHash` — canonical SHA-256 of the proof (excluded from its own computation)
-- `environment.measurement` — PCR0 of the enclave image (verifiable)
-
-### Verify a proof
-
-```ts
-import { verify } from "occproof";
-const result = await verify({ proof, bytes });
-```
-
-### Verification checklist
-
-A compliant verifier MUST check:
-
-1. **Ed25519 signature** — canonical signed body covers artifact, commit, attribution, policy, principal, actor, measurement
-2. **Attestation binding** — attestation report's `userData` == SHA-256 of signed body (binds hardware attestation to exact content)
-3. **Slot allocation** — verify slot signature, confirm `slotHashB64` matches canonical slot body, confirm `slot.counter < commit.counter`
-4. **Chain linking** — `prevB64` matches SHA-256 of the previous proof in the same chain
-5. **Measurement policy** — enforce an allowlist of trusted PCR0 hashes; reject unknown measurements in production
-6. **metadata is unsigned** — `proof.metadata` is advisory only and NOT covered by the signature
-
----
-
-## What OCC is NOT
-
-- **Not a timestamp** — proves causal order, not clock time
-- **Not a blockchain** — no consensus, no distributed ledger, no token
-- **Not a watermark** — no data embedded in the file
-- **Not DRM** — no encrypted containers or access control
-- **Not proof of authorship** — proves commitment through a boundary, not who created it
-
----
-
-## Architecture
-
-```
-occ/
-  src/                        Core library (occproof on npm)
-  server/
-    commit-service/           TEE commit service (AWS Nitro Enclave)
-      src/enclave/            Enclave app (Ed25519, counter, slots)
-      src/parent/             Parent server (HTTP, VSOCK bridge)
-  packages/
-    hosted/                   Ethereum anchor service (Railway)
-  website/                    occ.wtf (Next.js on Vercel)
-```
-
-### Infrastructure
-
-| Component | Location | Purpose |
-|---|---|---|
-| TEE | AWS EC2 + Nitro Enclave | Signs proofs, maintains monotonic counter |
-| Anchor | Railway (agent.occ.wtf) | Commits ETH block hashes every 12 seconds |
-| Ledger | S3 (occ-ledger-prod) | Immutable proof storage, 10-year Object Lock |
-| Website | Vercel (occ.wtf) | Drop zone, proof pages, chat, docs |
-| Tunnel | Cloudflare (nitro.occproof.com) | Public access to TEE |
-
----
-
-## Cryptography
-
-| Primitive | Algorithm | Library |
-|---|---|---|
-| Hashing | SHA-256 | `@noble/hashes` |
-| Signatures | Ed25519 | `@noble/ed25519` |
-| Attestation | AWS Nitro | Hardware (PCR0 measurement) |
-| Anchoring | Ethereum | Block hash commitment |
-
-Audited, zero-dependency, pure TypeScript.
-
----
-
-## Links
-
-- **[occ.wtf](https://occ.wtf)** — prove and verify files
-- **[occ.wtf/docs](https://occ.wtf/docs)** — documentation
-- **[GitHub](https://github.com/mikeargento/occ)** — source code
-
----
+See [occ.wtf/docs](https://occ.wtf/docs) for the full proof format, verification checklist, attestation handling, and self-host instructions.
 
 ## License
 
 Copyright 2024-2026 Mike Argento. Patent Pending.
 
-Licensed under the [Apache License, Version 2.0](./LICENSE).
+Licensed under the Apache License, Version 2.0.
