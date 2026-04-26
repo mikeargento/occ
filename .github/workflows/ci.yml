@@ -23,10 +23,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: |
-          npm install
-          cd packages/mcp-proxy && npm install
-          cd ../policy-sdk && npm install
+        run: npm ci
 
       - name: Build
         run: npm run build
