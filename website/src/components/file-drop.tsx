@@ -217,7 +217,7 @@ export function FileDrop({
               whiteSpace: "nowrap",
             }}
           >
-            Drop a file to seal its origin
+            Drop files to create or check proofs
           </div>
           <div
             className="mt-2 text-center"
@@ -231,7 +231,7 @@ export function FileDrop({
             {hint ? (
               <span style={{ whiteSpace: "pre-line" }}>{hint}</span>
             ) : (
-              <span>New files get sealed. Existing seals are looked up.</span>
+              <span>New files get a fresh proof. Proven files are looked up.</span>
             )}
           </div>
         </div>
