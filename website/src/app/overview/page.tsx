@@ -203,63 +203,6 @@ export default function OverviewPage() {
           <strong>Research and IP.</strong> Datasets, experimental outputs, and possession proofs that commit to a hash without requiring the file to leave the user&rsquo;s device.
         </p>
 
-        <h2>Authority first</h2>
-
-        <p>The order of the ladder: authority first, proof second, standing third.</p>
-
-        <p>
-          OCC does not manufacture authority. A random person hashing a file produces a structurally complete proof that is operationally meaningless, because there is no recognized standing to attach it to. OCC matters when a proof is connected to authority that already exists: an artist, a company, a court, a hospital, a platform, a publisher, an AI operator, an institution. The role of the protocol is to make that pre-existing authority portable, checkable, and accountable across digital artifacts.
-        </p>
-
-        <p>
-          OCC does not answer &ldquo;is this objectively real.&rdquo; It answers &ldquo;who authorized this artifact to have standing, and can the path be verified.&rdquo;
-        </p>
-
-        <h2>Why authority is the right anchor</h2>
-
-        <p>
-          Consider a birth certificate. Nobody inspects the paper fibers to decide if it is real. They care that it was issued by the entity with the power to issue it. A pixel-perfect copy carries zero weight because it did not come through the controlled process.
-        </p>
-
-        <p>
-          That is the same shape as an OCC proof. The proof is not a label asserting authenticity. It is the receipt that the artifact exited a controlled creation boundary. The question shifts from &ldquo;does this look legitimate&rdquo; to &ldquo;did this come through the door that only opens one way.&rdquo;
-        </p>
-
-        <h2>The economic engine</h2>
-
-        <p>
-          Authority is not static. It is a continuously contested position that requires active defense, and the digital environment is steadily eroding the preservation capacity of every form of authority that depends on artifacts.
-        </p>
-
-        <ul>
-          <li>Deepfakes erode photographic authority.</li>
-          <li>Generative text erodes editorial authority.</li>
-          <li>Synthetic voice erodes recorded testimony.</li>
-          <li>Metadata stripping erodes chain of custody.</li>
-        </ul>
-
-        <p>
-          This is why OCC has commercial gravity rather than just regulatory tailwind. Authorities will pay for preservation infrastructure because the alternative is decline. A photo agency without provenance loses its rate card. A medical imaging system without attestation loses its regulatory standing. A law firm without authenticated evidence loses cases. An AI lab without operator binding loses enterprise contracts.
-        </p>
-
-        <p>
-          Willingness to pay is proportional to how much authority the institution has at stake and how exposed that authority currently is to erosion. Both numbers are growing.
-        </p>
-
-        <h2>The buyer is the authority</h2>
-
-        <p>
-          The economic gradient runs from authority-holders downward. End users do not pay for trust. Authorities pay for preservation.
-        </p>
-
-        <p>
-          The photographer pays, not the viewer. The hospital pays, not the patient. The AI operator pays, not the user. The court pays, not the litigant. The newsroom pays, not the reader.
-        </p>
-
-        <p>
-          This gives OCC a cleaner commercial model than consumer-facing trust products. It sells preservation to the institutions whose continued existence as authorities depends on solving the problem before the erosion becomes terminal.
-        </p>
-
         <h2>How OCC differs from existing approaches</h2>
 
         <p>
