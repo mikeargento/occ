@@ -220,7 +220,7 @@ export function FileDrop({
             Drop a file to seal its origin
           </div>
           <div
-            className="mt-2 text-center flex flex-row gap-1.5 justify-center items-center"
+            className="mt-2 text-center"
             style={{
               color: "#6b7280",
               fontSize: "min(13px, 3vw)",
@@ -231,10 +231,7 @@ export function FileDrop({
             {hint ? (
               <span style={{ whiteSpace: "pre-line" }}>{hint}</span>
             ) : (
-              <>
-                <span>New files get sealed.</span>
-                <span>Existing seals are looked up.</span>
-              </>
+              <span>New files get sealed. Existing seals are looked up.</span>
             )}
           </div>
         </div>
