@@ -131,7 +131,7 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
           style={{
             background: "#0065A4",
             border: "1px solid #0065A4",
-            borderRadius: 10,
+            borderRadius: 0,
             padding: "10px 20px",
             color: "#ffffff",
             fontSize: 14,
@@ -174,7 +174,7 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
         width: "100%",
         maxHeight: "calc(100dvh - 200px)",
         background: "#ffffff",
-        borderRadius: 12,
+        borderRadius: 0,
         border: "1px solid #d0d5dd",
         display: "flex",
         flexDirection: "column",
@@ -231,7 +231,7 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
                 style={{
                   background: "#f9fafb",
                   border: "1px solid #d0d5dd",
-                  borderRadius: 20,
+                  borderRadius: 0,
                   padding: "8px 14px",
                   color: "#374151",
                   fontSize: 15,
@@ -339,7 +339,7 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
             flex: 1,
             background: "#f9fafb",
             border: "1px solid #d0d5dd",
-            borderRadius: 10,
+            borderRadius: 0,
             padding: "10px 14px",
             color: "#1f2937",
             fontSize: 16,
@@ -352,7 +352,7 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
           style={{
             background: input.trim() && !streaming ? "#0065A4" : "#e5e7eb",
             border: "none",
-            borderRadius: 10,
+            borderRadius: 0,
             padding: "10px 14px",
             color: input.trim() && !streaming ? "#ffffff" : "#9ca3af",
             fontSize: 16,
@@ -374,7 +374,7 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
         .occ-chat-md strong { color: #111827; font-weight: 600; }
         .occ-chat-md ul, .occ-chat-md ol { margin: 4px 0 8px; padding-left: 18px; }
         .occ-chat-md li { margin-bottom: 4px; }
-        .occ-chat-md code { background: #e5e7eb; padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+        .occ-chat-md code { background: #e5e7eb; padding: 1px 5px; border-radius: 0; font-size: 13px; }
         .occ-chat-md h1, .occ-chat-md h2, .occ-chat-md h3 { font-size: 14px; font-weight: 600; color: #111827; margin: 8px 0 4px; }
         @media (max-width: 640px) {
           .occ-chat-panel {

@@ -343,7 +343,7 @@ export default function MakerPage() {
 
   const btnOutline: React.CSSProperties = {
     height: 48, fontSize: 15, fontWeight: 500,
-    border: "1px solid var(--c-border)", borderRadius: 10,
+    border: "1px solid var(--c-border)", borderRadius: 0,
     background: "transparent", color: "var(--c-text)", cursor: "pointer",
     flex: 1,
   };
@@ -369,7 +369,7 @@ export default function MakerPage() {
         {/* Mode toggle */}
         <div style={{
           display: "flex", gap: 0, marginBottom: 32,
-          border: "1px solid var(--c-border)", borderRadius: 10, overflow: "hidden",
+          border: "1px solid var(--c-border)", borderRadius: 0, overflow: "hidden",
         }}>
           {(["make", "verify"] as Mode[]).map((m) => (
             <button key={m} onClick={() => setMode(m)} style={{
@@ -408,7 +408,7 @@ export default function MakerPage() {
                     placeholder="Author name (optional)"
                     style={{
                       flex: 1, height: 32, padding: "0 10px",
-                      fontSize: 13, border: "1px solid var(--c-border)", borderRadius: 6,
+                      fontSize: 13, border: "1px solid var(--c-border)", borderRadius: 0,
                       background: "transparent", color: "var(--c-text)",
                     }}
                   />
@@ -511,7 +511,7 @@ export default function MakerPage() {
                     </span>
                     <button onClick={copyProof} style={{
                       fontSize: 12, fontWeight: 500, padding: "4px 12px",
-                      border: "1px solid var(--c-border)", borderRadius: 6,
+                      border: "1px solid var(--c-border)", borderRadius: 0,
                       background: "transparent", color: copied ? "#30d158" : "var(--c-text-secondary)", cursor: "pointer",
                     }}>
                       {copied ? "Copied" : "Copy"}
@@ -520,7 +520,7 @@ export default function MakerPage() {
                   <pre style={{
                     fontSize: 11, fontFamily: "monospace", lineHeight: 1.5,
                     color: "#30d158", background: "#0a0a0a",
-                    padding: 16, borderRadius: 6, overflow: "auto", maxHeight: 400,
+                    padding: 16, borderRadius: 0, overflow: "auto", maxHeight: 400,
                   }}>
                     {makeProofs.length === 1
                       ? JSON.stringify(makeProofs[0], null, 2)
@@ -636,12 +636,12 @@ export default function MakerPage() {
                 {ledgerTotal.toLocaleString()} total proofs
               </span>
               <div style={{
-                display: "flex", gap: 2, background: "var(--c-bg-secondary, #141416)", borderRadius: 8,
+                display: "flex", gap: 2, background: "var(--c-bg-secondary, #141416)", borderRadius: 0,
                 padding: 2, border: "1px solid var(--c-border-subtle)",
               }}>
                 {(["normal", "timeonly"] as const).map(m => (
                   <button key={m} onClick={() => setLedgerViewMode(m)} style={{
-                    fontSize: 12, fontWeight: 500, padding: "5px 12px", borderRadius: 6,
+                    fontSize: 12, fontWeight: 500, padding: "5px 12px", borderRadius: 0,
                     border: "none", cursor: "pointer", fontFamily: "inherit", transition: "all 0.15s",
                     background: ledgerViewMode === m ? "var(--bg-elevated, #1c1c1e)" : "transparent",
                     color: ledgerViewMode === m ? "var(--c-text)" : "var(--c-text-tertiary)",
@@ -661,7 +661,7 @@ export default function MakerPage() {
             <>
               <div style={{
                 border: "1px solid var(--c-border-subtle)",
-                borderRadius: 12,
+                borderRadius: 0,
                 background: "var(--bg-elevated)",
                 overflow: "hidden",
               }}>
@@ -809,7 +809,7 @@ function LedgerRow({ entry, isLast, viewMode }: { entry: ProofEntry; isLast: boo
         <span style={cellStyle}>
           <span style={{
             display: "inline-block", fontSize: 11, fontWeight: 500, padding: "3px 8px",
-            borderRadius: 4, border: "1px solid var(--c-border-subtle)",
+            borderRadius: 0, border: "1px solid var(--c-border-subtle)",
             background: "rgba(255,255,255,0.02)", color: "var(--c-text-secondary)",
             whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 90,
           }} title={toolName}>{trunc(toolName, 12)}</span>
@@ -856,7 +856,7 @@ function LedgerRow({ entry, isLast, viewMode }: { entry: ProofEntry; isLast: boo
               {/* Ethereum anchor link */}
               {(proof.commit && (proof.commit as Record<string, unknown>).chainId === "occ:ethereum-anchors") || (proof.attribution?.name?.startsWith("Ethereum #")) ? (
                 <div style={{
-                  padding: "10px 16px", marginBottom: 16, borderRadius: 8,
+                  padding: "10px 16px", marginBottom: 16, borderRadius: 0,
                   border: "1px solid rgba(59,130,246,0.2)", background: "rgba(59,130,246,0.05)",
                   display: "flex", alignItems: "center", gap: 12, fontSize: 13, flexWrap: "wrap",
                 }}>
@@ -967,7 +967,7 @@ function LedgerRow({ entry, isLast, viewMode }: { entry: ProofEntry; isLast: boo
                   a.click();
                   URL.revokeObjectURL(url);
                 }} style={{
-                  fontSize: 12, fontWeight: 500, padding: "6px 14px", borderRadius: 6,
+                  fontSize: 12, fontWeight: 500, padding: "6px 14px", borderRadius: 0,
                   border: "1px solid var(--c-border)", background: "transparent",
                   color: "var(--c-text-secondary)", cursor: "pointer",
                 }}>
@@ -990,7 +990,7 @@ function LedgerRow({ entry, isLast, viewMode }: { entry: ProofEntry; isLast: boo
 function LedgerDetailSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{
-      border: "1px solid var(--c-border-subtle)", borderRadius: 8,
+      border: "1px solid var(--c-border-subtle)", borderRadius: 0,
       overflow: "hidden",
     }}>
       <div style={{
@@ -1041,7 +1041,7 @@ function LedgerCopyableJson({ data }: { data: unknown }) {
     <div>
       <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: open ? 8 : 0 }}>
         <button onClick={() => setOpen(!open)} style={{
-          fontSize: 12, fontWeight: 500, padding: "6px 14px", borderRadius: 6,
+          fontSize: 12, fontWeight: 500, padding: "6px 14px", borderRadius: 0,
           border: "1px solid var(--c-border)", background: "transparent",
           color: "var(--c-text-secondary)", cursor: "pointer",
         }}>
@@ -1049,7 +1049,7 @@ function LedgerCopyableJson({ data }: { data: unknown }) {
         </button>
         {open && (
           <button onClick={() => { navigator.clipboard.writeText(json); setCopied(true); setTimeout(() => setCopied(false), 1500); }} style={{
-            fontSize: 12, fontWeight: 500, padding: "6px 14px", borderRadius: 6,
+            fontSize: 12, fontWeight: 500, padding: "6px 14px", borderRadius: 0,
             border: "1px solid var(--c-border)", background: "transparent",
             color: copied ? "#30d158" : "var(--c-text-secondary)", cursor: "pointer",
           }}>
@@ -1064,7 +1064,7 @@ function LedgerCopyableJson({ data }: { data: unknown }) {
             style={{
               fontSize: 11, fontFamily: "var(--font-mono), monospace", lineHeight: 1.5,
               color: "#30d158", background: "#0a0a0a",
-              padding: 16, borderRadius: 6, overflow: "auto", maxHeight: 400,
+              padding: 16, borderRadius: 0, overflow: "auto", maxHeight: 400,
               cursor: "pointer", transition: "box-shadow 0.2s",
             }}
           >
@@ -1074,7 +1074,7 @@ function LedgerCopyableJson({ data }: { data: unknown }) {
             <span style={{
               position: "absolute", top: 8, right: 12,
               fontSize: 11, fontWeight: 600, color: "#30d158",
-              background: "#0a0a0a", padding: "2px 8px", borderRadius: 4,
+              background: "#0a0a0a", padding: "2px 8px", borderRadius: 0,
             }}>
               Copied
             </span>

@@ -898,8 +898,8 @@ export default function Sections10to19() {
                 Authority S<sub>0</sub>
               </div>
               <div className="flex justify-center gap-10 my-1">
-                <span className="text-[#6b7280] text-lg">&swarr;</span>
-                <span className="text-[#6b7280] text-lg">&searr;</span>
+                <span className="text-[#6b7280] text-lg">↙</span>
+                <span className="text-[#6b7280] text-lg">↘</span>
               </div>
               <div className="flex justify-center gap-3 my-1">
                 <div className="bg-[#f9fafb] border border-[#e5e7eb] p-2 px-3 text-xs text-[#1f2937]">
@@ -950,7 +950,7 @@ export default function Sections10to19() {
                 </div>
                 <div>
                   <div className="text-[#6b7280] text-lg">&darr;</div>
-                  <div className="bg-[#f9fafb] border border-dashed border-[#e5e7eb] p-2 px-3 text-xs text-[#6b7280] line-through">
+                  <div className="bg-[#f9fafb] border border-dashed border-[#e5e7eb] p-2 px-3 text-xs text-[#9ca3af]">
                     S<sub>1</sub>&prime;
                   </div>
                 </div>
@@ -966,8 +966,8 @@ export default function Sections10to19() {
               Authority S<sub>0</sub>
             </div>
             <div className="flex justify-center gap-3">
-              <span className="text-[#6b7280]">&swarr;</span>
-              <span className="text-[#6b7280]">&searr;</span>
+              <span className="text-[#6b7280]">↙</span>
+              <span className="text-[#6b7280]">↘</span>
             </div>
             <div className="flex justify-center gap-2">
               <div className="bg-[#f9fafb] border border-[#e5e7eb] p-1.5 px-2.5 text-xs text-[#1f2937]">S<sub>1</sub> valid</div>
@@ -999,7 +999,7 @@ export default function Sections10to19() {
               </div>
               <div className="text-center">
                 <div className="text-[#6b7280]">&darr;</div>
-                <div className="bg-[#f9fafb] border border-dashed border-[#e5e7eb] p-1.5 px-2.5 text-xs text-[#6b7280] line-through">S<sub>1</sub>&prime;</div>
+                <div className="bg-[#f9fafb] border border-dashed border-[#e5e7eb] p-1.5 px-2.5 text-xs text-[#9ca3af]">S<sub>1</sub>&prime;</div>
               </div>
             </div>
             <div className="text-[11px] text-[#6b7280]">fork structurally unreachable</div>

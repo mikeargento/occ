@@ -95,7 +95,7 @@ export function FileDrop({
       onDragLeave={() => setDragover(false)}
       onDrop={handleDrop}
       className={`
-        h-full relative border-2 rounded-2xl transition-all duration-300 cursor-pointer flex items-center
+        h-full relative border-2 rounded-none transition-all duration-300 cursor-pointer flex items-center
         ${disabled ? "opacity-50 cursor-not-allowed" : ""}
         ${dragover
           ? "border-[#0065A4] bg-[#f0f6ff] ring-2 ring-[#0065A4]/20 ring-offset-2 ring-offset-white scale-[1.01]"
@@ -203,7 +203,7 @@ export function FileDrop({
         </div>
       ) : (
         <div className="flex flex-col items-center py-20 px-4 sm:px-6 w-full">
-          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6" style={{ background: "#eef4ff", border: "1px solid #bfd4f2" }}>
+          <div className="w-16 h-16 rounded-none flex items-center justify-center mb-6" style={{ background: "#eef4ff", border: "1px solid #bfd4f2" }}>
             <svg width="28" height="28" viewBox="0 0 20 20" fill="none" stroke="#0065A4" strokeWidth="1.5">
               <path d="M10 3v10M6 7l4-4 4 4" />
               <path d="M3 14v2a1 1 0 001 1h12a1 1 0 001-1v-2" />
@@ -217,7 +217,7 @@ export function FileDrop({
               whiteSpace: "nowrap",
             }}
           >
-            Drop files to create or check proofs
+            Drop files to create or check BitGraphs
           </div>
           <div
             className="mt-2 text-center"
@@ -231,7 +231,7 @@ export function FileDrop({
             {hint ? (
               <span style={{ whiteSpace: "pre-line" }}>{hint}</span>
             ) : (
-              <span>New files get a fresh proof. Proven files are looked up.</span>
+              <span>New files will create a BitGraph. Existing BitGraphs will be looked up.</span>
             )}
           </div>
         </div>

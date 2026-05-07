@@ -317,7 +317,7 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   overflow: hidden;
   margin-bottom: 1.5rem;
   transform: translateZ(0);
-  border-radius: 8px;
+  border-radius: 0;
 }
 .code-block-header {
   display: flex;
@@ -425,7 +425,7 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 }
 
 /* ── Nav link hover ── */
-.nav-link:hover { background: var(--bg-elevated) !important; color: var(--c-text) !important; border-radius: 8px; }
+.nav-link:hover { background: var(--bg-elevated) !important; color: var(--c-text) !important; border-radius: 0; }
 
 /* ── Nav responsive ── */
 @media (max-width: 768px) {

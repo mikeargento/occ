@@ -90,7 +90,7 @@ export default function OCCPage() {
           continue;
         }
 
-        // Regular file — hash and look up
+        // Regular file: hash and look up
         const d = await hashFile(f);
         const resp = await fetch(`/api/proofs/${encodeURIComponent(toUrlSafeB64(d))}`);
         if (resp.ok) {
@@ -181,7 +181,7 @@ export default function OCCPage() {
     setExportProgress({ current: 0, total: totalSteps });
     const multi = withProofs.length > 1;
 
-    // Streaming zip — chunks accumulate as each file is added
+    // Streaming zip: chunks accumulate as each file is added
     const chunks: Uint8Array[] = [];
     let zipDone = false;
     let zipError: Error | null = null;
@@ -274,9 +274,9 @@ export default function OCCPage() {
   function reset() { setStep("drop"); setItems([]); setAnimCount(0); }
 
   /* ── Styles ── */
-  const card: React.CSSProperties = { border: "1px solid #d0d5dd", padding: "24px 20px", background: "#fff", borderRadius: 16, marginBottom: 16 };
-  const btnFill: React.CSSProperties = { height: 52, fontSize: 15, fontWeight: 600, border: "none", borderRadius: 12, background: "#0065A4", color: "#ffffff", cursor: "pointer", flex: 1, letterSpacing: "-0.01em" };
-  const btnOut: React.CSSProperties = { height: 52, fontSize: 15, fontWeight: 500, borderRadius: 12, cursor: "pointer", flex: 1, border: "1px solid #d1d5db", background: "#fff", color: "#111827" };
+  const card: React.CSSProperties = { border: "1px solid #d0d5dd", padding: "24px 20px", background: "#fff", borderRadius: 0, marginBottom: 16 };
+  const btnFill: React.CSSProperties = { height: 52, fontSize: 15, fontWeight: 600, border: "none", borderRadius: 0, background: "#0065A4", color: "#ffffff", cursor: "pointer", flex: 1, letterSpacing: "-0.01em" };
+  const btnOut: React.CSSProperties = { height: 52, fontSize: 15, fontWeight: 500, borderRadius: 0, cursor: "pointer", flex: 1, border: "1px solid #d1d5db", background: "#fff", color: "#111827" };
 
   return (
     <div style={{ background: "var(--bg)", color: "var(--c-text)", display: "flex", flexDirection: "column" }}>
@@ -318,7 +318,7 @@ export default function OCCPage() {
                   gap: 8,
                   background: "transparent",
                   border: "1px solid #d0d5dd",
-                  borderRadius: 10,
+                  borderRadius: 0,
                   padding: "10px 20px",
                   fontSize: 14,
                   fontWeight: 500,
@@ -373,7 +373,7 @@ export default function OCCPage() {
                       width: "min(480px, calc(100vw - 32px))",
                       background: "#ffffff",
                       border: "1px solid #e5e7eb",
-                      borderRadius: 12,
+                      borderRadius: 0,
                       boxShadow: "0 10px 32px rgba(0,0,0,0.10)",
                       padding: "18px 20px",
                       animation: "popIn 0.18s ease-out",
@@ -405,6 +405,17 @@ export default function OCCPage() {
                     >
                       <strong>BitGraphs</strong> are not labels or metadata added after the fact. They are new computations created when your file&apos;s hash <em>fills</em> a pre-existing cryptographic slot, constraining the commitment so it cannot be retroactively constructed. This occurs entirely off-chain and produces a proof file permanently bound to the original, establishing its immutable position in the causal chain.
                     </p>
+                    <p
+                      style={{
+                        margin: "12px 0 0 0",
+                        fontSize: 16,
+                        fontWeight: 400,
+                        color: "#111827",
+                        lineHeight: 1.65,
+                      }}
+                    >
+                      Just as a photograph captures photons of light, a BitGraph captures the bits of a file. Both are permanent records of a single moment. Once made, neither can be altered without detection.
+                    </p>
                   </div>
                 </>
               )}
@@ -412,14 +423,14 @@ export default function OCCPage() {
           </>
         )}
 
-        {/* ── Floating chat bubble — matches the docs layout ── */}
+        {/* Floating chat bubble: matches the docs layout */}
         {step === "drop" && (
           chatOpen ? (
             <div className="docs-chat-container" style={{
               position: "fixed", bottom: 24, right: 24, zIndex: 100,
               width: 400, maxWidth: "calc(100vw - 48px)",
               maxHeight: "calc(100vh - 120px)",
-              borderRadius: 16, overflow: "hidden",
+              borderRadius: 0, overflow: "hidden",
               boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08)",
             }}>
               <style>{`
@@ -444,7 +455,7 @@ export default function OCCPage() {
               aria-label="Open chat"
               style={{
                 position: "fixed", bottom: 24, right: 24, zIndex: 100,
-                width: 52, height: 52, borderRadius: 14,
+                width: 52, height: 52, borderRadius: 0,
                 background: "#0065A4", border: "none", cursor: "pointer",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 boxShadow: "0 4px 12px rgba(0,101,164,0.3)",
@@ -627,7 +638,7 @@ export default function OCCPage() {
                       }}
                       style={{
                         fontSize: 15, fontWeight: 600, color: "#ffffff", textDecoration: "none",
-                        flexShrink: 0, padding: "12px 28px", borderRadius: 10,
+                        flexShrink: 0, padding: "12px 28px", borderRadius: 0,
                         background: "#0065A4", border: "none", cursor: "pointer",
                         whiteSpace: "nowrap",
                       }}>

@@ -48,7 +48,7 @@ export default function ContactPage() {
     padding: "12px 14px",
     background: "#ffffff",
     border: "1px solid #d0d5dd",
-    borderRadius: 10,
+    borderRadius: 0,
     fontSize: 15,
     color: "#111827",
     fontFamily: "inherit",
@@ -88,7 +88,7 @@ export default function ContactPage() {
           style={{
             background: "#ffffff",
             border: "1px solid #d0d5dd",
-            borderRadius: 12,
+            borderRadius: 0,
             padding: "32px 28px",
             textAlign: "center",
           }}
@@ -114,7 +114,7 @@ export default function ContactPage() {
               marginTop: 24,
               background: "transparent",
               border: "1px solid #d0d5dd",
-              borderRadius: 10,
+              borderRadius: 0,
               padding: "8px 16px",
               fontSize: 13,
               fontWeight: 500,
@@ -239,7 +239,7 @@ export default function ContactPage() {
                 style={{
                   background: "#fef2f2",
                   border: "1px solid #fecaca",
-                  borderRadius: 10,
+                  borderRadius: 0,
                   padding: "10px 14px",
                   fontSize: 13,
                   color: "#991b1b",
@@ -265,7 +265,7 @@ export default function ContactPage() {
                     status === "sending"
                       ? "1px solid #9ca3af"
                       : "1px solid #0065A4",
-                  borderRadius: 10,
+                  borderRadius: 0,
                   padding: "10px 20px",
                   color: "#ffffff",
                   fontSize: 14,

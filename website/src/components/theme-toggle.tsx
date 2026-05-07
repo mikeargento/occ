@@ -29,7 +29,7 @@ export function ThemeToggle() {
         border: "none",
         cursor: "pointer",
         padding: 6,
-        borderRadius: 8,
+        borderRadius: 0,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",

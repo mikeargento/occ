@@ -165,7 +165,7 @@ export default function ProofPage() {
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 </span>
-                <span style={{ color: "var(--c-accent)" }}>Verified Proof </span>
+                <span style={{ color: "var(--c-accent)" }}>Verified BitGraph </span>
                 <ProofHashTitle proof={proof} />
               </span>
             )}
@@ -181,7 +181,7 @@ export default function ProofPage() {
                   color: "#374151",
                   background: "transparent",
                   border: "1px solid #d0d5dd",
-                  borderRadius: 10,
+                  borderRadius: 0,
                   cursor: "pointer",
                   transition: "border-color 0.15s, color 0.15s",
                 }}
@@ -351,7 +351,7 @@ function Shell({ children }: { children: React.ReactNode }) {
 
 function Card({ title, children }: { title: string; accent?: string; children: React.ReactNode }) {
   return (
-    <div style={{ background: "#fff", border: "1px solid #d0d5dd", borderRadius: 14, overflow: "hidden" }}>
+    <div style={{ background: "#fff", border: "1px solid #d0d5dd", borderRadius: 0, overflow: "hidden" }}>
       <div style={{
         fontSize: 14, fontWeight: 700, letterSpacing: "0.04em",
         color: "#0065A4", padding: "18px 24px",
@@ -424,7 +424,7 @@ function ProofHashTitle({ proof }: { proof: OCCProof }) {
 
 const btnStyle: React.CSSProperties = {
   padding: "8px 16px", fontSize: 13, fontWeight: 600, color: "#ffffff",
-  background: "#0065A4", border: "1px solid #0065A4", borderRadius: 10, cursor: "pointer",
+  background: "#0065A4", border: "1px solid #0065A4", borderRadius: 0, cursor: "pointer",
 };
 
 function JsonToggle({ proof }: { proof: OCCProof }) {
@@ -439,7 +439,7 @@ function JsonToggle({ proof }: { proof: OCCProof }) {
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}
       onClick={() => setOpen(false)}>
-      <div style={{ width: "100%", maxWidth: 700, maxHeight: "80vh", display: "flex", flexDirection: "column", background: "#fff", borderRadius: 16, border: "1px solid #d0d5dd", overflow: "hidden" }}
+      <div style={{ width: "100%", maxWidth: 700, maxHeight: "80vh", display: "flex", flexDirection: "column", background: "#fff", borderRadius: 0, border: "1px solid #d0d5dd", overflow: "hidden" }}
         onClick={(e) => e.stopPropagation()}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderBottom: "1px solid #e5e7eb" }}>
           <span style={{ fontSize: 14, fontWeight: 600, color: "#0065A4" }}>Proof JSON</span>
@@ -617,7 +617,7 @@ function SimpleView({
           style={{
             background: "#ffffff",
             border: "1px solid #d0d5dd",
-            borderRadius: 16,
+            borderRadius: 0,
             padding: 24,
             display: "flex",
             alignItems: "center",
@@ -640,7 +640,7 @@ function SimpleView({
               width: "auto",
               height: "auto",
               objectFit: "contain",
-              borderRadius: 8,
+              borderRadius: 0,
             }}
           />
         </div>
@@ -651,7 +651,7 @@ function SimpleView({
         style={{
           background: "#ffffff",
           border: "1px solid #d0d5dd",
-          borderRadius: 16,
+          borderRadius: 0,
           overflow: "hidden",
         }}
       >
@@ -695,7 +695,7 @@ function SimpleView({
           style={{
             background: "#ffffff",
             border: "1px solid #d0d5dd",
-            borderRadius: 16,
+            borderRadius: 0,
             padding: "20px 24px",
           }}
         >
@@ -728,7 +728,7 @@ function SimpleView({
         style={{
           background: "#ffffff",
           border: "1px solid #d0d5dd",
-          borderRadius: 16,
+          borderRadius: 0,
           padding: "22px 28px",
         }}
       >
@@ -816,7 +816,7 @@ function C2PACard({ c2pa, prettyProofDate }: { c2pa: C2PAReadResult; prettyProof
       style={{
         background: "#ffffff",
         border: "1px solid #d0d5dd",
-        borderRadius: 16,
+        borderRadius: 0,
         overflow: "hidden",
       }}
     >
@@ -1004,7 +1004,7 @@ function AttestationButton({ reportB64, measurement }: { reportB64: string; meas
         onClick={() => { setOpen(true); runVerify(); }}
         style={{
           padding: "8px 16px", fontSize: 13, fontWeight: 600, color: "#ffffff",
-          background: "var(--c-accent)", border: "none", borderRadius: 10, cursor: "pointer",
+          background: "var(--c-accent)", border: "none", borderRadius: 0, cursor: "pointer",
         }}
       >
         Verify Attestation
@@ -1018,13 +1018,13 @@ function AttestationButton({ reportB64, measurement }: { reportB64: string; meas
       onClick={() => setOpen(false)}
     >
       <div
-        style={{ width: "100%", maxWidth: 720, maxHeight: "85vh", display: "flex", flexDirection: "column", background: "#fff", borderRadius: 16, border: "1px solid #d0d5dd", overflow: "hidden" }}
+        style={{ width: "100%", maxWidth: 720, maxHeight: "85vh", display: "flex", flexDirection: "column", background: "#fff", borderRadius: 0, border: "1px solid #d0d5dd", overflow: "hidden" }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", borderBottom: "1px solid #e5e7eb" }}>
           <span style={{ fontSize: 14, fontWeight: 700, color: "var(--c-accent)" }}>AWS Nitro Attestation Verification</span>
-          <button onClick={() => setOpen(false)} style={{ padding: "5px 12px", fontSize: 12, fontWeight: 600, color: "#fff", background: "var(--c-accent)", border: "none", borderRadius: 8, cursor: "pointer" }}>Close</button>
+          <button onClick={() => setOpen(false)} style={{ padding: "5px 12px", fontSize: 12, fontWeight: 600, color: "#fff", background: "var(--c-accent)", border: "none", borderRadius: 0, cursor: "pointer" }}>Close</button>
         </div>
 
         {/* Body */}
@@ -1039,7 +1039,7 @@ function AttestationButton({ reportB64, measurement }: { reportB64: string; meas
             <>
               {/* Overall status */}
               <div style={{
-                padding: "14px 18px", marginBottom: 16, borderRadius: 10,
+                padding: "14px 18px", marginBottom: 16, borderRadius: 0,
                 background: result.valid ? "#f0fdf4" : "#fef2f2",
                 border: `1px solid ${result.valid ? "#bbf7d0" : "#fecaca"}`,
               }}>
@@ -1068,7 +1068,7 @@ function AttestationButton({ reportB64, measurement }: { reportB64: string; meas
 
               {/* Decoded fields */}
               {(result.moduleId || result.timestamp || result.certChainLength) && (
-                <div style={{ marginBottom: 18, padding: "14px 18px", background: "#f9fafb", borderRadius: 10, border: "1px solid #e5e7eb" }}>
+                <div style={{ marginBottom: 18, padding: "14px 18px", background: "#f9fafb", borderRadius: 0, border: "1px solid #e5e7eb" }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>Decoded from Attestation Document</div>
                   {result.moduleId && (
                     <div style={{ fontSize: 12, color: "#374151", marginBottom: 4, wordBreak: "break-all" }}>
@@ -1103,7 +1103,7 @@ function AttestationButton({ reportB64, measurement }: { reportB64: string; meas
               )}
 
               {/* Reproducible build */}
-              <div style={{ padding: "14px 18px", background: "rgba(0,101,164,0.04)", border: "1px solid rgba(0,101,164,0.15)", borderRadius: 10, marginBottom: 12 }}>
+              <div style={{ padding: "14px 18px", background: "rgba(0,101,164,0.04)", border: "1px solid rgba(0,101,164,0.15)", borderRadius: 0, marginBottom: 12 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: "var(--c-accent)", marginBottom: 6 }}>Reproducible Build</div>
                 <div style={{ fontSize: 12, color: "#374151", lineHeight: 1.5, marginBottom: 8 }}>
                   PCR0 is the SHA-384 hash of the exact enclave image that signed this proof. To independently confirm what code ran, build the enclave from source and check that you get the same PCR0.
@@ -1114,7 +1114,7 @@ function AttestationButton({ reportB64, measurement }: { reportB64: string; meas
               </div>
 
               {/* Raw report */}
-              <div style={{ padding: "12px 16px", background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 10 }}>
+              <div style={{ padding: "12px 16px", background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 0 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
                   <div style={{ fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.06em" }}>Raw Attestation Report</div>
                   <button

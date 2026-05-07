@@ -119,7 +119,7 @@ export default function ChainCarousel({ epochId, currentCounter }: { epochId: st
                 scrollSnapAlign: "center",
                 background: isAnchor ? "#f0fdf4" : "#fff",
                 border: isCurrent ? "2px solid #0065A4" : isAnchor ? "1px solid #bbf7d0" : "1px solid #d0d5dd",
-                borderRadius: 12,
+                borderRadius: 0,
                 cursor: isCurrent ? "default" : "pointer",
                 display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
                 padding: "14px 8px", gap: 4,

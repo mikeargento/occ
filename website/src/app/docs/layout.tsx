@@ -26,7 +26,7 @@ function SidebarNav({ pathname, onNavigate }: { pathname: string; onNavigate?: (
           display: "block", padding: "6px 12px", fontSize: 14,
           fontWeight: pathname === s.href ? 600 : 400,
           color: pathname === s.href ? "#111827" : "#4b5563",
-          textDecoration: "none", borderRadius: 6,
+          textDecoration: "none", borderRadius: 0,
           background: pathname === s.href ? "#f3f4f6" : "transparent",
         }}>
           {s.label}
@@ -57,7 +57,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
           style={{
             width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
             padding: "12px 16px", fontSize: 14, fontWeight: 600, color: "#111827",
-            background: "#fff", border: "1px solid #d0d5dd", borderRadius: 8,
+            background: "#fff", border: "1px solid #d0d5dd", borderRadius: 0,
             cursor: "pointer",
           }}
         >
@@ -69,7 +69,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
         {mobileMenuOpen && (
           <div style={{
             marginTop: 8, padding: 8,
-            background: "#fff", border: "1px solid #d0d5dd", borderRadius: 8,
+            background: "#fff", border: "1px solid #d0d5dd", borderRadius: 0,
             boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
           }}>
             <SidebarNav pathname={pathname} onNavigate={() => setMobileMenuOpen(false)} />
@@ -106,7 +106,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
                   fontWeight: 400,
                   color: "#4b5563",
                   textDecoration: "none",
-                  borderRadius: 6,
+                  borderRadius: 0,
                   transition: "color 0.15s, background 0.15s",
                 }}
                 onMouseEnter={(e) => {
@@ -145,7 +145,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
           position: "fixed", bottom: 24, right: 24, zIndex: 100,
           width: 400, maxWidth: "calc(100vw - 48px)",
           maxHeight: "calc(100vh - 120px)",
-          borderRadius: 16, overflow: "hidden",
+          borderRadius: 0, overflow: "hidden",
           boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08)",
         }}>
           <style>{`
@@ -169,7 +169,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
           onClick={() => setChatOpen(true)}
           style={{
             position: "fixed", bottom: 24, right: 24, zIndex: 100,
-            width: 52, height: 52, borderRadius: 14,
+            width: 52, height: 52, borderRadius: 0,
             background: "#0065A4", border: "none", cursor: "pointer",
             display: "flex", alignItems: "center", justifyContent: "center",
             boxShadow: "0 4px 12px rgba(0,101,164,0.3)",
