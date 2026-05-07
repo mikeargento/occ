@@ -17,15 +17,15 @@ interface ChatProps {
 
 const DEFAULT_QUESTIONS = [
   "What is provenance?",
-  "What does OCC prove?",
-  "What problem does OCC solve?",
+  "What does a BitGraph prove?",
+  "What problem does BitGraph solve?",
   "How is this different from a timestamp?",
   "Why not just hash a file?",
-  "What makes this impossible to fake?",
-  "Does OCC prove when something happened?",
-  "How do I verify a proof?",
+  "What makes a BitGraph hard to fake?",
+  "Does a BitGraph prove when something happened?",
+  "How do I verify a BitGraph?",
   "Is my file ever uploaded?",
-  "What data does OCC store about me?",
+  "What data does BitGraph store about me?",
   "What are Ethereum anchors?",
   "What happens if the server disappears?",
   "Why not use a blockchain?",
@@ -333,7 +333,7 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask anything about OCC..."
+          placeholder="Ask anything about BitGraph..."
           disabled={streaming}
           style={{
             flex: 1,
