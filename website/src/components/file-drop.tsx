@@ -231,7 +231,7 @@ export function FileDrop({
             {hint ? (
               <span style={{ whiteSpace: "pre-line" }}>{hint}</span>
             ) : (
-              <span>New files will create a BitGraph. Existing BitGraphs will be looked up.</span>
+              <span>New files will create a BitGraph. <br className="sm:hidden" />Existing BitGraphs will be looked up.</span>
             )}
           </div>
         </div>
