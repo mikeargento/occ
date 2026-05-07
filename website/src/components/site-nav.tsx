@@ -14,11 +14,11 @@ export function SiteNav() {
         height: 56, display: "flex", alignItems: "center", justifyContent: "space-between",
       }}>
         <Link href="/" style={{
-          fontSize: 22, fontWeight: 900, color: "#111827",
-          textDecoration: "none", letterSpacing: "-0.03em",
-          WebkitTextStroke: "0.6px #111827",
+          fontSize: 24, fontWeight: 900, color: "#111827",
+          textDecoration: "none", letterSpacing: "-0.02em",
+          WebkitTextStroke: "0.4px #111827",
         }}>
-          OCC
+          BitGraph
         </Link>
         <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
           <Link href="/docs" style={{

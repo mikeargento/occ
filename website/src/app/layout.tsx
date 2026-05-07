@@ -17,8 +17,8 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "OCC",
-    template: "%s | OCC",
+    default: "BitGraph",
+    template: "%s | BitGraph",
   },
   description:
     "Live cryptographic proof chain. Create, verify, and explore OCC proofs.",
@@ -27,15 +27,15 @@ export const metadata: Metadata = {
     "cryptographic policy", "AI governance", "default deny", "proof explorer",
   ],
   openGraph: {
-    title: "OCC",
-    description: "Live cryptographic proof chain. Create, verify, and explore OCC proofs.",
+    title: "BitGraph",
+    description: "Live cryptographic proof chain. Create, verify, and explore BitGraph proofs.",
     type: "website",
-    siteName: "OCC",
+    siteName: "BitGraph",
   },
   twitter: {
     card: "summary_large_image",
-    title: "OCC",
-    description: "Live cryptographic proof chain. Create, verify, and explore OCC proofs.",
+    title: "BitGraph",
+    description: "Live cryptographic proof chain. Create, verify, and explore BitGraph proofs.",
   },
   robots: { index: true, follow: true },
 };

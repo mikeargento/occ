@@ -1,10 +1,10 @@
-# OCC — Origin Controlled Computing
+# BitGraph — Origin Controlled Computing
 
 **Portable cryptographic proof of construction for digital artifacts.**
 
 [![npm @mikeargento/occproof](https://img.shields.io/npm/v/@mikeargento/occproof?label=%40mikeargento%2Foccproof&color=cb3837)](https://www.npmjs.com/package/@mikeargento/occproof)
-[![Website](https://img.shields.io/badge/occ.wtf-live-0065A4)](https://occ.wtf)
-[![Docs](https://img.shields.io/badge/docs-0065A4)](https://occ.wtf/docs)
+[![Website](https://img.shields.io/badge/bitgraph.ing-live-0065A4)](https://bitgraph.ing)
+[![Docs](https://img.shields.io/badge/docs-0065A4)](https://bitgraph.ing/docs)
 
 ---
 
@@ -145,7 +145,7 @@ The result is a provenance system that does not say "someone signed this." It sa
 
 ## Quickstart
 
-Try it live: drop a file at [occ.wtf](https://occ.wtf). The file never leaves your device; only its SHA-256 hash is sent to the enclave.
+Try it live: drop a file at [bitgraph.ing](https://bitgraph.ing). The file never leaves your device; only its SHA-256 hash is sent to the enclave.
 
 Verify a proof in code:
 
@@ -162,7 +162,7 @@ if (result.ok) {
 }
 ```
 
-See [occ.wtf/docs](https://occ.wtf/docs) for the full proof format, verification checklist, attestation handling, and self-host instructions.
+See [bitgraph.ing/docs](https://bitgraph.ing/docs) for the full proof format, verification checklist, attestation handling, and self-host instructions.
 
 ## License
 
