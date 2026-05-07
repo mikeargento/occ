@@ -111,12 +111,6 @@ export default function UseCasesPage() {
 
       <div className="mt-12 flex flex-wrap gap-4">
         <Link
-          href="https://agent.occ.wtf"
-          className="inline-flex h-12 items-center bg-text px-8 text-sm font-semibold text-bg transition-colors hover:opacity-85 active:scale-[0.98]"
-        >
-          Try the Dashboard
-        </Link>
-        <Link
           href="/docs"
           className="inline-flex h-12 items-center border border-border px-8 text-sm font-semibold text-text-secondary transition-colors hover:text-text hover:border-text-tertiary active:scale-[0.98]"
         >
