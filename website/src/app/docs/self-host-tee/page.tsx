@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 export default function SelfHostTEEPage() {
   return (
     <div className="prose-doc">
-      <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-6">Self-Host TEE</h1>
+      <h1 style={{ fontSize: 28, fontWeight: 700, letterSpacing: "-0.02em", marginBottom: 8 }}>Self-Host TEE</h1>
       <p style={{ color: "#6b7280", marginBottom: 32 }}>
         Deploy your own OCC Trusted Execution Environment using AWS Nitro Enclaves. This guide assumes no prior TEE experience.
       </p>
@@ -223,6 +223,17 @@ curl -X POST http://localhost:8080/commit \\
     \\"digests\\": [{\\"digestB64\\": \\"$DIGEST\\", \\"hashAlg\\": \\"sha256\\"}]
   }"
 # Returns: signed OCC proof with TEE attestation`}</pre>
+      </div>
+
+      <h2>Step 10: Point OCC Dashboard at Your TEE</h2>
+      <p>By default, the hosted dashboard at occ.bitgraph.ing points to <code>nitro.occproof.com</code>. To use your own TEE, set the <code>TEE_URL</code> environment variable on your hosted server:</p>
+      <div className="code-block">
+        <pre>{`# In your hosted server environment (Railway, etc.)
+TEE_URL=https://your-tee-domain.com`}</pre>
+      </div>
+      <p>The hosted server at <code>packages/hosted/src/authorization.ts</code> reads this variable:</p>
+      <div className="code-block">
+        <pre>{`const TEE_URL = process.env.TEE_URL || "https://nitro.occproof.com";`}</pre>
       </div>
 
       <h2>Production Checklist</h2>
