@@ -6,7 +6,7 @@ import { useState } from "react";
 import { Chat } from "@/components/chat";
 
 const sections = [
-  { href: "/docs", label: "Overview" },
+  { href: "/docs/overview", label: "Overview" },
   { href: "/docs/what-is-occ", label: "What is OCC" },
   { href: "/docs/whitepaper", label: "Whitepaper" },
   { href: "/docs/proof-format", label: "Proof Format (occ/1)" },
@@ -44,9 +44,42 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <div style={{ maxWidth: 1120, margin: "0 auto", padding: "32px 24px 80px" }}>
+      {/* Mobile section dropdown */}
+      <div className="docs-mobile-nav" style={{
+        position: "sticky", top: 56, zIndex: 40,
+        background: "#f5f5f5", marginBottom: 24,
+        paddingTop: 8, paddingBottom: 8,
+      }}>
+        <button
+          onClick={() => setMobileMenuOpen(o => !o)}
+          aria-expanded={mobileMenuOpen}
+          aria-label="Documentation sections"
+          style={{
+            width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "12px 16px", fontSize: 14, fontWeight: 600, color: "#111827",
+            background: "#fff", border: "1px solid #d0d5dd", borderRadius: 8,
+            cursor: "pointer",
+          }}
+        >
+          <span>{currentLabel}</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: mobileMenuOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}>
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </button>
+        {mobileMenuOpen && (
+          <div style={{
+            marginTop: 8, padding: 8,
+            background: "#fff", border: "1px solid #d0d5dd", borderRadius: 8,
+            boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
+          }}>
+            <SidebarNav pathname={pathname} onNavigate={() => setMobileMenuOpen(false)} />
+          </div>
+        )}
+      </div>
+
       <div style={{ display: "flex", gap: 48 }}>
         {/* Sidebar — desktop only */}
-        <aside className="hidden-mobile" style={{ width: 200, flexShrink: 0 }}>
+        <aside className="docs-sidebar" style={{ width: 200, flexShrink: 0 }}>
           <div style={{ position: "sticky", top: 88 }}>
             <div style={{
               fontSize: 11, fontWeight: 500, textTransform: "uppercase",

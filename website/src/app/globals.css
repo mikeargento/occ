@@ -207,7 +207,12 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   color: #1f2937;
 }
 .overview h1 {
-  margin: 0;
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  margin-top: 0;
+  margin-bottom: 1.25rem;
+  color: #111827;
 }
 .overview h2 {
   margin-top: 3rem;
@@ -296,6 +301,14 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .overview p, .overview li { font-size: 1rem; }
   .overview p.lede { font-size: 1.0625rem; }
   .overview td:first-child { white-space: normal; }
+}
+
+/* ── Docs layout responsive ── */
+.docs-sidebar { display: block; }
+.docs-mobile-nav { display: none; }
+@media (max-width: 768px) {
+  .docs-sidebar { display: none; }
+  .docs-mobile-nav { display: block; }
 }
 
 /* Code block container */
