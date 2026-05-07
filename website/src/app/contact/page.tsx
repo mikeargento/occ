@@ -83,17 +83,6 @@ export default function ContactPage() {
       >
         Contact
       </h1>
-      <p
-        style={{
-          fontSize: 15,
-          lineHeight: 1.65,
-          color: "#6b7280",
-          marginBottom: 40,
-        }}
-      >
-        Research questions, licensing, integration partners, or anything else. Messages go directly to an inbox. No accounts, no tracking.
-      </p>
-
       {status === "sent" ? (
         <div
           style={{
