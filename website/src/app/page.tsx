@@ -414,7 +414,7 @@ export default function OCCPage() {
                         lineHeight: 1.65,
                       }}
                     >
-                      Just as a photograph captures photons of light, a BitGraph captures the bits of a file. Both are permanent records of a single moment. Once made, neither can be altered without detection.
+                      A photograph records light at a moment in time. A BitGraph records a file&apos;s exact digital state at the moment of commitment. It proves that those bits filled that slot, in that order, and cannot be changed or recreated later without detection.
                     </p>
                   </div>
                 </>
