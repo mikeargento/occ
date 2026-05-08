@@ -148,25 +148,25 @@ export default function ProofPage() {
                 <ProofHashTitle proof={proof} />
               </span>
             ) : (
-              <span style={{ fontSize: 28, fontWeight: 900, fontFamily: 'var(--font-sans)', display: "inline-flex", alignItems: "center", gap: 10, flexWrap: "wrap", color: "#111827" }}>
+              <span style={{ fontSize: 28, fontWeight: 900, fontFamily: 'var(--font-sans)', display: "inline-flex", alignItems: "center", gap: 10, flexWrap: "wrap", lineHeight: 1 }}>
                 <span
                   aria-hidden="true"
                   style={{
                     display: "inline-flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    width: 32,
-                    height: 32,
+                    width: 28,
+                    height: 28,
                     borderRadius: 999,
                     background: "#22c55e",
+                    flexShrink: 0,
                   }}
                 >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 </span>
-                <span>BitGraph</span>
-                <ProofHashTitle proof={proof} />
+                <span style={{ color: "#22c55e" }}>BitGraph</span>
               </span>
             )}
           </div>
@@ -220,6 +220,13 @@ export default function ProofPage() {
         {(!simpleView || isEth) && (
         <div className="proof-grid" style={{ display: "grid", gridTemplateColumns: "1fr", gap: 24 }}>
 
+          {/* BitGraph identity — top-level identifier, sits above the construction sequence */}
+          {(proof as OCCProof & { proofHash?: string }).proofHash && (
+            <Card title="BitGraph">
+              <Field label="Proof Hash" value={(proof as OCCProof & { proofHash?: string }).proofHash!} mono highlight />
+            </Card>
+          )}
+
           {/* 1. Slot — reserved first, before anything else */}
           {slot && (
             <Card title="Causal Slot">
@@ -234,9 +241,6 @@ export default function ProofPage() {
           <Card title="Artifact">
             <Field label="Digest" value={proof.artifact.digestB64} mono />
             <Field label="Algorithm" value={proof.artifact.hashAlg.toUpperCase()} />
-            {(proof as OCCProof & { proofHash?: string }).proofHash && (
-              <Field label="Proof Hash" value={(proof as OCCProof & { proofHash?: string }).proofHash!} mono highlight />
-            )}
           </Card>
 
           {/* 3. Commit — slot consumed, proof signed atomically */}
@@ -585,6 +589,10 @@ function SimpleView({
   const fullHash = ph.proofHash || "";
   const shortHash = fullHash.replace(/[+/=]/g, "").slice(0, 12);
 
+  // File hash (artifact digest) — the file's content fingerprint, distinct from the proof's hash
+  const fullFileHash = proof.artifact.digestB64 || "";
+  const shortFileHash = fullFileHash.replace(/[+/=]/g, "").slice(0, 12);
+
   // File info. Creator is intentionally not shown in the default Simple view
   // unless we can source it from a verified channel (C2PA manifest or an
   // agency/actor field). Self-attributed `attribution.name` is rendered in
@@ -657,16 +665,23 @@ function SimpleView({
       >
         <BigField label="File" value={fileTitle} />
         <BigField
-          label="Proved on"
-          value={prettyDate}
-          muted={!anchored}
+          label="File hash"
+          value={shortFileHash}
+          mono
+          copyValue={fullFileHash}
+          hint="SHA-256 of the file bytes. Click to copy the full hash."
         />
         <BigField
-          label="Fingerprint"
+          label="BitGraph ID"
           value={shortHash}
           mono
           copyValue={fullHash}
-          hint="Click to copy the full proof hash"
+          hint="Unique identifier for this BitGraph. Click to copy the full ID."
+        />
+        <BigField
+          label="Proved on"
+          value={prettyDate}
+          muted={!anchored}
         />
         {anchored && blockNumber !== null ? (
           <BigField
