@@ -143,9 +143,8 @@ export default function ProofPage() {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 40, flexWrap: "wrap", gap: 12 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
             {isEth ? (
-              <span style={{ fontSize: 28, fontWeight: 900, fontFamily: 'var(--font-sans)' }}>
-                <span style={{ color: "var(--c-accent)" }}>Anchor </span>
-                <ProofHashTitle proof={proof} />
+              <span style={{ fontSize: 28, fontWeight: 900, fontFamily: 'var(--font-sans)', color: "var(--c-accent)" }}>
+                Ethereum Anchor
               </span>
             ) : (
               <span style={{ fontSize: 28, fontWeight: 900, fontFamily: 'var(--font-sans)', display: "inline-flex", alignItems: "center", gap: 10, flexWrap: "wrap", lineHeight: 1 }}>
@@ -158,7 +157,7 @@ export default function ProofPage() {
                     width: 28,
                     height: 28,
                     borderRadius: 999,
-                    background: "#22c55e",
+                    background: "#0065A4",
                     flexShrink: 0,
                   }}
                 >
@@ -166,7 +165,7 @@ export default function ProofPage() {
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 </span>
-                <span style={{ color: "#22c55e" }}>Verified</span>
+                <span style={{ color: "#0065A4" }}>Verified</span>
               </span>
             )}
           </div>
@@ -402,27 +401,6 @@ function Field({ label, value, mono: isMono, highlight, link }: { label: string;
         </span>
       )}
     </div>
-  );
-}
-
-function ProofHashTitle({ proof }: { proof: OCCProof }) {
-  const [copied, setCopied] = useState(false);
-  const ph = (proof as OCCProof & { proofHash?: string });
-  const full = ph.proofHash || "";
-  const short = full.replace(/[+/=]/g, "").slice(0, 12);
-
-  return (
-    <span
-      onClick={() => { navigator.clipboard.writeText(full); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
-      style={{
-        color: "#111827", cursor: "pointer", fontFamily: mono,
-        fontSize: 20, fontWeight: 700, letterSpacing: "-0.01em",
-        transition: "color 0.2s",
-      }}
-      title={`Click to copy: ${full}`}
-    >
-      {copied ? "Copied!" : short}
-    </span>
   );
 }
 
@@ -751,7 +729,7 @@ function SimpleView({
           What this means
         </div>
         <p style={{ fontSize: 14, color: "#374151", lineHeight: 1.6, margin: 0 }}>
-          This proof was created at commit time, not attached afterward. It
+          This BitGraph was created at commit time, not attached afterward. It
           fixes the file&apos;s position in a causal order. Ethereum later
           proves this position existed before a specific block, making the
           order impossible to rewrite.
