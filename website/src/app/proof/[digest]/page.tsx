@@ -148,7 +148,7 @@ export default function ProofPage() {
                 <ProofHashTitle proof={proof} />
               </span>
             ) : (
-              <span style={{ fontSize: 28, fontWeight: 900, fontFamily: 'var(--font-sans)', display: "inline-flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 28, fontWeight: 900, fontFamily: 'var(--font-sans)', display: "inline-flex", alignItems: "center", gap: 10, flexWrap: "wrap", color: "#111827" }}>
                 <span
                   aria-hidden="true"
                   style={{
@@ -165,7 +165,7 @@ export default function ProofPage() {
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 </span>
-                <span style={{ color: "#22c55e" }}>Verified BitGraph </span>
+                <span>BitGraph</span>
                 <ProofHashTitle proof={proof} />
               </span>
             )}
