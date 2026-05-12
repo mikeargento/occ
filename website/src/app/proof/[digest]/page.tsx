@@ -197,8 +197,6 @@ export default function ProofPage() {
               </button>
             )}
             <button onClick={exportZip} style={btnStyle}>Export Proof</button>
-            {/* JSON is a developer action — hide it in Simple view */}
-            {(!simpleView || isEth) && <JsonToggle proof={proof} />}
           </div>
         </div>
 
@@ -223,6 +221,7 @@ export default function ProofPage() {
           {(proof as OCCProof & { proofHash?: string }).proofHash && (
             <Card title="BitGraph">
               <Field label="Proof Hash" value={(proof as OCCProof & { proofHash?: string }).proofHash!} mono highlight />
+              <JsonSection proof={proof} />
             </Card>
           )}
 
@@ -409,37 +408,65 @@ const btnStyle: React.CSSProperties = {
   background: "#0065A4", border: "1px solid #0065A4", borderRadius: 0, cursor: "pointer",
 };
 
-function JsonToggle({ proof }: { proof: OCCProof }) {
+function JsonSection({ proof }: { proof: OCCProof }) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const json = JSON.stringify(proof, null, 2);
 
-  if (!open) {
-    return <button onClick={() => setOpen(true)} style={btnStyle}>JSON</button>;
-  }
-
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}
-      onClick={() => setOpen(false)}>
-      <div style={{ width: "100%", maxWidth: 700, maxHeight: "80vh", display: "flex", flexDirection: "column", background: "#fff", borderRadius: 0, border: "1px solid #d0d5dd", overflow: "hidden" }}
-        onClick={(e) => e.stopPropagation()}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderBottom: "1px solid #e5e7eb" }}>
-          <span style={{ fontSize: 14, fontWeight: 600, color: "#0065A4" }}>Proof JSON</span>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={() => { navigator.clipboard.writeText(json); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
-              style={{ ...btnStyle, fontSize: 12, padding: "5px 12px" }}>
+    <div>
+      <div
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 16,
+          padding: "14px 24px",
+          borderBottom: open ? "1px solid #e2e5e9" : "none",
+          cursor: "pointer",
+        }}
+      >
+        <span style={{ fontSize: 14, color: "#374151", fontWeight: 500 }}>Raw JSON</span>
+        <span style={{ fontSize: 13, color: "var(--c-accent)", fontWeight: 600 }}>
+          {open ? "Hide" : "Show"}
+        </span>
+      </div>
+      {open && (
+        <div style={{ padding: "14px 24px 18px 24px", background: "#f9fafb" }}>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                navigator.clipboard.writeText(json);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 1500);
+              }}
+              style={{ ...btnStyle, fontSize: 12, padding: "5px 12px" }}
+            >
               {copied ? "Copied" : "Copy"}
             </button>
-            <button onClick={() => setOpen(false)} style={{ ...btnStyle, fontSize: 12, padding: "5px 12px" }}>Close</button>
           </div>
+          <pre
+            style={{
+              fontSize: 12,
+              lineHeight: 1.6,
+              color: "#374151",
+              padding: 14,
+              margin: 0,
+              background: "#ffffff",
+              border: "1px solid #e5e7eb",
+              overflow: "auto",
+              maxHeight: 400,
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-all",
+              fontFamily: mono,
+            }}
+          >
+            {json}
+          </pre>
         </div>
-        <pre style={{
-          fontSize: 12, lineHeight: 1.6, color: "#374151", padding: 18, margin: 0, background: "#f9fafb",
-          overflow: "auto", flex: 1, whiteSpace: "pre-wrap", wordBreak: "break-all",
-        }}>
-          {json}
-        </pre>
-      </div>
+      )}
     </div>
   );
 }
