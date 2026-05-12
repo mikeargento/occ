@@ -851,10 +851,10 @@ function C2PACard({ c2pa, prettyProofDate }: { c2pa: C2PAReadResult; prettyProof
           display: "inline-flex", alignItems: "center", gap: 6,
           fontSize: 11, fontWeight: 700, letterSpacing: "0.02em",
           color: "#ffffff",
-          background: sigClean ? "#22c55e" : "#b45309",
+          background: sigClean ? "#0065A4" : "#b45309",
           padding: "5px 10px 5px 7px", borderRadius: 999,
           lineHeight: 1,
-          boxShadow: sigClean ? "0 1px 4px rgba(34,197,94,0.28)" : "none",
+          boxShadow: sigClean ? "0 1px 4px rgba(0,101,164,0.28)" : "none",
         }}>
           {sigClean && (
             <span
