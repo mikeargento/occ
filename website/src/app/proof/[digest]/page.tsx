@@ -905,7 +905,7 @@ function C2PACard({ c2pa, prettyProofDate }: { c2pa: C2PAReadResult; prettyProof
           color: "#374151",
           lineHeight: 1.55,
         }}>
-          BitGraph sealed this manifest into the file&apos;s proven state on {prettyProofDate}.
+          A Bitgrapher sealed this manifest into the file&apos;s proven state on {prettyProofDate}.
           Stripping or modifying it after this point would be detectable.
         </div>
       )}
