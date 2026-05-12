@@ -193,7 +193,7 @@ export default function ProofPage() {
                   e.currentTarget.style.color = "#374151";
                 }}
               >
-                {simpleView ? "See details" : "← Back to overview"}
+                {simpleView ? "See details" : "← Overview"}
               </button>
             )}
             <button onClick={exportZip} style={btnStyle}>Export Proof</button>
