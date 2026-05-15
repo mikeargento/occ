@@ -39,7 +39,7 @@ import { sha256 } from "@noble/hashes/sha256";
 import type { BitGraphProof } from "./types.js";
 
 /**
- * Compute the canonical hash of an BitGraph proof's signed body.
+ * Compute the canonical hash of a BitGraph proof's signed body.
  *
  * @param proof - The full BitGraphProof object (or equivalent Record)
  * @returns Base64-standard encoded SHA-256 hash

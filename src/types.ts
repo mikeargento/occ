@@ -374,7 +374,7 @@ export interface BitGraphPolicy {
 }
 
 /**
- * Constraints checked by the verifier against an BitGraphProof.
+ * Constraints checked by the verifier against a BitGraphProof.
  * All fields are optional; omitting a field skips that check.
  *
  * Trust model:
@@ -495,7 +495,7 @@ export interface VerificationPolicy {
 // ---------------------------------------------------------------------------
 
 /**
- * Binds an BitGraphProof to the policy document that governed the action.
+ * Binds a BitGraphProof to the policy document that governed the action.
  *
  * The digestB64 is the SHA-256 hash of the raw policy document bytes
  * (UTF-8 encoded). Any verifier can recompute this from the original

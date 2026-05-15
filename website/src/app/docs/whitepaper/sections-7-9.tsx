@@ -27,7 +27,7 @@ export default function Sections7to9() {
 
           <div className="my-5 border-l-[3px] border-text-tertiary bg-[#f9fafb] p-5">
             <p className="text-sm text-[#111827] leading-relaxed mb-3">
-              <strong>Definition 7.1</strong> (BitGraph System). An BitGraph system is a
+              <strong>Definition 7.1</strong> (BitGraph System). A BitGraph system is a
               labeled transition system{" "}
               <M c={"(\\Sigma, \\rightarrow, E)"} /> where:
             </p>
@@ -82,7 +82,7 @@ export default function Sections7to9() {
           </h3>
 
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
-            An BitGraph-compliant system enforces three invariants:
+            A BitGraph-compliant system enforces three invariants:
           </p>
 
           <div className="my-5 border-l-[3px] border-text-tertiary bg-[#f9fafb] p-5">
@@ -380,7 +380,7 @@ export default function Sections7to9() {
             <ol className="space-y-2 text-sm text-[#1f2937] list-decimal list-inside">
               <li>
                 <strong className="text-text">Setup.</strong> The challenger
-                initializes an BitGraph system with boundary identity{" "}
+                initializes a BitGraph system with boundary identity{" "}
                 <M c={"\\mathit{id}"} />, trust anchors{" "}
                 <M c={"\\mathit{TA}"} />, and security parameter{" "}
                 <M c={"\\lambda"} />.
@@ -416,7 +416,7 @@ export default function Sections7to9() {
 
           <div className="my-5 border-l-[3px] border-text-tertiary bg-[#f9fafb] p-5">
             <p className="text-sm text-[#111827] leading-relaxed mb-2">
-              <strong>Definition 8.2</strong> (BitGraph Security). An BitGraph system is{" "}
+              <strong>Definition 8.2</strong> (BitGraph Security). A BitGraph system is{" "}
               <em>secure</em> if for all probabilistic polynomial-time
               adversaries <M c={"\\mathcal{A}"} />:
             </p>

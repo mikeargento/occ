@@ -755,7 +755,7 @@ html.dark .hamburger{color:#e0e0e0}
 <h2><span class="header-section-number">7.1</span> State Space and Transition System</h2>
 
 <div class="definition">
-<p><strong>Definition 7.1</strong> (BitGraph System). An BitGraph system is a labeled transition system \((\Sigma, \rightarrow, E)\) where:</p>
+<p><strong>Definition 7.1</strong> (BitGraph System). A BitGraph system is a labeled transition system \((\Sigma, \rightarrow, E)\) where:</p>
 <ul>
 <li>\(\Sigma\) is the state space, partitioned into \(\Sigma_{\text{auth}} \cup \Sigma_{\text{unauth}}\).</li>
 <li>\(\rightarrow \,\subseteq \Sigma \times E \times \Sigma\) is the transition relation labeled by events \(E\).</li>
@@ -770,7 +770,7 @@ html.dark .hamburger{color:#e0e0e0}
 <section id="sec-core-invariants">
 <h2><span class="header-section-number">7.2</span> Core Invariants</h2>
 
-<p>An BitGraph-compliant system enforces three invariants:</p>
+<p>A BitGraph-compliant system enforces three invariants:</p>
 
 <div class="invariant">
 <p><strong>Invariant 7.2</strong> (Constructibility — Closure Property).
@@ -865,7 +865,7 @@ occur in a single atomic transition with no intermediate states observable outsi
 <div class="definition">
 <p><strong>Definition 8.1</strong> (Origin Forgery Game). The game \(\mathrm{Forge}_{\mathcal{A}}^{\mathrm{BitGraph}}(\lambda)\) proceeds as follows, where \(\lambda\) is the security parameter:</p>
 <ol>
-<li><strong>Setup.</strong> The challenger initializes an BitGraph system with boundary identity \(\mathit{id}\), trust anchors \(\mathit{TA}\), and security parameter \(\lambda\).</li>
+<li><strong>Setup.</strong> The challenger initializes a BitGraph system with boundary identity \(\mathit{id}\), trust anchors \(\mathit{TA}\), and security parameter \(\lambda\).</li>
 <li><strong>Query phase.</strong> The adversary \(\mathcal{A}\) may submit candidate data to the protected commit interface and observe the resulting authenticated artifacts and verification material. The adversary may make polynomially many such queries.</li>
 <li><strong>Forgery.</strong> The adversary outputs a candidate artifact \(a^*\) and verification material \(v^*\).</li>
 <li><strong>Win condition.</strong> \(\mathcal{A}\) wins if:
@@ -877,7 +877,7 @@ occur in a single atomic transition with no intermediate states observable outsi
 </div>
 
 <div class="definition">
-<p><strong>Definition 8.2</strong> (BitGraph Security). An BitGraph system is <em>secure</em> if for all probabilistic polynomial-time adversaries \(\mathcal{A}\):
+<p><strong>Definition 8.2</strong> (BitGraph Security). A BitGraph system is <em>secure</em> if for all probabilistic polynomial-time adversaries \(\mathcal{A}\):
 \[\Pr[\mathrm{Forge}_{\mathcal{A}}^{\mathrm{BitGraph}}(\lambda) = 1] \leq \mathrm{negl}(\lambda)\]</p>
 </div>
 

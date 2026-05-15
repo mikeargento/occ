@@ -47,7 +47,7 @@ const useCases = [
   {
     title: "Agent-to-Agent Handoff",
     subtitle: "Data passing between AI systems",
-    description: "When Agent A passes data to Agent B, it can include an BitGraph proof. Agent B verifies the proof against the received bytes before processing. This eliminates trust in the transport layer. If the bytes match the proof, they are exactly what the source boundary committed.",
+    description: "When Agent A passes data to Agent B, it can include a BitGraph proof. Agent B verifies the proof against the received bytes before processing. This eliminates trust in the transport layer. If the bytes match the proof, they are exactly what the source boundary committed.",
     fields: "artifact.digestB64 verifies byte integrity • signer identifies the source boundary",
   },
   {

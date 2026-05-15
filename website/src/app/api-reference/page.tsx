@@ -270,7 +270,7 @@ const proofs = await resp.json();
         <Endpoint
           method="POST"
           path="/convert-bw"
-          description="Demo endpoint: send a base64-encoded image to the enclave for grayscale conversion. The enclave converts the image, hashes the output, and returns the converted image with an BitGraph proof. Public endpoint."
+          description="Demo endpoint: send a base64-encoded image to the enclave for grayscale conversion. The enclave converts the image, hashes the output, and returns the converted image with a BitGraph proof. Public endpoint."
         >
           <h4 className="text-[11px] font-medium uppercase tracking-[0.15em] text-text-tertiary mb-2">
             Request body

@@ -67,10 +67,10 @@ export default function OverviewPage() {
         BitGraph closes the window by requiring the slot to exist first. The slot is not evidence added afterward. It is the condition the artifact must satisfy.
       </p>
 
-      <h2>What an BitGraph proof contains</h2>
+      <h2>What a BitGraph proof contains</h2>
 
       <p>
-        An BitGraph proof is a portable proof object, typically JSON, that travels with the artifact. It can include:
+        A BitGraph proof is a portable proof object, typically JSON, that travels with the artifact. It can include:
       </p>
 
       <table>
@@ -246,7 +246,7 @@ export default function OverviewPage() {
       </table>
 
       <p>
-        Signatures, timestamps, content credentials, and blockchains all answer &ldquo;who claimed what, when?&rdquo; BitGraph answers &ldquo;what construction path did this exact artifact satisfy?&rdquo; They are complementary, not competing. A signature can be inside an BitGraph proof. A timestamp can decorate one. Content credentials can ride alongside one. None of them, alone, do what BitGraph does.
+        Signatures, timestamps, content credentials, and blockchains all answer &ldquo;who claimed what, when?&rdquo; BitGraph answers &ldquo;what construction path did this exact artifact satisfy?&rdquo; They are complementary, not competing. A signature can be inside a BitGraph proof. A timestamp can decorate one. Content credentials can ride alongside one. None of them, alone, do what BitGraph does.
       </p>
 
       <h2>The simplest version</h2>

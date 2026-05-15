@@ -87,7 +87,7 @@ export interface VerifyResult {
 }
 
 /**
- * Verify an BitGraphProof against the original input bytes.
+ * Verify a BitGraphProof against the original input bytes.
  *
  * @param opts.proof        - The proof to verify
  * @param opts.bytes        - The original input bytes that were committed

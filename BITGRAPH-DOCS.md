@@ -22,7 +22,7 @@ Authorization, cryptographic binding, and commit happen as one indivisible opera
 
 ### What you get
 
-An BitGraph proof is a JSON object (schema version `bitgraph/1`) containing:
+A BitGraph proof is a JSON object (schema version `bitgraph/1`) containing:
 
 - **artifact** - SHA-256 digest of the committed bytes
 - **commit** - fresh nonce, monotonic counter, slot binding (slotCounter, slotHashB64), epoch identity, optional chain link
@@ -502,7 +502,7 @@ npm install bitgraph-agent
 
 ### Quick start
 
-The built-in `fetch_url` tool is ready to use. Wrap it, call it, and get back your output with an BitGraph proof attached.
+The built-in `fetch_url` tool is ready to use. Wrap it, call it, and get back your output with a BitGraph proof attached.
 
 ```typescript
 import { wrapTool, fetchUrlTool } from "bitgraph-agent";
@@ -1252,13 +1252,13 @@ We formalize BitGraph using a labeled transition system and closure algebra. Thi
 
 #### 7.1 State Space and Transition System
 
-> **Definition 7.1** (BitGraph System). An BitGraph system is a labeled transition system (Sigma, ->, E) where: Sigma is the state space, partitioned into Sigma_auth and Sigma_unauth; -> is the transition relation labeled by events E; E_auth is the set of authorization events; C is the *genesis constructor relation*.
+> **Definition 7.1** (BitGraph System). A BitGraph system is a labeled transition system (Sigma, ->, E) where: Sigma is the state space, partitioned into Sigma_auth and Sigma_unauth; -> is the transition relation labeled by events E; E_auth is the set of authorization events; C is the *genesis constructor relation*.
 
 The genesis constructor relation C captures the protected commit interface: it is the only relation that produces elements of Sigma_auth. Candidate state in Sigma_unauth may be created freely by any process.
 
 #### 7.2 Core Invariants
 
-An BitGraph-compliant system enforces three invariants:
+A BitGraph-compliant system enforces three invariants:
 
 > **Invariant 7.2** (Constructibility -- Closure Property). Every element of the authenticated state space was produced by a genesis constructor under an authorized event.
 
@@ -1302,9 +1302,9 @@ The adversary does *not* possess: the ability to execute code inside the atomic 
 
 #### 8.2 Security Game: Origin Forgery
 
-> **Definition 8.1** (Origin Forgery Game). The game Forge_A^BitGraph(lambda) proceeds as follows: 1. Setup -- the challenger initializes an BitGraph system. 2. Query phase -- the adversary may submit candidate data and observe results. 3. Forgery -- the adversary outputs a candidate artifact and verification material. 4. Win condition -- A wins if the output verifies under trust anchors and was not produced by any query to the protected commit interface.
+> **Definition 8.1** (Origin Forgery Game). The game Forge_A^BitGraph(lambda) proceeds as follows: 1. Setup -- the challenger initializes a BitGraph system. 2. Query phase -- the adversary may submit candidate data and observe results. 3. Forgery -- the adversary outputs a candidate artifact and verification material. 4. Win condition -- A wins if the output verifies under trust anchors and was not produced by any query to the protected commit interface.
 
-> **Definition 8.2** (BitGraph Security). An BitGraph system is *secure* if for all probabilistic polynomial-time adversaries A: Pr[Forge_A^BitGraph(lambda) = 1] <= negl(lambda).
+> **Definition 8.2** (BitGraph Security). A BitGraph system is *secure* if for all probabilistic polynomial-time adversaries A: Pr[Forge_A^BitGraph(lambda) = 1] <= negl(lambda).
 
 > **Proposition 8.3** (Security Reduction). If the signature scheme is existentially unforgeable under chosen-message attack (EUF-CMA) and the freshness source is collision-resistant, then the BitGraph system is secure under Definition 8.1.
 

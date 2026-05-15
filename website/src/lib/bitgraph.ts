@@ -104,7 +104,7 @@ export interface ProofVerifyResult {
 }
 
 /**
- * Detect whether a file's text content is an BitGraph proof JSON.
+ * Detect whether a file's text content is a BitGraph proof JSON.
  */
 export function isBitGraphProof(text: string): BitGraphProof | null {
   try {
@@ -127,7 +127,7 @@ export function isBitGraphProof(text: string): BitGraphProof | null {
 }
 
 /**
- * Verify an BitGraph proof's Ed25519 signature in the browser.
+ * Verify a BitGraph proof's Ed25519 signature in the browser.
  * Does NOT require the original file — verifies the cryptographic
  * structure of the proof itself.
  */

@@ -38,9 +38,9 @@ That leaves a forgery window. A malicious actor can prepare old hashes, replay p
 
 BitGraph closes the window by requiring the slot to exist first. The slot is not evidence added afterward. It is the condition the artifact must satisfy.
 
-## What an BitGraph proof contains
+## What a BitGraph proof contains
 
-An BitGraph proof is a portable proof object, typically JSON, that travels with the artifact. It can include:
+A BitGraph proof is a portable proof object, typically JSON, that travels with the artifact. It can include:
 
 | Component | Purpose |
 |---|---|
@@ -127,7 +127,7 @@ BitGraph is often confused with adjacent systems. The differences are structural
 | C2PA | Here are signed claims about this content | Here is the construction path this content satisfied |
 | Blockchains | Public ordering of shared transactions | Private origin coordinates with optional public anchoring |
 
-Signatures, timestamps, content credentials, and blockchains all answer "who claimed what, when?" BitGraph answers "what construction path did this exact artifact satisfy?" They are complementary, not competing. A signature can be inside an BitGraph proof. A timestamp can decorate one. Content credentials can ride alongside one. None of them, alone, do what BitGraph does.
+Signatures, timestamps, content credentials, and blockchains all answer "who claimed what, when?" BitGraph answers "what construction path did this exact artifact satisfy?" They are complementary, not competing. A signature can be inside a BitGraph proof. A timestamp can decorate one. Content credentials can ride alongside one. None of them, alone, do what BitGraph does.
 
 ## Multiple copies of the same original
 

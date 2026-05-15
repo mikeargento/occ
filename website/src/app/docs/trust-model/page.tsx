@@ -98,7 +98,7 @@ export default function TrustModelPage() {
         nothing about any individual user or file.
       </p>
       <p className="text-[#1f2937] leading-relaxed mb-4">
-        Each anchor is itself an BitGraph proof signed by the enclave, so it
+        Each anchor is itself a BitGraph proof signed by the enclave, so it
         participates in the same counter chain as the user proofs that came
         before it. When the anchor lands in a finalized Ethereum block, that
         block&apos;s timestamp and ordering become an external witness to the
