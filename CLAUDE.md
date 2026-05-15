@@ -71,9 +71,9 @@ bitgraph/
 When the user says **"fire it up"**, bring the TEE online with 12s Ethereum anchoring:
 
 1. SSH to EC2, `nitro-cli describe-enclaves` to check CID
-2. If no enclave: `nitro-cli run-enclave --eif-path /home/ec2-user/nsm-test/bitgraph-enclave-v2.eif --cpu-count 2 --memory 1024`
-3. Kill old socat, start new: `sudo nohup socat TCP-LISTEN:9000,fork,reuseaddr VSOCK-CONNECT:{CID}:5000 > /dev/null 2>&1 &`
-4. `sudo fuser -k 8787/tcp` then `sudo systemctl restart occ-http-server`
+2. If no enclave: `nitro-cli run-enclave --eif-path /home/ec2-user/nsm-test/bitgraph-enclave-v1.eif --cpu-count 2 --memory 1024`
+3. Kill old socat, start new: `sudo bash -c "setsid socat TCP-LISTEN:9000,fork,reuseaddr VSOCK-CONNECT:{CID}:5000 </dev/null >/dev/null 2>&1 &"` (use setsid, not nohup — nohup+sudo+& over SSH can hang the session)
+4. `sudo fuser -k 8787/tcp` then `sudo systemctl restart bitgraph-http-server`
 5. Verify: `curl https://nitro.occproof.com/health`
 6. Set 12s anchors: `curl -X POST https://occ.bitgraph.ing/api/anchor/interval -H "Content-Type: application/json" -d '{"seconds": 12}'`
 
