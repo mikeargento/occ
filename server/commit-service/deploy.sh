@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # SPDX-License-Identifier: Apache-2.0
-# Deploy OCC enclave to a Nitro-enabled EC2 instance.
+# Deploy BitGraph enclave to a Nitro-enabled EC2 instance.
 #
 # Run this ON the EC2 parent instance after pulling the latest code.
 #
@@ -29,7 +29,7 @@ ENCLAVE_CPU="${ENCLAVE_CPU:-2}"
 ENCLAVE_MEM="${ENCLAVE_MEM:-1024}"
 EIF_PATH="$SCRIPT_DIR/enclave.eif"
 
-echo "=== OCC Enclave Deploy ==="
+echo "=== BitGraph Enclave Deploy ==="
 echo "Repo root: $REPO_ROOT"
 echo "Enclave CPU: $ENCLAVE_CPU, Memory: ${ENCLAVE_MEM}MB"
 echo ""
@@ -38,13 +38,13 @@ echo ""
 echo "[1/5] Building Docker image..."
 docker build \
   -f "$SCRIPT_DIR/Dockerfile.enclave" \
-  -t occ-enclave \
+  -t bitgraph-enclave \
   "$REPO_ROOT"
 
 # Step 2: Build EIF
 echo "[2/5] Building enclave image (EIF)..."
 nitro-cli build-enclave \
-  --docker-uri occ-enclave \
+  --docker-uri bitgraph-enclave \
   --output-file "$EIF_PATH"
 
 echo ""

@@ -2,8 +2,8 @@
 # Nitro Enclave Docker image — builds the EIF via nitro-cli
 #
 # Usage (on the EC2 parent instance):
-#   docker build -f Dockerfile.enclave -t occ-enclave ../../
-#   nitro-cli build-enclave --docker-uri occ-enclave --output-file enclave.eif
+#   docker build -f Dockerfile.enclave -t bitgraph-enclave ../../
+#   nitro-cli build-enclave --docker-uri bitgraph-enclave --output-file enclave.eif
 #   nitro-cli run-enclave --eif-path enclave.eif --cpu-count 2 --memory 512
 
 FROM node:20-alpine AS builder
@@ -13,14 +13,14 @@ RUN apk add --no-cache gcc musl-dev
 
 WORKDIR /build
 
-# Copy the monorepo root (occproof core library)
+# Copy the monorepo root (bitgraph core library)
 COPY package.json package-lock.json tsconfig.json ./
 COPY src/ ./src/
 
 # Copy adapter-nitro
 COPY packages/adapter-nitro/ ./packages/adapter-nitro/
 
-# Copy commit-service (exclude mock sources — they depend on @occ/stub
+# Copy commit-service (exclude mock sources — they depend on @bitgraph/stub
 # which is a dev/test package not needed inside the enclave)
 COPY server/commit-service/package.json server/commit-service/package-lock.json server/commit-service/tsconfig.json ./server/commit-service/
 COPY server/commit-service/src/enclave/ ./server/commit-service/src/enclave/
@@ -64,10 +64,10 @@ WORKDIR /app
 COPY --from=builder /usr/local/bin/nsm_ioctl /usr/local/bin/nsm_ioctl
 
 # Copy built artifacts
-COPY --from=builder /build/dist/ ./node_modules/occproof/dist/
-COPY --from=builder /build/package.json ./node_modules/occproof/package.json
-COPY --from=builder /build/packages/adapter-nitro/dist/ ./node_modules/@occ/adapter-nitro/dist/
-COPY --from=builder /build/packages/adapter-nitro/package.json ./node_modules/@occ/adapter-nitro/package.json
+COPY --from=builder /build/dist/ ./node_modules/bitgraph/dist/
+COPY --from=builder /build/package.json ./node_modules/bitgraph/package.json
+COPY --from=builder /build/packages/adapter-nitro/dist/ ./node_modules/@bitgraph/adapter-nitro/dist/
+COPY --from=builder /build/packages/adapter-nitro/package.json ./node_modules/@bitgraph/adapter-nitro/package.json
 COPY --from=builder /build/server/commit-service/dist/ ./dist/
 COPY --from=builder /build/server/commit-service/package.json ./package.json
 
