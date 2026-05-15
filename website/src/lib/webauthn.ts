@@ -1,5 +1,5 @@
 /**
- * WebAuthn / Passkey helpers for OCC Proof Authorship.
+ * WebAuthn / Passkey helpers for BitGraph Proof Authorship.
  *
  * Uses platform authenticators (Face ID, Touch ID, Windows Hello) to
  * produce P-256 device-bound proofs of biometric user presence.
@@ -11,7 +11,7 @@
 // Storage key for localStorage
 // ---------------------------------------------------------------------------
 
-const STORAGE_KEY = "occ-passkey";
+const STORAGE_KEY = "bitgraph-passkey";
 
 export interface StoredCredential {
   credentialIdB64: string;   // base64(rawId)
@@ -121,7 +121,7 @@ export async function registerPasskey(): Promise<StoredCredential> {
     publicKey: {
       challenge: crypto.getRandomValues(new Uint8Array(32)),
       rp: {
-        name: "OCC",
+        name: "BitGraph",
         id: location.hostname,
       },
       user: {
@@ -239,7 +239,7 @@ export function buildAgencyEnvelope(
     provider: string;
   };
   authorization: {
-    purpose: "occ/commit-authorize/v1";
+    purpose: "bitgraph/commit-authorize/v1";
     format: "webauthn";
     actorKeyId: string;
     artifactHash: string;
@@ -263,7 +263,7 @@ export function buildAgencyEnvelope(
       provider: "passkey",
     },
     authorization: {
-      purpose: "occ/commit-authorize/v1",
+      purpose: "bitgraph/commit-authorize/v1",
       format: "webauthn",
       actorKeyId: credential.keyId,
       artifactHash: artifactDigestB64,

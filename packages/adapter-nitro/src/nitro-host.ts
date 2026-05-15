@@ -2,9 +2,9 @@
 // Copyright 2024-2026 Mike Argento
 
 /**
- * @occ/adapter-nitro — NitroHost
+ * @bitgraph/adapter-nitro — NitroHost
  *
- * AWS Nitro Enclaves adapter for occ-core.
+ * AWS Nitro Enclaves adapter for bitgraph-core.
  *
  * This adapter implements HostCapabilities for software running inside an
  * AWS Nitro Enclave.  It communicates with the Nitro Security Module (NSM)
@@ -23,7 +23,7 @@ import { mkdtempSync, writeFileSync, existsSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { decode, encode } from "cbor2";
-import type { EnforcementTier, HostCapabilities } from "occproof";
+import type { EnforcementTier, HostCapabilities } from "bitgraph";
 import type { KmsCounter } from "./kms-counter.js";
 
 // ---------------------------------------------------------------------------
@@ -315,7 +315,7 @@ export class NitroHost implements HostCapabilities {
     }
 
     // NSM GetRandom returns 256 bytes (its full entropy pool).
-    // Truncate to 32 bytes (256 bits) — the standard nonce size for OCC.
+    // Truncate to 32 bytes (256 bits) — the standard nonce size for BitGraph.
     // This is still well above the 128-bit minimum required by HostCapabilities.
     return random.random.slice(0, 32);
   }

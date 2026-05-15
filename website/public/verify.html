@@ -105,7 +105,7 @@ async function verifyEd25519(sig,msg,pub){
   return R.add(kA).clearCofactor().equals(sB.clearCofactor());
 }
 
-// ── Canonicalize (matches occproof exactly) ──
+// ── Canonicalize (matches bitgraph exactly) ──
 function canonicalize(obj){return new TextEncoder().encode(canonicalizeToString(obj));}
 function canonicalizeToString(obj){return JSON.stringify(sortKeys(obj));}
 function sortKeys(v){
@@ -153,11 +153,11 @@ async function verifyProof(fileBytes, proof){
   let slotValid=false;
   if(slot&&commit.slotHashB64){
     // Reconstruct slot body exactly as the enclave computes it:
-    // 5 core fields only. chainId is excluded for default chain ("occ:main")
+    // 5 core fields only. chainId is excluded for default chain ("bitgraph:main")
     // even though it may appear in the slotAllocation record.
     const slotBody={version:slot.version,nonceB64:slot.nonceB64,counter:slot.counter,epochId:slot.epochId,publicKeyB64:slot.publicKeyB64};
     // Only include chainId if it's NOT the default chain
-    if(slot.chainId&&slot.chainId!=="occ:main")slotBody.chainId=slot.chainId;
+    if(slot.chainId&&slot.chainId!=="bitgraph:main")slotBody.chainId=slot.chainId;
     const slotHash=toBase64(await sha256(canonicalize(slotBody)));
     slotValid=slotHash===commit.slotHashB64;
   }
@@ -198,7 +198,7 @@ let fileData=null,proofData=null;
 function handleFiles(files){
   for(const f of files){
     if(f.name.endsWith(".json")){
-      f.text().then(t=>{try{const p=JSON.parse(t);if(p.version==="occ/1"){proofData=p;updateUI();}}catch{}});
+      f.text().then(t=>{try{const p=JSON.parse(t);if(p.version==="bitgraph/1"){proofData=p;updateUI();}}catch{}});
     }else{
       f.arrayBuffer().then(b=>{fileData={name:f.name,size:f.size,bytes:new Uint8Array(b)};updateUI();});
     }

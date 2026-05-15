@@ -13,15 +13,15 @@
  *   POST /verify          — { proof, policy? }
  *   GET  /health          — { ok: true }
  *
- * OCC Causal Commit Model:
+ * BitGraph Causal Commit Model:
  *   The parent internally handles the 2-RTT protocol (allocateSlot → commit)
  *   so clients can still use the single POST /commit API. Clients that want
  *   direct control over slot allocation can use POST /allocate-slot.
  */
 
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { verify } from "occproof";
-import type { OCCProof, VerificationPolicy, AgencyEnvelope, PolicyBinding } from "occproof";
+import { verify } from "bitgraph";
+import type { BitGraphProof, VerificationPolicy, AgencyEnvelope, PolicyBinding } from "bitgraph";
 import { VsockClient, type EnclaveClient } from "./vsock-client.js";
 import { requestTimestamp } from "./tsa-client.js";
 
@@ -35,7 +35,7 @@ const PORT = Number(
 // Proof indexing — fire-and-forget POST to explorer database
 // ---------------------------------------------------------------------------
 
-const INDEX_URL = process.env["PROOF_INDEX_URL"] ?? "https://occ.wtf/api/proofs";
+const INDEX_URL = process.env["PROOF_INDEX_URL"] ?? "https://bitgraph.ing/api/proofs";
 const LEDGER_BUCKET = process.env["LEDGER_BUCKET"];
 const ALLOW_DEBUG_MODE = process.env["ALLOW_DEBUG_MODE"] === "true";
 
@@ -50,7 +50,7 @@ if (LEDGER_BUCKET) {
  * No-op if LEDGER_BUCKET is not configured.
  * Uses AWS SDK dynamically to avoid import issues when not needed.
  */
-async function persistToLedger(proofs: OCCProof[]): Promise<void> {
+async function persistToLedger(proofs: BitGraphProof[]): Promise<void> {
   if (!LEDGER_BUCKET) return;
   try {
     // Dynamic imports — these are only loaded when LEDGER_BUCKET is set
@@ -59,7 +59,7 @@ async function persistToLedger(proofs: OCCProof[]): Promise<void> {
       S3Client: new (config: { region: string }) => { send: (cmd: unknown) => Promise<void> };
       PutObjectCommand: new (params: Record<string, unknown>) => unknown;
     };
-    const { computeProofHash } = await import("occproof");
+    const { computeProofHash } = await import("bitgraph");
 
     const s3 = new S3Client({ region: process.env["LEDGER_REGION"] || "us-east-2" });
 
@@ -102,7 +102,7 @@ async function persistToLedger(proofs: OCCProof[]): Promise<void> {
   }
 }
 
-async function indexProofs(proofs: OCCProof[]): Promise<void> {
+async function indexProofs(proofs: BitGraphProof[]): Promise<void> {
   if (!INDEX_URL) return;
   try {
     await fetch(INDEX_URL, {
@@ -256,7 +256,7 @@ async function handleCommit(req: IncomingMessage, res: ServerResponse): Promise<
     }
   }
 
-  // OCC 2-RTT protocol: one slot → one artifact → one proof
+  // BitGraph 2-RTT protocol: one slot → one artifact → one proof
   // For each digest, allocate a slot then commit with the slotId.
   // The parent handles the round-trips so clients keep a single POST /commit API.
   //
@@ -269,7 +269,7 @@ async function handleCommit(req: IncomingMessage, res: ServerResponse): Promise<
   //
   // Enclave commits are sequential (monotonic counter), but TSA timestamps
   // are parallelized afterward to minimize latency on batch requests.
-  const proofs: OCCProof[] = [];
+  const proofs: BitGraphProof[] = [];
   const isBatch = body.digests.length > 1;
 
   for (let i = 0; i < body.digests.length; i++) {
@@ -313,7 +313,7 @@ async function handleCommit(req: IncomingMessage, res: ServerResponse): Promise<
       return;
     }
 
-    const { proof } = commitResult.data as { proof: OCCProof };
+    const { proof } = commitResult.data as { proof: BitGraphProof };
     proofs.push(proof);
   }
 
@@ -323,9 +323,9 @@ async function handleCommit(req: IncomingMessage, res: ServerResponse): Promise<
 
   // Add proofHash to each proof before responding
   try {
-    const { computeProofHash } = await import("occproof");
+    const { computeProofHash } = await import("bitgraph");
     for (const p of proofs) {
-      (p as OCCProof & { proofHash: string }).proofHash = computeProofHash(p);
+      (p as BitGraphProof & { proofHash: string }).proofHash = computeProofHash(p);
     }
   } catch (_) { /* non-critical — proofHash is a convenience field */ }
 
@@ -352,7 +352,7 @@ async function handleVerify(req: IncomingMessage, res: ServerResponse): Promise<
   }
 
   const raw = await readBody(req);
-  let body: { proof: OCCProof; policy?: VerificationPolicy };
+  let body: { proof: BitGraphProof; policy?: VerificationPolicy };
   try {
     body = JSON.parse(raw.toString("utf8"));
   } catch {
@@ -361,7 +361,7 @@ async function handleVerify(req: IncomingMessage, res: ServerResponse): Promise<
   }
 
   if (!body.proof) {
-    sendError(res, 400, "body must have { proof: OCCProof, policy?: VerificationPolicy }");
+    sendError(res, 400, "body must have { proof: BitGraphProof, policy?: VerificationPolicy }");
     return;
   }
 
@@ -387,7 +387,7 @@ async function handleChallenge(_req: IncomingMessage, res: ServerResponse): Prom
 
 async function handleAllocateSlot(_req: IncomingMessage, res: ServerResponse): Promise<void> {
   // Public endpoint — no API key required.
-  // Pre-allocates a causal slot (nonce-first) for the OCC commit model.
+  // Pre-allocates a causal slot (nonce-first) for the BitGraph commit model.
   // Returns { slotId, slot } where slot is the signed SlotAllocation record.
   try {
     const result = await enclaveClient.send({ type: "allocateSlot" });
@@ -446,7 +446,7 @@ async function handleConvertBW(req: IncomingMessage, res: ServerResponse): Promi
 
   const result = enclaveResult.data as {
     imageB64: string;
-    proof: OCCProof;
+    proof: BitGraphProof;
     digestB64: string;
   };
 

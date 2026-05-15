@@ -2,17 +2,17 @@ import type { Metadata } from "next";
 import { CommitPathDiagram } from "@/components/commit-path-diagram";
 
 export const metadata: Metadata = {
-  title: "What is OCC",
-  description: "OCC is a protocol for portable cryptographic proof caused by system structure.",
+  title: "What is BitGraph",
+  description: "BitGraph is a protocol for portable cryptographic proof caused by system structure.",
 };
 
-export default function WhatIsOCCPage() {
+export default function WhatIsBitGraphPage() {
   return (
     <article className="prose-doc">
-      <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-6">What is OCC</h1>
+      <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-6">What is BitGraph</h1>
 
       <p className="text-[#1f2937] leading-relaxed mb-10">
-        OCC (Origin Controlled Computing) is a protocol that produces portable
+        BitGraph (BitGraph) is a protocol that produces portable
         cryptographic proof when bytes are committed through an authorized
         execution boundary. The proof attests that a specific digital state was
         demonstrably possessed and committed in a specific form, by a specific
@@ -26,7 +26,7 @@ export default function WhatIsOCCPage() {
         entries after the fact.
       </p>
       <p className="text-[#1f2937] leading-relaxed mb-4">
-        OCC inverts this. Valid proof can only exist if the artifact was
+        BitGraph inverts this. Valid proof can only exist if the artifact was
         committed through a protected path. The proof is not added to the
         artifact. It is caused by the act of committing through the
         authorized boundary.
@@ -63,7 +63,7 @@ export default function WhatIsOCCPage() {
 
       <h2 className="text-xl font-semibold mt-12 mb-4">What you get</h2>
       <p className="text-[#1f2937] leading-relaxed mb-4">
-        An OCC proof is a JSON object (schema version <code className="text-xs font-mono bg-[#f3f4f6] px-1.5 py-0.5">occ/1</code>) containing:
+        An BitGraph proof is a JSON object (schema version <code className="text-xs font-mono bg-[#f3f4f6] px-1.5 py-0.5">bitgraph/1</code>) containing:
       </p>
       <ul className="space-y-2 mb-6">
         <li className="text-[#1f2937]"><strong className="text-text">artifact</strong> - SHA-256 digest of the committed bytes</li>

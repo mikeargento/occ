@@ -3,7 +3,7 @@
 // Copyright 2024-2026 Mike Argento
 
 /**
- * Tests the core occproof verify() function with agency proofs.
+ * Tests the core bitgraph verify() function with agency proofs.
  *
  * This test:
  *   1. Creates a proof with agency via the mock server
@@ -17,9 +17,9 @@
 
 import { createHash, createSign, generateKeyPairSync } from "node:crypto";
 import { sha256 } from "@noble/hashes/sha256";
-import { verify } from "occproof";
+import { verify } from "bitgraph";
 
-const BASE = process.env["OCC_URL"] ?? "http://localhost:8787";
+const BASE = process.env["BITGRAPH_URL"] ?? "http://localhost:8787";
 
 async function post(path: string, body: unknown): Promise<unknown> {
   const res = await fetch(`${BASE}${path}`, {
@@ -58,7 +58,7 @@ const timestamp = Date.now();
 
 // Build & sign authorization
 const canonicalPayload = {
-  purpose: "occ/commit-authorize/v1" as const,
+  purpose: "bitgraph/commit-authorize/v1" as const,
   actorKeyId: keyId,
   artifactHash: artifactDigestB64,
   challenge,

@@ -1,11 +1,11 @@
 /**
- * OCC Ledger — Rebuild Index from S3
+ * BitGraph Ledger — Rebuild Index from S3
  *
  * If the database is lost, this script reconstructs the index
  * from the immutable S3 ledger. The S3 ledger is the source of truth.
  *
  * Usage:
- *   LEDGER_BUCKET=occ-ledger DATABASE_URL=postgres://... npx tsx rebuild.ts
+ *   LEDGER_BUCKET=bitgraph-ledger DATABASE_URL=postgres://... npx tsx rebuild.ts
  */
 
 import { Ledger } from "./s3.js";

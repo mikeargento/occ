@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "API Reference",
-  description: "OCC Protocol API reference: commit, verify, key, and health endpoints.",
+  description: "BitGraph Protocol API reference: commit, verify, key, and health endpoints.",
 };
 
 function Endpoint({
@@ -55,7 +55,7 @@ export default function APIReferencePage() {
           API Reference
         </span>
         <h1 className="text-3xl font-semibold tracking-[-0.03em] mb-4">
-          OCC Protocol API
+          BitGraph Protocol API
         </h1>
         <p className="text-lg leading-relaxed text-text-secondary max-w-xl">
           REST API for committing artifacts and verifying proofs. The commit
@@ -66,7 +66,7 @@ export default function APIReferencePage() {
             Base URL
           </div>
           <code className="text-sm font-mono text-text">
-            https://nitro.occproof.com
+            https://nitro.bitgraph.ing
           </code>
         </div>
       </div>
@@ -96,7 +96,7 @@ export default function APIReferencePage() {
         <Endpoint
           method="POST"
           path="/commit"
-          description="Commit one or more artifact digests. For each digest, the enclave allocates a causal slot (nonce + counter), then commits the artifact against that slot. Returns a complete OCC proof for each digest. Requires API key if configured."
+          description="Commit one or more artifact digests. For each digest, the enclave allocates a causal slot (nonce + counter), then commits the artifact against that slot. Returns a complete BitGraph proof for each digest. Requires API key if configured."
         >
           <h4 className="text-[11px] font-medium uppercase tracking-[0.15em] text-text-tertiary mb-2">
             Request body
@@ -128,7 +128,7 @@ export default function APIReferencePage() {
           <CodeBlock
             code={`[
   {
-    "version": "occ/1",
+    "version": "bitgraph/1",
     "artifact": {
       "hashAlg": "sha256",
       "digestB64": "jYl9NHJP0VcRVh6OMEIU5VAGva6cu5kdrnPrlNr/RnU="
@@ -154,7 +154,7 @@ export default function APIReferencePage() {
       }
     },
     "slotAllocation": {
-      "version": "occ/slot/1",
+      "version": "bitgraph/slot/1",
       "nonceB64": "gTME79qH3fXQ5qXX0JxX6T5oGhFRLLw2BIUoeQai9Z8=",
       "counter": "277",
       "time": 1741496392800,
@@ -181,7 +181,7 @@ export default function APIReferencePage() {
           <CodeBlock
             code={`DIGEST=$(openssl dgst -sha256 -binary myfile.pdf | base64)
 
-curl -X POST https://nitro.occproof.com/commit \\
+curl -X POST https://nitro.bitgraph.ing/commit \\
   -H "Content-Type: application/json" \\
   -d '{
     "digests": [{
@@ -199,7 +199,7 @@ curl -X POST https://nitro.occproof.com/commit \\
 const hashBuf = await crypto.subtle.digest("SHA-256", bytes);
 const digestB64 = btoa(String.fromCharCode(...new Uint8Array(hashBuf)));
 
-const resp = await fetch("https://nitro.occproof.com/commit", {
+const resp = await fetch("https://nitro.bitgraph.ing/commit", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
@@ -208,7 +208,7 @@ const resp = await fetch("https://nitro.occproof.com/commit", {
 });
 
 const proofs = await resp.json();
-// proofs[0] is a complete OCCProof`}
+// proofs[0] is a complete BitGraphProof`}
           />
         </Endpoint>
 
@@ -230,7 +230,7 @@ const proofs = await resp.json();
             code={`{
   "slotId": "gTME79qH3fXQ5qXX0JxX6T5oGhFRLLw2BIUoeQai9Z8=",
   "slot": {
-    "version": "occ/slot/1",
+    "version": "bitgraph/slot/1",
     "nonceB64": "gTME79qH3fXQ5qXX0JxX6T5oGhFRLLw2BIUoeQai9Z8=",
     "counter": "277",
     "time": 1741496392800,
@@ -270,7 +270,7 @@ const proofs = await resp.json();
         <Endpoint
           method="POST"
           path="/convert-bw"
-          description="Demo endpoint: send a base64-encoded image to the enclave for grayscale conversion. The enclave converts the image, hashes the output, and returns the converted image with an OCC proof. Public endpoint."
+          description="Demo endpoint: send a base64-encoded image to the enclave for grayscale conversion. The enclave converts the image, hashes the output, and returns the converted image with an BitGraph proof. Public endpoint."
         >
           <h4 className="text-[11px] font-medium uppercase tracking-[0.15em] text-text-tertiary mb-2">
             Request body
@@ -287,7 +287,7 @@ const proofs = await resp.json();
           <CodeBlock
             code={`{
   "imageB64": "<base64-encoded grayscale image>",
-  "proof": { ... },                       // complete OCCProof
+  "proof": { ... },                       // complete BitGraphProof
   "digestB64": "..."                      // SHA-256 of the output image
 }`}
           />
@@ -322,7 +322,7 @@ const proofs = await resp.json();
           </h4>
           <CodeBlock
             code={`{
-  "proof": { ... },                  // complete OCCProof
+  "proof": { ... },                  // complete BitGraphProof
   "policy": {                        // optional VerificationPolicy
     "requireEnforcement": "measured-tee",
     "allowedMeasurements": ["ac813febd1ac4261..."],
@@ -362,11 +362,11 @@ const proofs = await resp.json();
       <div className="pt-0">
         <h2 className="text-xl font-semibold mb-6">Type definitions</h2>
 
-        <h3 className="text-lg font-semibold mb-3">OCCProof</h3>
+        <h3 className="text-lg font-semibold mb-3">BitGraphProof</h3>
         <CodeBlock
           title="TypeScript"
-          code={`interface OCCProof {
-  version: "occ/1";
+          code={`interface BitGraphProof {
+  version: "bitgraph/1";
   artifact: {
     hashAlg: "sha256";
     digestB64: string;
@@ -393,7 +393,7 @@ const proofs = await resp.json();
     };
   };
   slotAllocation?: {                 // causal slot record
-    version: string;                 // "occ/slot/1"
+    version: string;                 // "bitgraph/slot/1"
     nonceB64: string;
     counter: string;
     time: number;
@@ -409,7 +409,7 @@ const proofs = await resp.json();
       provider: string;              // e.g. "passkey"
     };
     authorization: {
-      purpose: "occ/commit-authorize/v1";
+      purpose: "bitgraph/commit-authorize/v1";
       actorKeyId: string;
       artifactHash: string;
       challenge: string;

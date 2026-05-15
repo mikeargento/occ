@@ -7,14 +7,14 @@ import { Chat } from "@/components/chat";
 
 const sections = [
   { href: "/docs/overview", label: "Overview" },
-  { href: "/docs/what-is-occ", label: "What is OCC" },
+  { href: "/docs/what-is-bitgraph", label: "What is BitGraph" },
   { href: "/docs/whitepaper", label: "Whitepaper" },
-  { href: "/docs/proof-format", label: "Proof Format (occ/1)" },
+  { href: "/docs/proof-format", label: "Proof Format (bitgraph/1)" },
   { href: "/docs/verification", label: "Verification" },
   { href: "/docs/trust-model", label: "Trust Model" },
   { href: "/docs/self-host-tee", label: "Self-Host TEE" },
   { href: "/docs/integration", label: "Integration Guide" },
-  { href: "/docs/what-occ-is-not", label: "What OCC is Not" },
+  { href: "/docs/what-bitgraph-is-not", label: "What BitGraph is Not" },
   { href: "/docs/faq", label: "FAQ" },
 ];
 
@@ -94,7 +94,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
               borderTop: "1px solid #e5e7eb",
             }}>
               <a
-                href="https://github.com/mikeargento/occ"
+                href="https://github.com/mikeargento/bitgraph"
                 target="_blank"
                 rel="noopener"
                 style={{

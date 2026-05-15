@@ -169,7 +169,7 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
 
   return (
     <div>
-    <div className="occ-chat-panel"
+    <div className="bitgraph-chat-panel"
       style={{
         width: "100%",
         maxHeight: "calc(100dvh - 200px)",
@@ -283,7 +283,7 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
             >
               {msg.role === "assistant" ? (
                 <>
-                  <div className="occ-chat-md"><ReactMarkdown>{msg.content}</ReactMarkdown></div>
+                  <div className="bitgraph-chat-md"><ReactMarkdown>{msg.content}</ReactMarkdown></div>
                 </>
               ) : msg.content}
               {streaming && i === messages.length - 1 && msg.role === "assistant" && (
@@ -369,15 +369,15 @@ export function Chat({ proofContext, preloadedQuestions, onOpenChange, defaultOp
           0%, 50% { opacity: 1; }
           51%, 100% { opacity: 0; }
         }
-        .occ-chat-md p { margin: 0 0 8px; }
-        .occ-chat-md p:last-child { margin-bottom: 0; }
-        .occ-chat-md strong { color: #111827; font-weight: 600; }
-        .occ-chat-md ul, .occ-chat-md ol { margin: 4px 0 8px; padding-left: 18px; }
-        .occ-chat-md li { margin-bottom: 4px; }
-        .occ-chat-md code { background: #e5e7eb; padding: 1px 5px; border-radius: 0; font-size: 13px; }
-        .occ-chat-md h1, .occ-chat-md h2, .occ-chat-md h3 { font-size: 14px; font-weight: 600; color: #111827; margin: 8px 0 4px; }
+        .bitgraph-chat-md p { margin: 0 0 8px; }
+        .bitgraph-chat-md p:last-child { margin-bottom: 0; }
+        .bitgraph-chat-md strong { color: #111827; font-weight: 600; }
+        .bitgraph-chat-md ul, .bitgraph-chat-md ol { margin: 4px 0 8px; padding-left: 18px; }
+        .bitgraph-chat-md li { margin-bottom: 4px; }
+        .bitgraph-chat-md code { background: #e5e7eb; padding: 1px 5px; border-radius: 0; font-size: 13px; }
+        .bitgraph-chat-md h1, .bitgraph-chat-md h2, .bitgraph-chat-md h3 { font-size: 14px; font-weight: 600; color: #111827; margin: 8px 0 4px; }
         @media (max-width: 640px) {
-          .occ-chat-panel {
+          .bitgraph-chat-panel {
             position: fixed !important;
             inset: 56px 0 0 0 !important;
             width: 100% !important;

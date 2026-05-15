@@ -1,8 +1,8 @@
-# BitGraph — Origin Controlled Computing
+# BitGraph — BitGraph
 
 **Portable cryptographic proof of construction for digital artifacts.**
 
-[![npm @mikeargento/occproof](https://img.shields.io/npm/v/@mikeargento/occproof?label=%40mikeargento%2Foccproof&color=cb3837)](https://www.npmjs.com/package/@mikeargento/occproof)
+[![npm @mikeargento/bitgraph](https://img.shields.io/npm/v/@mikeargento/bitgraph?label=%40mikeargento%2Fbitgraph&color=cb3837)](https://www.npmjs.com/package/@mikeargento/bitgraph)
 [![Website](https://img.shields.io/badge/bitgraph.ing-live-0065A4)](https://bitgraph.ing)
 [![Docs](https://img.shields.io/badge/docs-0065A4)](https://bitgraph.ing/docs)
 
@@ -10,9 +10,9 @@
 
 Origin can be enforced or it can be claimed. Most digital provenance systems claim it. They produce an artifact and then attach a signature, a timestamp, or a metadata block describing where the artifact came from. The claim arrives after the artifact already exists, which is the wrong end of the timeline.
 
-OCC enforces origin. A measured trusted execution environment creates an unpredictable cryptographic slot before the artifact's hash is known. The artifact's hash arrives later and is bound into the slot. The slot is consumed and cannot be reused. What emerges is not a description of provenance but a proof of construction.
+BitGraph enforces origin. A measured trusted execution environment creates an unpredictable cryptographic slot before the artifact's hash is known. The artifact's hash arrives later and is bound into the slot. The slot is consumed and cannot be reused. What emerges is not a description of provenance but a proof of construction.
 
-OCC turns randomness into one-time causal space: a nonce becomes origin space when a TEE can prove it was unused before and consumed once.
+BitGraph turns randomness into one-time causal space: a nonce becomes origin space when a TEE can prove it was unused before and consumed once.
 
 > This exact digital state was committed through this measured process, in this order, under these constraints.
 
@@ -28,7 +28,7 @@ The artifact hash arrives. The TEE binds the hash into the slot, signs the bindi
 
 The atomicity is the whole guarantee. The slot is allocated and signed before the hash is known. The slot can be consumed exactly once by a single binding operation. The artifact itself can be produced anywhere, by any process, using any tools. What matters is that when the hash arrives, the slot is already there waiting.
 
-Most systems say: "Here is a file hash. Now let's sign it." OCC says: "Here is a pre-existing origin slot. Now this file hash has occupied it."
+Most systems say: "Here is a file hash. Now let's sign it." BitGraph says: "Here is a pre-existing origin slot. Now this file hash has occupied it."
 
 ## Why nonce-first matters
 
@@ -36,11 +36,11 @@ If a nonce, timestamp, or credential is added after the hash is already witnesse
 
 That leaves a forgery window. A malicious actor can prepare old hashes, replay prior material, backfill records, or attach fresh randomness to something never produced through the claimed path. The label looks valid. The construction was never constrained.
 
-OCC closes the window by requiring the slot to exist first. The slot is not evidence added afterward. It is the condition the artifact must satisfy.
+BitGraph closes the window by requiring the slot to exist first. The slot is not evidence added afterward. It is the condition the artifact must satisfy.
 
-## What an OCC proof contains
+## What an BitGraph proof contains
 
-An OCC proof is a portable proof object, typically JSON, that travels with the artifact. It can include:
+An BitGraph proof is a portable proof object, typically JSON, that travels with the artifact. It can include:
 
 | Component | Purpose |
 |---|---|
@@ -54,7 +54,7 @@ An OCC proof is a portable proof object, typically JSON, that travels with the a
 | Signature | Verifies the proof was issued by the enclave-controlled key |
 | TEE measurement | Shows what code and environment produced the proof |
 | Attestation | Shows the proof came from measured hardware |
-| Public anchor | Tethers OCC logical time to a public reference |
+| Public anchor | Tethers BitGraph logical time to a public reference |
 
 The result is not "a file was signed." It is: this hash was committed into this causal slot, by this measured environment, at this position in logical order, under this signing identity.
 
@@ -62,11 +62,11 @@ The result is not "a file was signed." It is: this hash was committed into this 
 
 Every proof has order. Every slot and commit has a position. The system can prove that this happened after that, that this slot existed before this hash was bound, that this proof came before the next, that this epoch has an internal cryptographic history.
 
-OCC proves causal order first. Clock time is optional.
+BitGraph proves causal order first. Clock time is optional.
 
 ## Ethereum: the backward seal
 
-OCC's internal ordering does not require Ethereum. The chain creates internal order through slot allocation, consumption, counters, signatures, and chained proof history. Ethereum anchors add a different property on top: a public backward seal that any third party can independently verify.
+BitGraph's internal ordering does not require Ethereum. The chain creates internal order through slot allocation, consumption, counters, signatures, and chained proof history. Ethereum anchors add a different property on top: a public backward seal that any third party can independently verify.
 
 An Ethereum block hash that becomes available after the artifact has been committed could not have been known at the moment of commitment. This produces an entropy sandwich:
 
@@ -76,11 +76,11 @@ An Ethereum block hash that becomes available after the artifact has been commit
 
 The artifact was committed after the TEE-created slot existed and before the later Ethereum block was knowable. That bounds the commitment in adversary-resistant entropy, witnessed in a public timeline anyone can check years later.
 
-Ethereum is not asked to prove the artifact's origin. OCC does that. Ethereum provides the backward seal that makes the commitment publicly verifiable.
+Ethereum is not asked to prove the artifact's origin. BitGraph does that. Ethereum provides the backward seal that makes the commitment publicly verifiable.
 
 ## Multi-TEE breach detection
 
-OCC's architecture supports running three independent TEEs in parallel as a tripwire, not a consensus system. Three TEEs witness the same input and produce three individual proofs with different nonces, signatures, and attestations. They agree on the meaningful result: same artifact hash, same policy decision, valid measurements, valid signatures, expected ordering behavior.
+BitGraph's architecture supports running three independent TEEs in parallel as a tripwire, not a consensus system. Three TEEs witness the same input and produce three individual proofs with different nonces, signatures, and attestations. They agree on the meaningful result: same artifact hash, same policy decision, valid measurements, valid signatures, expected ordering behavior.
 
 If one diverges, the system does not need to know which one is compromised. It only needs to know something is wrong. The batch is quarantined, the affected range is marked suspect, the epoch is rotated, and downstream verification accounts for the gap.
 
@@ -88,7 +88,7 @@ This is not "trust this TEE forever." It is: compromise is assumed, silence is w
 
 ## The trust model
 
-OCC does not depend on blind trust in any single component. Not the operator, the TEE, Ethereum, the clock, a certificate authority, or a live server. Each layer adds an independently verifiable property.
+BitGraph does not depend on blind trust in any single component. Not the operator, the TEE, Ethereum, the clock, a certificate authority, or a live server. Each layer adds an independently verifiable property.
 
 | Layer | What it contributes |
 |---|---|
@@ -102,9 +102,9 @@ OCC does not depend on blind trust in any single component. Not the operator, th
 | Epoch rotation | Damage containment |
 | Portable verification | Independence from the original server |
 
-## What OCC applies to
+## What BitGraph applies to
 
-OCC works on any digital state that can be hashed. The same primitive applies whether the artifact is a photograph, a contract, a model output, a dataset, or a software release.
+BitGraph works on any digital state that can be hashed. The same primitive applies whether the artifact is a photograph, a contract, a model output, a dataset, or a software release.
 
 **Media.** Photos, videos, audio, edited files, generative outputs. The question shifts from "is this real?" to "what origin path does this artifact satisfy?"
 
@@ -116,24 +116,24 @@ OCC works on any digital state that can be hashed. The same primitive applies wh
 
 **Research and IP.** Datasets, experimental outputs, and possession proofs that commit to a hash without requiring the file to leave the user's device.
 
-## How OCC differs from existing approaches
+## How BitGraph differs from existing approaches
 
-OCC is often confused with adjacent systems. The differences are structural:
+BitGraph is often confused with adjacent systems. The differences are structural:
 
-| System | Says | OCC says |
+| System | Says | BitGraph says |
 |---|---|---|
 | Signatures | This key signed this data | This key was controlled by a measured environment that consumed an unused slot |
 | Timestamps | This hash existed by time T | This hash consumed a pre-existing slot at this position in causal order |
 | C2PA | Here are signed claims about this content | Here is the construction path this content satisfied |
 | Blockchains | Public ordering of shared transactions | Private origin coordinates with optional public anchoring |
 
-Signatures, timestamps, content credentials, and blockchains all answer "who claimed what, when?" OCC answers "what construction path did this exact artifact satisfy?" They are complementary, not competing. A signature can be inside an OCC proof. A timestamp can decorate one. Content credentials can ride alongside one. None of them, alone, do what OCC does.
+Signatures, timestamps, content credentials, and blockchains all answer "who claimed what, when?" BitGraph answers "what construction path did this exact artifact satisfy?" They are complementary, not competing. A signature can be inside an BitGraph proof. A timestamp can decorate one. Content credentials can ride alongside one. None of them, alone, do what BitGraph does.
 
 ## Multiple copies of the same original
 
 Physical originality depends on singularity. There is one canvas, one negative, one signed paper. Digital files broke that because perfect copies are indistinguishable from the source.
 
-OCC introduces a different category. A digital artifact can be copied without losing its original provenance. The proof travels with the bytes or alongside them. Instead of every copy being a degraded copy, OCC allows multiple copies of the same original. Originality moves from physical container to causal proof. Singularity is no longer required for originality.
+BitGraph introduces a different category. A digital artifact can be copied without losing its original provenance. The proof travels with the bytes or alongside them. Instead of every copy being a degraded copy, BitGraph allows multiple copies of the same original. Originality moves from physical container to causal proof. Singularity is no longer required for originality.
 
 ## The simplest version
 
@@ -150,11 +150,11 @@ Try it live: drop a file at [bitgraph.ing](https://bitgraph.ing). The file never
 Verify a proof in code:
 
 ```bash
-npm install @mikeargento/occproof
+npm install @mikeargento/bitgraph
 ```
 
 ```ts
-import { verify } from "@mikeargento/occproof";
+import { verify } from "@mikeargento/bitgraph";
 
 const result = await verify({ proof, bytes });
 if (result.ok) {

@@ -14,7 +14,7 @@ import { spawn, type ChildProcess } from "node:child_process";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { join, dirname } from "node:path";
-import type { OCCProof } from "../types.js";
+import type { BitGraphProof } from "../types.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -61,7 +61,7 @@ describe("HTTP commit service integration", () => {
   });
 
   test("happy path: commit + verify succeeds", async () => {
-    const digestB64 = sha256B64("hello occ integration test");
+    const digestB64 = sha256B64("hello bitgraph integration test");
 
     // Commit
     const commitRes = await fetch(`${BASE_URL}/commit`, {
@@ -71,11 +71,11 @@ describe("HTTP commit service integration", () => {
     });
     assert.equal(commitRes.status, 200, "POST /commit should return 200");
 
-    const proofs = (await commitRes.json()) as OCCProof[];
+    const proofs = (await commitRes.json()) as BitGraphProof[];
     assert.ok(Array.isArray(proofs) && proofs.length === 1, "expected one proof");
 
     const proof = proofs[0]!;
-    assert.equal(proof.version, "occ/1");
+    assert.equal(proof.version, "bitgraph/1");
     assert.equal(proof.artifact.digestB64, digestB64);
 
     // Verify
@@ -100,9 +100,9 @@ describe("HTTP commit service integration", () => {
     });
     assert.equal(commitRes.status, 200);
 
-    const proofs = (await commitRes.json()) as OCCProof[];
+    const proofs = (await commitRes.json()) as BitGraphProof[];
     // Deep-clone and tamper the artifact digest
-    const tampered: OCCProof = JSON.parse(JSON.stringify(proofs[0]!)) as OCCProof;
+    const tampered: BitGraphProof = JSON.parse(JSON.stringify(proofs[0]!)) as BitGraphProof;
     tampered.artifact.digestB64 = sha256B64("completely different content");
 
     const verifyRes = await fetch(`${BASE_URL}/verify`, {

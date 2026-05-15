@@ -54,7 +54,7 @@ export async function verifyLog(entries: ProofLogEntry[]): Promise<LogVerificati
       } else if (sigBytes.length !== 64) {
         checks.push({ label: "Ed25519 signature", status: "fail", detail: `Signature is ${sigBytes.length} bytes; expected 64` });
       } else {
-        // Reconstruct signed body (same as occ-core)
+        // Reconstruct signed body (same as bitgraph-core)
         const signedBody: Record<string, unknown> = {
           version: proof.version,
           artifact: proof.artifact,

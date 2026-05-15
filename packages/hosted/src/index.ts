@@ -144,7 +144,7 @@ const server = createServer(handler);
 server.listen(PORT, "0.0.0.0", () => {
   console.log("");
   console.log("  ┌─────────────────────────────────┐");
-  console.log("  │     OCC Ethereum Anchor Service   │");
+  console.log("  │     BitGraph Ethereum Anchor Service   │");
   console.log("  └─────────────────────────────────┘");
   console.log("");
   console.log(`  Dashboard:  http://localhost:${PORT}`);

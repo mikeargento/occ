@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Self-Host TEE",
-  description: "Deploy your own OCC Trusted Execution Environment using AWS Nitro Enclaves.",
+  description: "Deploy your own BitGraph Trusted Execution Environment using AWS Nitro Enclaves.",
 };
 
 export default function SelfHostTEEPage() {
@@ -10,11 +10,11 @@ export default function SelfHostTEEPage() {
     <div className="prose-doc">
       <h1 style={{ fontSize: 28, fontWeight: 700, letterSpacing: "-0.02em", marginBottom: 8 }}>Self-Host TEE</h1>
       <p style={{ color: "#6b7280", marginBottom: 32 }}>
-        Deploy your own OCC Trusted Execution Environment using AWS Nitro Enclaves. This guide assumes no prior TEE experience.
+        Deploy your own BitGraph Trusted Execution Environment using AWS Nitro Enclaves. This guide assumes no prior TEE experience.
       </p>
 
       <h2>Architecture</h2>
-      <p>The OCC TEE consists of three components running on a single EC2 instance:</p>
+      <p>The BitGraph TEE consists of three components running on a single EC2 instance:</p>
       <ul>
         <li><strong>Enclave</strong> — isolated TEE that holds the Ed25519 signing key and produces cryptographically signed proofs. The key is generated inside the enclave and never leaves.</li>
         <li><strong>Parent server</strong> — HTTP server running on the EC2 host. Receives proof requests, forwards them to the enclave via vsock, returns signed proofs.</li>
@@ -112,8 +112,8 @@ sudo systemctl restart nitro-enclaves-allocator`}</pre>
       <div className="code-block">
         <div className="code-block-header">Shell</div>
         <pre>{`# Clone the repo
-git clone https://github.com/mikeargento/occ.git
-cd occ
+git clone https://github.com/mikeargento/bitgraph.git
+cd bitgraph
 
 # Install dependencies
 npm ci
@@ -121,7 +121,7 @@ npm ci
 # Build the Docker image for the enclave
 # Context must be the repo root (monorepo build)
 cd server/commit-service
-docker build -f Dockerfile.enclave -t occ-enclave ../../`}</pre>
+docker build -f Dockerfile.enclave -t bitgraph-enclave ../../`}</pre>
       </div>
 
       <h2>Step 5: Build the Enclave Image (EIF)</h2>
@@ -130,7 +130,7 @@ docker build -f Dockerfile.enclave -t occ-enclave ../../`}</pre>
         <div className="code-block-header">Shell</div>
         <pre>{`# Build the EIF from the Docker image
 nitro-cli build-enclave \\
-  --docker-uri occ-enclave \\
+  --docker-uri bitgraph-enclave \\
   --output-file enclave.eif
 
 # Output will show:
@@ -187,7 +187,7 @@ ss -tlnp | grep 9000
       <div className="code-block">
         <div className="code-block-header">Shell</div>
         <pre>{`# Build the parent server (TypeScript → JavaScript)
-cd /path/to/occ/server/commit-service
+cd /path/to/bitgraph/server/commit-service
 npx tsc -p tsconfig.parent.json
 
 # Set environment variables
@@ -222,18 +222,18 @@ curl -X POST http://localhost:8080/commit \\
   -d "{
     \\"digests\\": [{\\"digestB64\\": \\"$DIGEST\\", \\"hashAlg\\": \\"sha256\\"}]
   }"
-# Returns: signed OCC proof with TEE attestation`}</pre>
+# Returns: signed BitGraph proof with TEE attestation`}</pre>
       </div>
 
-      <h2>Step 10: Point OCC Dashboard at Your TEE</h2>
-      <p>By default, the hosted dashboard at occ.bitgraph.ing points to <code>nitro.occproof.com</code>. To use your own TEE, set the <code>TEE_URL</code> environment variable on your hosted server:</p>
+      <h2>Step 10: Point BitGraph Dashboard at Your TEE</h2>
+      <p>By default, the hosted dashboard at anchor.bitgraph.ing points to <code>nitro.bitgraph.ing</code>. To use your own TEE, set the <code>TEE_URL</code> environment variable on your hosted server:</p>
       <div className="code-block">
         <pre>{`# In your hosted server environment (Railway, etc.)
 TEE_URL=https://your-tee-domain.com`}</pre>
       </div>
       <p>The hosted server at <code>packages/hosted/src/authorization.ts</code> reads this variable:</p>
       <div className="code-block">
-        <pre>{`const TEE_URL = process.env.TEE_URL || "https://nitro.occproof.com";`}</pre>
+        <pre>{`const TEE_URL = process.env.TEE_URL || "https://nitro.bitgraph.ing";`}</pre>
       </div>
 
       <h2>Production Checklist</h2>
@@ -251,7 +251,7 @@ TEE_URL=https://your-tee-domain.com`}</pre>
       <p>For automated deployment, use the included script:</p>
       <div className="code-block">
         <div className="code-block-header">Shell</div>
-        <pre>{`cd occ/server/commit-service
+        <pre>{`cd bitgraph/server/commit-service
 ./deploy.sh
 
 # This runs all steps automatically:
@@ -289,12 +289,12 @@ TEE_URL=https://your-tee-domain.com`}</pre>
 
       <p>For each proof request:</p>
       <ol>
-        <li>Validates the slot exists (OCC causal gate — no slot, no proof)</li>
+        <li>Validates the slot exists (BitGraph causal gate — no slot, no proof)</li>
         <li>Increments the chain counter</li>
         <li>Builds the signed body: artifact, commit, policy, principal</li>
         <li>Signs with Ed25519</li>
         <li>Gets a Nitro attestation report from the NSM device</li>
-        <li>Returns the complete OCC proof with attestation embedded</li>
+        <li>Returns the complete BitGraph proof with attestation embedded</li>
       </ol>
 
       <h2>Epoch Transitions</h2>

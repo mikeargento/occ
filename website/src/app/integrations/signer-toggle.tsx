@@ -77,19 +77,19 @@ export function SignerDescription({ mode }: { mode: "local" | "tee" }) {
   return (
     <p className="text-text-secondary text-sm leading-relaxed">
       <strong className="text-text">TEE signing</strong> — Hardware-attested via AWS Nitro Enclave.
-      Only a cryptographic hash leaves your machine. The enclave is sealed — not even OCC can access it.
+      Only a cryptographic hash leaves your machine. The enclave is sealed — not even BitGraph can access it.
       <br />
       <span className="text-text-tertiary">Open source. Verify the attestation yourself.</span>
     </p>
   );
 }
 
-const localBash = `npx occ-mcp-proxy --wrap npx -y @modelcontextprotocol/server-filesystem ~/Desktop`;
-const teeBash = `npx occ-mcp-proxy --wrap --signer occ-cloud npx -y @modelcontextprotocol/server-filesystem ~/Desktop`;
+const localBash = `npx bitgraph-mcp-proxy --wrap npx -y @modelcontextprotocol/server-filesystem ~/Desktop`;
+const teeBash = `npx bitgraph-mcp-proxy --wrap --signer bitgraph-cloud npx -y @modelcontextprotocol/server-filesystem ~/Desktop`;
 
 const localConfig = `{
   "command": "npx",
-  "args": ["occ-mcp-proxy", "--wrap",
+  "args": ["bitgraph-mcp-proxy", "--wrap",
     "npx", "-y",
     "@modelcontextprotocol/server-filesystem",
     "/home"]
@@ -97,8 +97,8 @@ const localConfig = `{
 
 const teeConfig = `{
   "command": "npx",
-  "args": ["occ-mcp-proxy", "--wrap",
-    "--signer", "occ-cloud",
+  "args": ["bitgraph-mcp-proxy", "--wrap",
+    "--signer", "bitgraph-cloud",
     "npx", "-y",
     "@modelcontextprotocol/server-filesystem",
     "/home"]

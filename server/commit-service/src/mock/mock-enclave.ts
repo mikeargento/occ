@@ -4,10 +4,10 @@
 import { createVerify, createHash, randomBytes } from "node:crypto";
 import { sha256 } from "@noble/hashes/sha256";
 import { signAsync } from "@noble/ed25519";
-import { canonicalize } from "occproof";
-import { Constructor } from "occproof";
-import type { HostCapabilities, OCCProof, SignedBody, AgencyEnvelope, AuthorizationPayload, WebAuthnAuthorization, PolicyBinding } from "occproof";
-import { StubHost } from "@occ/stub";
+import { canonicalize } from "bitgraph";
+import { Constructor } from "bitgraph";
+import type { HostCapabilities, BitGraphProof, SignedBody, AgencyEnvelope, AuthorizationPayload, WebAuthnAuthorization, PolicyBinding } from "bitgraph";
+import { StubHost } from "@bitgraph/stub";
 import type {
   EnclaveClient,
   EnclaveRequest,
@@ -88,7 +88,7 @@ export class MockEnclave implements EnclaveClient {
     }
 
     // Validate purpose
-    if (authorization.purpose !== "occ/commit-authorize/v1") {
+    if (authorization.purpose !== "bitgraph/commit-authorize/v1") {
       throw new Error(`Agency: invalid purpose "${authorization.purpose}"`);
     }
 
@@ -195,7 +195,7 @@ export class MockEnclave implements EnclaveClient {
   }
 
   async #handleCommit(req: CommitRequest): Promise<EnclaveResponse> {
-    const proofs: OCCProof[] = [];
+    const proofs: BitGraphProof[] = [];
 
     // Verify agency once against the first digest
     if (req.agency) {
@@ -219,14 +219,14 @@ export class MockEnclave implements EnclaveClient {
       const measurement = await this.#stub.host.getMeasurement();
       const publicKeyB64 = Buffer.from(publicKeyBytes).toString("base64");
 
-      const commitFields: OCCProof["commit"] = {
+      const commitFields: BitGraphProof["commit"] = {
         nonceB64: Buffer.from(nonceBytes).toString("base64"),
       };
       if (counter !== undefined) commitFields.counter = counter;
       if (time !== undefined) commitFields.time = time;
 
       const signedBody: SignedBody = {
-        version: "occ/1",
+        version: "bitgraph/1",
         artifact: { hashAlg: "sha256", digestB64 },
         commit: commitFields,
         publicKeyB64,
@@ -258,8 +258,8 @@ export class MockEnclave implements EnclaveClient {
       const canonicalBytes = canonicalize(signedBody);
       const signatureBytes = await this.#stub.host.sign(canonicalBytes);
 
-      const proof: OCCProof = {
-        version: "occ/1",
+      const proof: BitGraphProof = {
+        version: "bitgraph/1",
         artifact: signedBody.artifact,
         commit: signedBody.commit,
         signer: {
@@ -300,11 +300,11 @@ export class MockEnclave implements EnclaveClient {
     const commitResult = await this.#handleCommit({
       type: "commit",
       digests: [{ digestB64, hashAlg: "sha256" }],
-      metadata: { source: "occ-bw-demo", operation: "grayscale" },
+      metadata: { source: "bitgraph-bw-demo", operation: "grayscale" },
     });
 
     if (!commitResult.ok) return commitResult;
-    const proofs = commitResult.data as OCCProof[];
+    const proofs = commitResult.data as BitGraphProof[];
 
     return {
       ok: true,

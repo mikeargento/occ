@@ -22,7 +22,7 @@ export default function Sections1Through3() {
           </p>
           <p>
             This paper introduces a different enforcement model.{" "}
-            <strong>Origin Controlled Computing</strong> relocates trust to the
+            <strong>BitGraph</strong> relocates trust to the
             commit path. Authenticated durable state is reachable only through
             enforced finalization via a protected commit interface. An artifact
             is authenticated if and only if cryptographic binding and
@@ -34,7 +34,7 @@ export default function Sections1Through3() {
             <strong>Trusted Origin Token Architecture</strong>, in which
             authenticated creation requires consumption of a pre-existing
             single-use authorization unit at finalization. We then generalize
-            this into Origin Controlled Computing, in which equivalent origin
+            this into BitGraph, in which equivalent origin
             control is achieved without pre-existing tokens by generating
             boundary-fresh cryptographic output inside the atomic execution
             boundary. The enforcement principle that links authorization,
@@ -46,7 +46,7 @@ export default function Sections1Through3() {
             closure algebras, define a security game capturing the adversarial
             model, and systematically distinguish this architecture from existing
             approaches including attested execution, post-hoc provenance, and
-            content credential systems. We show that Origin Controlled Computing
+            content credential systems. We show that BitGraph
             defines a new enforcement primitive: authentication as a{" "}
             <em>reachability property</em> of system structure, not a property
             attached to artifacts after creation.
@@ -118,12 +118,12 @@ export default function Sections1Through3() {
         </p>
 
         <p>
-          Origin Controlled Computing is not a replacement for attestation,
+          BitGraph is not a replacement for attestation,
           provenance, or access control. It is a{" "}
           <em>lower-layer enforcement primitive</em> that existing systems can
           adopt to close the structural gap between trusted code execution and
           controlled state creation. Systems that already implement TEEs,
-          content credentials, or hardware roots of trust can implement OCC to
+          content credentials, or hardware roots of trust can implement BitGraph to
           strengthen the enforcement guarantees those mechanisms provide.
         </p>
 

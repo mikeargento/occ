@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 // Nav is in root layout
-import type { OCCProof } from "@/lib/occ";
+import type { BitGraphProof } from "@/lib/bitgraph";
 import { zipSync, strToU8 } from "fflate";
 import { verifyNitroAttestation, type NitroVerifyResult } from "@/lib/nitro-verify";
 import type { C2PAReadResult } from "@/lib/c2pa-reader";
@@ -14,7 +14,7 @@ const mono = "var(--font-mono), 'SF Mono', SFMono-Regular, monospace";
 export default function ProofPage() {
   const params = useParams();
   const digestParam = params.digest as string;
-  const [proof, setProof] = useState<OCCProof | null>(null);
+  const [proof, setProof] = useState<BitGraphProof | null>(null);
   const [causalWindow, setCausalWindow] = useState<{
     anchorBefore: { counter: string; attrName: string; blockNumber: number | null; blockHash: string | null; etherscanUrl: string | null; blockTime?: string | null; digestB64?: string | null } | null;
     anchorAfter: { counter: string; attrName: string; blockNumber: number | null; blockHash: string | null; etherscanUrl: string | null; blockTime?: string | null; digestB64?: string | null } | null;
@@ -49,14 +49,14 @@ export default function ProofPage() {
         if (!resp.ok) { setError("Proof not found"); setLoading(false); return; }
         const data = await resp.json();
         if (data.proofs?.[0]?.proof) {
-          setProof(data.proofs[0].proof as OCCProof);
+          setProof(data.proofs[0].proof as BitGraphProof);
           if (data.causalWindow) setCausalWindow(data.causalWindow);
           // Try to load cached file from IndexedDB
           try {
             let digestB64 = decodeURIComponent(digestParam).replace(/-/g, "+").replace(/_/g, "/");
             while (digestB64.length % 4 !== 0) digestB64 += "=";
             const db = await new Promise<IDBDatabase>((resolve, reject) => {
-              const req = indexedDB.open("occ-files", 1);
+              const req = indexedDB.open("bitgraph-files", 1);
               req.onupgradeneeded = () => req.result.createObjectStore("files");
               req.onsuccess = () => resolve(req.result);
               req.onerror = () => reject(req.error);
@@ -81,7 +81,7 @@ export default function ProofPage() {
     <Shell>
       <div style={{ padding: "80px 20px", textAlign: "center" }}>
         <div style={{ fontSize: 16, color: "#f87171", marginBottom: 12 }}>{error || "Proof not found"}</div>
-        <a href="/" style={{ fontSize: 14, color: "var(--c-accent)" }}>OCC</a>
+        <a href="/" style={{ fontSize: 14, color: "var(--c-accent)" }}>BitGraph</a>
       </div>
     </Shell>
   );
@@ -123,9 +123,9 @@ export default function ProofPage() {
     const zipped = zipSync(files, { level: 0 });
     const blob = new Blob([zipped as unknown as BlobPart], { type: "application/zip" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = `occ-proof-${commit.counter}.zip`; a.click();
+    const a = document.createElement("a"); a.href = url; a.download = `bitgraph-proof-${commit.counter}.zip`; a.click();
     URL.revokeObjectURL(url);
-    } catch (e) { console.error("[occ] export error:", e); alert("Export failed: " + e); }
+    } catch (e) { console.error("[bitgraph] export error:", e); alert("Export failed: " + e); }
   }
 
   return (
@@ -218,9 +218,9 @@ export default function ProofPage() {
         <div className="proof-grid" style={{ display: "grid", gridTemplateColumns: "1fr", gap: 24 }}>
 
           {/* BitGraph identity — top-level identifier, sits above the construction sequence */}
-          {(proof as OCCProof & { proofHash?: string }).proofHash && (
+          {(proof as BitGraphProof & { proofHash?: string }).proofHash && (
             <Card title="BitGraph">
-              <Field label="Proof Hash" value={(proof as OCCProof & { proofHash?: string }).proofHash!} mono highlight />
+              <Field label="Proof Hash" value={(proof as BitGraphProof & { proofHash?: string }).proofHash!} mono highlight />
               <JsonSection proof={proof} />
             </Card>
           )}
@@ -408,7 +408,7 @@ const btnStyle: React.CSSProperties = {
   background: "#0065A4", border: "1px solid #0065A4", borderRadius: 0, cursor: "pointer",
 };
 
-function JsonSection({ proof }: { proof: OCCProof }) {
+function JsonSection({ proof }: { proof: BitGraphProof }) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const json = JSON.stringify(proof, null, 2);
@@ -481,7 +481,7 @@ function SimpleView({
   c2pa,
   isTee,
 }: {
-  proof: OCCProof;
+  proof: BitGraphProof;
   attr?: { name?: string; title?: string; message?: string };
   causalWindow: {
     anchorAfter: { counter: string; blockNumber: number | null; etherscanUrl: string | null; blockTime?: string | null } | null;
@@ -555,7 +555,7 @@ function SimpleView({
           setPreviewUrl(url);
           revoke = () => URL.revokeObjectURL(url);
         } catch (e) {
-          console.warn("[occ] heic2any conversion failed:", e);
+          console.warn("[bitgraph] heic2any conversion failed:", e);
           setPreviewUrl(null);
         }
       })();
@@ -590,7 +590,7 @@ function SimpleView({
     : "Awaiting Ethereum anchor…";
 
   // Short proofHash — matches the title pill
-  const ph = (proof as OCCProof & { proofHash?: string });
+  const ph = (proof as BitGraphProof & { proofHash?: string });
   const fullHash = ph.proofHash || "";
   const shortHash = fullHash.replace(/[+/=]/g, "").slice(0, 12);
 

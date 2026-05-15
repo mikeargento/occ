@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Integration Guide",
-  description: "How to commit artifacts, verify proofs, and integrate OCC into your application.",
+  description: "How to commit artifacts, verify proofs, and integrate BitGraph into your application.",
 };
 
 export default function IntegrationPage() {
@@ -10,20 +10,20 @@ export default function IntegrationPage() {
     <article className="prose-doc">
       <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-6">Integration Guide</h1>
       <p className="text-[#1f2937] mb-10">
-        How to commit artifacts, verify proofs, and integrate OCC into your application.
+        How to commit artifacts, verify proofs, and integrate BitGraph into your application.
       </p>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Quick start: commit via API</h2>
       <p className="text-[#1f2937] mb-4">
-        Hash your artifact locally, then send only the digest to the OCC endpoint:
+        Hash your artifact locally, then send only the digest to the BitGraph endpoint:
       </p>
       <div className="code-block">
         <div className="code-block-header"><span>Shell</span></div>
         <pre className="text-xs font-mono leading-relaxed text-[#1f2937] overflow-x-auto">{`# 1. Hash your file
 DIGEST=$(openssl dgst -sha256 -binary myfile.pdf | base64)
 
-# 2. Send to OCC endpoint
-curl -X POST https://nitro.occproof.com/commit \\
+# 2. Send to BitGraph endpoint
+curl -X POST https://nitro.bitgraph.ing/commit \\
   -H "Content-Type: application/json" \\
   -d '{
     "digests": [{
@@ -45,7 +45,7 @@ const hashBuf = await crypto.subtle.digest("SHA-256", bytes);
 const digestB64 = btoa(String.fromCharCode(...new Uint8Array(hashBuf)));
 
 // Commit to enclave (with optional attribution)
-const resp = await fetch("https://nitro.occproof.com/commit", {
+const resp = await fetch("https://nitro.bitgraph.ing/commit", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
@@ -56,7 +56,7 @@ const resp = await fetch("https://nitro.occproof.com/commit", {
 });
 
 const [proof] = await resp.json();
-// proof is a complete OCCProof JSON object
+// proof is a complete BitGraphProof JSON object
 console.log(proof.commit.counter);
 console.log(proof.slotAllocation);   // causal slot record
 console.log(proof.attribution);      // signed creator metadata`}</pre>
@@ -68,7 +68,7 @@ console.log(proof.attribution);      // signed creator metadata`}</pre>
       </p>
       <div className="code-block">
         <div className="code-block-header"><span>TypeScript</span></div>
-        <pre className="text-xs font-mono leading-relaxed text-[#1f2937] overflow-x-auto">{`const resp = await fetch("https://nitro.occproof.com/commit", {
+        <pre className="text-xs font-mono leading-relaxed text-[#1f2937] overflow-x-auto">{`const resp = await fetch("https://nitro.bitgraph.ing/commit", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
@@ -89,7 +89,7 @@ const proofs = await resp.json();
       <h2 className="text-xl font-semibold mt-12 mb-4">Verify a proof</h2>
       <div className="code-block">
         <div className="code-block-header"><span>TypeScript</span></div>
-        <pre className="text-xs font-mono leading-relaxed text-[#1f2937] overflow-x-auto">{`import { verify } from "@mikeargento/occproof";
+        <pre className="text-xs font-mono leading-relaxed text-[#1f2937] overflow-x-auto">{`import { verify } from "@mikeargento/bitgraph";
 
 const result = await verify({
   proof: myProof,
@@ -113,7 +113,7 @@ if (result.valid) {
       <div className="code-block">
         <div className="code-block-header"><span>Shell</span></div>
         <pre className="text-xs font-mono leading-relaxed text-[#1f2937] overflow-x-auto">{`# Get enclave public key and measurement
-curl https://nitro.occproof.com/key
+curl https://nitro.bitgraph.ing/key
 
 # Response:
 # {

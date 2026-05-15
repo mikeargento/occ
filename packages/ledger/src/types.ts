@@ -1,7 +1,7 @@
 /**
- * OCC Ledger — Immutable Causal Storage Types
+ * BitGraph Ledger — Immutable Causal Storage Types
  *
- * These types define the storage layer for Origin Controlled Computing.
+ * These types define the storage layer for BitGraph.
  * The ledger is the source of truth. Everything else is an index.
  *
  * The user keeps only their file. The ledger stores everything else.
@@ -14,7 +14,7 @@
 /** A proof as stored in the immutable ledger (S3 Object Lock). */
 export interface StoredProof {
   /** Schema version. */
-  version: "occ/1";
+  version: "bitgraph/1";
 
   /** What was proven — the artifact hash. */
   artifact: {
@@ -38,7 +38,7 @@ export interface StoredProof {
 
   /** The pre-allocated origin slot (embedded for self-contained verification). */
   slotAllocation?: {
-    version: "occ/slot/1";
+    version: "bitgraph/slot/1";
     counter: string;
     epochId: string;
     nonceB64: string;

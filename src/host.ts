@@ -2,7 +2,7 @@
 // Copyright 2024-2026 Mike Argento
 
 /**
- * occ-core host abstraction
+ * bitgraph-core host abstraction
  *
  * `HostCapabilities` is the sole interface between this library and any
  * Trusted Execution Environment. All TEE-specific behavior (attestation,
@@ -18,7 +18,7 @@
  *
  * Adapters (e.g. aws-nitro, sgx-dcap, sev-snp) live in separate packages
  * and implement this interface. A minimal in-process stub for testing is
- * provided in @occ/stub.
+ * provided in @bitgraph/stub.
  *
  * IMPORTANT — adapter authors:
  *   enforcementTier is self-reported and signed into every proof.
@@ -31,7 +31,7 @@
  *     - signing (sign)
  *   If any of these run outside the boundary, the correct tier is "hw-key"
  *   or "stub". Misrepresenting the tier is an architectural violation of
- *   OCC's atomic causality invariant.
+ *   BitGraph's atomic causality invariant.
  */
 
 import type { EnforcementTier } from "./types.js";

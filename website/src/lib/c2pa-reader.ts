@@ -5,7 +5,7 @@
  *   - Lazy-load the ~6 MB WASM toolkit only when a file is actually read
  *   - Normalize the c2pa manifest store into a flat, UI-friendly shape
  *   - Fail soft: if parsing throws or returns no manifest, return null so the
- *     OCC proof flow is never blocked by C2PA issues
+ *     BitGraph proof flow is never blocked by C2PA issues
  *
  * This file is client-only. Do not import it from a server component.
  */
@@ -61,7 +61,7 @@ async function getC2pa() {
  *   - The library or WASM fails to load (no c2pa support on this browser)
  *   - Any exception is thrown during parsing
  *
- * Never throws. Never blocks the OCC flow.
+ * Never throws. Never blocks the BitGraph flow.
  */
 export async function readC2PA(file: File | Blob, filename?: string): Promise<C2PAReadResult | null> {
   try {

@@ -1,5 +1,5 @@
 /**
- * OCC Ledger Client — lightweight wrapper for use by services.
+ * BitGraph Ledger Client — lightweight wrapper for use by services.
  *
  * When LEDGER_BUCKET is set: stores proofs and anchors to S3 with Object Lock.
  * When LEDGER_BUCKET is not set: no-op (proofs still work, just not persisted to S3).

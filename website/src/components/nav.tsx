@@ -4,7 +4,7 @@ export function Nav() {
   return (
     <div style={{ textAlign: "center", paddingTop: 32, paddingBottom: 8 }}>
       <span style={{ fontSize: 28, fontWeight: 900, fontStyle: "normal", fontFamily: 'var(--font-sans)', letterSpacing: "-0.02em", color: "var(--c-text)" }}>
-        OCC
+        BitGraph
       </span>
     </div>
   );
@@ -20,7 +20,7 @@ export function Footer() {
       pointerEvents: "none",
     }}>
       <a href="/docs" target="_blank" rel="noopener" style={{ fontSize: 13, color: "var(--c-text-tertiary)", textDecoration: "none", pointerEvents: "auto" }}>Docs</a>
-      <a href="https://github.com/mikeargento/occ" target="_blank" rel="noopener" style={{ fontSize: 13, color: "var(--c-text-tertiary)", textDecoration: "none", pointerEvents: "auto" }}>GitHub</a>
+      <a href="https://github.com/mikeargento/bitgraph" target="_blank" rel="noopener" style={{ fontSize: 13, color: "var(--c-text-tertiary)", textDecoration: "none", pointerEvents: "auto" }}>GitHub</a>
     </div>
   );
 }

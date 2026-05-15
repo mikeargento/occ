@@ -2,11 +2,11 @@
 // Copyright 2024-2026 Mike Argento
 
 /**
- * occ-core canonical serialization
+ * bitgraph-core canonical serialization
  *
  * Produces a deterministic, UTF-8 encoded JSON byte sequence from an
  * arbitrary JavaScript value.  The output is used as the signing input
- * for OCCProof signatures and must be reproduced identically by any
+ * for BitGraphProof signatures and must be reproduced identically by any
  * verifier regardless of platform or runtime.
  *
  * Algorithm:
@@ -28,7 +28,7 @@
  *     numeric fields upstream.
  *   - Object prototype chains are not walked; only own enumerable keys.
  *
- * This module has zero dependencies on other occ-core modules so that it
+ * This module has zero dependencies on other bitgraph-core modules so that it
  * can be used standalone for testing and external verification tooling.
  */
 
@@ -72,17 +72,17 @@ function sortedReplacer(value: unknown): unknown {
     // Reject types that serialize to undefined in JSON.
     if (typeof value === "undefined") {
       throw new TypeError(
-        "occ-core/canonical: undefined values are not serializable to canonical JSON"
+        "bitgraph-core/canonical: undefined values are not serializable to canonical JSON"
       );
     }
     if (typeof value === "function" || typeof value === "symbol") {
       throw new TypeError(
-        `occ-core/canonical: ${typeof value} values are not serializable to canonical JSON`
+        `bitgraph-core/canonical: ${typeof value} values are not serializable to canonical JSON`
       );
     }
     if (typeof value === "bigint") {
       throw new TypeError(
-        "occ-core/canonical: BigInt values are not serializable to canonical JSON; " +
+        "bitgraph-core/canonical: BigInt values are not serializable to canonical JSON; " +
           "convert to string (decimal) before canonicalizing"
       );
     }

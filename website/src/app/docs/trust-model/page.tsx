@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Trust Model",
-  description: "OCC trust model: assumptions, threat model, enforcement tiers, non-goals.",
+  description: "BitGraph trust model: assumptions, threat model, enforcement tiers, non-goals.",
 };
 
 export default function TrustModelPage() {
@@ -12,7 +12,7 @@ export default function TrustModelPage() {
 
       <div className="border-l-2 border-l-[#d0d5dd] pl-6 mb-8">
         <p className="text-sm text-[#111827] italic leading-relaxed">
-          OCC guarantees single-successor semantics within the verifier-accepted
+          BitGraph guarantees single-successor semantics within the verifier-accepted
           measurement and monotonicity domain of the enforcing boundary.
         </p>
       </div>
@@ -90,7 +90,7 @@ export default function TrustModelPage() {
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Ethereum front anchors</h2>
       <p className="text-[#1f2937] leading-relaxed mb-4">
-        OCC does not require a blockchain to operate, but it uses Ethereum as
+        BitGraph does not require a blockchain to operate, but it uses Ethereum as
         an external write-once timeline. The same TEE that signs user proofs
         also periodically commits its current counter chain into an Ethereum
         block. The on-chain payload contains the enclave&apos;s public key, the
@@ -98,7 +98,7 @@ export default function TrustModelPage() {
         nothing about any individual user or file.
       </p>
       <p className="text-[#1f2937] leading-relaxed mb-4">
-        Each anchor is itself an OCC proof signed by the enclave, so it
+        Each anchor is itself an BitGraph proof signed by the enclave, so it
         participates in the same counter chain as the user proofs that came
         before it. When the anchor lands in a finalized Ethereum block, that
         block&apos;s timestamp and ordering become an external witness to the
@@ -112,7 +112,7 @@ export default function TrustModelPage() {
         This is the mechanism behind the phrase &quot;everything before me already
         existed.&quot; An anchor seals backward, not forward. It does not prove
         when individual proofs were created, only that they preceded the
-        anchor block. Combined with per-epoch keypairs, anchors give OCC a
+        anchor block. Combined with per-epoch keypairs, anchors give BitGraph a
         bounded breach window: between one anchor and the next, a compromise
         could in theory rewrite the live chain, but anything before the most
         recent anchor is already fixed in the public Ethereum timeline.
@@ -120,12 +120,12 @@ export default function TrustModelPage() {
       <p className="text-[#1f2937] leading-relaxed mb-8">
         Anchors are public, but they reveal no user-identifying information.
         A verifier can fetch any anchor from Ethereum and use it to bound
-        when a proof must have existed by, without ever contacting OCC.
+        when a proof must have existed by, without ever contacting BitGraph.
       </p>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Epoch isolation: blast-radius containment</h2>
       <p className="text-[#1f2937] leading-relaxed mb-4">
-        OCC&apos;s strongest containment property is structural, not behavioral.
+        BitGraph&apos;s strongest containment property is structural, not behavioral.
         Each restart of the enclave generates a new Ed25519 keypair inside the
         boundary, derives a new <code className="text-xs font-mono bg-[#f3f4f6] px-1.5 py-0.5">epochId</code> from
         fresh hardware entropy, and resets the monotonic counter. This means
@@ -191,8 +191,8 @@ export default function TrustModelPage() {
       <ul className="space-y-2 mb-8 text-sm text-[#1f2937]">
         <li>• <strong className="text-text">Global ordering from the counter alone</strong> - every TEE instance and every new epoch resets the counter to 1, so the counter by itself only orders proofs within a single epoch. Ordering relative to the outside world is established by Ethereum anchors: each anchor lands in a finalized block, and that block&apos;s position fixes where the anchored proofs sit in the public timeline — across epochs, across TEE instances, and against any other event in the world.</li>
         <li>• <strong className="text-text">Cross-boundary double-spend</strong> - same artifact can be submitted to separate boundaries</li>
-        <li>• <strong className="text-text">Copy prevention</strong> - OCC does not prevent raw byte copying</li>
-        <li>• <strong className="text-text">Consensus replacement</strong> - OCC constrains a single boundary, not distributed parties</li>
+        <li>• <strong className="text-text">Copy prevention</strong> - BitGraph does not prevent raw byte copying</li>
+        <li>• <strong className="text-text">Consensus replacement</strong> - BitGraph constrains a single boundary, not distributed parties</li>
         <li>• <strong className="text-text">Metadata integrity</strong> - the metadata field is advisory and unsigned</li>
       </ul>
     </article>

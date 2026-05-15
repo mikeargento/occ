@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "FAQ",
-  description: "Frequently asked questions about the OCC Protocol.",
+  description: "Frequently asked questions about the BitGraph Protocol.",
 };
 
 const faqs = [
   {
-    q: "Does OCC upload my file?",
+    q: "Does BitGraph upload my file?",
     a: "No. Your file is hashed locally in your browser or application. Only the SHA-256 digest (32 bytes) is sent to the enclave. The actual file bytes never leave your machine.",
   },
   {
@@ -24,10 +24,10 @@ const faqs = [
   },
   {
     q: "Is this a blockchain?",
-    a: "No. OCC has no distributed consensus, no global ledger, no tokens. It constrains a single execution boundary. Proof chaining (prevB64) is a local hash chain, not a distributed data structure.",
+    a: "No. BitGraph has no distributed consensus, no global ledger, no tokens. It constrains a single execution boundary. Proof chaining (prevB64) is a local hash chain, not a distributed data structure.",
   },
   {
-    q: "Does OCC prove who created the content?",
+    q: "Does BitGraph prove who created the content?",
     a: "A base proof attests which execution boundary committed specific bytes, not who created them. Actor-bound proofs (using device-bound biometric keys) can additionally attest that a specific person or device authorized the commitment.",
   },
   {
@@ -39,8 +39,8 @@ const faqs = [
     a: "For AWS Nitro Enclaves, it is the PCR0 value, a SHA-384 hash of the enclave image. It uniquely identifies the exact code running inside the boundary. Verifiers should pin allowedMeasurements to known-good values.",
   },
   {
-    q: "How does OCC establish time?",
-    a: "OCC does not claim to prove absolute time. It proves causal order: every commit pre-allocates a slot inside the enclave before the artifact hash is known, and the monotonic counter establishes sequencing within an epoch. For an external time anchor, the same enclave periodically seals its counter chain into an Ethereum block. Once anchored, every proof committed before that block is fixed in a public, immutable timeline.",
+    q: "How does BitGraph establish time?",
+    a: "BitGraph does not claim to prove absolute time. It proves causal order: every commit pre-allocates a slot inside the enclave before the artifact hash is known, and the monotonic counter establishes sequencing within an epoch. For an external time anchor, the same enclave periodically seals its counter chain into an Ethereum block. Once anchored, every proof committed before that block is fixed in a public, immutable timeline.",
   },
   {
     q: "Can the same file produce different proofs?",
@@ -52,7 +52,7 @@ const faqs = [
   },
   {
     q: "How is this different from just signing a file?",
-    a: "A standard digital signature proves someone with the private key signed the bytes. OCC additionally provides: a measured execution boundary (PCR0), a monotonic counter (ordering), causal slot pre-allocation (proves commitment position was reserved before content was known), proof chaining (sequence integrity), hardware attestation (boundary evidence), actor-bound proofs (device biometric authorization), and signed attribution (creator metadata). The key never leaves the enclave.",
+    a: "A standard digital signature proves someone with the private key signed the bytes. BitGraph additionally provides: a measured execution boundary (PCR0), a monotonic counter (ordering), causal slot pre-allocation (proves commitment position was reserved before content was known), proof chaining (sequence integrity), hardware attestation (boundary evidence), actor-bound proofs (device biometric authorization), and signed attribution (creator metadata). The key never leaves the enclave.",
   },
   {
     q: "What is a causal slot?",
@@ -67,7 +67,7 @@ const faqs = [
     a: "Yes. Send multiple digests in a single POST /commit request. The enclave allocates a slot and commits each digest sequentially. If using actor-bound proofs (passkey), all proofs in the batch receive actor identity via batchContext. Each proof is independently verifiable.",
   },
   {
-    q: "What libraries does OCC use?",
+    q: "What libraries does BitGraph use?",
     a: "The core library uses @noble/ed25519 for signatures and @noble/hashes for SHA-256. Both are audited, pure TypeScript, zero-dependency libraries. No Node.js native bindings.",
   },
 ];
@@ -77,7 +77,7 @@ export default function FAQPage() {
     <article className="prose-doc">
       <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-6">FAQ</h1>
       <p className="text-[#1f2937] mb-10">
-        Common questions about the OCC Protocol.
+        Common questions about the BitGraph Protocol.
       </p>
 
       <div className="space-y-8">

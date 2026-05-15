@@ -7,7 +7,7 @@ export function b64ToBytes(b64: string): Uint8Array<ArrayBuffer> {
 }
 
 /**
- * Canonical JSON serialization matching occ-core/canonical.ts.
+ * Canonical JSON serialization matching bitgraph-core/canonical.ts.
  * Sorts object keys lexicographically at every level, no whitespace.
  */
 export function canonicalize(obj: unknown): Uint8Array<ArrayBuffer> {

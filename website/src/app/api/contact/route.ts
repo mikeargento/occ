@@ -25,8 +25,8 @@ function isValidEmail(s: string): boolean {
 
 const RECIPIENT = "mikeargento@gmail.com";
 // Resend's sandbox sender — works without verifying a domain.
-// To use hello@occ.wtf instead, verify occ.wtf in the Resend dashboard.
-const SENDER = "OCC Contact <onboarding@resend.dev>";
+// To use hello@bitgraph.ing instead, verify bitgraph.ing in the Resend dashboard.
+const SENDER = "BitGraph Contact <onboarding@resend.dev>";
 
 export async function POST(req: Request) {
   const apiKey = process.env.RESEND_API_KEY;
@@ -105,7 +105,7 @@ export async function POST(req: Request) {
       from: SENDER,
       to: RECIPIENT,
       replyTo: safeEmail,
-      subject: `[occ.wtf] ${safeSubject}`,
+      subject: `[bitgraph.ing] ${safeSubject}`,
       text: [
         `From: ${safeName} <${safeEmail}>`,
         `Subject: ${safeSubject}`,

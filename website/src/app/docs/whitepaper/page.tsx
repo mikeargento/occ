@@ -6,9 +6,9 @@ import Sections10Through19 from "./sections-10-19";
 import TocDropdown from "./toc-dropdown";
 
 export const metadata: Metadata = {
-  title: "Whitepaper — Origin Controlled Computing",
+  title: "Whitepaper — BitGraph",
   description:
-    "OCC whitepaper: Proof as a Reachability Property. Formal model, security game, and architecture for authenticated digital state creation.",
+    "BitGraph whitepaper: Proof as a Reachability Property. Formal model, security game, and architecture for authenticated digital state creation.",
 };
 
 export default function WhitepaperPage() {
@@ -19,7 +19,7 @@ export default function WhitepaperPage() {
           Whitepaper
         </div>
         <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-3">
-          Origin Controlled Computing
+          BitGraph
         </h1>
         <p className="text-lg text-[#1f2937] mb-1">
           Proof as a Reachability Property

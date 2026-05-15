@@ -1,14 +1,14 @@
-# OCC — Origin Controlled Computing
+# BitGraph — BitGraph
 
 ## What This Is
 
 A protocol for portable cryptographic proof of **causal ordering**. Drop a file through an authorized execution boundary and you get a self-contained proof that the file existed in this exact form at a specific position in a sequence, anchored to a public timeline via Ethereum.
 
-The current application on **occ.wtf** is photos-first file provenance: "drop a file to create or check a proof." The broader protocol can be applied to other domains, but the public site and the IPTC demo are about file provenance.
+The current application on **bitgraph.ing** is photos-first file provenance: "drop a file to create or check a proof." The broader protocol can be applied to other domains, but the public site and the IPTC demo are about file provenance.
 
-**One-liner**: "OCC proofs are not labels or metadata added after the fact. They are new computations created when a file's hash fills a pre-existing cryptographic slot."
+**One-liner**: "BitGraph proofs are not labels or metadata added after the fact. They are new computations created when a file's hash fills a pre-existing cryptographic slot."
 
-**Tagline**: "Origin Controlled Computing — Patent Pending"
+**Tagline**: "BitGraph — Patent Pending"
 
 ## Core Concept
 
@@ -21,7 +21,7 @@ This is **not**:
 - A blockchain (no consensus, no tokens, no global ledger)
 - A watermark (nothing is embedded in the file bytes)
 - DRM (files are freely copyable; only the proof lineage is authoritative)
-- Proof of authorship or truth (OCC proves the commit event, not the content)
+- Proof of authorship or truth (BitGraph proves the commit event, not the content)
 - Identity verification (use C2PA or a passkey/agency flow for that)
 
 ## Project State (April 2026)
@@ -33,10 +33,10 @@ Repo was cleaned up in the April 3 session — 1,600+ files deleted from the old
 ## Repo Structure
 
 ```
-occ/
-├── src/                          # Core library (npm: occproof v1.2.0)
+bitgraph/
+├── src/                          # Core library (npm: @mikeargento/bitgraph 1.0.0)
 │   ├── proof-hash.ts             # Canonical proofHash computation
-│   ├── types.ts                  # OCCProof schema (occ/1)
+│   ├── types.ts                  # BitGraphProof schema (bitgraph/1)
 │   └── __tests__/                # Canonical + regression tests
 ├── server/
 │   └── commit-service/           # TEE (AWS Nitro enclave) + parent HTTP server
@@ -45,12 +45,12 @@ occ/
 │       └── deploy.sh             # nitro-cli build-enclave wrapper
 ├── packages/
 │   ├── hosted/                   # ETH anchor service (Railway)
-│   ├── ledger/                   # S3 ledger read/write (occ-ledger-prod)
+│   ├── ledger/                   # S3 ledger read/write (occ-ledger-prod, legacy archive)
 │   └── adapter-nitro/            # Nitro NSM interface (PCR0, attestation)
-└── website/                      # Next.js app on Vercel (occ.wtf)
+└── website/                      # Next.js app on Vercel (bitgraph.ing)
     ├── src/app/                  # Routes — home, proof/[digest], docs, contact
     ├── src/components/           # FileDrop, SiteNav, Chat, etc.
-    ├── src/lib/                  # occ client, s3, c2pa-reader, nitro-verify
+    ├── src/lib/                  # bitgraph client, s3, c2pa-reader, nitro-verify
     └── public/                   # verify.html, c2pa/ WASM (copied at build)
 ```
 
@@ -58,11 +58,11 @@ occ/
 
 | Service | Location | Purpose |
 |---|---|---|
-| **TEE** | `nitro.occproof.com` (EC2, Nitro Enclave, Cloudflare tunnel) | Signs proofs inside the enclave, returns via VSOCK bridge |
-| **Anchor service** | `agent.occ.wtf` (Railway project `content-quietude`) | Seals counter chain into Ethereum blocks, writes anchors to S3 |
+| **TEE** | `nitro.bitgraph.ing` (EC2, Nitro Enclave, Cloudflare tunnel) | Signs proofs inside the enclave, returns via VSOCK bridge |
+| **Anchor service** | `anchor.bitgraph.ing` (Railway project `content-quietude`) | Seals counter chain into Ethereum blocks, writes anchors to S3 |
 | **S3 ledger** | `occ-ledger-prod` (us-east-2, Object Lock COMPLIANCE, 10-year retention) | Sole storage. Keys: `proofs/{epoch}/{counter}-{hash}.json`, `anchors/{epoch}/`, `by-digest/{digest}.json` |
-| **Website** | `occ.wtf` (Vercel project `occ-docs`) | Built from `website/` subdirectory. Linked via `.vercel/` at the repo root |
-| **Contact form** | `occ.wtf/contact` → Resend | `mikeargento@gmail.com` inbox. `RESEND_API_KEY` env var on Vercel |
+| **Website** | `bitgraph.ing` (Vercel project `occ-docs`) | Built from `website/` subdirectory. Linked via `.vercel/` at the repo root |
+| **Contact form** | `bitgraph.ing/contact` → Resend | `mikeargento@gmail.com` inbox. `RESEND_API_KEY` env var on Vercel |
 
 **SSH to EC2**: `ssh -i ~/Desktop/Keys/occ-nitro-test.pem ec2-user@3.151.121.225`
 
@@ -71,18 +71,18 @@ occ/
 When the user says **"fire it up"**, bring the TEE online with 12s Ethereum anchoring:
 
 1. SSH to EC2, `nitro-cli describe-enclaves` to check CID
-2. If no enclave: `nitro-cli run-enclave --eif-path /home/ec2-user/nsm-test/occ-enclave-v2.eif --cpu-count 2 --memory 1024`
+2. If no enclave: `nitro-cli run-enclave --eif-path /home/ec2-user/nsm-test/bitgraph-enclave-v2.eif --cpu-count 2 --memory 1024`
 3. Kill old socat, start new: `sudo nohup socat TCP-LISTEN:9000,fork,reuseaddr VSOCK-CONNECT:{CID}:5000 > /dev/null 2>&1 &`
 4. `sudo fuser -k 8787/tcp` then `sudo systemctl restart occ-http-server`
-5. Verify: `curl https://nitro.occproof.com/health`
-6. Set 12s anchors: `curl -X POST https://agent.occ.wtf/api/anchor/interval -H "Content-Type: application/json" -d '{"seconds": 12}'`
+5. Verify: `curl https://nitro.bitgraph.ing/health`
+6. Set 12s anchors: `curl -X POST https://anchor.bitgraph.ing/api/anchor/interval -H "Content-Type: application/json" -d '{"seconds": 12}'`
 
 When the user says **"shut her down"**, set the anchor interval back to 3600s to minimize Railway cost.
 
 ## Build Commands
 
 ```bash
-# Core library (occproof)
+# Core library (bitgraph)
 npm run build          # compiles src/ → dist/
 npm run test:core      # canonical + verifier tests
 
@@ -92,7 +92,7 @@ cd website && npm run build  # production build
 
 # Vercel deploy must run from repo root (not website/) because
 # the Vercel project has rootDirectory: "website" configured
-cd occ && ./website/node_modules/.bin/vercel --prod --yes
+cd bitgraph && ./website/node_modules/.bin/vercel --prod --yes
 ```
 
 **Note**: the root `package.json`'s `test` script still references deleted `packages/mcp-proxy` and `packages/policy-sdk`. Use `npm run test:core` for now — the full `npm test` will fail on the missing sub-projects until that script is cleaned up.
@@ -108,7 +108,7 @@ Canonical `proofHash` is SHA-256 of canonicalized signed-body subset:
 
 Notably **not** in the signed body: `timestamps`, `metadata`, `claims`, `agency` (has its own P-256 signature), `slotAllocation` (has its own Ed25519 signature, bound via `commit.slotHashB64`).
 
-The `proofHash` field is added by the ledger at write time (see `packages/ledger/src/s3.ts`). The on-the-wire `occ/1` schema in `src/types.ts` does not include it.
+The `proofHash` field is added by the ledger at write time (see `packages/ledger/src/s3.ts`). The on-the-wire `bitgraph/1` schema in `src/types.ts` does not include it.
 
 ## Website Design System
 
@@ -117,7 +117,7 @@ The `proofHash` field is added by the ledger at write time (see `packages/ledger
 - **Brand accent**: blue `#0065A4` (changed from `#1A73E8` on April 7). Used for titles, links, primary buttons.
 - **Trust mark green**: emerald `#10b981` — verified check, C2PA "Signed" pill, attestation success states. Consistent across all trust indicators.
 - **Font**: Acumin Pro via Typekit (kit `svq0oqy`), fallback to Inter / system sans
-- **Nav**: solid `#f5f5f5` background, no border. Left: "OCC" text logo, `font-weight: 900`. Right: `Docs | Contact` (GitHub lives at the bottom of the docs sidebar, not in the nav)
+- **Nav**: solid `#f5f5f5` background, no border. Left: "BitGraph" text logo, `font-weight: 900`. Right: `Docs | Contact` (GitHub lives at the bottom of the docs sidebar, not in the nav)
 - **Drop zone**: 90% width, max 640px, 360px tall (280 mobile). Fluid typography: `min(22px, 4.25vw)` headline, `min(13px, 3vw)` subtitle so everything fits on one line at any viewport
 - **Proof pages**: 800px max width, single column. Simple view is the default; "See details" flips to the technical card grid (Slot → Artifact → Commit → Signer → Environment → Proven Before)
 - **Cards**: white `#ffffff`, 1px `#d0d5dd` border, 16px radius
@@ -157,7 +157,7 @@ Any claim of identity should come from **verified** sources only — C2PA manife
 
 The following were part of an older agent-control direction that was abandoned. If you see references in stale docs or old sessions, they do not apply to the current state:
 
-- `occ-mcp-proxy`, `occ-anthropic`, `occ-openai`, `occ-vercel`, `occ-langgraph`, `occ-langchain`, `occ-crewai`, `occ-gemini`, `occ-google-adk` — all deleted
+- `bitgraph-mcp-proxy`, `bitgraph-anthropic`, `bitgraph-openai`, `bitgraph-vercel`, `bitgraph-langgraph`, `bitgraph-langchain`, `bitgraph-crewai`, `bitgraph-gemini`, `bitgraph-google-adk` — all deleted
 - Policy-in-proof / default-deny faucet model — removed
 - ProofStudio branding, `proofstudio.xyz` domain — legacy, do not use
 - Emerald-400 (`#34d399`) accent — wrong, current trust green is `#10b981`

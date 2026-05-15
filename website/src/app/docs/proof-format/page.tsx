@@ -1,23 +1,23 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Proof Format (occ/1)",
-  description: "Wire format specification for the occ/1 proof schema.",
+  title: "Proof Format (bitgraph/1)",
+  description: "Wire format specification for the bitgraph/1 proof schema.",
 };
 
 export default function ProofFormatPage() {
   return (
     <article className="prose-doc">
-      <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-6">Proof Format: occ/1</h1>
+      <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-6">Proof Format: bitgraph/1</h1>
       <p className="text-[#1f2937] mb-10">
-        Normative specification for the <code className="text-xs font-mono bg-[#f3f4f6] px-1.5 py-0.5">occ/1</code> proof format. Derived from the reference implementation.
+        Normative specification for the <code className="text-xs font-mono bg-[#f3f4f6] px-1.5 py-0.5">bitgraph/1</code> proof format. Derived from the reference implementation.
       </p>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Proof JSON schema</h2>
       <div className="code-block mb-8">
         <div className="code-block-header"><span>proof.json</span></div>
         <pre className="text-[#1f2937]">{`{
-  "version": "occ/1",                // REQUIRED - exact value
+  "version": "bitgraph/1",                // REQUIRED - exact value
   "artifact": {
     "hashAlg": "sha256",             // REQUIRED - "sha256" only in v1
     "digestB64": "<base64>"          // REQUIRED - SHA-256, 32 decoded bytes
@@ -44,7 +44,7 @@ export default function ProofFormatPage() {
     }
   },
   "slotAllocation": {                // OPTIONAL - causal slot record
-    "version":      "occ/slot/1",
+    "version":      "bitgraph/slot/1",
     "nonceB64":     "<base64>",      // same as commit.nonceB64
     "counter":      "41",            // same as commit.slotCounter
     "time":         1700000000000,

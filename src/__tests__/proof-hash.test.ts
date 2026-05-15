@@ -2,10 +2,10 @@ import { describe, it } from "node:test";
 import * as assert from "node:assert/strict";
 import { sha256 } from "@noble/hashes/sha256";
 import { computeProofHash, canonicalize } from "../index.js";
-import type { OCCProof } from "../types.js";
+import type { BitGraphProof } from "../types.js";
 
-const MOCK_PROOF: OCCProof = {
-  version: "occ/1",
+const MOCK_PROOF: BitGraphProof = {
+  version: "bitgraph/1",
   artifact: { hashAlg: "sha256", digestB64: "abc123==" },
   commit: {
     nonceB64: "nonce==",
@@ -67,7 +67,7 @@ describe("computeProofHash", () => {
       artifact: MOCK_PROOF.artifact,
       commit: MOCK_PROOF.commit,
       attribution: MOCK_PROOF.attribution,
-    } as unknown as OCCProof;
+    } as unknown as BitGraphProof;
     assert.equal(computeProofHash(reordered), computeProofHash(MOCK_PROOF));
   });
 
@@ -76,7 +76,7 @@ describe("computeProofHash", () => {
       ...MOCK_PROOF,
       metadata: { extra: "stuff", nested: { deep: true } },
       timestamps: { artifact: { time: 12345 } },
-    } as unknown as OCCProof;
+    } as unknown as BitGraphProof;
     assert.equal(computeProofHash(withMetadata), computeProofHash(MOCK_PROOF));
   });
 
@@ -84,7 +84,7 @@ describe("computeProofHash", () => {
     const differentSig = {
       ...MOCK_PROOF,
       signer: { ...MOCK_PROOF.signer, signatureB64: "completely-different-sig==" },
-    } as OCCProof;
+    } as BitGraphProof;
     assert.equal(computeProofHash(differentSig), computeProofHash(MOCK_PROOF));
   });
 
@@ -95,7 +95,7 @@ describe("computeProofHash", () => {
         ...MOCK_PROOF.environment,
         attestation: { format: "aws-nitro", reportB64: "totally-different==" },
       },
-    } as OCCProof;
+    } as BitGraphProof;
     assert.equal(computeProofHash(differentReport), computeProofHash(MOCK_PROOF));
   });
 
@@ -119,7 +119,7 @@ describe("computeProofHash", () => {
     const different = {
       ...MOCK_PROOF,
       signer: { ...MOCK_PROOF.signer, publicKeyB64: "different-key==" },
-    } as OCCProof;
+    } as BitGraphProof;
     assert.notEqual(computeProofHash(different), computeProofHash(MOCK_PROOF));
   });
 
@@ -136,11 +136,11 @@ describe("computeProofHash", () => {
         enforcement: MOCK_PROOF.environment.enforcement,
         measurement: MOCK_PROOF.environment.measurement,
       },
-    } as OCCProof;
+    } as BitGraphProof;
     assert.notEqual(computeProofHash(withoutAttestation), computeProofHash(MOCK_PROOF));
   });
 
-  it("works with Record<string, unknown> input (not just OCCProof)", () => {
+  it("works with Record<string, unknown> input (not just BitGraphProof)", () => {
     const record: Record<string, unknown> = { ...MOCK_PROOF };
     const hash = computeProofHash(record);
     assert.equal(hash, computeProofHash(MOCK_PROOF));

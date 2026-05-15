@@ -1,7 +1,7 @@
 {
-  "name": "@occ/adapter-nitro",
+  "name": "@bitgraph/adapter-nitro",
   "version": "1.0.0",
-  "description": "AWS Nitro Enclaves adapter for OCC",
+  "description": "AWS Nitro Enclaves adapter for BitGraph",
   "author": "Mike Argento",
   "license": "Apache-2.0",
   "type": "module",
@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "cbor2": "^1.0.0",
-    "occproof": "file:../../"
+    "bitgraph": "file:../../"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

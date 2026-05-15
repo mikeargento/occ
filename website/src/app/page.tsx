@@ -9,10 +9,10 @@ import {
   commitDigest,
   commitBatch,
   formatFileSize,
-  isOCCProof,
+  isBitGraphProof,
   verifyProofSignature,
-  type OCCProof,
-} from "@/lib/occ";
+  type BitGraphProof,
+} from "@/lib/bitgraph";
 import { toUrlSafeB64 } from "@/lib/explorer";
 import { Zip, ZipPassThrough } from "fflate";
 
@@ -21,13 +21,13 @@ type Step = "drop" | "scanning" | "results" | "proving" | "exporting";
 interface FileItem {
   file: File;
   digestB64: string;
-  proof: OCCProof | null;
+  proof: BitGraphProof | null;
   valid: boolean | null;
   status: "found" | "new" | "proving" | "proved" | "error";
 }
 
 
-export default function OCCPage() {
+export default function BitGraphPage() {
   const [step, setStep] = useState<Step>("drop");
   const [items, setItems] = useState<FileItem[]>([]);
   const [scanProgress, setScanProgress] = useState({ current: 0, total: 0 });
@@ -83,7 +83,7 @@ export default function OCCPage() {
       try {
         // Check if it's a proof.json
         const text = await f.text();
-        const proofJson = isOCCProof(text);
+        const proofJson = isBitGraphProof(text);
         if (proofJson) {
           const result = await verifyProofSignature(proofJson);
           results.push({ file: f, digestB64: proofJson.artifact.digestB64, proof: proofJson, valid: result.valid, status: "found" });
@@ -96,7 +96,7 @@ export default function OCCPage() {
         if (resp.ok) {
           const data = await resp.json();
           if (data.proofs?.length > 0) {
-            const p = data.proofs[0].proof as OCCProof;
+            const p = data.proofs[0].proof as BitGraphProof;
             const result = await verifyProofSignature(p);
             results.push({ file: f, digestB64: d, proof: p, valid: result.valid, status: "found" });
           } else {
@@ -228,7 +228,7 @@ export default function OCCPage() {
       const lastEpoch = last.proof?.commit?.epochId || "";
       if (!lastEpoch) throw new Error("no epochId");
       const url = `/api/proofs/anchors?counter=${lastCounter}&epoch=${encodeURIComponent(lastEpoch)}`;
-      console.log("[occ] anchor lookup:", url);
+      console.log("[bitgraph] anchor lookup:", url);
       const resp = await fetch(url);
       if (resp.ok) {
         const data = await resp.json();
@@ -265,7 +265,7 @@ export default function OCCPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = withProofs.length === 1 ? `${withProofs[0].file.name.replace(/\.[^.]+$/, "")}-occ.zip` : "occ-proof-batch.zip";
+    a.download = withProofs.length === 1 ? `${withProofs[0].file.name.replace(/\.[^.]+$/, "")}-bitgraph.zip` : "bitgraph-proof-batch.zip";
     a.click();
     URL.revokeObjectURL(url);
     setStep("results");
@@ -281,10 +281,10 @@ export default function OCCPage() {
   return (
     <div style={{ background: "var(--bg)", color: "var(--c-text)", display: "flex", flexDirection: "column" }}>
       <style>{`
-        .occ-wrap { width: 90%; max-width: 640px; margin: 0 auto; padding: 0; display: flex; flex-direction: column; align-items: stretch; justify-content: center; gap: 24px; min-height: calc(100dvh - 57px); }
-        .occ-wrap.occ-results { justify-content: flex-start; padding-top: 32px; min-height: 0; }
-        .occ-wrap .file-drop-container { height: 360px; }
-        @media (max-width: 640px) { .occ-wrap .file-drop-container { height: 280px; } }
+        .bitgraph-wrap { width: 90%; max-width: 640px; margin: 0 auto; padding: 0; display: flex; flex-direction: column; align-items: stretch; justify-content: center; gap: 24px; min-height: calc(100dvh - 57px); }
+        .bitgraph-wrap.bitgraph-results { justify-content: flex-start; padding-top: 32px; min-height: 0; }
+        .bitgraph-wrap .file-drop-container { height: 360px; }
+        @media (max-width: 640px) { .bitgraph-wrap .file-drop-container { height: 280px; } }
         @keyframes countPop { 0% { transform: scale(0.5); opacity: 0 } 50% { transform: scale(1.15) } 100% { transform: scale(1); opacity: 1 } }
         @keyframes slideIn { from { opacity: 0; transform: translateY(12px) } to { opacity: 1; transform: translateY(0) } }
         @keyframes popIn { from { opacity: 0 } to { opacity: 1 } }
@@ -293,9 +293,9 @@ export default function OCCPage() {
       `}</style>
       {/* Nav is in root layout */}
 
-      <div className={`occ-wrap${step !== "drop" ? " occ-results" : ""}`}>
+      <div className={`bitgraph-wrap${step !== "drop" ? " bitgraph-results" : ""}`}>
 
-        {/* ── Drop zone + What is OCC button ── */}
+        {/* ── Drop zone + What is BitGraph button ── */}
         {step === "drop" && (
           <>
             <div className="file-drop-container" style={{ animation: "slideIn 0.3s ease-out" }}>
@@ -617,11 +617,11 @@ export default function OCCPage() {
                               const { readC2PA } = await import("@/lib/c2pa-reader");
                               c2pa = await readC2PA(item.file);
                             } catch (e) {
-                              console.warn("[occ] c2pa read failed:", e);
+                              console.warn("[bitgraph] c2pa read failed:", e);
                             }
 
                             const db = await new Promise<IDBDatabase>((resolve, reject) => {
-                              const req = indexedDB.open("occ-files", 1);
+                              const req = indexedDB.open("bitgraph-files", 1);
                               req.onupgradeneeded = () => req.result.createObjectStore("files");
                               req.onsuccess = () => resolve(req.result);
                               req.onerror = () => reject(req.error);
@@ -633,7 +633,7 @@ export default function OCCPage() {
                             );
                             await new Promise((r, j) => { tx.oncomplete = r; tx.onerror = j; });
                             db.close();
-                          } catch (e) { console.error("[occ] cache error:", e); }
+                          } catch (e) { console.error("[bitgraph] cache error:", e); }
                         })();
                       }}
                       style={{

@@ -12,7 +12,7 @@ const N = ({ children }: { children: string | number }) => (
 function ProofLine() {
   return (
     <>
-      {`{ `}<K>version</K>{`: `}<S>occ/1</S>{`, `}
+      {`{ `}<K>version</K>{`: `}<S>bitgraph/1</S>{`, `}
       <K>artifact</K>{`: { `}<K>hashAlg</K>{`: `}<S>sha256</S>{`, `}
       <K>digestB64</K>{`: `}<S>VmSUR4azmbQ9WmWeajc10XLvcGMfHutn5Ikkx9fewHI=</S>{` }, `}
       <K>commit</K>{`: { `}<K>nonceB64</K>{`: `}<S>MFsVZDsJxC9LS0yTqiaU8QflQ97d9DcKuF8UVfD46S0=</S>{`, `}
@@ -28,7 +28,7 @@ function ProofLine() {
       <K>timestamps</K>{`: { `}<K>authority</K>{`: `}<S>freetsa.org</S>{`, `}<K>time</K>{`: `}<S>2026-03-13T02:25:13Z</S>{` }, `}
       <K>agency</K>{`: { `}<K>algorithm</K>{`: `}<S>ES256</S>{`, `}<K>provider</K>{`: `}<S>passkey</S>{` }, `}
       <K>attribution</K>{`: { `}<K>name</K>{`: `}<S>Mike Argento</S>{`, `}<K>title</K>{`: `}<S>Photo taken with the Ricoh GR IIIx</S>{` }, `}
-      <K>slotAllocation</K>{`: { `}<K>version</K>{`: `}<S>occ/slot/1</S>{`, `}<K>counter</K>{`: `}<N>97</N>{` } }`}
+      <K>slotAllocation</K>{`: { `}<K>version</K>{`: `}<S>bitgraph/slot/1</S>{`, `}<K>counter</K>{`: `}<N>97</N>{` } }`}
     </>
   );
 }

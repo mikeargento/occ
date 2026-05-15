@@ -1,5 +1,5 @@
 /**
- * OCC Ledger — Index Database
+ * BitGraph Ledger — Index Database
  *
  * Postgres index for fast lookups. NOT the source of truth.
  * Rebuildable from S3 at any time.
@@ -16,7 +16,7 @@ import postgres from "postgres";
 // ---------------------------------------------------------------------------
 
 const SCHEMA = `
-  CREATE TABLE IF NOT EXISTS occ_ledger_proofs (
+  CREATE TABLE IF NOT EXISTS bitgraph_ledger_proofs (
     id              SERIAL PRIMARY KEY,
     proof_hash      TEXT NOT NULL UNIQUE,
     artifact_digest TEXT NOT NULL,
@@ -33,9 +33,9 @@ const SCHEMA = `
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
   );
 
-  CREATE INDEX IF NOT EXISTS idx_artifact_digest ON occ_ledger_proofs(artifact_digest);
-  CREATE INDEX IF NOT EXISTS idx_epoch_counter ON occ_ledger_proofs(epoch_id, counter);
-  CREATE INDEX IF NOT EXISTS idx_anchor ON occ_ledger_proofs(is_anchor, epoch_id, counter);
+  CREATE INDEX IF NOT EXISTS idx_artifact_digest ON bitgraph_ledger_proofs(artifact_digest);
+  CREATE INDEX IF NOT EXISTS idx_epoch_counter ON bitgraph_ledger_proofs(epoch_id, counter);
+  CREATE INDEX IF NOT EXISTS idx_anchor ON bitgraph_ledger_proofs(is_anchor, epoch_id, counter);
 `;
 
 // ---------------------------------------------------------------------------
@@ -71,7 +71,7 @@ export class LedgerIndex {
     s3Key: string;
   }): Promise<void> {
     await this.sql`
-      INSERT INTO occ_ledger_proofs (
+      INSERT INTO bitgraph_ledger_proofs (
         proof_hash, artifact_digest, counter, epoch_id,
         signer_pub, enforcement, measurement, attribution,
         is_anchor, anchor_block, anchor_hash, s3_key
@@ -96,7 +96,7 @@ export class LedgerIndex {
   }>> {
     const rows = await this.sql`
       SELECT proof_hash, counter, epoch_id, attribution, s3_key
-      FROM occ_ledger_proofs
+      FROM bitgraph_ledger_proofs
       WHERE artifact_digest = ${digestB64}
       ORDER BY epoch_id, counter
     `;
@@ -123,7 +123,7 @@ export class LedgerIndex {
   } | null> {
     const rows = await this.sql`
       SELECT proof_hash, counter, anchor_block, anchor_hash, s3_key
-      FROM occ_ledger_proofs
+      FROM bitgraph_ledger_proofs
       WHERE is_anchor = TRUE
         AND epoch_id = ${epochId}
         AND counter > ${BigInt(counter)}
@@ -153,7 +153,7 @@ export class LedgerIndex {
   } | null> {
     const rows = await this.sql`
       SELECT proof_hash, counter, anchor_block, anchor_hash, s3_key
-      FROM occ_ledger_proofs
+      FROM bitgraph_ledger_proofs
       WHERE is_anchor = TRUE
         AND epoch_id = ${epochId}
         AND counter < ${BigInt(counter)}
@@ -185,7 +185,7 @@ export class LedgerIndex {
   }>> {
     const rows = await this.sql`
       SELECT proof_hash, artifact_digest, counter, epoch_id, attribution, is_anchor, anchor_block
-      FROM occ_ledger_proofs
+      FROM bitgraph_ledger_proofs
       ORDER BY epoch_id DESC, counter DESC
       LIMIT ${limit} OFFSET ${offset}
     `;
@@ -202,13 +202,13 @@ export class LedgerIndex {
 
   /** Total proof count. */
   async count(): Promise<number> {
-    const [row] = await this.sql`SELECT COUNT(*) as total FROM occ_ledger_proofs`;
+    const [row] = await this.sql`SELECT COUNT(*) as total FROM bitgraph_ledger_proofs`;
     return Number(row.total);
   }
 
   /** Drop and recreate (for rebuild). */
   async reset(): Promise<void> {
-    await this.sql`DROP TABLE IF EXISTS occ_ledger_proofs`;
+    await this.sql`DROP TABLE IF EXISTS bitgraph_ledger_proofs`;
     await this.initialize();
   }
 

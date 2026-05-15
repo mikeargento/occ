@@ -2,7 +2,7 @@
 // Copyright 2024-2026 Mike Argento
 
 /**
- * occ-core — Origin Controlled Computing
+ * bitgraph-core — BitGraph
  *
  * Portable cryptographic proof at finalization.
  * Hardware TEE enforcement via AWS Nitro Enclaves.
@@ -10,8 +10,8 @@
 
 // Types
 export type {
-  OCCProof,
-  OCCPolicy,
+  BitGraphProof,
+  BitGraphPolicy,
   VerificationPolicy,
   SignedBody,
   EnforcementTier,

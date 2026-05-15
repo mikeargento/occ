@@ -2,7 +2,7 @@
 // Copyright 2024-2026 Mike Argento
 
 /**
- * occ-core proof hash
+ * bitgraph-core proof hash
  *
  * Canonical, deterministic proof hash computation.
  *
@@ -36,15 +36,15 @@
 
 import { canonicalize } from "./canonical.js";
 import { sha256 } from "@noble/hashes/sha256";
-import type { OCCProof } from "./types.js";
+import type { BitGraphProof } from "./types.js";
 
 /**
- * Compute the canonical hash of an OCC proof's signed body.
+ * Compute the canonical hash of an BitGraph proof's signed body.
  *
- * @param proof - The full OCCProof object (or equivalent Record)
+ * @param proof - The full BitGraphProof object (or equivalent Record)
  * @returns Base64-standard encoded SHA-256 hash
  */
-export function computeProofHash(proof: OCCProof | Record<string, unknown>): string {
+export function computeProofHash(proof: BitGraphProof | Record<string, unknown>): string {
   const p = proof as Record<string, unknown>;
   const signer = p.signer as { publicKeyB64: string } | undefined;
   const env = p.environment as { enforcement: string; measurement: string; attestation?: { format: string } } | undefined;
@@ -68,7 +68,7 @@ export function computeProofHash(proof: OCCProof | Record<string, unknown>): str
     signedBody.attestationFormat = env.attestation.format;
   }
 
-  const bytes = canonicalize(signedBody as unknown as OCCProof);
+  const bytes = canonicalize(signedBody as unknown as BitGraphProof);
   const hash = sha256(bytes);
 
   // Base64 encode (works in both Node.js and browser)

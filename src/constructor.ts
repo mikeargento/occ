@@ -2,9 +2,9 @@
 // Copyright 2024-2026 Mike Argento
 
 /**
- * occ-core Constructor
+ * bitgraph-core Constructor
  *
- * The Constructor is the sole write path in occ-core. It enforces a strict
+ * The Constructor is the sole write path in bitgraph-core. It enforces a strict
  * atomic commit invariant:
  *
  *   authorize → bind → sign → (authorization consumed)
@@ -23,7 +23,7 @@
  *   7. Canonicalize signed body to UTF-8 bytes
  *   8. Sign canonical bytes via host
  *   9. Optionally obtain attestation report bound to this commit
- *  10. Assemble and return the complete OCCProof
+ *  10. Assemble and return the complete BitGraphProof
  *
  * Steps 1-9 are performed inside a single async critical section; any
  * rejection causes the function to throw with no returned value.
@@ -32,7 +32,7 @@
 import { sha256 } from "@noble/hashes/sha256";
 import { canonicalize } from "./canonical.js";
 import type { HostCapabilities } from "./host.js";
-import type { OCCPolicy, OCCProof, SignedBody, AgencyEnvelope, Attribution, PolicyBinding } from "./types.js";
+import type { BitGraphPolicy, BitGraphProof, SignedBody, AgencyEnvelope, Attribution, PolicyBinding } from "./types.js";
 
 // ---------------------------------------------------------------------------
 // Constructor class
@@ -40,12 +40,12 @@ import type { OCCPolicy, OCCProof, SignedBody, AgencyEnvelope, Attribution, Poli
 
 export class Constructor {
   readonly #host: HostCapabilities;
-  readonly #policy: Required<OCCPolicy>;
+  readonly #policy: Required<BitGraphPolicy>;
   readonly #epochId: string | undefined;
 
   private constructor(
     host: HostCapabilities,
-    policy: Required<OCCPolicy>,
+    policy: Required<BitGraphPolicy>,
     epochId: string | undefined,
   ) {
     this.#host = host;
@@ -69,12 +69,12 @@ export class Constructor {
    */
   static async initialize(opts: {
     host: HostCapabilities;
-    policy?: OCCPolicy;
+    policy?: BitGraphPolicy;
     epochId?: string;
   }): Promise<Constructor> {
     const { host, policy = {}, epochId } = opts;
 
-    const resolvedPolicy: Required<OCCPolicy> = {
+    const resolvedPolicy: Required<BitGraphPolicy> = {
       requireCounter: policy.requireCounter ?? false,
       requireTime: policy.requireTime ?? false,
     };
@@ -83,7 +83,7 @@ export class Constructor {
     await Promise.all([host.getMeasurement(), host.getPublicKey()]).catch(
       (cause: unknown) => {
         throw new Error(
-          "occ-core: host preflight failed — getMeasurement() or getPublicKey() rejected",
+          "bitgraph-core: host preflight failed — getMeasurement() or getPublicKey() rejected",
           { cause }
         );
       }
@@ -92,13 +92,13 @@ export class Constructor {
     // Policy validation: if counter is required, confirm the host has it.
     if (resolvedPolicy.requireCounter && typeof host.nextCounter !== "function") {
       throw new Error(
-        "occ-core: policy requires a monotonic counter but host does not implement nextCounter()"
+        "bitgraph-core: policy requires a monotonic counter but host does not implement nextCounter()"
       );
     }
 
     if (resolvedPolicy.requireTime && typeof host.secureTime !== "function") {
       throw new Error(
-        "occ-core: policy requires secure time but host does not implement secureTime()"
+        "bitgraph-core: policy requires secure time but host does not implement secureTime()"
       );
     }
 
@@ -125,14 +125,14 @@ export class Constructor {
     agency?: AgencyEnvelope;
     attribution?: Attribution;
     policy?: PolicyBinding;
-  }): Promise<OCCProof> {
+  }): Promise<BitGraphProof> {
     const { digestB64, metadata, prevProofHashB64 } = input;
 
     // Validate the provided digest
     const digestBytes = fromBase64Digest(digestB64);
     if (digestBytes.length !== 32) {
       throw new RangeError(
-        `occ-core: digestB64 decodes to ${digestBytes.length} bytes; expected 32 (SHA-256)`
+        `bitgraph-core: digestB64 decodes to ${digestBytes.length} bytes; expected 32 (SHA-256)`
       );
     }
 
@@ -143,7 +143,7 @@ export class Constructor {
   /**
    * Produce a tamper-evident, signed commit proof for `input.bytes`.
    *
-   * The call is atomic: it either returns a complete OCCProof or throws.
+   * The call is atomic: it either returns a complete BitGraphProof or throws.
    * No partial proof is ever returned.
    *
    * @param input.bytes            - The raw bytes to commit
@@ -158,7 +158,7 @@ export class Constructor {
     agency?: AgencyEnvelope;
     attribution?: Attribution;
     policy?: PolicyBinding;
-  }): Promise<OCCProof> {
+  }): Promise<BitGraphProof> {
     const { bytes, metadata, prevProofHashB64 } = input;
 
     // Step 4: SHA-256 digest of input bytes
@@ -180,7 +180,7 @@ export class Constructor {
     agency: AgencyEnvelope | undefined;
     attribution: Attribution | undefined;
     policy: PolicyBinding | undefined;
-  }): Promise<OCCProof> {
+  }): Promise<BitGraphProof> {
     const { digestB64, metadata, prevProofHashB64, agency, attribution, policy } = input;
 
     // ------------------------------------------------------------------
@@ -189,7 +189,7 @@ export class Constructor {
     let counter: string | undefined;
     if (typeof this.#host.nextCounter === "function") {
       counter = await this.#host.nextCounter().catch((cause: unknown) => {
-        throw new Error("occ-core: host.nextCounter() rejected", { cause });
+        throw new Error("bitgraph-core: host.nextCounter() rejected", { cause });
       });
       assertNonEmptyString(counter, "counter");
     }
@@ -198,7 +198,7 @@ export class Constructor {
     // Step 2: Fresh boundary nonce
     // ------------------------------------------------------------------
     const nonceBytes = await this.#host.getFreshNonce().catch((cause: unknown) => {
-      throw new Error("occ-core: host.getFreshNonce() rejected", { cause });
+      throw new Error("bitgraph-core: host.getFreshNonce() rejected", { cause });
     });
     assertUint8Array(nonceBytes, "nonce", 16); // minimum 128-bit entropy
 
@@ -208,11 +208,11 @@ export class Constructor {
     let time: number | undefined;
     if (typeof this.#host.secureTime === "function") {
       time = await this.#host.secureTime().catch((cause: unknown) => {
-        throw new Error("occ-core: host.secureTime() rejected", { cause });
+        throw new Error("bitgraph-core: host.secureTime() rejected", { cause });
       });
       if (typeof time !== "number" || !Number.isFinite(time) || time < 0) {
         throw new TypeError(
-          "occ-core: host.secureTime() returned an invalid value; expected a non-negative finite number"
+          "bitgraph-core: host.secureTime() returned an invalid value; expected a non-negative finite number"
         );
       }
     }
@@ -222,10 +222,10 @@ export class Constructor {
     // ------------------------------------------------------------------
     const [measurement, publicKeyBytes] = await Promise.all([
       this.#host.getMeasurement().catch((cause: unknown) => {
-        throw new Error("occ-core: host.getMeasurement() rejected", { cause });
+        throw new Error("bitgraph-core: host.getMeasurement() rejected", { cause });
       }),
       this.#host.getPublicKey().catch((cause: unknown) => {
-        throw new Error("occ-core: host.getPublicKey() rejected", { cause });
+        throw new Error("bitgraph-core: host.getPublicKey() rejected", { cause });
       }),
     ]);
 
@@ -235,7 +235,7 @@ export class Constructor {
     // ------------------------------------------------------------------
     // Step 6: Build canonical signed body
     // ------------------------------------------------------------------
-    const commitFields: OCCProof["commit"] = {
+    const commitFields: BitGraphProof["commit"] = {
       nonceB64: toBase64(nonceBytes),
     };
     if (counter !== undefined) commitFields.counter = counter;
@@ -244,7 +244,7 @@ export class Constructor {
     if (this.#epochId !== undefined) commitFields.epochId = this.#epochId;
 
     const signedBody: SignedBody = {
-      version: "occ/1",
+      version: "bitgraph/1",
       artifact: {
         hashAlg: "sha256",
         digestB64,
@@ -280,7 +280,7 @@ export class Constructor {
     // ------------------------------------------------------------------
     const signatureBytes = await this.#host.sign(canonicalBytes).catch(
       (cause: unknown) => {
-        throw new Error("occ-core: host.sign() rejected", { cause });
+        throw new Error("bitgraph-core: host.sign() rejected", { cause });
       }
     );
     assertUint8Array(signatureBytes, "signature", 64); // Ed25519 signature
@@ -288,14 +288,14 @@ export class Constructor {
     // ------------------------------------------------------------------
     // Step 9: Optional attestation report bound to this commit
     // ------------------------------------------------------------------
-    let attestation: OCCProof["environment"]["attestation"];
+    let attestation: BitGraphProof["environment"]["attestation"];
     if (typeof this.#host.getAttestation === "function") {
       // Bind the attestation to the canonical body hash so that a verifier
       // can confirm the report covers this specific commit.
       const bodyHash = sha256(canonicalBytes);
       const result = await this.#host.getAttestation(bodyHash).catch(
         (cause: unknown) => {
-          throw new Error("occ-core: host.getAttestation() rejected", { cause });
+          throw new Error("bitgraph-core: host.getAttestation() rejected", { cause });
         }
       );
       if (
@@ -307,7 +307,7 @@ export class Constructor {
         result.report.length === 0
       ) {
         throw new TypeError(
-          "occ-core: host.getAttestation() must return { format: string, report: Uint8Array }"
+          "bitgraph-core: host.getAttestation() must return { format: string, report: Uint8Array }"
         );
       }
       attestation = {
@@ -321,7 +321,7 @@ export class Constructor {
       const canonicalBytesWithAttestation = canonicalize(signedBody);
       const signatureBytesWithAttestation = await this.#host.sign(canonicalBytesWithAttestation).catch(
         (cause: unknown) => {
-          throw new Error("occ-core: host.sign() rejected (attestation body)", { cause });
+          throw new Error("bitgraph-core: host.sign() rejected (attestation body)", { cause });
         }
       );
       assertUint8Array(signatureBytesWithAttestation, "signature", 64);
@@ -329,8 +329,8 @@ export class Constructor {
       // ------------------------------------------------------------------
       // Step 10: Assemble proof (with attestation)
       // ------------------------------------------------------------------
-      const proof: OCCProof = {
-        version: "occ/1",
+      const proof: BitGraphProof = {
+        version: "bitgraph/1",
         artifact: signedBody.artifact,
         commit: signedBody.commit,
         signer: {
@@ -354,8 +354,8 @@ export class Constructor {
     // ------------------------------------------------------------------
     // Step 10: Assemble proof (without attestation)
     // ------------------------------------------------------------------
-    const proof: OCCProof = {
-      version: "occ/1",
+    const proof: BitGraphProof = {
+      version: "bitgraph/1",
       artifact: signedBody.artifact,
       commit: signedBody.commit,
       signer: {
@@ -387,12 +387,12 @@ function assertUint8Array(
 ): asserts value is Uint8Array {
   if (!(value instanceof Uint8Array)) {
     throw new TypeError(
-      `occ-core: host returned non-Uint8Array for ${name}`
+      `bitgraph-core: host returned non-Uint8Array for ${name}`
     );
   }
   if (value.length < minLength) {
     throw new RangeError(
-      `occ-core: host returned ${name} with insufficient length ` +
+      `bitgraph-core: host returned ${name} with insufficient length ` +
         `(got ${value.length}, expected >= ${minLength})`
     );
   }
@@ -404,7 +404,7 @@ function assertNonEmptyString(
 ): asserts value is string {
   if (typeof value !== "string" || value.length === 0) {
     throw new TypeError(
-      `occ-core: host returned invalid ${name}: expected a non-empty string`
+      `bitgraph-core: host returned invalid ${name}: expected a non-empty string`
     );
   }
 }
@@ -426,11 +426,11 @@ function toBase64(bytes: Uint8Array): string {
  */
 function fromBase64Digest(b64: string): Uint8Array {
   if (typeof b64 !== "string" || b64.length === 0) {
-    throw new TypeError("occ-core: digestB64 must be a non-empty string");
+    throw new TypeError("bitgraph-core: digestB64 must be a non-empty string");
   }
   const buf = Buffer.from(b64, "base64");
   if (buf.toString("base64") !== b64) {
-    throw new TypeError(`occ-core: digestB64 is not valid base64: "${b64}"`);
+    throw new TypeError(`bitgraph-core: digestB64 is not valid base64: "${b64}"`);
   }
   return new Uint8Array(buf);
 }

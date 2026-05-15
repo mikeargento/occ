@@ -24,7 +24,7 @@
 import { createHash, createSign, generateKeyPairSync } from "node:crypto";
 import { sha256 } from "@noble/hashes/sha256";
 
-const BASE = process.env["OCC_URL"] ?? "http://localhost:8787";
+const BASE = process.env["BITGRAPH_URL"] ?? "http://localhost:8787";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -70,7 +70,7 @@ const publicKeyB64 = pubKeyDer.toString("base64");
 const keyId = createHash("sha256").update(pubKeyDer).digest("hex");
 
 console.log("\n═══════════════════════════════════════════════");
-console.log("  OCC Agency Signing — Integration Test");
+console.log("  BitGraph Agency Signing — Integration Test");
 console.log("═══════════════════════════════════════════════\n");
 console.log(`Server:     ${BASE}`);
 console.log(`Actor keyId: ${keyId.slice(0, 16)}...`);
@@ -110,7 +110,7 @@ const baselineProofs = await post("/commit", {
 }) as any[];
 assert(Array.isArray(baselineProofs) && baselineProofs.length === 1, "Received 1 proof");
 assert(baselineProofs[0].agency === undefined, "No agency in baseline proof");
-assert(baselineProofs[0].version === "occ/1", "Version is occ/1");
+assert(baselineProofs[0].version === "bitgraph/1", "Version is bitgraph/1");
 assert(typeof baselineProofs[0].signer.signatureB64 === "string", "Has Ed25519 signature");
 
 // Verify baseline proof
@@ -140,7 +140,7 @@ assert(true, `Artifact digest: ${artifactDigestB64.slice(0, 20)}...`);
 console.log("  Step 3: Build canonical payload...");
 const timestamp = Date.now();
 const canonicalPayload = {
-  purpose: "occ/commit-authorize/v1" as const,
+  purpose: "bitgraph/commit-authorize/v1" as const,
   actorKeyId: keyId,
   artifactHash: artifactDigestB64,
   challenge,
@@ -167,7 +167,7 @@ const agency = {
     provider: "test-node-crypto",
   },
   authorization: {
-    purpose: "occ/commit-authorize/v1" as const,
+    purpose: "bitgraph/commit-authorize/v1" as const,
     actorKeyId: keyId,
     artifactHash: artifactDigestB64,
     challenge,
@@ -189,7 +189,7 @@ const proof = agencyProofs[0];
 
 // Verify proof structure
 console.log("\n  ── Proof structure checks ──");
-assert(proof.version === "occ/1", "Version: occ/1");
+assert(proof.version === "bitgraph/1", "Version: bitgraph/1");
 assert(proof.artifact.digestB64 === artifactDigestB64, "Artifact digest matches");
 assert(typeof proof.signer.signatureB64 === "string", "Has Ed25519 signature");
 assert(proof.environment.enforcement === "stub", "Enforcement: stub");
@@ -200,7 +200,7 @@ assert(proof.agency.actor.keyId === keyId, "Actor keyId matches");
 assert(proof.agency.actor.publicKeyB64 === publicKeyB64, "Actor publicKeyB64 matches");
 assert(proof.agency.actor.algorithm === "ES256", "Actor algorithm: ES256");
 assert(proof.agency.actor.provider === "test-node-crypto", "Actor provider: test-node-crypto");
-assert(proof.agency.authorization.purpose === "occ/commit-authorize/v1", "Purpose: occ/commit-authorize/v1");
+assert(proof.agency.authorization.purpose === "bitgraph/commit-authorize/v1", "Purpose: bitgraph/commit-authorize/v1");
 assert(proof.agency.authorization.challenge === challenge, "Challenge matches");
 assert(proof.agency.authorization.artifactHash === artifactDigestB64, "ArtifactHash matches digest");
 assert(proof.agency.authorization.actorKeyId === keyId, "ActorKeyId matches actor.keyId");
@@ -243,7 +243,7 @@ console.log("\n── Test 6: Tampered keyId ──");
 const challenge2 = ((await post("/challenge", {})) as { challenge: string }).challenge;
 const timestamp2 = Date.now();
 const tamperedPayload = {
-  purpose: "occ/commit-authorize/v1" as const,
+  purpose: "bitgraph/commit-authorize/v1" as const,
   actorKeyId: "deadbeef0000000000000000000000000000000000000000000000000000cafe",
   artifactHash: artifactDigestB64,
   challenge: challenge2,
@@ -285,7 +285,7 @@ const challenge3 = ((await post("/challenge", {})) as { challenge: string }).cha
 const wrongDigest = Buffer.from(sha256(Buffer.from("different data"))).toString("base64");
 const timestamp3 = Date.now();
 const mismatchPayload = {
-  purpose: "occ/commit-authorize/v1" as const,
+  purpose: "bitgraph/commit-authorize/v1" as const,
   actorKeyId: keyId,
   artifactHash: wrongDigest, // signed over wrong digest
   challenge: challenge3,
@@ -325,7 +325,7 @@ const timestamp4 = Date.now();
 // Sign the right payload but with a different key
 const { privateKey: wrongKey } = generateKeyPairSync("ec", { namedCurve: "P-256" });
 const validPayload = {
-  purpose: "occ/commit-authorize/v1" as const,
+  purpose: "bitgraph/commit-authorize/v1" as const,
   actorKeyId: keyId,
   artifactHash: artifactDigestB64,
   challenge: challenge4,
@@ -365,7 +365,7 @@ const timestamp5 = Date.now();
 const digest2 = Buffer.from(sha256(Buffer.from("second artifact"))).toString("base64");
 
 const multiPayload = {
-  purpose: "occ/commit-authorize/v1" as const,
+  purpose: "bitgraph/commit-authorize/v1" as const,
   actorKeyId: keyId,
   artifactHash: artifactDigestB64, // bound to first digest
   challenge: challenge5,

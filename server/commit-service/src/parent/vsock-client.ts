@@ -2,7 +2,7 @@
 // Copyright 2024-2026 Mike Argento
 
 import { connect, type Socket } from "node:net";
-import type { AgencyEnvelope, OCCProof, PolicyBinding } from "occproof";
+import type { AgencyEnvelope, BitGraphProof, PolicyBinding } from "bitgraph";
 
 export interface CommitRequest {
   type: "commit";
@@ -17,7 +17,7 @@ export interface CommitRequest {
   policy?: PolicyBinding;
 }
 
-/** OCC 2-RTT: single-artifact commit with pre-allocated slot. */
+/** BitGraph 2-RTT: single-artifact commit with pre-allocated slot. */
 export interface CommitDigestRequest {
   type: "commitDigest";
   slotId: string;
@@ -60,9 +60,9 @@ export interface ConvertBWRequest {
  */
 export interface InitRequest {
   type: "init";
-  lastProof?: OCCProof;
+  lastProof?: BitGraphProof;
   /** Per-chain last proofs for multi-chain epoch lineage. */
-  lastProofsPerChain?: Record<string, OCCProof>;
+  lastProofsPerChain?: Record<string, BitGraphProof>;
   /** Must be explicitly true to start without a predecessor. */
   allowGenesis?: boolean;
 }

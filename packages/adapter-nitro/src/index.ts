@@ -2,7 +2,7 @@
 // Copyright 2024-2026 Mike Argento
 
 /**
- * @occ/adapter-nitro public API
+ * @bitgraph/adapter-nitro public API
  */
 export {
   NitroHost,

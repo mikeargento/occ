@@ -135,13 +135,13 @@ describe("Constructor.initialize", () => {
 // ---------------------------------------------------------------------------
 
 describe("Constructor.commit", () => {
-  test("returns a structurally valid OCCProof", async () => {
+  test("returns a structurally valid BitGraphProof", async () => {
     const km = await makeKeys();
     const ctor = await Constructor.initialize({ host: baseHost(km) });
-    const bytes = new TextEncoder().encode("hello occ");
+    const bytes = new TextEncoder().encode("hello bitgraph");
     const proof = await ctor.commit({ bytes });
 
-    assert.equal(proof.version, "occ/1");
+    assert.equal(proof.version, "bitgraph/1");
     assert.equal(proof.artifact.hashAlg, "sha256");
     assert.ok(typeof proof.artifact.digestB64 === "string" && proof.artifact.digestB64.length > 0);
     assert.ok(typeof proof.commit.nonceB64 === "string" && proof.commit.nonceB64.length > 0);
@@ -155,7 +155,7 @@ describe("Constructor.commit", () => {
     const km = await makeKeys();
     const ctor = await Constructor.initialize({ host: baseHost(km) });
     const proof = await ctor.commit({ bytes: new Uint8Array(0) });
-    assert.equal(proof.version, "occ/1");
+    assert.equal(proof.version, "bitgraph/1");
     assert.ok(proof.artifact.digestB64.length > 0);
   });
 
@@ -165,7 +165,7 @@ describe("Constructor.commit", () => {
     // crypto.getRandomValues is limited to 65536 bytes; use fill instead
     const bytes = new Uint8Array(100_000).fill(0xab);
     const proof = await ctor.commit({ bytes });
-    assert.equal(proof.version, "occ/1");
+    assert.equal(proof.version, "bitgraph/1");
   });
 
   test("includes metadata when provided (outside signature)", async () => {
@@ -295,7 +295,7 @@ describe("Constructor.commitDigest", () => {
     // SHA-256 of empty bytes
     const digest = Buffer.alloc(32, 0xab).toString("base64");
     const proof = await ctor.commitDigest({ digestB64: digest });
-    assert.equal(proof.version, "occ/1");
+    assert.equal(proof.version, "bitgraph/1");
     assert.equal(proof.artifact.digestB64, digest);
   });
 

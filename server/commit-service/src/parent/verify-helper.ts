@@ -2,8 +2,8 @@
 // Copyright 2024-2026 Mike Argento
 
 import { verifyAsync as ed25519VerifyAsync } from "@noble/ed25519";
-import { canonicalize } from "occproof";
-import type { OCCProof, SignedBody, VerificationPolicy } from "occproof";
+import { canonicalize } from "bitgraph";
+import type { BitGraphProof, SignedBody, VerificationPolicy } from "bitgraph";
 
 export interface VerifyResult {
   valid: boolean;
@@ -12,18 +12,18 @@ export interface VerifyResult {
 }
 
 export async function verifySignatureOnly(
-  proof: OCCProof,
+  proof: BitGraphProof,
   policy?: VerificationPolicy
 ): Promise<VerifyResult> {
   const checks: string[] = [];
 
-  if (proof.version !== "occ/1") {
+  if (proof.version !== "bitgraph/1") {
     return { valid: false, reason: `unsupported version: ${proof.version}`, checks };
   }
   checks.push("structure: ok");
 
   const signedBody: SignedBody = {
-    version: proof.version as "occ/1",
+    version: proof.version as "bitgraph/1",
     artifact: proof.artifact,
     commit: proof.commit,
     publicKeyB64: proof.signer.publicKeyB64,

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// End-to-end test for the OCC policy enforcement pipeline.
+// End-to-end test for the BitGraph policy enforcement pipeline.
 
 import { test, describe } from "node:test";
 import * as assert from "node:assert/strict";
@@ -14,7 +14,7 @@ import { sha256 } from "@noble/hashes/sha256";
 // Inline stub host for test isolation — dynamic import avoids tsc dist conflicts
 async function createTestHost(statePath: string) {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const mod = await import("occ-stub" as string) as any;
+  const mod = await import("bitgraph-stub" as string) as any;
   const StubHost = mod.StubHost ?? mod.default?.StubHost;
   return StubHost.createPersistent({
     statePath,
@@ -55,7 +55,7 @@ describe("Policy Enforcement Pipeline", () => {
   });
 
   test("policy committed as slot 0 with binding in proof", async () => {
-    const testDir = join(tmpdir(), `occ-test-${Date.now()}`);
+    const testDir = join(tmpdir(), `bitgraph-test-${Date.now()}`);
     mkdirSync(testDir, { recursive: true });
 
     const stub = await createTestHost(join(testDir, "state.json"));
@@ -86,7 +86,7 @@ describe("Policy Enforcement Pipeline", () => {
   });
 
   test("action proofs carry the policy binding", async () => {
-    const testDir = join(tmpdir(), `occ-test-${Date.now()}`);
+    const testDir = join(tmpdir(), `bitgraph-test-${Date.now()}`);
     mkdirSync(testDir, { recursive: true });
 
     const stub = await createTestHost(join(testDir, "state.json"));
@@ -123,7 +123,7 @@ describe("Policy Enforcement Pipeline", () => {
   });
 
   test("policy revocation updates binding", async () => {
-    const testDir = join(tmpdir(), `occ-test-${Date.now()}`);
+    const testDir = join(tmpdir(), `bitgraph-test-${Date.now()}`);
     mkdirSync(testDir, { recursive: true });
 
     const stub = await createTestHost(join(testDir, "state.json"));
@@ -182,7 +182,7 @@ describe("Policy Enforcement Pipeline", () => {
   });
 
   test("causal ordering: policy counter < action counter", async () => {
-    const testDir = join(tmpdir(), `occ-test-${Date.now()}`);
+    const testDir = join(tmpdir(), `bitgraph-test-${Date.now()}`);
     mkdirSync(testDir, { recursive: true });
 
     const stub = await createTestHost(join(testDir, "state.json"));

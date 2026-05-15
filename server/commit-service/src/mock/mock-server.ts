@@ -6,7 +6,7 @@
  */
 
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import type { OCCProof, VerificationPolicy, AgencyEnvelope } from "occproof";
+import type { BitGraphProof, VerificationPolicy, AgencyEnvelope } from "bitgraph";
 import { MockEnclave } from "./mock-enclave.js";
 
 const PORT = Number(
@@ -119,11 +119,11 @@ async function handleVerify(req: IncomingMessage, res: ServerResponse): Promise<
   }
 
   const raw = await readBody(req);
-  let body: { proof: OCCProof; policy?: VerificationPolicy };
+  let body: { proof: BitGraphProof; policy?: VerificationPolicy };
   try { body = JSON.parse(raw.toString("utf8")); } catch { sendError(res, 400, "Invalid JSON body"); return; }
 
   if (!body.proof) {
-    sendError(res, 400, "body must have { proof: OCCProof, policy?: VerificationPolicy }");
+    sendError(res, 400, "body must have { proof: BitGraphProof, policy?: VerificationPolicy }");
     return;
   }
 

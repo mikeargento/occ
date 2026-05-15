@@ -1,7 +1,7 @@
 {
-  "name": "@mikeargento/occproof",
-  "version": "1.2.1",
-  "description": "Portable cryptographic proof library for Origin Controlled Computing.",
+  "name": "@mikeargento/bitgraph",
+  "version": "1.0.0",
+  "description": "Portable cryptographic proof library for BitGraph.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

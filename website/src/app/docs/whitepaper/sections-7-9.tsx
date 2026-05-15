@@ -12,7 +12,7 @@ export default function Sections7to9() {
         </h2>
 
         <p className="text-sm text-[#1f2937] leading-relaxed mb-6">
-          We formalize Origin Controlled Computing using a labeled transition
+          We formalize BitGraph using a labeled transition
           system and closure algebra. This formalization captures the essential
           properties of the architecture and enables precise comparison with
           existing enforcement models.
@@ -27,7 +27,7 @@ export default function Sections7to9() {
 
           <div className="my-5 border-l-[3px] border-text-tertiary bg-[#f9fafb] p-5">
             <p className="text-sm text-[#111827] leading-relaxed mb-3">
-              <strong>Definition 7.1</strong> (OCC System). An OCC system is a
+              <strong>Definition 7.1</strong> (BitGraph System). An BitGraph system is a
               labeled transition system{" "}
               <M c={"(\\Sigma, \\rightarrow, E)"} /> where:
             </p>
@@ -82,7 +82,7 @@ export default function Sections7to9() {
           </h3>
 
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
-            An OCC-compliant system enforces three invariants:
+            An BitGraph-compliant system enforces three invariants:
           </p>
 
           <div className="my-5 border-l-[3px] border-text-tertiary bg-[#f9fafb] p-5">
@@ -196,7 +196,7 @@ export default function Sections7to9() {
             <li>
               <strong className="text-text">Provenance</strong>: Unlike
               provenance semirings, which annotate data with origin information,
-              OCC <em>enforces</em> that authenticated state can only exist if
+              BitGraph <em>enforces</em> that authenticated state can only exist if
               it has authorized genesis — enforcement, not annotation.
             </li>
           </ul>
@@ -247,7 +247,7 @@ export default function Sections7to9() {
 
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             <strong className="text-text">
-              Boundary-Fresh Uniqueness (OCC).
+              Boundary-Fresh Uniqueness (BitGraph).
             </strong>{" "}
             Authorization events are boundary-generated values whose
             cryptographic freshness ensures uniqueness. Each value appears in
@@ -295,7 +295,7 @@ export default function Sections7to9() {
               ensures one-to-one correspondence — but the enforcement mechanism
               is fundamentally different. In ledger systems, double-spend
               prevention requires global consensus over a shared transaction
-              history. In OCC, non-reusability is enforced locally by the atomic
+              history. In BitGraph, non-reusability is enforced locally by the atomic
               execution boundary: boundary-fresh generation produces a value
               that is cryptographically bound to exactly one artifact at exactly
               one finalization event, with no external coordination required.
@@ -315,7 +315,7 @@ export default function Sections7to9() {
 
         <p className="text-sm text-[#1f2937] leading-relaxed mb-6">
           We define a security game that captures the adversarial setting in
-          which Origin Controlled Computing operates.
+          which BitGraph operates.
         </p>
 
         {/* 8.1 */}
@@ -372,7 +372,7 @@ export default function Sections7to9() {
               <strong>Definition 8.1</strong> (Origin Forgery Game). The game{" "}
               <M
                 c={
-                  "\\mathrm{Forge}_{\\mathcal{A}}^{\\mathrm{OCC}}(\\lambda)"
+                  "\\mathrm{Forge}_{\\mathcal{A}}^{\\mathrm{BitGraph}}(\\lambda)"
                 }
               />{" "}
               proceeds as follows, where <M c={"\\lambda"} /> is the security
@@ -381,7 +381,7 @@ export default function Sections7to9() {
             <ol className="space-y-2 text-sm text-[#1f2937] list-decimal list-inside">
               <li>
                 <strong className="text-text">Setup.</strong> The challenger
-                initializes an OCC system with boundary identity{" "}
+                initializes an BitGraph system with boundary identity{" "}
                 <M c={"\\mathit{id}"} />, trust anchors{" "}
                 <M c={"\\mathit{TA}"} />, and security parameter{" "}
                 <M c={"\\lambda"} />.
@@ -417,13 +417,13 @@ export default function Sections7to9() {
 
           <div className="my-5 border-l-[3px] border-text-tertiary bg-[#f9fafb] p-5">
             <p className="text-sm text-[#111827] leading-relaxed mb-2">
-              <strong>Definition 8.2</strong> (OCC Security). An OCC system is{" "}
+              <strong>Definition 8.2</strong> (BitGraph Security). An BitGraph system is{" "}
               <em>secure</em> if for all probabilistic polynomial-time
               adversaries <M c={"\\mathcal{A}"} />:
             </p>
             <MBlock
               c={
-                "\\Pr[\\mathrm{Forge}_{\\mathcal{A}}^{\\mathrm{OCC}}(\\lambda) = 1] \\leq \\mathrm{negl}(\\lambda)"
+                "\\Pr[\\mathrm{Forge}_{\\mathcal{A}}^{\\mathrm{BitGraph}}(\\lambda) = 1] \\leq \\mathrm{negl}(\\lambda)"
               }
             />
           </div>
@@ -433,7 +433,7 @@ export default function Sections7to9() {
               <strong>Proposition 8.3</strong> (Security Reduction). If the
               signature scheme is existentially unforgeable under
               chosen-message attack (EUF-CMA) and the freshness source is
-              collision-resistant, then the OCC system is secure under
+              collision-resistant, then the BitGraph system is secure under
               Definition 8.1.
             </p>
           </div>
@@ -494,7 +494,7 @@ export default function Sections7to9() {
           </h3>
 
           <p className="text-sm text-[#1f2937] leading-relaxed mb-6">
-            The following tests distinguish OCC-compliant systems from systems
+            The following tests distinguish BitGraph-compliant systems from systems
             that appear similar but fail to enforce origin control.
           </p>
 
@@ -509,7 +509,7 @@ export default function Sections7to9() {
               }
             />{" "}
             that promotes unauthenticated state to authenticated state while
-            preserving content, the system is not OCC-compliant. This test fails
+            preserving content, the system is not BitGraph-compliant. This test fails
             for any system where content is created first and authentication is
             applied afterward — signing, blockchain registration, provenance
             database entry, or metadata attachment. These are{" "}
@@ -561,7 +561,7 @@ export default function Sections7to9() {
             authenticated form by any post-hoc operation that preserves content,
             the system is implementing annotation, not origin control. This is
             the most direct test: if the content bytes can exist before the
-            authorization event, the system does not enforce OCC.
+            authorization event, the system does not enforce BitGraph.
           </p>
         </section>
       </section>
@@ -582,7 +582,7 @@ export default function Sections7to9() {
           </h3>
 
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
-            Origin Controlled Computing distinguishes between candidate digital
+            BitGraph distinguishes between candidate digital
             state and authenticated durable state. Candidate state may exist
             anywhere and may be adversarial. Authenticated durable state
             consists of externally visible or persistent artifacts whose
@@ -772,7 +772,7 @@ export default function Sections7to9() {
           </h3>
 
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
-            A distinction fundamental to OCC must be stated explicitly.
+            A distinction fundamental to BitGraph must be stated explicitly.
             Enforcement determines whether authenticated durable state{" "}
             <em>exists</em>. Verification determines whether a third party can{" "}
             <em>demonstrate</em> that authenticated durable state exists. These
@@ -802,9 +802,9 @@ export default function Sections7to9() {
           </p>
 
           <p className="text-sm text-[#1f2937] leading-relaxed mb-6">
-            This separation is what distinguishes OCC from verification systems,
+            This separation is what distinguishes BitGraph from verification systems,
             provenance frameworks, and attestation protocols. Those systems
-            define authenticity in terms of what can currently be checked. OCC
+            define authenticity in terms of what can currently be checked. BitGraph
             defines authenticity in terms of what was structurally enforced at
             creation. Verification is one mechanism for observing the
             consequences of enforcement, but it is not the enforcement itself.
@@ -819,7 +819,7 @@ export default function Sections7to9() {
           </h3>
 
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
-            A critical architectural property of OCC is that the enforcement
+            A critical architectural property of BitGraph is that the enforcement
             invariants described in Section 4 hold at genesis and are not
             contingent on any subsequent verification event, proof transport
             mechanism, or reference infrastructure availability. Verification is
@@ -829,7 +829,7 @@ export default function Sections7to9() {
 
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             The verification model is therefore independent of how verification
-            material reaches the verifier. OCC supports multiple verification
+            material reaches the verifier. BitGraph supports multiple verification
             models, and the choice among them is a deployment decision, not an
             architectural constraint. No verification model choice affects
             whether the enforcement invariants hold.
@@ -879,7 +879,7 @@ export default function Sections7to9() {
             <div className="hidden sm:flex items-start justify-center gap-3 flex-wrap text-sm">
               <div className="text-center">
                 <div className="border border-[#e5e7eb] px-3.5 py-2.5 bg-[#f9fafb]">
-                  OCC Boundary
+                  BitGraph Boundary
                   <br />
                   <span className="text-xs text-[#6b7280]">(genesis)</span>
                 </div>
@@ -942,7 +942,7 @@ export default function Sections7to9() {
             {/* Mobile layout */}
             <div className="flex sm:hidden flex-col items-center gap-2 text-sm">
               <div className="border border-[#e5e7eb] px-3.5 py-2.5 bg-[#f9fafb] w-full text-center">
-                OCC Boundary
+                BitGraph Boundary
                 <br />
                 <span className="text-xs text-[#6b7280]">(genesis)</span>
               </div>
@@ -1008,7 +1008,7 @@ export default function Sections7to9() {
 
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             This property has significant practical consequences.
-            OCC-authenticated artifacts can be freely copied, reformatted,
+            BitGraph-authenticated artifacts can be freely copied, reformatted,
             compressed, transcoded, or distributed through channels that strip
             metadata — and their authenticated status is permanent regardless of
             what happens to metadata during distribution.{" "}
@@ -1039,7 +1039,7 @@ export default function Sections7to9() {
             container rewrapping — leave this hash intact and verification
             proceeds directly. Lossy transforms — recompression, transcoding,
             cropping, resolution scaling — alter the content bytes and therefore
-            invalidate the original binding. Under OCC, a lossy transform
+            invalidate the original binding. Under BitGraph, a lossy transform
             produces new candidate state. If the transformed output must itself
             be authenticated, it requires a new finalization event at a
             protected transform boundary, producing fresh verification material

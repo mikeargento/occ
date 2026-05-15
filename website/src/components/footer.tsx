@@ -10,7 +10,7 @@ export function Footer() {
       textAlign: "center",
     }}>
       <span style={{ fontSize: 13, color: "#9ca3af" }}>
-        Origin Controlled Computing — Patent Pending
+        BitGraph — Patent Pending
       </span>
     </footer>
   );

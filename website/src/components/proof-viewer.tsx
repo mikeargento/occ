@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import type { OCCProof } from "@/lib/occ";
+import type { BitGraphProof } from "@/lib/bitgraph";
 
 interface ProofViewerProps {
-  proof: OCCProof;
+  proof: BitGraphProof;
   defaultExpanded?: boolean;
 }
 
@@ -24,7 +24,7 @@ export function ProofViewer({ proof, defaultExpanded = false }: ProofViewerProps
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `occ-proof-${proof.commit?.counter || "latest"}.json`;
+    a.download = `bitgraph-proof-${proof.commit?.counter || "latest"}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };

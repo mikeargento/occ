@@ -1,5 +1,5 @@
 /**
- * OCC Ledger — S3 Immutable Storage
+ * BitGraph Ledger — S3 Immutable Storage
  *
  * All writes use S3 Object Lock (COMPLIANCE mode, immutable retention).
  * All reads use deterministic keys.
@@ -16,7 +16,7 @@ import {
   ListObjectsV2Command,
 } from "@aws-sdk/client-s3";
 import { sha256 } from "@noble/hashes/sha256";
-import { canonicalize, computeProofHash } from "occproof";
+import { canonicalize, computeProofHash } from "bitgraph";
 import {
   type StoredProof,
   type StoredAnchor,

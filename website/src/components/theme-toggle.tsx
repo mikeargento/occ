@@ -15,7 +15,7 @@ export function ThemeToggle() {
     const next = !dark;
     setDark(next);
     document.documentElement.setAttribute("data-theme", next ? "dark" : "light");
-    localStorage.setItem("occ-theme", next ? "dark" : "light");
+    localStorage.setItem("bitgraph-theme", next ? "dark" : "light");
   }
 
   if (!mounted) return <div style={{ width: 32, height: 32 }} />;

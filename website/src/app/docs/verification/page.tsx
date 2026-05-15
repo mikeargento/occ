@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Verification",
-  description: "OCC five-step verification algorithm: structural validation, digest check, signature verification, policy enforcement.",
+  description: "BitGraph five-step verification algorithm: structural validation, digest check, signature verification, policy enforcement.",
 };
 
 export default function VerificationPage() {
@@ -10,12 +10,12 @@ export default function VerificationPage() {
     <article className="prose-doc">
       <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-6">Verification</h1>
       <p className="text-[#1f2937] mb-10">
-        OCC verification is deterministic and runs offline. No network calls, no API keys, no accounts.
+        BitGraph verification is deterministic and runs offline. No network calls, no API keys, no accounts.
       </p>
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Five-step algorithm</h2>
       <p className="text-[#1f2937] mb-6">
-        Input: a proof (<code className="text-xs font-mono bg-[#f3f4f6] px-1">OCCProof</code>), the original bytes (<code className="text-xs font-mono bg-[#f3f4f6] px-1">Uint8Array</code>), and an optional verification policy.
+        Input: a proof (<code className="text-xs font-mono bg-[#f3f4f6] px-1">BitGraphProof</code>), the original bytes (<code className="text-xs font-mono bg-[#f3f4f6] px-1">Uint8Array</code>), and an optional verification policy.
       </p>
 
       <div className="space-y-6 mb-12">
@@ -23,7 +23,7 @@ export default function VerificationPage() {
           {
             step: "1",
             title: "Structural validation",
-            desc: "Check that all required fields are present with correct types. version must be \"occ/1\", hashAlg must be \"sha256\", enforcement must be one of the valid tiers, all base64 fields must decode correctly.",
+            desc: "Check that all required fields are present with correct types. version must be \"bitgraph/1\", hashAlg must be \"sha256\", enforcement must be one of the valid tiers, all base64 fields must decode correctly.",
           },
           {
             step: "2",

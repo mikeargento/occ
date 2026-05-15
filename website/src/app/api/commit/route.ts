@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { storeProofByDigest } from "@/lib/s3";
 
-const TEE_URL = "https://nitro.occproof.com";
+const TEE_URL = "https://nitro.bitgraph.ing";
 
 export const dynamic = "force-dynamic";
 

@@ -1,8 +1,8 @@
 /**
  * Ethereum Anchor Service
  *
- * Commits the latest Ethereum block hash to the OCC proof chain via TEE.
- * The anchor proof is a NORMAL OCC proof on the SAME monotonic counter chain
+ * Commits the latest Ethereum block hash to the BitGraph proof chain via TEE.
+ * The anchor proof is a NORMAL BitGraph proof on the SAME monotonic counter chain
  * as user proofs — same counter, same prevB64, same enclave key, same epoch.
  *
  * Because the Ethereum block hash is unpredictable and the anchor occurs
@@ -18,7 +18,7 @@ import { sha256 } from "@noble/hashes/sha256";
 
 /**
  * Canonical proof hash — signed body only.
- * MUST match computeProofHash() from occproof exactly.
+ * MUST match computeProofHash() from bitgraph exactly.
  * Inlined here because Railway can't resolve the monorepo package.
  */
 function computeProofHash(proof: Record<string, unknown>): string {
@@ -38,7 +38,7 @@ function computeProofHash(proof: Record<string, unknown>): string {
   return Buffer.from(sha256(new TextEncoder().encode(json))).toString("base64");
 }
 
-/** Recursive key-sort JSON — matches occproof's canonicalize(). */
+/** Recursive key-sort JSON — matches bitgraph's canonicalize(). */
 function stableStringify(obj: unknown): string {
   if (obj === null || typeof obj !== "object") return JSON.stringify(obj);
   if (Array.isArray(obj)) return "[" + obj.map(stableStringify).join(",") + "]";
@@ -122,7 +122,7 @@ async function persistAnchor(
 
 /* ── Ethereum RPC ── */
 
-const TEE_URL = "https://nitro.occproof.com";
+const TEE_URL = "https://nitro.bitgraph.ing";
 let anchorIntervalMs = 12 * 1000; // 12 seconds — every finalized Ethereum block
 
 function toBase64(bytes: Uint8Array): string {
@@ -173,9 +173,9 @@ async function getLatestBlock(): Promise<EthBlock> {
 /* ── TEE commit ── */
 
 /**
- * Commit an Ethereum block hash to the OCC chain via TEE.
+ * Commit an Ethereum block hash to the BitGraph chain via TEE.
  *
- * The anchor proof is a normal OCC proof where:
+ * The anchor proof is a normal BitGraph proof where:
  * - artifact.digestB64 = SHA-256(blockHash) — the block hash IS the artifact
  * - attribution.name = "Ethereum Anchor" (signed, human-readable label)
  * - attribution.message = blockHash (signed, the actual anchor data)
@@ -194,7 +194,7 @@ async function commitAnchor(block: EthBlock): Promise<{ proof: unknown; digestB6
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         digests: [{ digestB64, hashAlg: "sha256" }],
-        chainId: "occ:main",
+        chainId: "bitgraph:main",
         // Attribution is SIGNED — block data is tamper-evident
         attribution: {
           name: "Ethereum Anchor",

@@ -1,7 +1,7 @@
-import type { OCCProof } from "@/lib/occ";
+import type { BitGraphProof } from "@/lib/bitgraph";
 
 interface ProofMetaProps {
-  proof: OCCProof;
+  proof: BitGraphProof;
   fileName?: string;
   fileSize?: number;
 }

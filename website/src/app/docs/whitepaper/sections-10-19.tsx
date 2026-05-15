@@ -25,10 +25,10 @@ export default function Sections10to19() {
           </p>
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             These systems answer the question: <em>&ldquo;Did specific trusted code execute?&rdquo;</em>{" "}
-            OCC asks a different question: <em>&ldquo;Is authenticated durable state reachable only
-            through enforced commit paths?&rdquo;</em> Attestation authenticates a pipeline. OCC
+            BitGraph asks a different question: <em>&ldquo;Is authenticated durable state reachable only
+            through enforced commit paths?&rdquo;</em> Attestation authenticates a pipeline. BitGraph
             constrains the commit architecture so that alternative pipelines cannot produce
-            authenticated state. TEEs are one possible implementation substrate for OCC boundaries,
+            authenticated state. TEEs are one possible implementation substrate for BitGraph boundaries,
             but attestation alone does not close unprotected commit paths that exist alongside the
             attested process.
           </p>
@@ -47,9 +47,9 @@ export default function Sections10to19() {
             interoperable.
           </p>
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
-            OCC targets a different architectural layer. Provenance standards are a{" "}
+            BitGraph targets a different architectural layer. Provenance standards are a{" "}
             <em>packaging and disclosure layer</em>: they define what claims look like and how to
-            verify them. OCC is an <em>enforcement layer</em>: it determines whether authenticated
+            verify them. BitGraph is an <em>enforcement layer</em>: it determines whether authenticated
             durable state can be finalized at all unless creation-time conditions were met. The
             distinction matters because provenance ecosystems are voluntary at the edges. A signed
             artifact can be verified, but an unsigned artifact can still be created, circulated, and
@@ -57,11 +57,11 @@ export default function Sections10to19() {
             boundary. Provenance improves traceability without guaranteeing exclusion.
           </p>
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
-            OCC and provenance are complementary. OCC strengthens provenance by making provenance
+            BitGraph and provenance are complementary. BitGraph strengthens provenance by making provenance
             verifiability a prerequisite for admission into protected domains. Provenance remains the
-            interoperability layer that carries claims across ecosystems; OCC supplies the mechanism
+            interoperability layer that carries claims across ecosystems; BitGraph supplies the mechanism
             by which systems enforce that only authenticated artifacts become trusted durable state.
-            Under OCC with reference-based verification, provenance survives even when manifests are
+            Under BitGraph with reference-based verification, provenance survives even when manifests are
             stripped during distribution (see the provenance example in{" "}
             <a href="#sec-provenance-example" className="text-[#111827] underline decoration-border-subtle underline-offset-2">
               Section 2.2
@@ -84,7 +84,7 @@ export default function Sections10to19() {
             Controlled Computing is strictly stronger in one dimension: it controls not merely which{" "}
             <em>operations</em> on objects are permitted, but which{" "}
             <em>objects are permitted to exist</em> in authenticated form. Classical access control
-            assumes object creation is uncontrolled and focuses on subsequent access. OCC constrains
+            assumes object creation is uncontrolled and focuses on subsequent access. BitGraph constrains
             creation itself.
           </p>
           <p className="text-sm text-[#1f2937] leading-relaxed mb-2">
@@ -92,7 +92,7 @@ export default function Sections10to19() {
           </p>
           <MBlock c={"\\forall\\, \\mathit{op} \\in \\mathit{Operations},\\; \\forall\\, \\mathit{obj} \\in \\mathit{Objects} : \\mathit{execute}(\\mathit{op}, \\mathit{obj}) \\Rightarrow \\mathit{authorized}(\\mathit{subject}, \\mathit{op}, \\mathit{obj})"} />
           <p className="text-sm text-[#1f2937] leading-relaxed mb-2">
-            A genesis monitor (OCC) enforces:
+            A genesis monitor (BitGraph) enforces:
           </p>
           <MBlock c={"\\forall\\, \\mathit{obj} \\in \\Sigma_{\\text{auth}} : \\mathit{obj} \\in \\Sigma \\Rightarrow \\exists\\, e \\in E_{\\text{auth}} : \\mathit{genesis}(\\mathit{obj}) = \\mathcal{C}(e, \\mathit{data})"} />
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
@@ -114,12 +114,12 @@ export default function Sections10to19() {
             capability systems create revocable boundaries around object graphs.
           </p>
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
-            OCC shares the emphasis on structural enforcement through unforgeable references but
+            BitGraph shares the emphasis on structural enforcement through unforgeable references but
             applies it at a different layer. Capabilities control{" "}
-            <em>reachability of existing objects</em>. OCC controls{" "}
-            <em>constructibility of new authenticated state</em>. The boundary-held capability in OCC
+            <em>reachability of existing objects</em>. BitGraph controls{" "}
+            <em>constructibility of new authenticated state</em>. The boundary-held capability in BitGraph
             is a capability-security mechanism, but the enforcement target&mdash;preventing existence
-            rather than preventing access&mdash;distinguishes OCC from classical capability models.
+            rather than preventing access&mdash;distinguishes BitGraph from classical capability models.
           </p>
         </section>
 
@@ -130,9 +130,9 @@ export default function Sections10to19() {
           </h3>
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             Mandatory information flow control (Goguen &amp; Meseguer, 1982; Myers &amp; Liskov,
-            1997) constrains how information propagates through a system. OCC enforces a related but
+            1997) constrains how information propagates through a system. BitGraph enforces a related but
             distinct property: it constrains how authenticated state is <em>generated</em>, not how
-            information flows between existing states. In information flow terms, OCC enforces a
+            information flows between existing states. In information flow terms, BitGraph enforces a
             mandatory creation policy: authenticated state can only be generated through specific
             channels (the protected commit interface), analogous to noninterference applied to
             creation rather than observation.
@@ -146,11 +146,11 @@ export default function Sections10to19() {
           </h3>
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             Blockchain systems enforce that state changes require consensus among distributed
-            participants. The architectural parallel to OCC is real: both create structural
+            participants. The architectural parallel to BitGraph is real: both create structural
             bottlenecks through which state transitions must pass. However, blockchain achieves
-            consensus through economic coordination among mutually distrustful parties, while OCC
+            consensus through economic coordination among mutually distrustful parties, while BitGraph
             achieves origin enforcement through boundary isolation and cryptographic causality at a
-            single enforcement point. OCC generalizes the structural bottleneck principle to
+            single enforcement point. BitGraph generalizes the structural bottleneck principle to
             arbitrary protected boundaries without requiring distributed consensus, economic
             incentives, or global coordination.
           </p>
@@ -166,9 +166,9 @@ export default function Sections10to19() {
             for environments with extreme latency and intermittent connectivity. Bundle security
             (BPSec, RFC 9172) provides integrity and confidentiality at the bundle layer but does not
             constrain how authenticated payloads are created&mdash;it secures transport, not genesis.
-            OCC complements DTN by enforcing that bundle payloads finalized through a protected
+            BitGraph complements DTN by enforcing that bundle payloads finalized through a protected
             commit interface carry portable verification material validatable offline against
-            pre-distributed trust anchors, with no return path to the origin required. OCC proofs
+            pre-distributed trust anchors, with no return path to the origin required. BitGraph proofs
             map onto BP extension blocks, enabling authenticated bundles to traverse existing DTN
             infrastructure without routing modifications.
           </p>
@@ -180,7 +180,7 @@ export default function Sections10to19() {
             <span className="text-[#6b7280] mr-2">10.8</span> Summary of Structural Distinctions
           </h3>
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
-            Table 1 summarizes the structural properties that distinguish OCC from related
+            Table 1 summarizes the structural properties that distinguish BitGraph from related
             approaches. Each property is defined by the system invariants and falsifiability tests in{" "}
             <a href="#sec-invariants" className="text-[#111827] underline decoration-border-subtle underline-offset-2">
               Sections 4
@@ -202,7 +202,7 @@ export default function Sections10to19() {
                   <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#6b7280]">TEE / Attested Exec.</th>
                   <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#6b7280]">Provenance (C2PA)</th>
                   <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#6b7280]">Blockchain / Ledger</th>
-                  <th className="text-left py-2 text-xs font-medium uppercase tracking-wider text-[#6b7280]">OCC</th>
+                  <th className="text-left py-2 text-xs font-medium uppercase tracking-wider text-[#6b7280]">BitGraph</th>
                 </tr>
               </thead>
               <tbody className="text-[#1f2937]">
@@ -292,7 +292,7 @@ export default function Sections10to19() {
           <span className="text-[#6b7280] mr-2">11</span> Worked Examples
         </h2>
         <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
-          We present two worked examples demonstrating Origin Controlled Computing in distinct
+          We present two worked examples demonstrating BitGraph in distinct
           domains. In each case, the same architectural pattern applies: candidate data is prepared
           freely; authenticated durable state is produced only through the protected commit interface;
           and any artifact not finalized through the boundary is rejected as unauthenticated.
@@ -371,7 +371,7 @@ export default function Sections10to19() {
             path&mdash;including direct database writes, API bypasses, or file system
             access&mdash;can produce outputs that satisfy verification. This is particularly
             relevant for regulatory compliance frameworks such as the EU AI Act, which require
-            AI-generated content to be identifiable. OCC provides an enforcement mechanism rather
+            AI-generated content to be identifiable. BitGraph provides an enforcement mechanism rather
             than a voluntary labeling scheme.
           </p>
         </section>
@@ -419,7 +419,7 @@ export default function Sections10to19() {
           API, or a cloud service endpoint, the enforcement properties are identical.
         </p>
         <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
-          OCC does not prevent the construction of unauthorized boundaries. Any party can build a
+          BitGraph does not prevent the construction of unauthorized boundaries. Any party can build a
           boundary and produce verification material. However, artifacts produced by unauthorized
           boundaries fail verification under accepted trust anchors, because those boundaries&apos;
           identities are not in the approved set. Trust is mediated by trust anchor policy, not by
@@ -445,7 +445,7 @@ export default function Sections10to19() {
             be made explicit in the proof structure itself.
           </p>
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
-            OCC proofs carry two orthogonal attestations. The first is a{" "}
+            BitGraph proofs carry two orthogonal attestations. The first is a{" "}
             <em>cryptographic attestation</em>: the signature and public key establish who signed and
             that the signed content was unaltered. This is machine-checkable by any party with the
             public key and is unconditionally verifiable offline. The second is an{" "}
@@ -454,7 +454,7 @@ export default function Sections10to19() {
             permitted&mdash;whether the commit gate, key management, nonce generation, and signing
             occurred inside a verified hardware boundary or merely inside a software process. Atomic
             causality lives in the second attestation, not the first. A signature proves who signed;
-            the enforcement context proves whether the creation-time constraints of OCC actually
+            the enforcement context proves whether the creation-time constraints of BitGraph actually
             held.
           </p>
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
@@ -506,7 +506,7 @@ export default function Sections10to19() {
 
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             A critical subtlety distinguishes tamper-evidence from self-authentication. The
-            enforcement tier is included in the signed body of every OCC proof, making it
+            enforcement tier is included in the signed body of every BitGraph proof, making it
             tamper-evident in transit: an adversary who intercepts a proof and attempts to substitute
             a higher-assurance tier will break the signature. However, the tier field is{" "}
             <em>self-reported</em> by the boundary adapter. A malicious or misconfigured adapter can
@@ -524,7 +524,7 @@ export default function Sections10to19() {
             the identity was produced by real hardware under the declared conditions. All three are
             necessary; any two leave a gap. A verifier who checks the signature and trusts the
             self-reported tier without verifying measurement and attestation has verified fact
-            (A)&mdash;who signed&mdash;but not fact (B)&mdash;whether the OCC invariants actually
+            (A)&mdash;who signed&mdash;but not fact (B)&mdash;whether the BitGraph invariants actually
             held.
           </p>
 
@@ -539,7 +539,7 @@ export default function Sections10to19() {
               hardware signer can produce valid signatures for any content without traversal of the
               protected commit interface. This is useful as an identity anchor and may be sufficient
               for some deployment contexts, but it is architecturally distinct
-              from <M c={"\\tau_{\\text{tee}}"} /> and does not satisfy OCC&apos;s Atomic Causality
+              from <M c={"\\tau_{\\text{tee}}"} /> and does not satisfy BitGraph&apos;s Atomic Causality
               invariant (Definition 6.1) against a compromised-host adversary.
             </p>
           </div>
@@ -566,7 +566,7 @@ export default function Sections10to19() {
           <span className="text-[#6b7280] mr-2">13</span> Admission of Pre-Existing Data
         </h2>
         <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
-          Origin Controlled Computing defines authenticity in terms of enforced finalization events,
+          BitGraph defines authenticity in terms of enforced finalization events,
           not in terms of historical existence of content bytes.
         </p>
         <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
@@ -596,7 +596,7 @@ export default function Sections10to19() {
             <span className="text-[#6b7280] mr-2">13.1</span> Enforced Provenance Chains
           </h3>
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
-            When content traverses multiple OCC-enforced boundaries, each boundary produces
+            When content traverses multiple BitGraph-enforced boundaries, each boundary produces
             independent verification material for the same content. The result is a structurally
             enforced provenance chain: an ordered sequence of admission events, each
             cryptographically bound to the content at its respective boundary. Unlike voluntary
@@ -685,7 +685,7 @@ export default function Sections10to19() {
 
             <p className="text-xs text-[#6b7280] italic text-center mt-3">
               <strong>Figure 6.</strong> Enforced provenance chains. Pre-existing content traverses
-              multiple OCC boundaries, each producing independent verification material. Each
+              multiple BitGraph boundaries, each producing independent verification material. Each
               admission is a separate enforced finalization event. The resulting chain is structurally
               guaranteed&mdash;not voluntarily annotated&mdash;because each link requires traversal of
               a protected commit interface.
@@ -753,8 +753,8 @@ export default function Sections10to19() {
 
         <h3 className="text-base font-semibold mt-6 mb-2">Interoperability with provenance systems.</h3>
         <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
-          OCC coexists with provenance and credentialing systems that focus on post-creation
-          traceability. Provenance chains can be attached to artifacts finalized under OCC, providing
+          BitGraph coexists with provenance and credentialing systems that focus on post-creation
+          traceability. Provenance chains can be attached to artifacts finalized under BitGraph, providing
           richer downstream traceability. The admission decision remains anchored in enforced
           finalization, while provenance provides the interoperability layer for distribution and
           audit.
@@ -769,7 +769,7 @@ export default function Sections10to19() {
           <span className="text-[#6b7280] mr-2">15</span> Deployment and Adoption
         </h2>
         <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
-          Origin Controlled Computing is best understood as an enforcement primitive that can be
+          BitGraph is best understood as an enforcement primitive that can be
           introduced incrementally. Most environments cannot transition from fully permissive
           creation to strict admissibility in a single step.
         </p>
@@ -789,7 +789,7 @@ export default function Sections10to19() {
         <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           The decisive question in most deployments is not whether an artifact can be produced, but
           whether it can be admitted into a domain that confers legitimacy, downstream impact, or
-          compliance standing. OCC can be applied selectively at these boundaries: ingestion into
+          compliance standing. BitGraph can be applied selectively at these boundaries: ingestion into
           training corpora, publication to official channels, archival in compliance systems, or
           persistence into audit-grade logs.
         </p>
@@ -822,7 +822,7 @@ export default function Sections10to19() {
           <span className="text-[#6b7280] mr-2">16</span> Applications
         </h2>
         <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
-          Origin Controlled Computing applies wherever systems must distinguish admissible durable
+          BitGraph applies wherever systems must distinguish admissible durable
           outputs from arbitrary durable outputs produced outside trusted pipelines. The common
           architectural pattern is a protected commit path that gates admission into authenticated
           durable state. The pattern arises across domains:
@@ -853,7 +853,7 @@ export default function Sections10to19() {
             <strong className="text-text">Interplanetary and delay-tolerant systems</strong>, where
             authentication must be non-interactive, verification must occur offline, and proofs must
             travel with data across store-and-forward networks with minutes-to-hours latency.
-            OCC&apos;s non-interactive finalization, compact portable proofs, and hardware-rooted
+            BitGraph&apos;s non-interactive finalization, compact portable proofs, and hardware-rooted
             trust align with the operational constraints of DTN/Bundle Protocol environments, where
             real-time protocols, centralized registries, and consensus mechanisms are infeasible.
           </li>
@@ -873,7 +873,7 @@ export default function Sections10to19() {
           <span className="text-[#6b7280] mr-2">17</span> Birth&ndash;Death Semantics
         </h2>
         <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
-          Origin Controlled Computing (OCC) enforces what we term <em>birth&ndash;death
+          BitGraph (BitGraph) enforces what we term <em>birth&ndash;death
           semantics</em> for digital state. Under this model, every authoritative state transition
           has exactly one verifiable moment of creation (birth), and every transfer or succession
           requires cryptographic evidence that the prior authority has been irreversibly consumed
@@ -882,7 +882,7 @@ export default function Sections10to19() {
         <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           Traditional provenance systems operate in a <em>detect-after</em> model: artifacts are
           produced freely, and conflicts such as replay, duplication, or double-spend are identified
-          retrospectively through logs, ledgers, or consensus. OCC instead constrains the execution
+          retrospectively through logs, ledgers, or consensus. BitGraph instead constrains the execution
           path such that invalid successor states are structurally unreachable within the enforcing
           boundary.
         </p>
@@ -920,7 +920,7 @@ export default function Sections10to19() {
             {/* Arrow */}
             <div className="flex flex-col items-center justify-center pt-16">
               <div className="text-[28px] font-light text-[#6b7280]">&rarr;</div>
-              <div className="text-[11px] text-[#6b7280] text-center mt-0.5">OCC<br />enforces</div>
+              <div className="text-[11px] text-[#6b7280] text-center mt-0.5">BitGraph<br />enforces</div>
             </div>
 
             {/* Birth-Death Semantics */}
@@ -980,7 +980,7 @@ export default function Sections10to19() {
             <div className="text-[11px] text-[#6b7280]">fork now, detect later</div>
 
             <div className="text-[22px] font-light text-[#6b7280] my-2">&darr;</div>
-            <div className="text-[11px] text-[#6b7280] mb-3">OCC enforces</div>
+            <div className="text-[11px] text-[#6b7280] mb-3">BitGraph enforces</div>
 
             <div className="font-bold text-[13px] mb-2 text-text">Birth&ndash;Death Semantics</div>
             <div className="bg-[#f9fafb] border border-[#e5e7eb] p-2 px-4 text-[13px] w-full text-center text-[#1f2937]">
@@ -1022,7 +1022,7 @@ export default function Sections10to19() {
           </h3>
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             Within a verifier-accepted measured boundary (e.g., a Trusted Execution Environment or
-            equivalent protected constructor), a valid OCC commit requires the atomic execution of
+            equivalent protected constructor), a valid BitGraph commit requires the atomic execution of
             the following steps:
           </p>
           <ul className="space-y-2 mb-4 text-sm text-[#1f2937]">
@@ -1044,7 +1044,7 @@ export default function Sections10to19() {
             <span className="text-[#6b7280] mr-2">17.2</span> Single-Successor Property
           </h3>
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
-            Given correct enforcement of measurement and monotonicity within the boundary, OCC
+            Given correct enforcement of measurement and monotonicity within the boundary, BitGraph
             guarantees:
           </p>
           <div className="my-5 border-l-[3px] border-text-tertiary bg-[#f9fafb] p-5">
@@ -1078,11 +1078,11 @@ export default function Sections10to19() {
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             Birth&ndash;death semantics targets the core primitive underlying double-spend failures:
             the ability to produce multiple valid successor states from a single authority. By making
-            such forks structurally unreachable at commit time within the stated trust envelope, OCC
+            such forks structurally unreachable at commit time within the stated trust envelope, BitGraph
             reduces reliance on global ordering for single-holder and provenance-sensitive workflows.
           </p>
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
-            OCC does not claim global uniqueness across mutually distrustful, permissionless
+            BitGraph does not claim global uniqueness across mutually distrustful, permissionless
             environments without additional coordination. Instead, it provides strong local authority
             guarantees that higher-level systems may compose with federation or consensus where global
             agreement is required.
@@ -1102,7 +1102,7 @@ export default function Sections10to19() {
             <li>&#8226; A protected execution boundary is required for enforcement</li>
             <li>&#8226; Monotonic state must be resistant to rollback within that boundary</li>
             <li>&#8226; Verifiers must enforce measurement policy and counter monotonicity</li>
-            <li>&#8226; OCC does not prevent byte-level copying of artifacts outside the authority model</li>
+            <li>&#8226; BitGraph does not prevent byte-level copying of artifacts outside the authority model</li>
           </ul>
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             Within this envelope, birth&ndash;death semantics converts post-facto detection problems
@@ -1119,7 +1119,7 @@ export default function Sections10to19() {
           <span className="text-[#6b7280] mr-2">18</span> Single-Transfer Value Without Consensus
         </h2>
         <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
-          Origin Controlled Computing (OCC) enables single-transfer digital value by binding
+          BitGraph (BitGraph) enables single-transfer digital value by binding
           authority to a consumptive, cryptographically enforced state transition rather than to a
           ledger entry. This is a concrete instantiation of the birth&ndash;death semantics
           described in{" "}
@@ -1147,7 +1147,7 @@ export default function Sections10to19() {
         </h2>
         <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
           The Trusted Origin Token Architecture demonstrates that origin control can be enforced by
-          consuming authorization units at finalization. Origin Controlled Computing generalizes
+          consuming authorization units at finalization. BitGraph generalizes
           this result by showing that equivalent enforcement is achieved using boundary-fresh
           cryptographic computation and protected commit paths, without requiring tracked tokens.
         </p>
@@ -1158,14 +1158,14 @@ export default function Sections10to19() {
           claims, metadata, or post-hoc annotation.
         </p>
         <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
-          The formal model presented here shows that OCC defines a new enforcement primitive: a{" "}
+          The formal model presented here shows that BitGraph defines a new enforcement primitive: a{" "}
           <em>genesis access control mechanism</em> that constrains which authenticated objects are
           permitted to exist, rather than mediating operations on objects that already exist. This is
           strictly stronger than classical reference monitors and formally distinct from attested
           execution, information flow control, and capability-based security.
         </p>
         <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
-          By securing creation rather than history, Origin Controlled Computing establishes an
+          By securing creation rather than history, BitGraph establishes an
           architectural primitive for trustworthy digital systems. It does not replace provenance,
           verification, or access control. It provides the structural foundation that makes those
           mechanisms enforceable at the boundaries where legitimacy is conferred.

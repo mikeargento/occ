@@ -7,14 +7,14 @@ import { getPublicKeyAsync, signAsync } from "@noble/ed25519";
 import { Constructor } from "../constructor.js";
 import { verify, resetEpochLinkState } from "../verifier.js";
 import type { HostCapabilities } from "../host.js";
-import type { OCCProof } from "../types.js";
+import type { BitGraphProof } from "../types.js";
 
 // ---------------------------------------------------------------------------
 // Test-fixture helpers
 // ---------------------------------------------------------------------------
 
 interface Fixture {
-  proof: OCCProof;
+  proof: BitGraphProof;
   bytes: Uint8Array;
   publicKeyB64: string;
   measurement: string;
@@ -65,15 +65,15 @@ async function makeFixture(opts?: {
       : { host },
   );
 
-  const bytes = new TextEncoder().encode("occ-test-payload-42");
+  const bytes = new TextEncoder().encode("bitgraph-test-payload-42");
   const proof = await ctor.commit({ bytes });
 
   return { proof, bytes, publicKeyB64, measurement, privateKey };
 }
 
 /** Deep-clone a proof so mutations don't affect the original. */
-function clone(proof: OCCProof): OCCProof {
-  return JSON.parse(JSON.stringify(proof)) as OCCProof;
+function clone(proof: BitGraphProof): BitGraphProof {
+  return JSON.parse(JSON.stringify(proof)) as BitGraphProof;
 }
 
 // ---------------------------------------------------------------------------
@@ -204,7 +204,7 @@ describe("verify — signature tampering", () => {
 describe("verify — structural validation", () => {
   test("fails for non-object proof", async () => {
     const result = await verify({
-      proof: "not-a-proof" as unknown as OCCProof,
+      proof: "not-a-proof" as unknown as BitGraphProof,
       bytes: fx.bytes,
     });
     assert.equal(result.valid, false);
@@ -213,7 +213,7 @@ describe("verify — structural validation", () => {
 
   test("fails for null proof", async () => {
     const result = await verify({
-      proof: null as unknown as OCCProof,
+      proof: null as unknown as BitGraphProof,
       bytes: fx.bytes,
     });
     assert.equal(result.valid, false);
@@ -221,7 +221,7 @@ describe("verify — structural validation", () => {
 
   test("fails for wrong version", async () => {
     const tampered = clone(fx.proof);
-    (tampered as unknown as Record<string, unknown>)["version"] = "occ/2";
+    (tampered as unknown as Record<string, unknown>)["version"] = "bitgraph/2";
     const result = await verify({ proof: tampered, bytes: fx.bytes });
     assert.equal(result.valid, false);
     assert.match(result.reason ?? "", /version/);

@@ -14,7 +14,7 @@ export default function Sections4Through6() {
         </h2>
 
         <p className="text-[#1f2937] mb-4">
-          If Origin Controlled Computing is correctly implemented, the following
+          If BitGraph is correctly implemented, the following
           invariants hold:
         </p>
 
@@ -72,7 +72,7 @@ export default function Sections4Through6() {
           The significance of Invariant 4.5 deserves emphasis. In conventional
           systems, authenticity is a <em>label</em>: a property that can be
           attached to, claimed about, or inferred from an artifact after it
-          exists. Under OCC, authenticity is a <em>reachability property</em>: a
+          exists. Under BitGraph, authenticity is a <em>reachability property</em>: a
           consequence of the state transitions that produced the artifact. An
           artifact does not become authenticated by having the right metadata. It
           is authenticated because it could only have come into existence through
@@ -96,7 +96,7 @@ export default function Sections4Through6() {
           <a href="#sec-concrete-example" className="text-[#111827] underline">
             Section 2.1
           </a>
-          : under OCC, the system would not merely attest that trusted code ran.
+          : under BitGraph, the system would not merely attest that trusted code ran.
           It would enforce that authenticated image output is{" "}
           <em>structurally unreachable</em> except through a commit path that
           includes sensor capture within the atomic execution boundary. The
@@ -114,7 +114,7 @@ export default function Sections4Through6() {
           <a href="#sec-provenance-example" className="text-[#111827] underline">
             Section 2.2
           </a>
-          : under OCC with reference-based verification (described in{" "}
+          : under BitGraph with reference-based verification (described in{" "}
           <a href="#sec-verification-independence" className="text-[#111827] underline">
             Section 9.5
           </a>
@@ -242,12 +242,12 @@ export default function Sections4Through6() {
       </section>
 
       {/* ================================================================ */}
-      {/* 6. OCC AND ATOMIC CAUSALITY                                      */}
+      {/* 6. BitGraph AND ATOMIC CAUSALITY                                      */}
       {/* ================================================================ */}
-      <section id="sec-occ">
+      <section id="sec-bitgraph">
         <h2 className="text-xl font-semibold mt-12 mb-4">
           <span className="text-[#6b7280] mr-2">6</span>
-          Origin Controlled Computing and Atomic Causality
+          BitGraph and Atomic Causality
         </h2>
 
         <p className="text-[#1f2937] mb-4">
@@ -263,7 +263,7 @@ export default function Sections4Through6() {
         </p>
 
         <p className="text-[#1f2937] mb-4">
-          Origin Controlled Computing generalizes this principle. Instead of
+          BitGraph generalizes this principle. Instead of
           consuming a pre-generated token, the enforcement component generates a{" "}
           <em>boundary-fresh cryptographic value</em> <M c="N" /> during the
           atomic finalization event. Cryptographic unpredictability and
@@ -346,10 +346,10 @@ export default function Sections4Through6() {
               </div>
             </div>
 
-            {/* OCC side */}
+            {/* BitGraph side */}
             <div className="text-center w-[200px]">
               <div className="font-semibold text-[13px] mb-3 text-text">
-                OCC: Boundary-Fresh Generation
+                BitGraph: Boundary-Fresh Generation
               </div>
               <div className="bg-[#f9fafb] border border-[#e5e7eb] rounded-none px-4 py-2 text-[13px] text-[#1f2937] mb-2">
                 Freshness Source{" "}
@@ -422,7 +422,7 @@ export default function Sections4Through6() {
             </div>
 
             <div className="font-semibold text-[13px] mb-2 text-text">
-              OCC: Boundary-Fresh Generation
+              BitGraph: Boundary-Fresh Generation
             </div>
             <div className="w-full border border-[#e5e7eb] rounded-none px-4 py-2 text-[13px] text-[#1f2937] text-center">
               Freshness Source{" "}
@@ -454,7 +454,7 @@ export default function Sections4Through6() {
           <p className="text-xs text-[#6b7280] mt-4 leading-relaxed">
             <strong className="text-[#1f2937]">Figure 1.</strong>{" "}
             Token&ndash;Nonce duality. TOTA (left) consumes a pre-existing token
-            from a finite pool. OCC (right) generates a boundary-fresh value
+            from a finite pool. BitGraph (right) generates a boundary-fresh value
             from a cryptographic source. Both enforce the same invariant: each
             authenticated artifact corresponds to exactly one irreversible
             authorization event (injective genesis). Collision resistance makes
@@ -465,10 +465,10 @@ export default function Sections4Through6() {
 
         <p className="text-[#1f2937] mb-4">
           The equivalence shown in Figure 1 is structural, not operational. The
-          reader should resist the interpretation that OCC merely replaces
+          reader should resist the interpretation that BitGraph merely replaces
           physical tokens with virtual ones. The insight is the reverse: TOTA is
-          a special case of OCC in which the authorization event happens to be
-          reified as a consumable object. OCC reveals that the underlying
+          a special case of BitGraph in which the authorization event happens to be
+          reified as a consumable object. BitGraph reveals that the underlying
           enforcement primitive is not the token but the structural
           constraint&mdash;that authenticated state is unreachable without an
           irreversible authorization event at the commit boundary. Tokens enforce
@@ -480,7 +480,7 @@ export default function Sections4Through6() {
         <p className="text-[#1f2937] mb-4">
           Similarly, the boundary-fresh value <M c="N" /> should not be
           understood as merely a &ldquo;nonce for replay protection.&rdquo; In
-          conventional protocols, nonces prevent message replay. In OCC, the
+          conventional protocols, nonces prevent message replay. In BitGraph, the
           boundary-fresh value is <em>the authorization event itself</em>&mdash;its
           generation inside the boundary constitutes the irreversible act that
           gates the creation of authenticated state. Producing valid verification
@@ -527,10 +527,10 @@ export default function Sections4Through6() {
           <div className="my-8 border border-[#e5e7eb] bg-[#f9fafb] p-6">
             {/* Desktop layout */}
             <div className="hidden sm:flex items-start justify-center gap-12">
-              {/* OCC side */}
+              {/* BitGraph side */}
               <div className="text-center min-w-[180px]">
                 <div className="font-semibold text-[13px] mb-3 text-text">
-                  OCC: Atomic Causality
+                  BitGraph: Atomic Causality
                 </div>
                 <div className="border-2 border-[#d0d5dd] bg-[#f9fafb] rounded-none p-4">
                   <div className="border border-text-tertiary rounded-none px-5 py-2 text-[13px] text-[#1f2937] mb-2">
@@ -553,10 +553,10 @@ export default function Sections4Through6() {
                 </div>
               </div>
 
-              {/* Non-OCC side */}
+              {/* Non-BitGraph side */}
               <div className="text-center min-w-[180px]">
                 <div className="font-semibold text-[13px] mb-3 text-text">
-                  Non-OCC: Separated Steps
+                  Non-BitGraph: Separated Steps
                 </div>
                 <div className="p-4">
                   <div className="border border-[#e5e7eb] rounded-none px-5 py-2 text-[13px] text-[#1f2937]">
@@ -591,7 +591,7 @@ export default function Sections4Through6() {
             <div className="sm:hidden flex flex-col gap-5">
               <div className="text-center">
                 <div className="font-semibold text-[13px] mb-3 text-text">
-                  OCC: Atomic Causality
+                  BitGraph: Atomic Causality
                 </div>
                 <div className="border-2 border-[#d0d5dd] bg-[#f9fafb] rounded-none p-4">
                   <div className="border border-text-tertiary rounded-none px-5 py-2 text-[13px] text-[#1f2937] mb-2">
@@ -613,7 +613,7 @@ export default function Sections4Through6() {
 
               <div className="border-t border-[#e5e7eb] pt-5 text-center">
                 <div className="font-semibold text-[13px] mb-3 text-text">
-                  Non-OCC: Separated Steps
+                  Non-BitGraph: Separated Steps
                 </div>
                 <div className="px-3 py-2">
                   <div className="border border-dashed border-[#e5e7eb] rounded-none px-5 py-2 text-[13px] text-[#6b7280] mb-2">
@@ -640,10 +640,10 @@ export default function Sections4Through6() {
 
             <p className="text-xs text-[#6b7280] mt-4 leading-relaxed">
               <strong className="text-[#1f2937]">Figure 2.</strong> Atomic
-              Causality versus separated operations. In OCC (left),
+              Causality versus separated operations. In BitGraph (left),
               authorization, binding, and commit occur as a single indivisible
               event inside the boundary with no externally observable
-              intermediate states. In non-OCC systems (right), these are
+              intermediate states. In non-BitGraph systems (right), these are
               separate operations with observable gaps exploitable by
               adversaries.
             </p>
@@ -682,7 +682,7 @@ export default function Sections4Through6() {
           </p>
 
           <p className="text-[#1f2937] mb-4">
-            Origin Controlled Computing closes this gap. Authenticated durable
+            BitGraph closes this gap. Authenticated durable
             state is reachable <em>only</em> through protected commit paths that
             enforce atomic binding, authorization, and durable commit at the
             moment of finalization. Valid verification material implies not

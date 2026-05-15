@@ -2,7 +2,7 @@
 // Copyright 2024-2026 Mike Argento
 
 /**
- * OCC Nitro Enclave — Origin Controlled Computing
+ * BitGraph Nitro Enclave — BitGraph
  *
  * This enclave controls how objects come into existence and proves
  * their causal ordering. It does NOT prove time. It proves origin
@@ -62,9 +62,9 @@ import { createServer, type Socket } from "node:net";
 import { createVerify, createHash } from "node:crypto";
 import { sha256 } from "@noble/hashes/sha256";
 import { getPublicKeyAsync, signAsync, verifyAsync, utils } from "@noble/ed25519";
-import { canonicalize, canonicalizeToString } from "occproof";
-import { Constructor } from "occproof";
-import type { HostCapabilities, OCCProof, SignedBody, SlotAllocation, ActorIdentity, AgencyEnvelope, AuthorizationPayload, WebAuthnAuthorization, PolicyBinding } from "occproof";
+import { canonicalize, canonicalizeToString } from "bitgraph";
+import { Constructor } from "bitgraph";
+import type { HostCapabilities, BitGraphProof, SignedBody, SlotAllocation, ActorIdentity, AgencyEnvelope, AuthorizationPayload, WebAuthnAuthorization, PolicyBinding } from "bitgraph";
 import type { EnclaveRequest, EnclaveResponse } from "../parent/vsock-client.js";
 
 // ---------------------------------------------------------------------------
@@ -82,7 +82,7 @@ console.log(`[enclave] publicKey: ${publicKeyB64}`);
 // Enclave HostCapabilities (NitroHost for real enclaves)
 // ---------------------------------------------------------------------------
 
-import { NitroHost, DefaultNsmClient } from "@occ/adapter-nitro";
+import { NitroHost, DefaultNsmClient } from "@bitgraph/adapter-nitro";
 
 const nsmClient = new DefaultNsmClient();
 const nitroHost = new NitroHost({
@@ -131,7 +131,7 @@ const constructor = await Constructor.initialize({ host: nitroHost, epochId });
 interface ChainState {
   counter: bigint;
   lastProofHashB64: string | undefined;
-  pendingEpochLink: OCCProof["commit"]["epochLink"] | undefined;
+  pendingEpochLink: BitGraphProof["commit"]["epochLink"] | undefined;
 }
 
 const chains = new Map<string, ChainState>();
@@ -207,7 +207,7 @@ async function handleChallenge(): Promise<{ challenge: string }> {
 }
 
 // ---------------------------------------------------------------------------
-// Causal slot state — pending slots for OCC atomic causality
+// Causal slot state — pending slots for BitGraph atomic causality
 // Each slot is a pre-allocated nonce signed by the enclave BEFORE any
 // artifact hash is known. Consuming a slot is required to produce a proof.
 // ---------------------------------------------------------------------------
@@ -240,7 +240,7 @@ function cleanExpiredSlots(): void {
  * single-use resource. A subsequent commit must reference this slotId to
  * produce a proof.
  *
- * This is the OCC nonce-first causal ordering primitive:
+ * This is the BitGraph nonce-first causal ordering primitive:
  *   allocateSlot() → slot exists → commit(slotId, digest) → slot consumed
  *
  * The signed slot record is embedded in the resulting proof so that any
@@ -264,7 +264,7 @@ async function handleAllocateSlot(chainId?: string): Promise<{ slotId: string; s
   // 4. Build slot body — deliberately NO artifact hash, NO clock
   const resolvedChainId = chainId ?? DEFAULT_CHAIN;
   const slotBody = {
-    version: "occ/slot/1" as const,
+    version: "bitgraph/slot/1" as const,
     nonceB64,
     counter: String(chain.counter),
     epochId,
@@ -322,7 +322,7 @@ function verifyAgencyEnvelope(
   }
 
   // 2. Validate purpose
-  if (authorization.purpose !== "occ/commit-authorize/v1") {
+  if (authorization.purpose !== "bitgraph/commit-authorize/v1") {
     throw new Error(`Agency: invalid purpose "${authorization.purpose}"`);
   }
 
@@ -450,13 +450,13 @@ function verifyAgencyEnvelope(
 }
 
 // ---------------------------------------------------------------------------
-// Commit handler — produces OCC proofs for pre-computed digests
+// Commit handler — produces BitGraph proofs for pre-computed digests
 // ---------------------------------------------------------------------------
 
 /**
  * Commit a single artifact hash by consuming a pre-allocated causal slot.
  *
- * OCC causal invariant: one slot → one artifact → one proof.
+ * BitGraph causal invariant: one slot → one artifact → one proof.
  * The slot MUST exist before the artifact hash can be committed.
  * The slot's nonce becomes the proof's nonce (binding).
  * The slot's counter must be less than the commit's counter (ordering).
@@ -471,8 +471,8 @@ async function handleCommit(req: {
   attribution?: { name?: string; title?: string; message?: string };
   policy?: PolicyBinding;
   principal?: { id: string; provider?: string };
-}): Promise<OCCProof> {
-  // ── Slot consumption — OCC causal gate ──
+}): Promise<BitGraphProof> {
+  // ── Slot consumption — BitGraph causal gate ──
   // The slot MUST exist before any artifact can be committed.
   // This is the enforcement point for nonce-first atomic causality.
   cleanExpiredSlots();
@@ -536,7 +536,7 @@ async function handleCommit(req: {
     }
   }
 
-  // ── OCC causal commit flow ──
+  // ── BitGraph causal commit flow ──
   // The slot has been consumed. This commit is causally bound to
   // the pre-existing slot allocation.
 
@@ -561,7 +561,7 @@ async function handleCommit(req: {
   const slotHashB64 = Buffer.from(sha256(canonicalize(slotBody))).toString("base64");
 
   // Step 6: Build signed body
-  const commitFields: OCCProof["commit"] = {
+  const commitFields: BitGraphProof["commit"] = {
     nonceB64: slotRecord.nonceB64,  // bound to the pre-allocated slot
     counter: counterStr,
     slotCounter: slotRecord.counter, // proves slot preceded commit
@@ -588,7 +588,7 @@ async function handleCommit(req: {
   }
 
   const signedBody: SignedBody = {
-    version: "occ/1",
+    version: "bitgraph/1",
     artifact: { hashAlg: "sha256", digestB64 },
     commit: commitFields,
     publicKeyB64,
@@ -624,7 +624,7 @@ async function handleCommit(req: {
     (signedBody as unknown as Record<string, unknown>).principal = req.principal;
   }
 
-  // ── OCC signing flow (attestation-correct) ──
+  // ── BitGraph signing flow (attestation-correct) ──
   // 1. Add attestation format to signed body BEFORE hashing.
   //    AWS Nitro always uses "aws-nitro" — this is a known constant.
   // 2. Canonicalize the FINAL body (including attestationFormat).
@@ -643,8 +643,8 @@ async function handleCommit(req: {
   const signatureBytes = await signAsync(finalCanonicalBytes, privateKey);
 
   // Step 10: Assemble proof
-  const proof: OCCProof = {
-    version: "occ/1",
+  const proof: BitGraphProof = {
+    version: "bitgraph/1",
     artifact: signedBody.artifact,
     commit: signedBody.commit,
     signer: {
@@ -659,7 +659,7 @@ async function handleCommit(req: {
         reportB64: Buffer.from(attestation.report).toString("base64"),
       },
     },
-    // ── OCC causal evidence ──
+    // ── BitGraph causal evidence ──
     // Embed the full signed slot allocation record. The commit signature
     // binds to this via slotHashB64 (preventing slot swapping), and the
     // slot's own signature proves the enclave created it independently.
@@ -702,7 +702,7 @@ async function handleCommit(req: {
 // Reused for both global and per-chain last proofs during init.
 // ---------------------------------------------------------------------------
 
-async function verifyAndLinkChain(chainId: string, lastProof: OCCProof): Promise<void> {
+async function verifyAndLinkChain(chainId: string, lastProof: BitGraphProof): Promise<void> {
   // 1. Validate structure
   if (!lastProof.signer?.publicKeyB64 || !lastProof.signer?.signatureB64) {
     throw new Error(`FATAL: chain "${chainId}" lastProof missing signer fields — enclave HALTED`);
@@ -710,7 +710,7 @@ async function verifyAndLinkChain(chainId: string, lastProof: OCCProof): Promise
   if (!lastProof.commit?.epochId) {
     throw new Error(`FATAL: chain "${chainId}" lastProof missing commit.epochId — enclave HALTED`);
   }
-  if (!lastProof.version || lastProof.version !== "occ/1") {
+  if (!lastProof.version || lastProof.version !== "bitgraph/1") {
     throw new Error(`FATAL: chain "${chainId}" lastProof unsupported version — enclave HALTED`);
   }
   if (!lastProof.artifact?.digestB64 || !lastProof.artifact?.hashAlg) {
@@ -796,11 +796,11 @@ async function handleRequest(req: Record<string, unknown>): Promise<unknown> {
       // Counter does NOT carry over. Each epoch starts fresh.
       // The previous counter is referenced only inside epochLink.
       //
-      // Disk (.occ/last-proof.json) is only a transport — not a source of truth.
+      // Disk (.bitgraph/last-proof.json) is only a transport — not a source of truth.
       // The enclave fully verifies the proof cryptographically before using it.
 
-      const lastProof = (req as { lastProof?: OCCProof }).lastProof;
-      const lastProofsPerChain = (req as { lastProofsPerChain?: Record<string, OCCProof> }).lastProofsPerChain;
+      const lastProof = (req as { lastProof?: BitGraphProof }).lastProof;
+      const lastProofsPerChain = (req as { lastProofsPerChain?: Record<string, BitGraphProof> }).lastProofsPerChain;
       const allowGenesis = (req as { allowGenesis?: boolean }).allowGenesis === true;
 
       // ── PER-CHAIN EPOCH LINEAGE ──
@@ -867,7 +867,7 @@ async function handleRequest(req: Record<string, unknown>): Promise<unknown> {
       };
     }
     case "commitDigest": {
-      // One slot → one artifact → one proof (OCC causal unit)
+      // One slot → one artifact → one proof (BitGraph causal unit)
       const slotId = (req as { slotId: string }).slotId;
       if (!slotId) throw new Error("commitDigest requires slotId — call allocateSlot first");
       const digestB64 = (req as { digestB64: string }).digestB64;
@@ -879,7 +879,7 @@ async function handleRequest(req: Record<string, unknown>): Promise<unknown> {
       return { proof };
     }
     case "commit": {
-      // One slot → one artifact → one proof (OCC causal unit)
+      // One slot → one artifact → one proof (BitGraph causal unit)
       const slotId = (req as { slotId: string }).slotId;
       if (!slotId) throw new Error("commit requires slotId — call allocateSlot first");
 
@@ -932,11 +932,11 @@ async function handleRequest(req: Record<string, unknown>): Promise<unknown> {
       const digest = sha256(bwBuffer);
       const digestB64 = Buffer.from(digest).toString("base64");
 
-      // Generate OCC proof for this digest
+      // Generate BitGraph proof for this digest
       const proof = await handleCommit({
         slotId,
         digestB64,
-        metadata: { source: "occ-bw-demo", operation: "grayscale" },
+        metadata: { source: "bitgraph-bw-demo", operation: "grayscale" },
       });
 
       return {

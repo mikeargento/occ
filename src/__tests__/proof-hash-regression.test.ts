@@ -2,7 +2,7 @@
  * Regression test: all code paths must produce identical proofHash.
  *
  * Simulates the hash computation as done by:
- *   1. computeProofHash() from occproof (canonical)
+ *   1. computeProofHash() from bitgraph (canonical)
  *   2. Inline signed-body + canonicalize + sha256 (how ledger s3.ts USED to do it)
  *   3. Any other path
  *
@@ -15,7 +15,7 @@ import { computeProofHash, canonicalize } from "../index.js";
 
 // Realistic proof — mirrors what the TEE actually produces
 const REALISTIC_PROOF = {
-  version: "occ/1" as const,
+  version: "bitgraph/1" as const,
   artifact: {
     hashAlg: "sha256" as const,
     digestB64: "NkYJQ1Gi0hE0SIhv6c46MlqJdurmKHtbScOprDfoL6A=",
@@ -27,7 +27,7 @@ const REALISTIC_PROOF = {
     slotHashB64: "8IyrBOGB64ppP/RETEZTYyYesF5bfcwJ5dI9+u7r2yY=",
     epochId: "7jU4N9703cm6A2t8YNoGsyOvbdePDpoaD8AKCFs7wko=",
     prevB64: "KsJfA3MinpSwF+t4GuxU9vLmmaqAK8FhzhaepEnJBDc=",
-    chainId: "occ:main",
+    chainId: "bitgraph:main",
   },
   signer: {
     publicKeyB64: "9XjqKDS+e8NhhNoBqbisCKHpaR/HK6hH0x5AKdwc56w=",
@@ -42,12 +42,12 @@ const REALISTIC_PROOF = {
     },
   },
   slotAllocation: {
-    version: "occ/slot/1" as const,
+    version: "bitgraph/slot/1" as const,
     nonceB64: "z1272XEvkMtibuBP0qG3oY37cewo6cJ/o1AuigOSVOk=",
     counter: "1369",
     epochId: "7jU4N9703cm6A2t8YNoGsyOvbdePDpoaD8AKCFs7wko=",
     publicKeyB64: "9XjqKDS+e8NhhNoBqbisCKHpaR/HK6hH0x5AKdwc56w=",
-    chainId: "occ:main",
+    chainId: "bitgraph:main",
     signatureB64: "yO34pHfmkjGY6HgDxcPIaFd/lnt/UFZuHQa10LmUvTHgsQP3S3bIEJX/xcXPRENKZ9duVe7c+81rAWdmhiRMBg==",
   },
   attribution: {

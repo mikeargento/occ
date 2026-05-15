@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState, useRef } from "react";
-import { formatFileSize } from "@/lib/occ";
+import { formatFileSize } from "@/lib/bitgraph";
 
 interface FileDropProps {
   onFile?: (file: File) => void;

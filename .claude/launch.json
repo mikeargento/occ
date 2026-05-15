@@ -2,20 +2,20 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "occ-docs",
+      "name": "bitgraph-docs",
       "runtimeExecutable": "/usr/local/bin/node",
       "runtimeArgs": ["/Users/argento/Desktop/Claude Code/occ/website/node_modules/.bin/next", "dev", "--port", "3000"],
       "port": 3000,
       "cwd": "/Users/argento/Desktop/Claude Code/occ/website"
     },
     {
-      "name": "occ-website",
+      "name": "bitgraph-website",
       "runtimeExecutable": "/bin/sh",
       "runtimeArgs": ["-c", "cd '/Users/argento/Desktop/Claude Code/occ/website' && /usr/local/bin/node /usr/local/lib/node_modules/npm/bin/npm-cli.js run dev -- --port 3001"],
       "port": 3001
     },
     {
-      "name": "occ-agent",
+      "name": "bitgraph-agent",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "port": 3002,
@@ -28,7 +28,7 @@
       "port": 3100,
       "cwd": "packages/paperclip/server",
       "env": {
-        "OCC_MODE": "tee",
+        "BITGRAPH_MODE": "tee",
         "PAPERCLIP_MIGRATION_AUTO_APPLY": "true"
       }
     },

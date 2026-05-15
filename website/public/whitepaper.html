@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OCC: Proof as a Reachability Property</title>
+<title>BitGraph: Proof as a Reachability Property</title>
 <script>window.MathJax={tex:{inlineMath:[['$','$'],['\\(','\\)']],displayMath:[['$$','$$'],['\\[','\\]']]},options:{skipHtmlTags:['script','noscript','style','textarea','pre']},startup:{ready(){MathJax.startup.defaultReady();MathJax.startup.promise.then(()=>{document.querySelectorAll('mjx-container:not([display="true"])').forEach(el=>{if(el.offsetWidth>el.parentElement.clientWidth+2){const w=document.createElement('div');w.style.cssText='overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%';el.parentNode.insertBefore(w,el);w.appendChild(el);}});});}}};</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -208,7 +208,7 @@ html.dark .hamburger{color:#e0e0e0}
 <div class="sidebar-nav-links">
 <a href="/docs">Docs</a>
 <a href="/explorer">Explorer</a>
-<a href="https://github.com/mikeargento/occ" target="_blank">GitHub</a>
+<a href="https://github.com/mikeargento/bitgraph" target="_blank">GitHub</a>
 </div>
 <ul class="toc-list">
 <li><a href="#abstract">Abstract</a></li>
@@ -226,7 +226,7 @@ html.dark .hamburger{color:#e0e0e0}
 <li><a href="#sec-functional-properties"><span class="toc-section-number">5.1</span> Functional Properties</a></li>
 <li><a href="#sec-limits-token"><span class="toc-section-number">5.2</span> Limits of Token-Based Enforcement</a></li>
 </ul></li>
-<li><a href="#sec-occ"><span class="toc-section-number">6</span> Origin Controlled Computing and Atomic Causality</a>
+<li><a href="#sec-bitgraph"><span class="toc-section-number">6</span> BitGraph and Atomic Causality</a>
 <ul class="toc-list">
 <li><a href="#sec-atomic-causality"><span class="toc-section-number">6.1</span> Atomic Causality</a></li>
 <li><a href="#sec-not-attestation"><span class="toc-section-number">6.2</span> Why This Is Not Attested Execution</a></li>
@@ -301,11 +301,11 @@ html.dark .hamburger{color:#e0e0e0}
 </div>
 <div class="content-wrap">
 <nav>
-<a href="/" class="nav-brand"><span style="position:relative;top:1px">OCC</span></a>
+<a href="/" class="nav-brand"><span style="position:relative;top:1px">BitGraph</span></a>
 <div class="nav-links">
 <a href="/docs">Docs</a>
 <a href="/explorer">Explorer</a>
-<a href="https://github.com/mikeargento/occ" target="_blank">GitHub</a>
+<a href="https://github.com/mikeargento/bitgraph" target="_blank">GitHub</a>
 <button class="theme-toggle" onclick="document.documentElement.classList.toggle('dark');localStorage.setItem('wp-theme',document.documentElement.classList.contains('dark')?'dark':'light')" title="Toggle theme">☀</button>
 </div>
 <button class="hamburger" aria-label="Menu" onclick="document.querySelector('.nav-links').classList.toggle('open')">
@@ -317,14 +317,14 @@ html.dark .hamburger{color:#e0e0e0}
 <div class="nav-wrap"><hr class="nav-rule"></div>
 <div class="sidebar-overlay" onclick="document.querySelector('.sidebar').classList.remove('open');this.classList.remove('active')"></div>
 <main class="main">
-<h1 class="doc-h1">Origin Controlled Computing: Proof as a Reachability Property</h1>
+<h1 class="doc-h1">BitGraph: Proof as a Reachability Property</h1>
 
 <div id="abstract" style="background:#fafafa;border:1px solid #ccc;border-radius:0;padding:20px 28px;margin-bottom:32px">
 <div style="font-family:'Inter',-apple-system,sans-serif;font-weight:700;font-size:14px;text-transform:uppercase;letter-spacing:0.5px;color:#888;margin-bottom:12px">Abstract</div>
 <p>Modern computing systems permit durable digital state to be created freely and attempt to establish trust only after that state already exists. This architecture introduces fundamental weaknesses in provenance, AI outputs, sensor data, logs, and media, because authenticity is optional and structurally bypassable. All existing approaches—signatures, metadata, watermarking, registries, and provenance standards—operate after content has been instantiated and therefore cannot constrain the creation path itself.</p>
-<p>This paper introduces a different enforcement model. <strong>Origin Controlled Computing</strong> relocates trust to the commit path. Authenticated durable state is reachable only through enforced finalization via a protected commit interface. An artifact is authenticated if and only if cryptographic binding and authorization occur inside an atomic execution boundary at the moment durable state is created.</p>
-<p>We first present the <strong>Trusted Origin Token Architecture</strong>, in which authenticated creation requires consumption of a pre-existing single-use authorization unit at finalization. We then generalize this into Origin Controlled Computing, in which equivalent origin control is achieved without pre-existing tokens by generating boundary-fresh cryptographic output inside the atomic execution boundary. The enforcement principle that links authorization, binding, and durable commit into a single indivisible event is called <strong>Atomic Causality</strong>.</p>
-<p>We provide a formal model based on labeled transition systems and closure algebras, define a security game capturing the adversarial model, and systematically distinguish this architecture from existing approaches including attested execution, post-hoc provenance, and content credential systems. We show that Origin Controlled Computing defines a new enforcement primitive: authentication as a <em>reachability property</em> of system structure, not a property attached to artifacts after creation.</p>
+<p>This paper introduces a different enforcement model. <strong>BitGraph</strong> relocates trust to the commit path. Authenticated durable state is reachable only through enforced finalization via a protected commit interface. An artifact is authenticated if and only if cryptographic binding and authorization occur inside an atomic execution boundary at the moment durable state is created.</p>
+<p>We first present the <strong>Trusted Origin Token Architecture</strong>, in which authenticated creation requires consumption of a pre-existing single-use authorization unit at finalization. We then generalize this into BitGraph, in which equivalent origin control is achieved without pre-existing tokens by generating boundary-fresh cryptographic output inside the atomic execution boundary. The enforcement principle that links authorization, binding, and durable commit into a single indivisible event is called <strong>Atomic Causality</strong>.</p>
+<p>We provide a formal model based on labeled transition systems and closure algebras, define a security game capturing the adversarial model, and systematically distinguish this architecture from existing approaches including attested execution, post-hoc provenance, and content credential systems. We show that BitGraph defines a new enforcement primitive: authentication as a <em>reachability property</em> of system structure, not a property attached to artifacts after creation.</p>
 </div>
 
 <!-- ================================================================ -->
@@ -343,7 +343,7 @@ html.dark .hamburger{color:#e0e0e0}
 
 <p>A corollary of this principle is that enforcement and verification are architecturally distinct: enforcement determines whether authenticated state exists; verification determines whether that status can be demonstrated to a third party. This separation is developed formally in <a href="#sec-enforcement-verification">Section 9.4</a>.</p>
 
-<p>Origin Controlled Computing is not a replacement for attestation, provenance, or access control. It is a <em>lower-layer enforcement primitive</em> that existing systems can adopt to close the structural gap between trusted code execution and controlled state creation. Systems that already implement TEEs, content credentials, or hardware roots of trust can implement OCC to strengthen the enforcement guarantees those mechanisms provide.</p>
+<p>BitGraph is not a replacement for attestation, provenance, or access control. It is a <em>lower-layer enforcement primitive</em> that existing systems can adopt to close the structural gap between trusted code execution and controlled state creation. Systems that already implement TEEs, content credentials, or hardware roots of trust can implement BitGraph to strengthen the enforcement guarantees those mechanisms provide.</p>
 
 <div class="nongoal">
 <p><strong>Non-Goal.</strong> This architecture does not attempt to establish the semantic truth, correctness, or factual validity of content. It enforces only whether content has been admitted into authenticated durable state through protected finalization semantics.</p>
@@ -463,7 +463,7 @@ html.dark .hamburger{color:#e0e0e0}
 <section id="sec-invariants">
 <h1><span class="header-section-number">4</span> System Invariants</h1>
 
-<p>If Origin Controlled Computing is correctly implemented, the following invariants hold:</p>
+<p>If BitGraph is correctly implemented, the following invariants hold:</p>
 
 <div class="invariant">
 <p><strong>Invariant 4.1</strong> (Authenticated Reachability). Authenticated durable state exists if and only if a successful finalization event occurred inside an approved atomic execution boundary.</p>
@@ -485,13 +485,13 @@ html.dark .hamburger{color:#e0e0e0}
 <p><strong>Invariant 4.5</strong> (Authenticity as Reachability). Authenticated durable state is defined by enforced state transitions, not by post-hoc claims, metadata, or byte-level identity.</p>
 </div>
 
-<p>The significance of Invariant 4.5 deserves emphasis. In conventional systems, authenticity is a <em>label</em>: a property that can be attached to, claimed about, or inferred from an artifact after it exists. Under OCC, authenticity is a <em>reachability property</em>: a consequence of the state transitions that produced the artifact. An artifact does not become authenticated by having the right metadata. It is authenticated because it could only have come into existence through a path that enforced authorization, cryptographic binding, and durable commit as a single indivisible event. The authenticated state space is closed under authorized genesis—nothing else can produce it.</p>
+<p>The significance of Invariant 4.5 deserves emphasis. In conventional systems, authenticity is a <em>label</em>: a property that can be attached to, claimed about, or inferred from an artifact after it exists. Under BitGraph, authenticity is a <em>reachability property</em>: a consequence of the state transitions that produced the artifact. An artifact does not become authenticated by having the right metadata. It is authenticated because it could only have come into existence through a path that enforced authorization, cryptographic binding, and durable commit as a single indivisible event. The authenticated state space is closed under authorized genesis—nothing else can produce it.</p>
 
 <p>This is the central claim of the paper: if authenticated digital state can only come into existence through a controlled creation path, then the existence of an authenticated artifact is itself proof that the creation path was traversed. Authentication becomes a reachability property of system architecture—a consequence of how state transitions are structured—rather than a label applied to artifacts after the fact.</p>
 
-<p>Returning to the camera example from <a href="#sec-concrete-example">Section 2.1</a>: under OCC, the system would not merely attest that trusted code ran. It would enforce that authenticated image output is <em>structurally unreachable</em> except through a commit path that includes sensor capture within the atomic execution boundary. The adversary's synthetic frames would not produce authenticated output, because the commit path would require that sensor acquisition, hashing, binding, and durable commit all occur within the same indivisible boundary event. Feeding synthetic data to the input buffer would bypass the authorized creation path entirely, and the protected commit interface would never be invoked through the sensor-capture path for that data. The result: no authenticated artifact is produced.</p>
+<p>Returning to the camera example from <a href="#sec-concrete-example">Section 2.1</a>: under BitGraph, the system would not merely attest that trusted code ran. It would enforce that authenticated image output is <em>structurally unreachable</em> except through a commit path that includes sensor capture within the atomic execution boundary. The adversary's synthetic frames would not produce authenticated output, because the commit path would require that sensor acquisition, hashing, binding, and durable commit all occur within the same indivisible boundary event. Feeding synthetic data to the input buffer would bypass the authorized creation path entirely, and the protected commit interface would never be invoked through the sensor-capture path for that data. The result: no authenticated artifact is produced.</p>
 
-<p>Returning to the provenance example from <a href="#sec-provenance-example">Section 2.2</a>: under OCC with reference-based verification (described in <a href="#sec-verification-independence">Section 9.5</a>), the downstream consumer could still verify the stripped image by computing its content hash and querying a reference point for the verification material produced at genesis. Authentication would survive distribution because it was established by the artifact's structural relationship to its creation event, not by metadata co-traveling with the artifact.</p>
+<p>Returning to the provenance example from <a href="#sec-provenance-example">Section 2.2</a>: under BitGraph with reference-based verification (described in <a href="#sec-verification-independence">Section 9.5</a>), the downstream consumer could still verify the stripped image by computing its content hash and querying a reference point for the verification material produced at genesis. Authentication would survive distribution because it was established by the artifact's structural relationship to its creation event, not by metadata co-traveling with the artifact.</p>
 </section>
 
 <!-- ================================================================ -->
@@ -540,14 +540,14 @@ html.dark .hamburger{color:#e0e0e0}
 </section>
 
 <!-- ================================================================ -->
-<!-- 6. OCC AND ATOMIC CAUSALITY -->
+<!-- 6. BitGraph AND ATOMIC CAUSALITY -->
 <!-- ================================================================ -->
-<section id="sec-occ">
-<h1><span class="header-section-number">6</span> Origin Controlled Computing and Atomic Causality</h1>
+<section id="sec-bitgraph">
+<h1><span class="header-section-number">6</span> BitGraph and Atomic Causality</h1>
 
 <p>The Trusted Origin Token Architecture reveals a structural principle that is more general than tokens. What enforced origin control in TOTA was not the token itself—it was the fact that authenticated state was structurally unreachable without traversing a protected commit path that combined authorization, binding, and commit into a single indivisible event. Tokens enforced this by requiring consumption of a pre-existing resource. But any mechanism that makes authenticated state unreachable without an irreversible authorization event at the commit boundary achieves the same enforcement.</p>
 
-<p>Origin Controlled Computing generalizes this principle. Instead of consuming a pre-generated token, the enforcement component generates a <em>boundary-fresh cryptographic value</em> \(N\) during the atomic finalization event. Cryptographic unpredictability and negligible collision probability prevent precomputation, reuse, or accidental duplication.</p>
+<p>BitGraph generalizes this principle. Instead of consuming a pre-generated token, the enforcement component generates a <em>boundary-fresh cryptographic value</em> \(N\) during the atomic finalization event. Cryptographic unpredictability and negligible collision probability prevent precomputation, reuse, or accidental duplication.</p>
 
 <p>The reader should note what changed and what did not. What changed is the mechanism: tokens are replaced by boundary-fresh generation. What did <em>not</em> change is the enforcement invariant: authenticated durable state remains structurally unreachable without an irreversible authorization event inside the atomic execution boundary. The invariant is the primitive. The mechanism is an implementation detail.</p>
 
@@ -583,7 +583,7 @@ html.dark .hamburger{color:#e0e0e0}
     <div style="font-size:11px;color:#888;text-align:center;margin-top:2px">same injective<br>genesis</div>
   </div>
   <div style="text-align:center;width:200px">
-    <div style="font-weight:700;font-size:13px;margin-bottom:12px;font-family:'Inter',-apple-system,sans-serif">OCC: Boundary-Fresh Generation</div>
+    <div style="font-weight:700;font-size:13px;margin-bottom:12px;font-family:'Inter',-apple-system,sans-serif">BitGraph: Boundary-Fresh Generation</div>
     <div style="background:rgba(0,0,0,0.06);border:1px solid #ccc;border-radius:0;padding:8px 16px;font-size:13px;margin-bottom:8px">Freshness Source <span style="color:#888;font-size:11px">CSPRNG</span></div>
     <div style="color:#888;font-size:18px">↓</div>
     <div style="border:2px solid #bbb;background:#f0f0f0;border-radius:0;padding:16px 12px;margin:4px 0">
@@ -617,7 +617,7 @@ html.dark .hamburger{color:#e0e0e0}
   </div>
   <div style="text-align:center;font-size:22px;font-weight:300;color:#888;margin:4px 0">&#x2261;</div>
   <div style="text-align:center;font-size:11px;color:#888;margin-bottom:16px">same injective genesis</div>
-  <div style="font-weight:700;font-size:13px;margin-bottom:10px;font-family:'Inter',-apple-system,sans-serif;text-align:center">OCC: Boundary-Fresh Generation</div>
+  <div style="font-weight:700;font-size:13px;margin-bottom:10px;font-family:'Inter',-apple-system,sans-serif;text-align:center">BitGraph: Boundary-Fresh Generation</div>
   <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
     <div style="background:rgba(0,0,0,0.06);border:1px solid #ccc;border-radius:0;padding:8px 16px;font-size:13px;width:100%;text-align:center">Freshness Source <span style="color:#888;font-size:11px">CSPRNG</span></div>
     <div style="color:#888">&#x2193;</div>
@@ -633,12 +633,12 @@ html.dark .hamburger{color:#e0e0e0}
     <div style="font-size:11px;color:#888">1 nonce &#x2192; 1 artifact</div>
   </div>
 </div>
-<div class="fig-cap"><b>Figure 1.</b> Token–Nonce duality. TOTA (left) consumes a pre-existing token from a finite pool. OCC (right) generates a boundary-fresh value from a cryptographic source. Both enforce the same invariant: each authenticated artifact corresponds to exactly one irreversible authorization event (injective genesis). Collision resistance makes boundary-fresh generation operationally equivalent to token consumption.</div>
+<div class="fig-cap"><b>Figure 1.</b> Token–Nonce duality. TOTA (left) consumes a pre-existing token from a finite pool. BitGraph (right) generates a boundary-fresh value from a cryptographic source. Both enforce the same invariant: each authenticated artifact corresponds to exactly one irreversible authorization event (injective genesis). Collision resistance makes boundary-fresh generation operationally equivalent to token consumption.</div>
 </div>
 
-<p>The equivalence shown in Figure 1 is structural, not operational. The reader should resist the interpretation that OCC merely replaces physical tokens with virtual ones. The insight is the reverse: TOTA is a special case of OCC in which the authorization event happens to be reified as a consumable object. OCC reveals that the underlying enforcement primitive is not the token but the structural constraint—that authenticated state is unreachable without an irreversible authorization event at the commit boundary. Tokens enforce this by depletion; boundary-fresh generation enforces it by cryptographic causality. The primitive is the constraint, not the mechanism.</p>
+<p>The equivalence shown in Figure 1 is structural, not operational. The reader should resist the interpretation that BitGraph merely replaces physical tokens with virtual ones. The insight is the reverse: TOTA is a special case of BitGraph in which the authorization event happens to be reified as a consumable object. BitGraph reveals that the underlying enforcement primitive is not the token but the structural constraint—that authenticated state is unreachable without an irreversible authorization event at the commit boundary. Tokens enforce this by depletion; boundary-fresh generation enforces it by cryptographic causality. The primitive is the constraint, not the mechanism.</p>
 
-<p>Similarly, the boundary-fresh value \(N\) should not be understood as merely a "nonce for replay protection." In conventional protocols, nonces prevent message replay. In OCC, the boundary-fresh value is <em>the authorization event itself</em>—its generation inside the boundary constitutes the irreversible act that gates the creation of authenticated state. Producing valid verification material is proof that this act occurred, not merely that a unique value was included.</p>
+<p>Similarly, the boundary-fresh value \(N\) should not be understood as merely a "nonce for replay protection." In conventional protocols, nonces prevent message replay. In BitGraph, the boundary-fresh value is <em>the authorization event itself</em>—its generation inside the boundary constitutes the irreversible act that gates the creation of authenticated state. Producing valid verification material is proof that this act occurred, not merely that a unique value was included.</p>
 
 <!-- 6.1 Atomic Causality -->
 <section id="sec-atomic-causality">
@@ -658,7 +658,7 @@ html.dark .hamburger{color:#e0e0e0}
 <div class="diagram-desktop">
 <div style="display:flex;align-items:flex-start;justify-content:center;gap:48px;flex-wrap:wrap">
   <div style="text-align:center;min-width:180px">
-    <div style="font-weight:700;font-size:13px;margin-bottom:12px;font-family:'Inter',-apple-system,sans-serif">OCC: Atomic Causality</div>
+    <div style="font-weight:700;font-size:13px;margin-bottom:12px;font-family:'Inter',-apple-system,sans-serif">BitGraph: Atomic Causality</div>
     <div style="border:2px solid #bbb;background:#f0f0f0;border-radius:0;padding:16px 12px">
       <div style="background:rgba(0,0,0,0.06);border:1px solid #555;border-radius:0;padding:8px 20px;font-size:13px;margin-bottom:8px">1. Authorize</div>
       <div style="color:#888;font-size:14px">↓</div>
@@ -670,7 +670,7 @@ html.dark .hamburger{color:#e0e0e0}
     <div style="color:#555;font-size:20px;margin-top:4px">✓</div>
   </div>
   <div style="text-align:center;min-width:180px">
-    <div style="font-weight:700;font-size:13px;margin-bottom:12px;font-family:'Inter',-apple-system,sans-serif">Non-OCC: Separated Steps</div>
+    <div style="font-weight:700;font-size:13px;margin-bottom:12px;font-family:'Inter',-apple-system,sans-serif">Non-BitGraph: Separated Steps</div>
     <div style="padding:16px 12px">
       <div style="background:rgba(0,0,0,0.04);border:1px solid rgba(0,0,0,0.15);border-radius:0;padding:8px 20px;font-size:13px">1. Authorize</div>
       <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin:6px 0">
@@ -691,7 +691,7 @@ html.dark .hamburger{color:#e0e0e0}
 <div class="diagram-mobile">
   <div style="display:flex;flex-direction:column;gap:20px;font-size:13px">
     <div style="text-align:center">
-      <div style="font-weight:700;font-size:13px;margin-bottom:12px;font-family:'Inter',-apple-system,sans-serif">OCC: Atomic Causality</div>
+      <div style="font-weight:700;font-size:13px;margin-bottom:12px;font-family:'Inter',-apple-system,sans-serif">BitGraph: Atomic Causality</div>
       <div style="border:2px solid #bbb;background:#f0f0f0;border-radius:0;padding:16px 12px">
         <div style="background:rgba(0,0,0,0.06);border:1px solid #555;border-radius:0;padding:8px 20px;font-size:13px;margin-bottom:8px">1. Authorize</div>
         <div style="color:#888">&#x2193;</div>
@@ -702,7 +702,7 @@ html.dark .hamburger{color:#e0e0e0}
       <div style="font-size:11px;color:#888;margin-top:6px">single atomic operation &#x2713;</div>
     </div>
     <div style="border-top:1px solid #ddd;padding-top:20px;text-align:center">
-      <div style="font-weight:700;font-size:13px;margin-bottom:12px;font-family:'Inter',-apple-system,sans-serif">Non-OCC: Separated Steps</div>
+      <div style="font-weight:700;font-size:13px;margin-bottom:12px;font-family:'Inter',-apple-system,sans-serif">Non-BitGraph: Separated Steps</div>
       <div style="padding:8px 12px">
         <div style="border:1px dashed #bbb;border-radius:0;padding:8px 20px;font-size:13px;margin-bottom:8px;color:#888">Authorize</div>
         <div style="color:#888">&#x2193; (separate call)</div>
@@ -714,7 +714,7 @@ html.dark .hamburger{color:#e0e0e0}
     </div>
   </div>
 </div>
-<div class="fig-cap"><b>Figure 2.</b> Atomic Causality versus separated operations. In OCC (left), authorization, binding, and commit occur as a single indivisible event inside the boundary with no externally observable intermediate states. In non-OCC systems (right), these are separate operations with observable gaps exploitable by adversaries.</div>
+<div class="fig-cap"><b>Figure 2.</b> Atomic Causality versus separated operations. In BitGraph (left), authorization, binding, and commit occur as a single indivisible event inside the boundary with no externally observable intermediate states. In non-BitGraph systems (right), these are separate operations with observable gaps exploitable by adversaries.</div>
 </div>
 </section>
 
@@ -728,7 +728,7 @@ html.dark .hamburger{color:#e0e0e0}
 
 <p>In most attestation-based systems, enforcement is advisory. Trusted processes may produce signed outputs, while untrusted processes may still produce durable state that enters downstream systems through alternative commit paths. The enforcement gap is not in the attested path—it is in the unattested paths that remain open.</p>
 
-<p>Origin Controlled Computing closes this gap. Authenticated durable state is reachable <em>only</em> through protected commit paths that enforce atomic binding, authorization, and durable commit at the moment of finalization. Valid verification material implies not merely that trusted code ran, but that <em>no alternative path to authenticated state exists</em>. This is a structural property of the commit architecture, not a property of any single attested process.</p>
+<p>BitGraph closes this gap. Authenticated durable state is reachable <em>only</em> through protected commit paths that enforce atomic binding, authorization, and durable commit at the moment of finalization. Valid verification material implies not merely that trusted code ran, but that <em>no alternative path to authenticated state exists</em>. This is a structural property of the commit architecture, not a property of any single attested process.</p>
 </section>
 
 <!-- 6.3 -->
@@ -749,13 +749,13 @@ html.dark .hamburger{color:#e0e0e0}
 <section id="sec-formal">
 <h1><span class="header-section-number">7</span> Formal Model</h1>
 
-<p>We formalize Origin Controlled Computing using a labeled transition system and closure algebra. This formalization captures the essential properties of the architecture and enables precise comparison with existing enforcement models.</p>
+<p>We formalize BitGraph using a labeled transition system and closure algebra. This formalization captures the essential properties of the architecture and enables precise comparison with existing enforcement models.</p>
 
 <section id="sec-state-space">
 <h2><span class="header-section-number">7.1</span> State Space and Transition System</h2>
 
 <div class="definition">
-<p><strong>Definition 7.1</strong> (OCC System). An OCC system is a labeled transition system \((\Sigma, \rightarrow, E)\) where:</p>
+<p><strong>Definition 7.1</strong> (BitGraph System). An BitGraph system is a labeled transition system \((\Sigma, \rightarrow, E)\) where:</p>
 <ul>
 <li>\(\Sigma\) is the state space, partitioned into \(\Sigma_{\text{auth}} \cup \Sigma_{\text{unauth}}\).</li>
 <li>\(\rightarrow \,\subseteq \Sigma \times E \times \Sigma\) is the transition relation labeled by events \(E\).</li>
@@ -770,7 +770,7 @@ html.dark .hamburger{color:#e0e0e0}
 <section id="sec-core-invariants">
 <h2><span class="header-section-number">7.2</span> Core Invariants</h2>
 
-<p>An OCC-compliant system enforces three invariants:</p>
+<p>An BitGraph-compliant system enforces three invariants:</p>
 
 <div class="invariant">
 <p><strong>Invariant 7.2</strong> (Constructibility — Closure Property).
@@ -805,14 +805,14 @@ occur in a single atomic transition with no intermediate states observable outsi
 <ul>
 <li><strong>Order theory</strong>: \(\Sigma_{\text{auth}}\) forms a Moore family (closed under arbitrary intersections of compliant subsets).</li>
 <li><strong>Type theory</strong>: Genesis constructors are the sole constructors of an abstract data type; \(\Sigma_{\text{auth}}\) has private constructors.</li>
-<li><strong>Provenance</strong>: Unlike provenance semirings [8], which annotate data with origin information, OCC <em>enforces</em> that authenticated state can only exist if it has authorized genesis—enforcement, not annotation.</li>
+<li><strong>Provenance</strong>: Unlike provenance semirings [8], which annotate data with origin information, BitGraph <em>enforces</em> that authenticated state can only exist if it has authorized genesis—enforcement, not annotation.</li>
 </ul>
 </section>
 
 <section id="sec-duality">
 <h2><span class="header-section-number">7.4</span> Token–Nonce Duality</h2>
 
-<p>The Trusted Origin Token Architecture and Origin Controlled Computing enforce the same injective genesis invariant through dual mechanisms:</p>
+<p>The Trusted Origin Token Architecture and BitGraph enforce the same injective genesis invariant through dual mechanisms:</p>
 
 <div class="definition">
 <p><strong>Definition 7.5</strong> (Injective Genesis). A system enforces injective genesis if and only if the map \(\varphi : E_{\text{auth}} \rightarrow \Sigma_{\text{auth}}\) defined by \(\varphi(e) = s'\) where \((s, e, s') \in \mathcal{C}\) is an injection. Each authorization event produces at most one authenticated artifact, and each authenticated artifact corresponds to exactly one authorization event.</p>
@@ -820,14 +820,14 @@ occur in a single atomic transition with no intermediate states observable outsi
 
 <p><strong>Token Conservation (TOTA).</strong> Authorization events are reified as consumable tokens. Consumption tracking enforces \(|\text{tokens consumed}| = |\Sigma_{\text{auth}}|\). This is a <em>depletable resource</em> model analogous to affine types in linear logic.</p>
 
-<p><strong>Boundary-Fresh Uniqueness (OCC).</strong> Authorization events are boundary-generated values whose cryptographic freshness ensures uniqueness. Each value appears in exactly one authenticated artifact. This is a <em>unique generator</em> model analogous to existential types with freshness guarantees.</p>
+<p><strong>Boundary-Fresh Uniqueness (BitGraph).</strong> Authorization events are boundary-generated values whose cryptographic freshness ensures uniqueness. Each value appears in exactly one authenticated artifact. This is a <em>unique generator</em> model analogous to existential types with freshness guarantees.</p>
 
 <p>Under perfect cryptography and uncompromised boundary assumptions, these mechanisms are <em>cryptographic duals</em>: they enforce the same cardinality constraint \(|E_{\text{auth}}| = |\Sigma_{\text{auth}}|\) through isomorphic algebraic structures—consumable resources versus generative uniqueness. The token model makes injectivity definitional; the boundary-fresh model makes injectivity derived from collision resistance and freshness guarantees.</p>
 
 <div class="remark">
 <p><strong>Remark 7.6</strong> (Structural Non-Reusability). Injective genesis ensures that no authorization event can contribute to more than one authenticated artifact, and no authenticated artifact can exist without a unique authorization event. Authorization events are irreversible state transitions—once an event has produced an authenticated artifact, it is permanently consumed by that production and cannot be replayed, redirected, or shared. This is a structural property of the genesis constructor, not a bookkeeping constraint enforced by external tracking.</p>
 
-<p>Readers familiar with distributed ledger systems may recognize an analogy to double-spend prevention. The invariant is similar—\(|E_{\text{auth}}| = |\Sigma_{\text{auth}}|\) ensures one-to-one correspondence—but the enforcement mechanism is fundamentally different. In ledger systems, double-spend prevention requires global consensus over a shared transaction history. In OCC, non-reusability is enforced locally by the atomic execution boundary: boundary-fresh generation produces a value that is cryptographically bound to exactly one artifact at exactly one finalization event, with no external coordination required.</p>
+<p>Readers familiar with distributed ledger systems may recognize an analogy to double-spend prevention. The invariant is similar—\(|E_{\text{auth}}| = |\Sigma_{\text{auth}}|\) ensures one-to-one correspondence—but the enforcement mechanism is fundamentally different. In ledger systems, double-spend prevention requires global consensus over a shared transaction history. In BitGraph, non-reusability is enforced locally by the atomic execution boundary: boundary-fresh generation produces a value that is cryptographically bound to exactly one artifact at exactly one finalization event, with no external coordination required.</p>
 </div>
 </section>
 </section>
@@ -838,7 +838,7 @@ occur in a single atomic transition with no intermediate states observable outsi
 <section id="sec-security">
 <h1><span class="header-section-number">8</span> Adversarial Model and Security Game</h1>
 
-<p>We define a security game that captures the adversarial setting in which Origin Controlled Computing operates.</p>
+<p>We define a security game that captures the adversarial setting in which BitGraph operates.</p>
 
 <section id="sec-threat-model">
 <h2><span class="header-section-number">8.1</span> Threat Model</h2>
@@ -863,9 +863,9 @@ occur in a single atomic transition with no intermediate states observable outsi
 <h2><span class="header-section-number">8.2</span> Security Game: Origin Forgery</h2>
 
 <div class="definition">
-<p><strong>Definition 8.1</strong> (Origin Forgery Game). The game \(\mathrm{Forge}_{\mathcal{A}}^{\mathrm{OCC}}(\lambda)\) proceeds as follows, where \(\lambda\) is the security parameter:</p>
+<p><strong>Definition 8.1</strong> (Origin Forgery Game). The game \(\mathrm{Forge}_{\mathcal{A}}^{\mathrm{BitGraph}}(\lambda)\) proceeds as follows, where \(\lambda\) is the security parameter:</p>
 <ol>
-<li><strong>Setup.</strong> The challenger initializes an OCC system with boundary identity \(\mathit{id}\), trust anchors \(\mathit{TA}\), and security parameter \(\lambda\).</li>
+<li><strong>Setup.</strong> The challenger initializes an BitGraph system with boundary identity \(\mathit{id}\), trust anchors \(\mathit{TA}\), and security parameter \(\lambda\).</li>
 <li><strong>Query phase.</strong> The adversary \(\mathcal{A}\) may submit candidate data to the protected commit interface and observe the resulting authenticated artifacts and verification material. The adversary may make polynomially many such queries.</li>
 <li><strong>Forgery.</strong> The adversary outputs a candidate artifact \(a^*\) and verification material \(v^*\).</li>
 <li><strong>Win condition.</strong> \(\mathcal{A}\) wins if:
@@ -877,12 +877,12 @@ occur in a single atomic transition with no intermediate states observable outsi
 </div>
 
 <div class="definition">
-<p><strong>Definition 8.2</strong> (OCC Security). An OCC system is <em>secure</em> if for all probabilistic polynomial-time adversaries \(\mathcal{A}\):
-\[\Pr[\mathrm{Forge}_{\mathcal{A}}^{\mathrm{OCC}}(\lambda) = 1] \leq \mathrm{negl}(\lambda)\]</p>
+<p><strong>Definition 8.2</strong> (BitGraph Security). An BitGraph system is <em>secure</em> if for all probabilistic polynomial-time adversaries \(\mathcal{A}\):
+\[\Pr[\mathrm{Forge}_{\mathcal{A}}^{\mathrm{BitGraph}}(\lambda) = 1] \leq \mathrm{negl}(\lambda)\]</p>
 </div>
 
 <div class="proposition">
-<p><strong>Proposition 8.3</strong> (Security Reduction). If the signature scheme is existentially unforgeable under chosen-message attack (EUF-CMA) and the freshness source is collision-resistant, then the OCC system is secure under Definition 8.1.</p>
+<p><strong>Proposition 8.3</strong> (Security Reduction). If the signature scheme is existentially unforgeable under chosen-message attack (EUF-CMA) and the freshness source is collision-resistant, then the BitGraph system is secure under Definition 8.1.</p>
 </div>
 
 <div class="proof">
@@ -895,10 +895,10 @@ occur in a single atomic transition with no intermediate states observable outsi
 <section id="sec-falsifiers">
 <h2><span class="header-section-number">8.3</span> Falsifiable Distinctions</h2>
 
-<p>The following tests distinguish OCC-compliant systems from systems that appear similar but fail to enforce origin control.</p>
+<p>The following tests distinguish BitGraph-compliant systems from systems that appear similar but fail to enforce origin control.</p>
 
 <h3>F1: Post-hoc Annotation.</h3>
-<p>If there exists a function \(f: \Sigma_{\text{unauth}} \rightarrow \Sigma_{\text{auth}}\) that promotes unauthenticated state to authenticated state while preserving content, the system is not OCC-compliant. This test fails for any system where content is created first and authentication is applied afterward—signing, blockchain registration, provenance database entry, or metadata attachment. These are <em>annotation systems</em>, not origin enforcement.</p>
+<p>If there exists a function \(f: \Sigma_{\text{unauth}} \rightarrow \Sigma_{\text{auth}}\) that promotes unauthenticated state to authenticated state while preserving content, the system is not BitGraph-compliant. This test fails for any system where content is created first and authentication is applied afterward—signing, blockchain registration, provenance database entry, or metadata attachment. These are <em>annotation systems</em>, not origin enforcement.</p>
 
 <h3>F2: Unconfined Constructor.</h3>
 <p>If the genesis constructor can be invoked from contexts outside the protected boundary, the system violates constructor completeness. This test fails when signing keys are accessible to application code, when the commit interface is a public API without boundary isolation, or when trusted and untrusted code share execution context.</p>
@@ -910,7 +910,7 @@ occur in a single atomic transition with no intermediate states observable outsi
 <p>If the genesis transition can be decomposed into externally observable intermediate steps—authorization at time \(t_1\), binding at \(t_2 > t_1\), commit at \(t_3 > t_2\)—the system violates Atomic Causality. This test fails for systems where authorization checking, signing, and storage commit are separate API calls, creating time-of-check-to-time-of-use vulnerabilities.</p>
 
 <h3>F5: Retroactive Authentication.</h3>
-<p>If durable state can be created first and then promoted to authenticated form by any post-hoc operation that preserves content, the system is implementing annotation, not origin control. This is the most direct test: if the content bytes can exist before the authorization event, the system does not enforce OCC.</p>
+<p>If durable state can be created first and then promoted to authenticated form by any post-hoc operation that preserves content, the system is implementing annotation, not origin control. This is the most direct test: if the content bytes can exist before the authorization event, the system does not enforce BitGraph.</p>
 </section>
 </section>
 
@@ -923,7 +923,7 @@ occur in a single atomic transition with no intermediate states observable outsi
 <section id="sec-state-transition">
 <h2><span class="header-section-number">9.1</span> State Transition Model</h2>
 
-<p>Origin Controlled Computing distinguishes between candidate digital state and authenticated durable state. Candidate state may exist anywhere and may be adversarial. Authenticated durable state consists of externally visible or persistent artifacts whose authenticated form includes verification material produced by enforced finalization.</p>
+<p>BitGraph distinguishes between candidate digital state and authenticated durable state. Candidate state may exist anywhere and may be adversarial. Authenticated durable state consists of externally visible or persistent artifacts whose authenticated form includes verification material produced by enforced finalization.</p>
 
 <p>The transition from candidate to authenticated occurs at <em>commit paths</em>: file writes, storage uploads, message publication, model output export, sensor data release, and log entry creation.</p>
 
@@ -1005,21 +1005,21 @@ occur in a single atomic transition with no intermediate states observable outsi
 <section id="sec-enforcement-verification">
 <h2><span class="header-section-number">9.4</span> Enforcement and Verification Are Separate Architectural Layers</h2>
 
-<p>A distinction fundamental to OCC must be stated explicitly. Enforcement determines whether authenticated durable state <em>exists</em>. Verification determines whether a third party can <em>demonstrate</em> that authenticated durable state exists. These are different properties operating at different architectural layers.</p>
+<p>A distinction fundamental to BitGraph must be stated explicitly. Enforcement determines whether authenticated durable state <em>exists</em>. Verification determines whether a third party can <em>demonstrate</em> that authenticated durable state exists. These are different properties operating at different architectural layers.</p>
 
 <p>Enforcement is irrevocable. Once candidate state has been finalized through the protected commit interface—once authorization, binding, and durable commit have occurred as a single atomic event inside the boundary—the resulting artifact is authenticated. This is a historical fact about the artifact's genesis, not a claim that depends on the continued availability of any proof material.</p>
 
 <p>Verification is operationally contingent. A verifier can confirm an artifact's authenticated status only if verification material is accessible—either co-traveling with the artifact or retrievable from a reference point. If all copies of verification material are lost, the artifact becomes <em>unverifiable</em> but does not become <em>unauthenticated</em>. The genesis event still occurred. The enforcement invariants still held at the moment of creation. The artifact's authenticated status is a property of its creation path, not a property of currently available evidence.</p>
 
-<p>This separation is what distinguishes OCC from verification systems, provenance frameworks, and attestation protocols. Those systems define authenticity in terms of what can currently be checked. OCC defines authenticity in terms of what was structurally enforced at creation. Verification is one mechanism for observing the consequences of enforcement, but it is not the enforcement itself.</p>
+<p>This separation is what distinguishes BitGraph from verification systems, provenance frameworks, and attestation protocols. Those systems define authenticity in terms of what can currently be checked. BitGraph defines authenticity in terms of what was structurally enforced at creation. Verification is one mechanism for observing the consequences of enforcement, but it is not the enforcement itself.</p>
 </section>
 
 <section id="sec-verification-independence">
 <h2><span class="header-section-number">9.5</span> Verification Independence from Proof Transport</h2>
 
-<p>A critical architectural property of OCC is that the enforcement invariants described in <a href="#sec-invariants">Section 4</a> hold at genesis and are not contingent on any subsequent verification event, proof transport mechanism, or reference infrastructure availability. Verification is a mechanism for demonstrating that enforcement occurred. It is not a component of enforcement.</p>
+<p>A critical architectural property of BitGraph is that the enforcement invariants described in <a href="#sec-invariants">Section 4</a> hold at genesis and are not contingent on any subsequent verification event, proof transport mechanism, or reference infrastructure availability. Verification is a mechanism for demonstrating that enforcement occurred. It is not a component of enforcement.</p>
 
-<p>The verification model is therefore independent of how verification material reaches the verifier. OCC supports multiple verification models, and the choice among them is a deployment decision, not an architectural constraint. No verification model choice affects whether the enforcement invariants hold.</p>
+<p>The verification model is therefore independent of how verification material reaches the verifier. BitGraph supports multiple verification models, and the choice among them is a deployment decision, not an architectural constraint. No verification model choice affects whether the enforcement invariants hold.</p>
 
 <h3>Portable proof.</h3>
 <p>Verification material travels with the artifact—embedded in file metadata, carried in a sidecar file, or included in a manifest bundle. This is compatible with existing provenance formats such as C2PA and enables self-contained verification without external dependencies.</p>
@@ -1036,7 +1036,7 @@ occur in a single atomic transition with no intermediate states observable outsi
 <div style="font-weight:700;font-size:13px;text-align:center;margin-bottom:16px;font-family:'Inter',-apple-system,sans-serif">Verification Independence from Proof Transport</div>
 <div style="display:flex;align-items:flex-start;justify-content:center;gap:12px;flex-wrap:wrap;font-size:13px">
   <div style="text-align:center">
-    <div style="background:rgba(0,0,0,0.06);border:1px solid #555;border-radius:0;padding:10px 14px">OCC Boundary<br><span style="font-size:11px;color:#888">(genesis)</span></div>
+    <div style="background:rgba(0,0,0,0.06);border:1px solid #555;border-radius:0;padding:10px 14px">BitGraph Boundary<br><span style="font-size:11px;color:#888">(genesis)</span></div>
     <div style="display:flex;gap:24px;margin-top:8px">
       <div style="display:flex;flex-direction:column;align-items:center">
         <div style="color:#888;font-size:11px">store proof</div>
@@ -1070,7 +1070,7 @@ occur in a single atomic transition with no intermediate states observable outsi
 </div>
 <div class="diagram-mobile">
   <div style="font-size:13px">
-    <div style="background:rgba(0,0,0,0.06);border:1px solid #555;border-radius:0;padding:10px 14px;text-align:center;margin-bottom:12px">OCC Boundary<br><span style="font-size:11px;color:#888">(genesis)</span></div>
+    <div style="background:rgba(0,0,0,0.06);border:1px solid #555;border-radius:0;padding:10px 14px;text-align:center;margin-bottom:12px">BitGraph Boundary<br><span style="font-size:11px;color:#888">(genesis)</span></div>
     <div style="display:flex;gap:8px;margin-bottom:12px">
       <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
         <div style="font-size:11px;color:#888">store proof</div>
@@ -1101,11 +1101,11 @@ occur in a single atomic transition with no intermediate states observable outsi
 <div class="fig-cap"><b>Figure 4.</b> Verification independence from proof transport. Artifacts may carry verification material (top path) or be verified by reference lookup using the content hash (bottom path). Both paths validate against the same trust anchors. Authentication survives metadata stripping, format conversion, and redistribution.</div>
 </div>
 
-<p>This property has significant practical consequences. OCC-authenticated artifacts can be freely copied, reformatted, compressed, transcoded, or distributed through channels that strip metadata—and their authenticated status is permanent regardless of what happens to metadata during distribution. <em>Verifiability</em>—the ability for a third party to confirm authenticated status—requires that either co-traveling proof or a reference point is available and that the content-preserving hash can be recomputed. But the artifact's authenticated status, as defined by the enforcement invariants, is an irrevocable consequence of its genesis and does not depend on proof availability. This is a structural advantage over systems that embed provenance in format-specific metadata, which is routinely stripped by social media platforms, content delivery networks, messaging applications, and file conversion tools.</p>
+<p>This property has significant practical consequences. BitGraph-authenticated artifacts can be freely copied, reformatted, compressed, transcoded, or distributed through channels that strip metadata—and their authenticated status is permanent regardless of what happens to metadata during distribution. <em>Verifiability</em>—the ability for a third party to confirm authenticated status—requires that either co-traveling proof or a reference point is available and that the content-preserving hash can be recomputed. But the artifact's authenticated status, as defined by the enforcement invariants, is an irrevocable consequence of its genesis and does not depend on proof availability. This is a structural advantage over systems that embed provenance in format-specific metadata, which is routinely stripped by social media platforms, content delivery networks, messaging applications, and file conversion tools.</p>
 
 <p>This property is particularly consequential in delay-tolerant and interplanetary networks, where verification material must travel with the data and no return channel to the origin may exist at verification time.</p>
 
-<p>A clarification regarding content transforms is warranted. Verification depends on recomputing a content-dependent hash that matches the hash bound at genesis. Lossless operations that preserve byte-identical content—copying, re-hosting, metadata stripping, container rewrapping—leave this hash intact and verification proceeds directly. Lossy transforms—recompression, transcoding, cropping, resolution scaling—alter the content bytes and therefore invalidate the original binding. Under OCC, a lossy transform produces new candidate state. If the transformed output must itself be authenticated, it requires a new finalization event at a protected transform boundary, producing fresh verification material for the new content. This is not a limitation but a correct application of the enforcement model: the transformed artifact is a different artifact with a different origin. Systems requiring verification across lossy transforms may define robust or perceptual digest schemes as the content-dependent value \(H\), but such schemes introduce their own security trade-offs and are a deployment choice, not an architectural requirement. The enforcement invariant is the same regardless of digest construction.</p>
+<p>A clarification regarding content transforms is warranted. Verification depends on recomputing a content-dependent hash that matches the hash bound at genesis. Lossless operations that preserve byte-identical content—copying, re-hosting, metadata stripping, container rewrapping—leave this hash intact and verification proceeds directly. Lossy transforms—recompression, transcoding, cropping, resolution scaling—alter the content bytes and therefore invalidate the original binding. Under BitGraph, a lossy transform produces new candidate state. If the transformed output must itself be authenticated, it requires a new finalization event at a protected transform boundary, producing fresh verification material for the new content. This is not a limitation but a correct application of the enforcement model: the transformed artifact is a different artifact with a different origin. Systems requiring verification across lossy transforms may define robust or perceptual digest schemes as the content-dependent value \(H\), but such schemes introduce their own security trade-offs and are a deployment choice, not an architectural requirement. The enforcement invariant is the same regardless of digest construction.</p>
 
 <p>A reference point is not an artifact registry. A registry implies centralized control over all authenticated artifacts and creates a single point of failure for the entire system. A reference point is a service that holds verification material produced by a specific boundary and can be replicated, federated, or operated by the producing boundary itself. Multiple reference points can hold verification material for the same artifact. The trust model does not change: verifiers validate against trust anchors, not against the reference point's authority. Reference points play no role in the enforcement layer. They do not participate in genesis, do not confer authenticated status, and their unavailability does not retroactively affect the authenticated status of any artifact. They are verification infrastructure, not enforcement infrastructure.</p>
 
@@ -1191,14 +1191,14 @@ occur in a single atomic transition with no intermediate states observable outsi
 <section id="sec-related">
 <h1><span class="header-section-number">10</span> Related Work</h1>
 
-<p>Origin Controlled Computing intersects with several established areas of security and systems research. This section distinguishes OCC from the most closely related approaches and identifies the specific enforcement gap each leaves open.</p>
+<p>BitGraph intersects with several established areas of security and systems research. This section distinguishes BitGraph from the most closely related approaches and identifies the specific enforcement gap each leaves open.</p>
 
 <section id="sec-tees">
 <h2><span class="header-section-number">10.1</span> Attested Execution and Trusted Execution Environments</h2>
 
 <p>Trusted Execution Environments (TEEs) such as Intel SGX, Intel TDX, and ARM Confidential Compute Architecture (CCA) provide hardware-isolated execution with remote attestation. The DICE (Device Identifier Composition Engine) architecture establishes device identity through layered measurements. The IETF RATS (Remote ATtestation procedureS) framework standardizes attestation evidence formats and verification workflows.</p>
 
-<p>These systems answer the question: <em>"Did specific trusted code execute?"</em> OCC asks a different question: <em>"Is authenticated durable state reachable only through enforced commit paths?"</em> Attestation authenticates a pipeline. OCC constrains the commit architecture so that alternative pipelines cannot produce authenticated state. TEEs are one possible implementation substrate for OCC boundaries, but attestation alone does not close unprotected commit paths that exist alongside the attested process.</p>
+<p>These systems answer the question: <em>"Did specific trusted code execute?"</em> BitGraph asks a different question: <em>"Is authenticated durable state reachable only through enforced commit paths?"</em> Attestation authenticates a pipeline. BitGraph constrains the commit architecture so that alternative pipelines cannot produce authenticated state. TEEs are one possible implementation substrate for BitGraph boundaries, but attestation alone does not close unprotected commit paths that exist alongside the attested process.</p>
 </section>
 
 <section id="sec-provenance-systems">
@@ -1206,19 +1206,19 @@ occur in a single atomic transition with no intermediate states observable outsi
 
 <p>The Coalition for Content Provenance and Authenticity (C2PA) and related provenance standards define how to represent claims about an artifact's origin, edits, and attribution, and how to transport that information across tools and platforms. When a signed artifact is present, these standards make integrity and lineage verifiable and interoperable.</p>
 
-<p>OCC targets a different architectural layer. Provenance standards are a <em>packaging and disclosure layer</em>: they define what claims look like and how to verify them. OCC is an <em>enforcement layer</em>: it determines whether authenticated durable state can be finalized at all unless creation-time conditions were met. The distinction matters because provenance ecosystems are voluntary at the edges. A signed artifact can be verified, but an unsigned artifact can still be created, circulated, and injected into downstream systems that do not strictly require provenance at every boundary. Provenance improves traceability without guaranteeing exclusion.</p>
+<p>BitGraph targets a different architectural layer. Provenance standards are a <em>packaging and disclosure layer</em>: they define what claims look like and how to verify them. BitGraph is an <em>enforcement layer</em>: it determines whether authenticated durable state can be finalized at all unless creation-time conditions were met. The distinction matters because provenance ecosystems are voluntary at the edges. A signed artifact can be verified, but an unsigned artifact can still be created, circulated, and injected into downstream systems that do not strictly require provenance at every boundary. Provenance improves traceability without guaranteeing exclusion.</p>
 
-<p>OCC and provenance are complementary. OCC strengthens provenance by making provenance verifiability a prerequisite for admission into protected domains. Provenance remains the interoperability layer that carries claims across ecosystems; OCC supplies the mechanism by which systems enforce that only authenticated artifacts become trusted durable state. Under OCC with reference-based verification, provenance survives even when manifests are stripped during distribution (see the provenance example in <a href="#sec-provenance-example">Section 2.2</a> and the verification model in <a href="#sec-verification-independence">Section 9.5</a>).</p>
+<p>BitGraph and provenance are complementary. BitGraph strengthens provenance by making provenance verifiability a prerequisite for admission into protected domains. Provenance remains the interoperability layer that carries claims across ecosystems; BitGraph supplies the mechanism by which systems enforce that only authenticated artifacts become trusted durable state. Under BitGraph with reference-based verification, provenance survives even when manifests are stripped during distribution (see the provenance example in <a href="#sec-provenance-example">Section 2.2</a> and the verification model in <a href="#sec-verification-independence">Section 9.5</a>).</p>
 </section>
 
 <section id="sec-reference-monitors">
 <h2><span class="header-section-number">10.3</span> Reference Monitors and Access Control</h2>
 
-<p>The classical reference monitor concept (Anderson, 1972) mediates all operations on existing objects: every access is checked against a policy before it is permitted. Origin Controlled Computing is strictly stronger in one dimension: it controls not merely which <em>operations</em> on objects are permitted, but which <em>objects are permitted to exist</em> in authenticated form. Classical access control assumes object creation is uncontrolled and focuses on subsequent access. OCC constrains creation itself.</p>
+<p>The classical reference monitor concept (Anderson, 1972) mediates all operations on existing objects: every access is checked against a policy before it is permitted. BitGraph is strictly stronger in one dimension: it controls not merely which <em>operations</em> on objects are permitted, but which <em>objects are permitted to exist</em> in authenticated form. Classical access control assumes object creation is uncontrolled and focuses on subsequent access. BitGraph constrains creation itself.</p>
 
 <p>Formally, a reference monitor enforces:
 \[\forall\, \mathit{op} \in \mathit{Operations},\; \forall\, \mathit{obj} \in \mathit{Objects} : \mathit{execute}(\mathit{op}, \mathit{obj}) \Rightarrow \mathit{authorized}(\mathit{subject}, \mathit{op}, \mathit{obj})\]
-A genesis monitor (OCC) enforces:
+A genesis monitor (BitGraph) enforces:
 \[\forall\, \mathit{obj} \in \Sigma_{\text{auth}} : \mathit{obj} \in \Sigma \Rightarrow \exists\, e \in E_{\text{auth}} : \mathit{genesis}(\mathit{obj}) = \mathcal{C}(e, \mathit{data})\]
 The key difference: a reference monitor assumes objects exist and mediates access. A genesis monitor constrains which authenticated objects can exist at all. This is <em>mandatory constructor security</em>, analogous to mandatory access control but applied to object generation rather than object access.</p>
 </section>
@@ -1228,36 +1228,36 @@ The key difference: a reference monitor assumes objects exist and mediates acces
 
 <p>Object-capability models (Dennis &amp; Van Horn, 1966; Miller, 2006) enforce that access to objects requires possession of an unforgeable capability. Membrane patterns in capability systems create revocable boundaries around object graphs.</p>
 
-<p>OCC shares the emphasis on structural enforcement through unforgeable references but applies it at a different layer. Capabilities control <em>reachability of existing objects</em>. OCC controls <em>constructibility of new authenticated state</em>. The boundary-held capability in OCC is a capability-security mechanism, but the enforcement target—preventing existence rather than preventing access—distinguishes OCC from classical capability models.</p>
+<p>BitGraph shares the emphasis on structural enforcement through unforgeable references but applies it at a different layer. Capabilities control <em>reachability of existing objects</em>. BitGraph controls <em>constructibility of new authenticated state</em>. The boundary-held capability in BitGraph is a capability-security mechanism, but the enforcement target—preventing existence rather than preventing access—distinguishes BitGraph from classical capability models.</p>
 </section>
 
 <section id="sec-ifc">
 <h2><span class="header-section-number">10.5</span> Information Flow Control</h2>
 
-<p>Mandatory information flow control (Goguen &amp; Meseguer, 1982; Myers &amp; Liskov, 1997) constrains how information propagates through a system. OCC enforces a related but distinct property: it constrains how authenticated state is <em>generated</em>, not how information flows between existing states. In information flow terms, OCC enforces a mandatory creation policy: authenticated state can only be generated through specific channels (the protected commit interface), analogous to noninterference applied to creation rather than observation.</p>
+<p>Mandatory information flow control (Goguen &amp; Meseguer, 1982; Myers &amp; Liskov, 1997) constrains how information propagates through a system. BitGraph enforces a related but distinct property: it constrains how authenticated state is <em>generated</em>, not how information flows between existing states. In information flow terms, BitGraph enforces a mandatory creation policy: authenticated state can only be generated through specific channels (the protected commit interface), analogous to noninterference applied to creation rather than observation.</p>
 </section>
 
 <section id="sec-blockchain">
 <h2><span class="header-section-number">10.6</span> Blockchain and Distributed Consensus</h2>
 
-<p>Blockchain systems enforce that state changes require consensus among distributed participants. The architectural parallel to OCC is real: both create structural bottlenecks through which state transitions must pass. However, blockchain achieves consensus through economic coordination among mutually distrustful parties, while OCC achieves origin enforcement through boundary isolation and cryptographic causality at a single enforcement point. OCC generalizes the structural bottleneck principle to arbitrary protected boundaries without requiring distributed consensus, economic incentives, or global coordination.</p>
+<p>Blockchain systems enforce that state changes require consensus among distributed participants. The architectural parallel to BitGraph is real: both create structural bottlenecks through which state transitions must pass. However, blockchain achieves consensus through economic coordination among mutually distrustful parties, while BitGraph achieves origin enforcement through boundary isolation and cryptographic causality at a single enforcement point. BitGraph generalizes the structural bottleneck principle to arbitrary protected boundaries without requiring distributed consensus, economic incentives, or global coordination.</p>
 </section>
 
 <section id="sec-dtn">
 <h2><span class="header-section-number">10.7</span> Delay-Tolerant Networking and Interplanetary Protocols</h2>
 
-<p>The Bundle Protocol (RFC 9171) and DTN architecture provide store-and-forward transport for environments with extreme latency and intermittent connectivity. Bundle security (BPSec, RFC 9172) provides integrity and confidentiality at the bundle layer but does not constrain how authenticated payloads are created—it secures transport, not genesis. OCC complements DTN by enforcing that bundle payloads finalized through a protected commit interface carry portable verification material validatable offline against pre-distributed trust anchors, with no return path to the origin required. OCC proofs map onto BP extension blocks, enabling authenticated bundles to traverse existing DTN infrastructure without routing modifications.</p>
+<p>The Bundle Protocol (RFC 9171) and DTN architecture provide store-and-forward transport for environments with extreme latency and intermittent connectivity. Bundle security (BPSec, RFC 9172) provides integrity and confidentiality at the bundle layer but does not constrain how authenticated payloads are created—it secures transport, not genesis. BitGraph complements DTN by enforcing that bundle payloads finalized through a protected commit interface carry portable verification material validatable offline against pre-distributed trust anchors, with no return path to the origin required. BitGraph proofs map onto BP extension blocks, enabling authenticated bundles to traverse existing DTN infrastructure without routing modifications.</p>
 </section>
 
 <section id="sec-structural-distinctions">
 <h2><span class="header-section-number">10.8</span> Summary of Structural Distinctions</h2>
 
-<p>Table 1 summarizes the structural properties that distinguish OCC from related approaches. Each property is defined by the system invariants and falsifiability tests in <a href="#sec-invariants">Sections 4</a> and <a href="#sec-falsifiers">8.3</a>. Entries reflect architectural constraints, not implementation quality.</p>
+<p>Table 1 summarizes the structural properties that distinguish BitGraph from related approaches. Each property is defined by the system invariants and falsifiability tests in <a href="#sec-invariants">Sections 4</a> and <a href="#sec-falsifiers">8.3</a>. Entries reflect architectural constraints, not implementation quality.</p>
 
 <table>
 <caption>Table 1: Structural property comparison across enforcement paradigms.</caption>
 <thead>
-<tr><th>Property</th><th>Digital Signing</th><th>TEE / Attested Exec.</th><th>Provenance (C2PA)</th><th>Blockchain / Ledger</th><th>OCC</th></tr>
+<tr><th>Property</th><th>Digital Signing</th><th>TEE / Attested Exec.</th><th>Provenance (C2PA)</th><th>Blockchain / Ledger</th><th>BitGraph</th></tr>
 </thead>
 <tbody>
 <tr><td>Enforces creation-path exclusivity</td><td>No</td><td>No<sup>a</sup></td><td>No</td><td>No</td><td><strong>Yes</strong></td></tr>
@@ -1284,7 +1284,7 @@ The key difference: a reference monitor assumes objects exist and mediates acces
 <section id="sec-examples">
 <h1><span class="header-section-number">11</span> Worked Examples</h1>
 
-<p>We present two worked examples demonstrating Origin Controlled Computing in distinct domains. In each case, the same architectural pattern applies: candidate data is prepared freely; authenticated durable state is produced only through the protected commit interface; and any artifact not finalized through the boundary is rejected as unauthenticated.</p>
+<p>We present two worked examples demonstrating BitGraph in distinct domains. In each case, the same architectural pattern applies: candidate data is prepared freely; authenticated durable state is produced only through the protected commit interface; and any artifact not finalized through the boundary is rejected as unauthenticated.</p>
 
 <section id="sec-media-capture">
 <h2><span class="header-section-number">11.1</span> Secure Media Capture</h2>
@@ -1325,7 +1325,7 @@ The key difference: a reference monitor assumes objects exist and mediates acces
 
 <p>Downstream verifiers validate the content hash, check verification material under approved trust anchors, and enforce policy constraints on acceptable model identities and metadata.</p>
 
-<p>Any AI output not finalized through this boundary cannot produce valid verification material and is rejected as unauthenticated—even if it is byte-identical to an authenticated output. The system architecture ensures that no alternative export path—including direct database writes, API bypasses, or file system access—can produce outputs that satisfy verification. This is particularly relevant for regulatory compliance frameworks such as the EU AI Act, which require AI-generated content to be identifiable. OCC provides an enforcement mechanism rather than a voluntary labeling scheme.</p>
+<p>Any AI output not finalized through this boundary cannot produce valid verification material and is rejected as unauthenticated—even if it is byte-identical to an authenticated output. The system architecture ensures that no alternative export path—including direct database writes, API bypasses, or file system access—can produce outputs that satisfy verification. This is particularly relevant for regulatory compliance frameworks such as the EU AI Act, which require AI-generated content to be identifiable. BitGraph provides an enforcement mechanism rather than a voluntary labeling scheme.</p>
 </section>
 </section>
 
@@ -1351,7 +1351,7 @@ The key difference: a reference monitor assumes objects exist and mediates acces
 
 <p>In practical terms, the protected commit interface presents a narrow surface: the caller submits candidate content and policy metadata; the boundary performs hashing, binding, authorization, and signing internally; and the caller receives the authenticated artifact and its verification material (or a confirmation that verification material has been stored at a reference point keyed by content hash). The caller never handles signing keys, never observes intermediate cryptographic state, and cannot influence the boundary-fresh value. Whether this interface is realized as a system call, a hardware enclave entry point, an HSM API, or a cloud service endpoint, the enforcement properties are identical.</p>
 
-<p>OCC does not prevent the construction of unauthorized boundaries. Any party can build a boundary and produce verification material. However, artifacts produced by unauthorized boundaries fail verification under accepted trust anchors, because those boundaries' identities are not in the approved set. Trust is mediated by trust anchor policy, not by preventing the existence of alternative boundaries.</p>
+<p>BitGraph does not prevent the construction of unauthorized boundaries. Any party can build a boundary and produce verification material. However, artifacts produced by unauthorized boundaries fail verification under accepted trust anchors, because those boundaries' identities are not in the approved set. Trust is mediated by trust anchor policy, not by preventing the existence of alternative boundaries.</p>
 
 <p>In practice, layered deployment is common. A device may generate creation-time verification material, while a gateway enforces admission policy and rejects unauthenticated artifacts. Both layers implement the same enforcement principle at different points in the system.</p>
 
@@ -1360,7 +1360,7 @@ The key difference: a reference monitor assumes objects exist and mediates acces
 
 <p>Concrete instantiations of the atomic execution boundary differ in the strength of the enforcement guarantee they provide. Not all boundaries are equivalent: a software boundary running in process memory and a hardware enclave with remote attestation both produce cryptographically valid verification material, but they provide fundamentally different assurance that the enforcement invariants actually held. This distinction must be made explicit in the proof structure itself.</p>
 
-<p>OCC proofs carry two orthogonal attestations. The first is a <em>cryptographic attestation</em>: the signature and public key establish who signed and that the signed content was unaltered. This is machine-checkable by any party with the public key and is unconditionally verifiable offline. The second is an <em>enforcement attestation</em>: the boundary's identity measurement and optional platform attestation report establish <em>under what conditions</em> signing was permitted — whether the commit gate, key management, nonce generation, and signing occurred inside a verified hardware boundary or merely inside a software process. Atomic causality lives in the second attestation, not the first. A signature proves who signed; the enforcement context proves whether the creation-time constraints of OCC actually held.</p>
+<p>BitGraph proofs carry two orthogonal attestations. The first is a <em>cryptographic attestation</em>: the signature and public key establish who signed and that the signed content was unaltered. This is machine-checkable by any party with the public key and is unconditionally verifiable offline. The second is an <em>enforcement attestation</em>: the boundary's identity measurement and optional platform attestation report establish <em>under what conditions</em> signing was permitted — whether the commit gate, key management, nonce generation, and signing occurred inside a verified hardware boundary or merely inside a software process. Atomic causality lives in the second attestation, not the first. A signature proves who signed; the enforcement context proves whether the creation-time constraints of BitGraph actually held.</p>
 
 <p>Three enforcement tiers capture the practically relevant points in this assurance space:</p>
 
@@ -1373,12 +1373,12 @@ The key difference: a reference monitor assumes objects exist and mediates acces
 </ul>
 </div>
 
-<p>A critical subtlety distinguishes tamper-evidence from self-authentication. The enforcement tier is included in the signed body of every OCC proof, making it tamper-evident in transit: an adversary who intercepts a proof and attempts to substitute a higher-assurance tier will break the signature. However, the tier field is <em>self-reported</em> by the boundary adapter. A malicious or misconfigured adapter can declare any tier. The signed field prevents downgrade attacks during transmission; it does not prevent a lying producer.</p>
+<p>A critical subtlety distinguishes tamper-evidence from self-authentication. The enforcement tier is included in the signed body of every BitGraph proof, making it tamper-evident in transit: an adversary who intercepts a proof and attempts to substitute a higher-assurance tier will break the signature. However, the tier field is <em>self-reported</em> by the boundary adapter. A malicious or misconfigured adapter can declare any tier. The signed field prevents downgrade attacks during transmission; it does not prevent a lying producer.</p>
 
-<p>Actual trust in a declared tier therefore requires independent corroboration. For $\tau_\text{tee}$, this means: (1) pinning acceptable measurements to a known-good enclave image hash published by the boundary operator or auditor, and (2) validating a hardware attestation report — a vendor-signed document generated by the hardware itself, bound to the specific commit, that certifies the enclave measurement matches a known image. Signature verification establishes cryptographic integrity. Measurement pinning establishes identity. Attestation report validation establishes that the identity was produced by real hardware under the declared conditions. All three are necessary; any two leave a gap. A verifier who checks the signature and trusts the self-reported tier without verifying measurement and attestation has verified fact (A) — who signed — but not fact (B) — whether the OCC invariants actually held.</p>
+<p>Actual trust in a declared tier therefore requires independent corroboration. For $\tau_\text{tee}$, this means: (1) pinning acceptable measurements to a known-good enclave image hash published by the boundary operator or auditor, and (2) validating a hardware attestation report — a vendor-signed document generated by the hardware itself, bound to the specific commit, that certifies the enclave measurement matches a known image. Signature verification establishes cryptographic integrity. Measurement pinning establishes identity. Attestation report validation establishes that the identity was produced by real hardware under the declared conditions. All three are necessary; any two leave a gap. A verifier who checks the signature and trusts the self-reported tier without verifying measurement and attestation has verified fact (A) — who signed — but not fact (B) — whether the BitGraph invariants actually held.</p>
 
 <div class="remark">
-<p><strong>Remark 12.2</strong> (Hardware-Bound Key is Not Causal Enforcement). The $\tau_\text{hw}$ tier corresponds to devices such as mobile Secure Enclaves, TPMs, or HSMs where the signing key is hardware-protected but the commit gate runs in application code. Such systems provide meaningful security against key extraction — an adversary cannot steal the private key — but do not satisfy commit-path exclusivity. Application code feeding arbitrary digests to the hardware signer can produce valid signatures for any content without traversal of the protected commit interface. This is useful as an identity anchor and may be sufficient for some deployment contexts, but it is architecturally distinct from $\tau_\text{tee}$ and does not satisfy OCC's Atomic Causality invariant (Definition 6.1) against a compromised-host adversary.</p>
+<p><strong>Remark 12.2</strong> (Hardware-Bound Key is Not Causal Enforcement). The $\tau_\text{hw}$ tier corresponds to devices such as mobile Secure Enclaves, TPMs, or HSMs where the signing key is hardware-protected but the commit gate runs in application code. Such systems provide meaningful security against key extraction — an adversary cannot steal the private key — but do not satisfy commit-path exclusivity. Application code feeding arbitrary digests to the hardware signer can produce valid signatures for any content without traversal of the protected commit interface. This is useful as an identity anchor and may be sufficient for some deployment contexts, but it is architecturally distinct from $\tau_\text{tee}$ and does not satisfy BitGraph's Atomic Causality invariant (Definition 6.1) against a compromised-host adversary.</p>
 </div>
 
 <p>This taxonomy is not a quality ranking among implementations — a $\tau_\text{sw}$ boundary is fully correct for development environments where the adversary model does not include privileged process access. It is a structural classification that makes the adversary model explicit in the proof itself. Verifiers select the tier they require based on their own threat model. A local development tool may accept $\tau_\text{sw}$. A regulated ingestion gateway may require $\tau_\text{tee}$ with measurement pinning and attestation validation. The same proof format and verification protocol supports all three, with enforcement strength determined by verifier policy rather than proof format version.</p>
@@ -1391,7 +1391,7 @@ The key difference: a reference monitor assumes objects exist and mediates acces
 <section id="sec-admission">
 <h1><span class="header-section-number">13</span> Admission of Pre-Existing Data</h1>
 
-<p>Origin Controlled Computing defines authenticity in terms of enforced finalization events, not in terms of historical existence of content bytes.</p>
+<p>BitGraph defines authenticity in terms of enforced finalization events, not in terms of historical existence of content bytes.</p>
 
 <p>Candidate data may exist prior to authenticated finalization and may be externally sourced, duplicated, replayed, or synthesized. Such prior existence is outside the trust model and carries no authenticity semantics.</p>
 
@@ -1404,7 +1404,7 @@ The key difference: a reference monitor assumes objects exist and mediates acces
 <section id="sec-provenance-chains">
 <h2><span class="header-section-number">13.1</span> Enforced Provenance Chains</h2>
 
-<p>When content traverses multiple OCC-enforced boundaries, each boundary produces independent verification material for the same content. The result is a structurally enforced provenance chain: an ordered sequence of admission events, each cryptographically bound to the content at its respective boundary. Unlike voluntary provenance annotations, each link in this chain is the product of an enforced finalization event and could not have been produced without traversing the corresponding boundary.</p>
+<p>When content traverses multiple BitGraph-enforced boundaries, each boundary produces independent verification material for the same content. The result is a structurally enforced provenance chain: an ordered sequence of admission events, each cryptographically bound to the content at its respective boundary. Unlike voluntary provenance annotations, each link in this chain is the product of an enforced finalization event and could not have been produced without traversing the corresponding boundary.</p>
 
 <!-- Figure 6: Enforced Provenance Chains -->
 <div class="diagram">
@@ -1445,7 +1445,7 @@ The key difference: a reference monitor assumes objects exist and mediates acces
   </div>
 </div>
 <div style="text-align:center;margin-top:10px;font-size:12px;color:#333;font-style:italic">
-  enforced provenance chain — each link is an independent OCC finalization
+  enforced provenance chain — each link is an independent BitGraph finalization
 </div>
 </div>
 <div class="diagram-mobile">
@@ -1474,7 +1474,7 @@ The key difference: a reference monitor assumes objects exist and mediates acces
     <div style="text-align:center;font-size:12px;color:#333;font-style:italic;margin-top:4px">enforced provenance chain</div>
   </div>
 </div>
-<div class="fig-cap"><b>Figure 6.</b> Enforced provenance chains. Pre-existing content traverses multiple OCC boundaries, each producing independent verification material. Each admission is a separate enforced finalization event. The resulting chain is structurally guaranteed—not voluntarily annotated—because each link requires traversal of a protected commit interface.</div>
+<div class="fig-cap"><b>Figure 6.</b> Enforced provenance chains. Pre-existing content traverses multiple BitGraph boundaries, each producing independent verification material. Each admission is a separate enforced finalization event. The resulting chain is structurally guaranteed—not voluntarily annotated—because each link requires traversal of a protected commit interface.</div>
 </div>
 </section>
 </section>
@@ -1501,7 +1501,7 @@ The key difference: a reference monitor assumes objects exist and mediates acces
 <p>Operational deployments require key rotation policies and revocation mechanisms. When a boundary is compromised, trust anchors can be revoked or rotated, new boundary identities introduced, and epoch constraints enforced on acceptable verification material. No artifact registry is required for rotation or recovery.</p>
 
 <h3>Interoperability with provenance systems.</h3>
-<p>OCC coexists with provenance and credentialing systems that focus on post-creation traceability. Provenance chains can be attached to artifacts finalized under OCC, providing richer downstream traceability. The admission decision remains anchored in enforced finalization, while provenance provides the interoperability layer for distribution and audit.</p>
+<p>BitGraph coexists with provenance and credentialing systems that focus on post-creation traceability. Provenance chains can be attached to artifacts finalized under BitGraph, providing richer downstream traceability. The admission decision remains anchored in enforced finalization, while provenance provides the interoperability layer for distribution and audit.</p>
 </section>
 
 <!-- ================================================================ -->
@@ -1510,13 +1510,13 @@ The key difference: a reference monitor assumes objects exist and mediates acces
 <section id="sec-deployment">
 <h1><span class="header-section-number">15</span> Deployment and Adoption</h1>
 
-<p>Origin Controlled Computing is best understood as an enforcement primitive that can be introduced incrementally. Most environments cannot transition from fully permissive creation to strict admissibility in a single step.</p>
+<p>BitGraph is best understood as an enforcement primitive that can be introduced incrementally. Most environments cannot transition from fully permissive creation to strict admissibility in a single step.</p>
 
 <h3>Phased rollout.</h3>
 <p>A practical deployment begins with visibility: attaching verification material when available and surfacing authenticated versus unauthenticated status. The next phase requires authenticated finalization for selected high-assurance workflows while allowing unauthenticated outputs in a separate untrusted lane. Over time, enforcement expands to additional repositories, export paths, and regulated domains. Each phase requires engineering integration with existing commit paths, and the phased model is designed to contain this cost by limiting initial enforcement to high-value boundaries.</p>
 
 <h3>Policy-driven boundaries.</h3>
-<p>The decisive question in most deployments is not whether an artifact can be produced, but whether it can be admitted into a domain that confers legitimacy, downstream impact, or compliance standing. OCC can be applied selectively at these boundaries: ingestion into training corpora, publication to official channels, archival in compliance systems, or persistence into audit-grade logs.</p>
+<p>The decisive question in most deployments is not whether an artifact can be produced, but whether it can be admitted into a domain that confers legitimacy, downstream impact, or compliance standing. BitGraph can be applied selectively at these boundaries: ingestion into training corpora, publication to official channels, archival in compliance systems, or persistence into audit-grade logs.</p>
 
 <h3>Institutional adoption incentives.</h3>
 <p>Adoption is accelerated when benefits are concrete: reduced downstream moderation burden, improved auditability, clearer liability boundaries, and the ability to define and enforce admissible content policies. In high-volume environments, the ability to reject unauthenticated artifacts at ingestion is more valuable than attempting to detect or classify them after the fact. Organizations already subject to compliance mandates—regulated data processors, evidentiary systems, and entities operating under frameworks such as the EU AI Act—are natural early adopters, as they face the strongest immediate demand for structural authenticity guarantees.</p>
@@ -1531,7 +1531,7 @@ The key difference: a reference monitor assumes objects exist and mediates acces
 <section id="sec-applications">
 <h1><span class="header-section-number">16</span> Applications</h1>
 
-<p>Origin Controlled Computing applies wherever systems must distinguish admissible durable outputs from arbitrary durable outputs produced outside trusted pipelines. The common architectural pattern is a protected commit path that gates admission into authenticated durable state. The pattern arises across domains:</p>
+<p>BitGraph applies wherever systems must distinguish admissible durable outputs from arbitrary durable outputs produced outside trusted pipelines. The common architectural pattern is a protected commit path that gates admission into authenticated durable state. The pattern arises across domains:</p>
 
 <ol>
 <li><strong>AI training and inference pipelines</strong>, where only authenticated outputs may be admitted into datasets or downstream automation.</li>
@@ -1542,7 +1542,7 @@ The key difference: a reference monitor assumes objects exist and mediates acces
 <li><strong>Digital identity and credential issuance</strong>, where credentials must be structurally unforgeable.</li>
 <li><strong>Supply chain verification</strong>, where provenance must be enforced at each handoff rather than reconstructed afterward.</li>
 <li><strong>Authorization transfer and ledger-independent scarcity</strong>, where transfer of digital value or authority is enforced by a single atomic transition that both irreversibly de-authorizes the sender capability and generates the receiver capability within a protected execution boundary. This is a direct application of the birth–death semantics described in <a href="#sec-birth-death">Section 17</a>: the prior authority undergoes verifiable death, and the successor undergoes verifiable birth, within a single atomic event. This preserves scarcity invariants structurally and implies double-spend resistance without global ledgers, distributed consensus, or registry-based settlement infrastructure. The settlement and monetary implications are substantial and are explored separately.</li>
-<li><strong>Interplanetary and delay-tolerant systems</strong>, where authentication must be non-interactive, verification must occur offline, and proofs must travel with data across store-and-forward networks with minutes-to-hours latency. OCC's non-interactive finalization, compact portable proofs, and hardware-rooted trust align with the operational constraints of DTN/Bundle Protocol environments, where real-time protocols, centralized registries, and consensus mechanisms are infeasible.</li>
+<li><strong>Interplanetary and delay-tolerant systems</strong>, where authentication must be non-interactive, verification must occur offline, and proofs must travel with data across store-and-forward networks with minutes-to-hours latency. BitGraph's non-interactive finalization, compact portable proofs, and hardware-rooted trust align with the operational constraints of DTN/Bundle Protocol environments, where real-time protocols, centralized registries, and consensus mechanisms are infeasible.</li>
 </ol>
 
 <p>Across these domains, trust derives from enforced admission into authenticated state at commit time, not from retrospective provenance reconstruction. When admissibility matters, origin enforcement necessarily moves into the creation and finalization paths of the system.</p>
@@ -1554,9 +1554,9 @@ The key difference: a reference monitor assumes objects exist and mediates acces
 <section id="sec-birth-death">
 <h1><span class="header-section-number">17</span> Birth–Death Semantics</h1>
 
-<p>Origin Controlled Computing (OCC) enforces what we term <em>birth–death semantics</em> for digital state. Under this model, every authoritative state transition has exactly one verifiable moment of creation (birth), and every transfer or succession requires cryptographic evidence that the prior authority has been irreversibly consumed (death).</p>
+<p>BitGraph (BitGraph) enforces what we term <em>birth–death semantics</em> for digital state. Under this model, every authoritative state transition has exactly one verifiable moment of creation (birth), and every transfer or succession requires cryptographic evidence that the prior authority has been irreversibly consumed (death).</p>
 
-<p>Traditional provenance systems operate in a <em>detect-after</em> model: artifacts are produced freely, and conflicts such as replay, duplication, or double-spend are identified retrospectively through logs, ledgers, or consensus. OCC instead constrains the execution path such that invalid successor states are structurally unreachable within the enforcing boundary.</p>
+<p>Traditional provenance systems operate in a <em>detect-after</em> model: artifacts are produced freely, and conflicts such as replay, duplication, or double-spend are identified retrospectively through logs, ledgers, or consensus. BitGraph instead constrains the execution path such that invalid successor states are structurally unreachable within the enforcing boundary.</p>
 
 <!-- Figure: Birth-Death Semantics -->
 <div class="diagram">
@@ -1579,7 +1579,7 @@ The key difference: a reference monitor assumes objects exist and mediates acces
   </div>
   <div class="diagram-divider">
     <div style="font-size:28px;font-weight:300">→</div>
-    <div style="font-size:11px;color:#888;text-align:center;margin-top:2px">OCC<br>enforces</div>
+    <div style="font-size:11px;color:#888;text-align:center;margin-top:2px">BitGraph<br>enforces</div>
   </div>
   <div style="text-align:center;width:240px">
     <div style="font-weight:700;font-size:13px;margin-bottom:12px;font-family:'Inter',-apple-system,sans-serif">Birth–Death Semantics</div>
@@ -1627,7 +1627,7 @@ The key difference: a reference monitor assumes objects exist and mediates acces
     <div style="font-size:11px;color:#888">fork now, detect later</div>
   </div>
   <div style="text-align:center;font-size:22px;font-weight:300;color:#888;margin:4px 0">&#x2193;</div>
-  <div style="text-align:center;font-size:11px;color:#888;margin-bottom:16px">OCC enforces</div>
+  <div style="text-align:center;font-size:11px;color:#888;margin-bottom:16px">BitGraph enforces</div>
   <div style="font-weight:700;font-size:13px;margin-bottom:10px;font-family:'Inter',-apple-system,sans-serif;text-align:center">Birth&#x2013;Death Semantics</div>
   <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
     <div style="background:rgba(0,0,0,0.04);border:1px solid #ccc;border-radius:0;padding:8px 16px;font-size:13px;width:100%;text-align:center">Authority S&#x2080;</div>
@@ -1655,7 +1655,7 @@ The key difference: a reference monitor assumes objects exist and mediates acces
 
 <h2 id="sec-bd-construction"><span class="header-section-number">17.1</span> Construction</h2>
 
-<p>Within a verifier-accepted measured boundary (e.g., a Trusted Execution Environment or equivalent protected constructor), a valid OCC commit requires the atomic execution of the following steps:</p>
+<p>Within a verifier-accepted measured boundary (e.g., a Trusted Execution Environment or equivalent protected constructor), a valid BitGraph commit requires the atomic execution of the following steps:</p>
 
 <ul>
 <li>Policy authorization of the requested operation</li>
@@ -1668,7 +1668,7 @@ The key difference: a reference monitor assumes objects exist and mediates acces
 
 <h2 id="sec-bd-single-successor"><span class="header-section-number">17.2</span> Single-Successor Property</h2>
 
-<p>Given correct enforcement of measurement and monotonicity within the boundary, OCC guarantees:</p>
+<p>Given correct enforcement of measurement and monotonicity within the boundary, BitGraph guarantees:</p>
 
 <div class="property">
 <p><strong>Property (Single-Successor).</strong> At most one valid successor can be produced from any given parent authority within the verifier-accepted measurement and monotonicity domain of the enforcing boundary.</p>
@@ -1687,9 +1687,9 @@ The key difference: a reference monitor assumes objects exist and mediates acces
 
 <h2 id="sec-bd-double-spend"><span class="header-section-number">17.3</span> Relationship to Double-Spend</h2>
 
-<p>Birth–death semantics targets the core primitive underlying double-spend failures: the ability to produce multiple valid successor states from a single authority. By making such forks structurally unreachable at commit time within the stated trust envelope, OCC reduces reliance on global ordering for single-holder and provenance-sensitive workflows.</p>
+<p>Birth–death semantics targets the core primitive underlying double-spend failures: the ability to produce multiple valid successor states from a single authority. By making such forks structurally unreachable at commit time within the stated trust envelope, BitGraph reduces reliance on global ordering for single-holder and provenance-sensitive workflows.</p>
 
-<p>OCC does not claim global uniqueness across mutually distrustful, permissionless environments without additional coordination. Instead, it provides strong local authority guarantees that higher-level systems may compose with federation or consensus where global agreement is required.</p>
+<p>BitGraph does not claim global uniqueness across mutually distrustful, permissionless environments without additional coordination. Instead, it provides strong local authority guarantees that higher-level systems may compose with federation or consensus where global agreement is required.</p>
 
 <h2 id="sec-bd-trust-envelope"><span class="header-section-number">17.4</span> Trust Envelope</h2>
 
@@ -1699,7 +1699,7 @@ The key difference: a reference monitor assumes objects exist and mediates acces
 <li>A protected execution boundary is required for enforcement</li>
 <li>Monotonic state must be resistant to rollback within that boundary</li>
 <li>Verifiers must enforce measurement policy and counter monotonicity</li>
-<li>OCC does not prevent byte-level copying of artifacts outside the authority model</li>
+<li>BitGraph does not prevent byte-level copying of artifacts outside the authority model</li>
 </ul>
 
 <p>Within this envelope, birth–death semantics converts post-facto detection problems into construction-time exclusion properties.</p>
@@ -1711,7 +1711,7 @@ The key difference: a reference monitor assumes objects exist and mediates acces
 <section id="sec-value-transfer">
 <h1><span class="header-section-number">18</span> Single-Transfer Value Without Consensus</h1>
 
-<p>Origin Controlled Computing (OCC) enables single-transfer digital value by binding authority to a consumptive, cryptographically enforced state transition rather than to a ledger entry. This is a concrete instantiation of the birth–death semantics described in <a href="#sec-birth-death">Section 17</a>: each transfer atomically consumes (kills) the prior holder's authority and produces (births) a new verifiable successor. Each artifact carries a proof that can only be produced through a protected commit path, where authorization, binding, and durable commit occur atomically inside a trusted execution boundary. When value is transferred, the prior holder's permission is provably consumed and the new state is independently verifiable offline using public keys and hash lineage. The bytes themselves may be copied, but the authoritative right cannot be duplicated, because the single-successor property guarantees that only one unspent lineage can exist at a time within the enforcing boundary. In this model, uniqueness and transfer integrity come from enforced execution semantics instead of global consensus, allowing blockchain-free, verifiable digital handoff.</p>
+<p>BitGraph (BitGraph) enables single-transfer digital value by binding authority to a consumptive, cryptographically enforced state transition rather than to a ledger entry. This is a concrete instantiation of the birth–death semantics described in <a href="#sec-birth-death">Section 17</a>: each transfer atomically consumes (kills) the prior holder's authority and produces (births) a new verifiable successor. Each artifact carries a proof that can only be produced through a protected commit path, where authorization, binding, and durable commit occur atomically inside a trusted execution boundary. When value is transferred, the prior holder's permission is provably consumed and the new state is independently verifiable offline using public keys and hash lineage. The bytes themselves may be copied, but the authoritative right cannot be duplicated, because the single-successor property guarantees that only one unspent lineage can exist at a time within the enforcing boundary. In this model, uniqueness and transfer integrity come from enforced execution semantics instead of global consensus, allowing blockchain-free, verifiable digital handoff.</p>
 </section>
 
 <!-- ================================================================ -->
@@ -1720,13 +1720,13 @@ The key difference: a reference monitor assumes objects exist and mediates acces
 <section id="sec-conclusion">
 <h1><span class="header-section-number">19</span> Conclusion</h1>
 
-<p>The Trusted Origin Token Architecture demonstrates that origin control can be enforced by consuming authorization units at finalization. Origin Controlled Computing generalizes this result by showing that equivalent enforcement is achieved using boundary-fresh cryptographic computation and protected commit paths, without requiring tracked tokens.</p>
+<p>The Trusted Origin Token Architecture demonstrates that origin control can be enforced by consuming authorization units at finalization. BitGraph generalizes this result by showing that equivalent enforcement is achieved using boundary-fresh cryptographic computation and protected commit paths, without requiring tracked tokens.</p>
 
 <p>Atomic Causality links authorization, cryptographic binding, and durable commit into a single indivisible event. Authenticated durable state is defined by structural reachability—by the state transitions that produced it—not by historical claims, metadata, or post-hoc annotation.</p>
 
-<p>The formal model presented here shows that OCC defines a new enforcement primitive: a <em>genesis access control mechanism</em> that constrains which authenticated objects are permitted to exist, rather than mediating operations on objects that already exist. This is strictly stronger than classical reference monitors and formally distinct from attested execution, information flow control, and capability-based security.</p>
+<p>The formal model presented here shows that BitGraph defines a new enforcement primitive: a <em>genesis access control mechanism</em> that constrains which authenticated objects are permitted to exist, rather than mediating operations on objects that already exist. This is strictly stronger than classical reference monitors and formally distinct from attested execution, information flow control, and capability-based security.</p>
 
-<p>By securing creation rather than history, Origin Controlled Computing establishes an architectural primitive for trustworthy digital systems. It does not replace provenance, verification, or access control. It provides the structural foundation that makes those mechanisms enforceable at the boundaries where legitimacy is conferred.</p>
+<p>By securing creation rather than history, BitGraph establishes an architectural primitive for trustworthy digital systems. It does not replace provenance, verification, or access control. It provides the structural foundation that makes those mechanisms enforceable at the boundaries where legitimacy is conferred.</p>
 </section>
 
 <!-- ================================================================ -->

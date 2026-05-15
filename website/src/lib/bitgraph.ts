@@ -1,4 +1,4 @@
-export const OCC_ENDPOINT = "https://nitro.occproof.com";
+export const BITGRAPH_ENDPOINT = "https://nitro.bitgraph.ing";
 
 export interface ActorIdentity {
   keyId: string;
@@ -11,7 +11,7 @@ export interface AgencyEnvelope {
   actor: ActorIdentity;
   authorization: {
     format: string;
-    purpose: "occ/commit-authorize/v1";
+    purpose: "bitgraph/commit-authorize/v1";
     actorKeyId: string;
     artifactHash: string;
     challenge: string;
@@ -27,7 +27,7 @@ export interface AgencyEnvelope {
   };
 }
 
-export interface OCCProof {
+export interface BitGraphProof {
   version: string;
   artifact: {
     hashAlg: string;
@@ -104,21 +104,21 @@ export interface ProofVerifyResult {
 }
 
 /**
- * Detect whether a file's text content is an OCC proof JSON.
+ * Detect whether a file's text content is an BitGraph proof JSON.
  */
-export function isOCCProof(text: string): OCCProof | null {
+export function isBitGraphProof(text: string): BitGraphProof | null {
   try {
     const obj = JSON.parse(text);
     if (
       obj &&
       typeof obj === "object" &&
       typeof obj.version === "string" &&
-      obj.version.startsWith("occ/") &&
+      obj.version.startsWith("bitgraph/") &&
       obj.artifact?.digestB64 &&
       obj.signer?.publicKeyB64 &&
       obj.signer?.signatureB64
     ) {
-      return obj as OCCProof;
+      return obj as BitGraphProof;
     }
   } catch {
     // not JSON
@@ -127,11 +127,11 @@ export function isOCCProof(text: string): OCCProof | null {
 }
 
 /**
- * Verify an OCC proof's Ed25519 signature in the browser.
+ * Verify an BitGraph proof's Ed25519 signature in the browser.
  * Does NOT require the original file — verifies the cryptographic
  * structure of the proof itself.
  */
-export async function verifyProofSignature(proof: OCCProof): Promise<ProofVerifyResult> {
+export async function verifyProofSignature(proof: BitGraphProof): Promise<ProofVerifyResult> {
   const ed = await import("@noble/ed25519");
 
   // Noble v3 requires SHA-512 to be configured for browser use
@@ -283,17 +283,17 @@ export async function commitDigest(
   metadata?: Record<string, unknown>,
   agency?: AgencyEnvelope,
   attribution?: { name?: string; title?: string; message?: string }
-): Promise<OCCProof> {
+): Promise<BitGraphProof> {
   const body: Record<string, unknown> = {
     digests: [{ digestB64, hashAlg: "sha256" }],
     metadata,
-    chainId: "occ:main",
+    chainId: "bitgraph:main",
   };
   if (agency) body.agency = agency;
   if (attribution) body.attribution = attribution;
 
   // Route through server-side proxy when in browser — guarantees indexing
-  const commitUrl = typeof window !== "undefined" ? "/api/commit" : `${OCC_ENDPOINT}/commit`;
+  const commitUrl = typeof window !== "undefined" ? "/api/commit" : `${BITGRAPH_ENDPOINT}/commit`;
 
   const resp = await fetch(commitUrl, {
     method: "POST",
@@ -310,8 +310,8 @@ export async function commitDigest(
   const raw = Array.isArray(proofs) ? proofs[0] : proofs;
 
   // Canonical field order first, then any extra enclave fields at the end
-  const proof: OCCProof = {
-    version: raw.version || "occ/1",
+  const proof: BitGraphProof = {
+    version: raw.version || "bitgraph/1",
     artifact: raw.artifact,
     commit: raw.commit,
     signer: raw.signer,
@@ -336,20 +336,20 @@ export async function commitDigest(
 /**
  * Commit multiple digests in a single enclave request (batch mode).
  * Agency is verified once against the first digest.
- * Returns one OCCProof per digest, in order.
+ * Returns one BitGraphProof per digest, in order.
  */
 export async function commitBatch(
   digests: Array<{ digestB64: string; hashAlg: "sha256" }>,
   metadata?: Record<string, unknown>,
   agency?: AgencyEnvelope,
   attribution?: { name?: string; title?: string; message?: string }
-): Promise<OCCProof[]> {
-  const body: Record<string, unknown> = { digests, metadata, chainId: "occ:main" };
+): Promise<BitGraphProof[]> {
+  const body: Record<string, unknown> = { digests, metadata, chainId: "bitgraph:main" };
   if (agency) body.agency = agency;
   if (attribution) body.attribution = attribution;
 
   // Route through server-side proxy when in browser — guarantees indexing
-  const commitUrl = typeof window !== "undefined" ? "/api/commit" : `${OCC_ENDPOINT}/commit`;
+  const commitUrl = typeof window !== "undefined" ? "/api/commit" : `${BITGRAPH_ENDPOINT}/commit`;
 
   const resp = await fetch(commitUrl, {
     method: "POST",
@@ -366,18 +366,18 @@ export async function commitBatch(
   const rawProofs = Array.isArray(raw) ? raw : [raw];
 
   const results = rawProofs.map((r: Record<string, unknown>) => {
-    const proof: OCCProof = {
-      version: (r.version as string) || "occ/1",
-      artifact: r.artifact as OCCProof["artifact"],
-      commit: r.commit as OCCProof["commit"],
-      signer: r.signer as OCCProof["signer"],
-      environment: r.environment as OCCProof["environment"],
-      timestamps: r.timestamps as OCCProof["timestamps"],
-      agency: r.agency as OCCProof["agency"],
-      attribution: r.attribution as OCCProof["attribution"],
-      slotAllocation: r.slotAllocation as OCCProof["slotAllocation"],
-      metadata: r.metadata as OCCProof["metadata"],
-      claims: r.claims as OCCProof["claims"],
+    const proof: BitGraphProof = {
+      version: (r.version as string) || "bitgraph/1",
+      artifact: r.artifact as BitGraphProof["artifact"],
+      commit: r.commit as BitGraphProof["commit"],
+      signer: r.signer as BitGraphProof["signer"],
+      environment: r.environment as BitGraphProof["environment"],
+      timestamps: r.timestamps as BitGraphProof["timestamps"],
+      agency: r.agency as BitGraphProof["agency"],
+      attribution: r.attribution as BitGraphProof["attribution"],
+      slotAllocation: r.slotAllocation as BitGraphProof["slotAllocation"],
+      metadata: r.metadata as BitGraphProof["metadata"],
+      claims: r.claims as BitGraphProof["claims"],
       ...r, // any extra/unknown fields go at the end
     };
 
@@ -398,7 +398,7 @@ export async function getEnclaveInfo(): Promise<{
   measurement: string;
   enforcement: string;
 }> {
-  const resp = await fetch(`${OCC_ENDPOINT}/key`);
+  const resp = await fetch(`${BITGRAPH_ENDPOINT}/key`);
   if (!resp.ok) throw new Error("Failed to fetch enclave info");
   return resp.json();
 }
@@ -409,7 +409,7 @@ export async function getEnclaveInfo(): Promise<{
  * commit request's agency envelope.
  */
 export async function requestChallenge(): Promise<string> {
-  const resp = await fetch(`${OCC_ENDPOINT}/challenge`, {
+  const resp = await fetch(`${BITGRAPH_ENDPOINT}/challenge`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: "{}",
@@ -436,7 +436,7 @@ export function formatFileSize(bytes: number): string {
 
 export interface BWConversionResult {
   imageB64: string;
-  proof: OCCProof;
+  proof: BitGraphProof;
   digestB64: string;
 }
 
@@ -445,7 +445,7 @@ export interface BWConversionResult {
  * The enclave converts to B&W, hashes the output, and returns a proof.
  */
 export async function convertToBW(imageB64: string): Promise<BWConversionResult> {
-  const resp = await fetch(`${OCC_ENDPOINT}/convert-bw`, {
+  const resp = await fetch(`${BITGRAPH_ENDPOINT}/convert-bw`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ imageB64 }),
@@ -458,8 +458,8 @@ export async function convertToBW(imageB64: string): Promise<BWConversionResult>
 
   const result = await resp.json();
 
-  const proof: OCCProof = {
-    version: "occ/1",
+  const proof: BitGraphProof = {
+    version: "bitgraph/1",
     artifact: result.proof.artifact,
     commit: result.proof.commit,
     signer: result.proof.signer,

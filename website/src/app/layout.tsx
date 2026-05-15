@@ -21,9 +21,9 @@ export const metadata: Metadata = {
     template: "%s | BitGraph",
   },
   description:
-    "Live cryptographic proof chain. Create, verify, and explore OCC proofs.",
+    "Live cryptographic proof chain. Create, verify, and explore BitGraph proofs.",
   keywords: [
-    "OCC", "Origin Controlled Computing", "AI agent control", "AI safety",
+    "BitGraph", "BitGraph", "AI agent control", "AI safety",
     "cryptographic policy", "AI governance", "default deny", "proof explorer",
   ],
   openGraph: {

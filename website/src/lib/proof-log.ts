@@ -1,6 +1,6 @@
-import type { OCCProof } from "@/lib/occ";
+import type { BitGraphProof } from "@/lib/bitgraph";
 
-/** A single entry in a proof.jsonl file produced by occ-mcp-proxy --wrap */
+/** A single entry in a proof.jsonl file produced by bitgraph-mcp-proxy --wrap */
 export interface ProofLogEntry {
   timestamp: string;
   tool: string;
@@ -10,7 +10,7 @@ export interface ProofLogEntry {
   receipt?: {
     format: string;
     envelope: ExecutionEnvelope;
-    proof: OCCProof;
+    proof: BitGraphProof;
   };
 }
 

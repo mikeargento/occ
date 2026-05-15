@@ -2,7 +2,7 @@
 // Copyright 2024-2026 Mike Argento
 
 /**
- * occ-core Policy — parse, hash, and validate markdown policy documents.
+ * bitgraph-core Policy — parse, hash, and validate markdown policy documents.
  *
  * Policy documents are human-readable markdown files that define what an
  * agent is allowed to do. The SHA-256 hash of the raw document bytes is
@@ -47,7 +47,7 @@ export interface PolicyDocument {
 }
 
 export interface PolicyRules {
-  /** Always true — OCC is default-deny. */
+  /** Always true — BitGraph is default-deny. */
   defaultDeny: true;
   /** Tool names explicitly allowed by the policy. */
   allowedTools?: string[] | undefined;

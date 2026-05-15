@@ -2,9 +2,9 @@
 // Copyright 2024-2026 Mike Argento
 
 /**
- * occ-core Verifier
+ * bitgraph-core Verifier
  *
- * Deterministic, offline verification of OCCProof structures.
+ * Deterministic, offline verification of BitGraphProof structures.
  *
  * Verification steps (in order):
  *   1. Structural validation — required fields present and typed correctly
@@ -30,7 +30,7 @@
  *
  * ## Compliant Verifier Requirements
  *
- * Any implementation that claims to verify OCC proofs MUST perform ALL of
+ * Any implementation that claims to verify BitGraph proofs MUST perform ALL of
  * the following steps:
  *
  *   1. **Ed25519 signature verification** — Reconstruct the canonical
@@ -74,7 +74,7 @@ import { createVerify, createHash } from "node:crypto";
 import { verifyAsync as ed25519VerifyAsync } from "@noble/ed25519";
 import { sha256 } from "@noble/hashes/sha256";
 import { canonicalize, constantTimeEqual } from "./canonical.js";
-import type { EnforcementTier, OCCProof, SignedBody, SlotAllocation, VerificationPolicy, AgencyEnvelope, AuthorizationPayload, WebAuthnAuthorization } from "./types.js";
+import type { EnforcementTier, BitGraphProof, SignedBody, SlotAllocation, VerificationPolicy, AgencyEnvelope, AuthorizationPayload, WebAuthnAuthorization } from "./types.js";
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -87,7 +87,7 @@ export interface VerifyResult {
 }
 
 /**
- * Verify an OCCProof against the original input bytes.
+ * Verify an BitGraphProof against the original input bytes.
  *
  * @param opts.proof        - The proof to verify
  * @param opts.bytes        - The original input bytes that were committed
@@ -97,7 +97,7 @@ export interface VerifyResult {
  * @returns             `{ valid: true }` on success, `{ valid: false, reason }` on failure
  */
 export async function verify(opts: {
-  proof: OCCProof;
+  proof: BitGraphProof;
   bytes: Uint8Array;
   trustAnchors?: VerificationPolicy;
 }): Promise<VerifyResult> {
@@ -145,7 +145,7 @@ export async function verify(opts: {
   }
 
   const signedBody: SignedBody = {
-    version: proof.version as "occ/1",
+    version: proof.version as "bitgraph/1",
     artifact: proof.artifact,
     commit: proof.commit,
     publicKeyB64: proof.signer.publicKeyB64,
@@ -219,7 +219,7 @@ export async function verify(opts: {
   }
 
   // ------------------------------------------------------------------
-  // 4c. Slot allocation verification (OCC causal ordering)
+  // 4c. Slot allocation verification (BitGraph causal ordering)
   // ------------------------------------------------------------------
   if (proof.slotAllocation !== undefined) {
     const slotError = await verifySlotAllocation(proof);
@@ -267,7 +267,7 @@ function validateStructure(proof: unknown): string | null {
   }
   const p = proof as Record<string, unknown>;
 
-  if (p["version"] !== "occ/1") {
+  if (p["version"] !== "bitgraph/1") {
     return `unsupported proof version: ${String(p["version"])}`;
   }
 
@@ -343,7 +343,7 @@ function validateStructure(proof: unknown): string | null {
 // Policy enforcement
 // ---------------------------------------------------------------------------
 
-function checkPolicy(proof: OCCProof, policy: VerificationPolicy): string | null {
+function checkPolicy(proof: BitGraphProof, policy: VerificationPolicy): string | null {
   // Enforcement tier check
   if (policy.requireEnforcement !== undefined) {
     if (proof.environment.enforcement !== policy.requireEnforcement) {
@@ -479,10 +479,10 @@ function checkPolicy(proof: OCCProof, policy: VerificationPolicy): string | null
     }
   }
 
-  // Slot allocation required (OCC causal ordering)
+  // Slot allocation required (BitGraph causal ordering)
   if (policy.requireSlot === true) {
     if (proof.slotAllocation === undefined) {
-      return "policy requires slotAllocation (OCC causal slot) but proof has none";
+      return "policy requires slotAllocation (BitGraph causal slot) but proof has none";
     }
     // Slot verification itself is handled in step 4c (before policy checks),
     // so by this point the slot has already been validated if present.
@@ -504,10 +504,10 @@ function checkPolicy(proof: OCCProof, policy: VerificationPolicy): string | null
  *   2. actor.keyId == hex(SHA-256(SPKI DER pubkey bytes))
  *   3. authorization.actorKeyId == actor.keyId
  *   4. authorization.artifactHash == proof.artifact.digestB64
- *   5. authorization.purpose == "occ/commit-authorize/v1"
+ *   5. authorization.purpose == "bitgraph/commit-authorize/v1"
  *   6. P-256 signature over canonical authorization payload
  */
-function verifyAgency(proof: OCCProof): string | null {
+function verifyAgency(proof: BitGraphProof): string | null {
   const agency = proof.agency!;
   const { actor, authorization } = agency;
   const isWebAuthn = "format" in authorization && authorization.format === "webauthn";
@@ -525,8 +525,8 @@ function verifyAgency(proof: OCCProof): string | null {
   if (typeof actor.provider !== "string" || actor.provider.length === 0) {
     return "agency.actor.provider must be a non-empty string";
   }
-  if (authorization.purpose !== "occ/commit-authorize/v1") {
-    return `agency.authorization.purpose must be "occ/commit-authorize/v1", got "${String(authorization.purpose)}"`;
+  if (authorization.purpose !== "bitgraph/commit-authorize/v1") {
+    return `agency.authorization.purpose must be "bitgraph/commit-authorize/v1", got "${String(authorization.purpose)}"`;
   }
   if (typeof authorization.signatureB64 !== "string" || authorization.signatureB64.length === 0) {
     return "agency.authorization.signatureB64 must be a non-empty string";
@@ -670,11 +670,11 @@ function verifyAgency(proof: OCCProof): string | null {
 }
 
 // ---------------------------------------------------------------------------
-// Slot allocation verification (OCC causal ordering)
+// Slot allocation verification (BitGraph causal ordering)
 // ---------------------------------------------------------------------------
 
 /**
- * Verify the embedded slot allocation record for OCC atomic causality.
+ * Verify the embedded slot allocation record for BitGraph atomic causality.
  *
  * Checks (in order):
  *   1. Slot signature valid (enclave created it independently)
@@ -689,12 +689,12 @@ function verifyAgency(proof: OCCProof): string | null {
  * exact slot allocation record (via the hash in the signed body). Without
  * this, the slot record would be advisory data that could be swapped.
  */
-async function verifySlotAllocation(proof: OCCProof): Promise<string | null> {
+async function verifySlotAllocation(proof: BitGraphProof): Promise<string | null> {
   const slot = proof.slotAllocation!;
 
   // 1. Validate slot structure
-  if (slot.version !== "occ/slot/1") {
-    return `slotAllocation.version must be "occ/slot/1", got "${String(slot.version)}"`;
+  if (slot.version !== "bitgraph/slot/1") {
+    return `slotAllocation.version must be "bitgraph/slot/1", got "${String(slot.version)}"`;
   }
   if (typeof slot.nonceB64 !== "string" || slot.nonceB64.length === 0) {
     return "slotAllocation.nonceB64 must be a non-empty string";
@@ -843,7 +843,7 @@ const consumedPredecessors = new Map<string, string>(); // successorKey → toEp
  * Compute the unique key for a consumed predecessor.
  * successorKey = BASE64(SHA-256(prevEpochId + "|" + prevCounter + "|" + prevProofHashB64))
  */
-function computeSuccessorKey(link: NonNullable<OCCProof["commit"]["epochLink"]>): string {
+function computeSuccessorKey(link: NonNullable<BitGraphProof["commit"]["epochLink"]>): string {
   const input = `${link.prevEpochId}|${link.prevCounter}|${link.prevProofHashB64}`;
   const hash = sha256(new TextEncoder().encode(input));
   return Buffer.from(hash).toString("base64");
@@ -863,7 +863,7 @@ function computeSuccessorKey(link: NonNullable<OCCProof["commit"]["epochLink"]>)
  * performs this validation at init time. The verifier checks structural
  * consistency and fork detection.
  */
-function verifyEpochLink(proof: OCCProof): string | null {
+function verifyEpochLink(proof: BitGraphProof): string | null {
   const link = proof.commit.epochLink!;
 
   // 1. Structural validation

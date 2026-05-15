@@ -9,8 +9,8 @@ import {
   resizeImageToBase64,
   hashBytes,
   formatFileSize,
-  type OCCProof,
-} from "@/lib/occ";
+  type BitGraphProof,
+} from "@/lib/bitgraph";
 import { zipSync } from "fflate";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -19,7 +19,7 @@ type Status = "idle" | "resizing" | "sending" | "processing" | "done" | "error";
 
 // ─── VERIFY.txt builder ─────────────────────────────────────────────────────
 
-function buildBWVerifyTxt(originalFilename: string, p: OCCProof): string {
+function buildBWVerifyTxt(originalFilename: string, p: BitGraphProof): string {
   const slot = p.slotAllocation;
   const hasSlot = !!slot;
 
@@ -29,7 +29,7 @@ function buildBWVerifyTxt(originalFilename: string, p: OCCProof): string {
 1. PURPOSE
 ----------
 This file is a self-contained verification guide for the B&W conversion
-proof package created by OCC (https://occ.wtf/bw-demo).
+proof package created by BitGraph (https://bitgraph.ing/bw-demo).
 
 The grayscale conversion was performed INSIDE an AWS Nitro Enclave
 (Trusted Execution Environment). The proof's artifact digest is the
@@ -42,9 +42,9 @@ It is designed so that any AI system (ChatGPT, Claude, Gemini, Grok, etc.)
 can be given this file along with proof.json and the artifact to perform
 a complete, independent verification analysis.
 
-Proof system: OCC (Origin Controlled Computing)
+Proof system: BitGraph (BitGraph)
 Protocol version: ${p.version}
-Learn more: https://occ.wtf
+Learn more: https://bitgraph.ing
 
 
 2. FILES IN THIS PACKAGE
@@ -108,7 +108,7 @@ To verify:
   if (hasSlot) {
     txt += `
 
-6. SLOT ALLOCATION VERIFICATION (OCC Causal Ordering)
+6. SLOT ALLOCATION VERIFICATION (BitGraph Causal Ordering)
 ------------------------------------------------------
 This proof contains a slot allocation record proving nonce-first causality.
 
@@ -191,7 +191,7 @@ ${hasSlot ? `This proof demonstrates causal ordering through three independent m
      slotAllocation.counter (${slot!.counter}) < commit.counter (${p.commit.counter})
      The monotonic counter proves the slot was allocated first.
 
-Together, these three checks constitute the OCC atomic causality proof:
+Together, these three checks constitute the BitGraph atomic causality proof:
 the nonce provably existed before the artifact was bound to it.` : `Without a slot allocation record, causal ordering relies on trust in the
 enclave code (verified via measurement + attestation) to correctly implement
 nonce-first behavior internally.`}
@@ -282,8 +282,8 @@ checks (field presence, value matching, counter ordering) can always
 be performed by reading the proof.json directly.
 
 
-Powered by OCC (Origin Controlled Computing)
-https://occ.wtf
+Powered by BitGraph (BitGraph)
+https://bitgraph.ing
 `;
 
   return txt;
@@ -296,7 +296,7 @@ export default function BWDemoPage() {
   const [originalPreview, setOriginalPreview] = useState<string | null>(null);
   const [bwImageUrl, setBwImageUrl] = useState<string | null>(null);
   const [bwImageB64, setBwImageB64] = useState<string | null>(null);
-  const [proof, setProof] = useState<OCCProof | null>(null);
+  const [proof, setProof] = useState<BitGraphProof | null>(null);
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
   const [digestMatch, setDigestMatch] = useState<boolean | null>(null);

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Overview",
   description:
-    "Origin Controlled Computing — what it is, how it works, and why it is different.",
+    "BitGraph — what it is, how it works, and why it is different.",
 };
 
 export default function OverviewPage() {
@@ -18,11 +18,11 @@ export default function OverviewPage() {
       </p>
 
       <p>
-        OCC enforces origin. A measured trusted execution environment creates an unpredictable cryptographic slot before the artifact&rsquo;s hash is known. The artifact&rsquo;s hash arrives later and is bound into the slot. The slot is consumed and cannot be reused. What emerges is not a description of provenance but a proof of construction.
+        BitGraph enforces origin. A measured trusted execution environment creates an unpredictable cryptographic slot before the artifact&rsquo;s hash is known. The artifact&rsquo;s hash arrives later and is bound into the slot. The slot is consumed and cannot be reused. What emerges is not a description of provenance but a proof of construction.
       </p>
 
       <p className="lede">
-        OCC turns randomness into one-time causal space: a nonce becomes origin space when a TEE can prove it was unused before and consumed once.
+        BitGraph turns randomness into one-time causal space: a nonce becomes origin space when a TEE can prove it was unused before and consumed once.
       </p>
 
       <blockquote>
@@ -50,7 +50,7 @@ export default function OverviewPage() {
       </p>
 
       <p>
-        Most systems say: &ldquo;Here is a file hash. Now let&rsquo;s sign it.&rdquo; OCC says: &ldquo;Here is a pre-existing origin slot. Now this file hash has occupied it.&rdquo;
+        Most systems say: &ldquo;Here is a file hash. Now let&rsquo;s sign it.&rdquo; BitGraph says: &ldquo;Here is a pre-existing origin slot. Now this file hash has occupied it.&rdquo;
       </p>
 
       <h2>Why nonce-first matters</h2>
@@ -64,13 +64,13 @@ export default function OverviewPage() {
       </p>
 
       <p>
-        OCC closes the window by requiring the slot to exist first. The slot is not evidence added afterward. It is the condition the artifact must satisfy.
+        BitGraph closes the window by requiring the slot to exist first. The slot is not evidence added afterward. It is the condition the artifact must satisfy.
       </p>
 
-      <h2>What an OCC proof contains</h2>
+      <h2>What an BitGraph proof contains</h2>
 
       <p>
-        An OCC proof is a portable proof object, typically JSON, that travels with the artifact. It can include:
+        An BitGraph proof is a portable proof object, typically JSON, that travels with the artifact. It can include:
       </p>
 
       <table>
@@ -91,7 +91,7 @@ export default function OverviewPage() {
           <tr><td>Signature</td><td>Verifies the proof was issued by the enclave-controlled key</td></tr>
           <tr><td>TEE measurement</td><td>Shows what code and environment produced the proof</td></tr>
           <tr><td>Attestation</td><td>Shows the proof came from measured hardware</td></tr>
-          <tr><td>Public anchor</td><td>Tethers OCC logical time to a public reference</td></tr>
+          <tr><td>Public anchor</td><td>Tethers BitGraph logical time to a public reference</td></tr>
         </tbody>
       </table>
 
@@ -105,12 +105,12 @@ export default function OverviewPage() {
         Every proof has order. Every slot and commit has a position. The system can prove that this happened after that, that this slot existed before this hash was bound, that this proof came before the next, that this epoch has an internal cryptographic history.
       </p>
 
-      <p>OCC proves causal order first. Clock time is optional.</p>
+      <p>BitGraph proves causal order first. Clock time is optional.</p>
 
       <h2>Ethereum: the backward seal</h2>
 
       <p>
-        OCC&rsquo;s internal ordering does not require Ethereum. The chain creates internal order through slot allocation, consumption, counters, signatures, and chained proof history. Ethereum anchors add a different property on top: a public backward seal that any third party can independently verify.
+        BitGraph&rsquo;s internal ordering does not require Ethereum. The chain creates internal order through slot allocation, consumption, counters, signatures, and chained proof history. Ethereum anchors add a different property on top: a public backward seal that any third party can independently verify.
       </p>
 
       <p>
@@ -128,13 +128,13 @@ export default function OverviewPage() {
       </p>
 
       <p>
-        Ethereum is not asked to prove the artifact&rsquo;s origin. OCC does that. Ethereum provides the backward seal that makes the commitment publicly verifiable.
+        Ethereum is not asked to prove the artifact&rsquo;s origin. BitGraph does that. Ethereum provides the backward seal that makes the commitment publicly verifiable.
       </p>
 
       <h2>Multi-TEE breach detection</h2>
 
       <p>
-        OCC&rsquo;s architecture supports running three independent TEEs in parallel as a tripwire, not a consensus system. Three TEEs witness the same input and produce three individual proofs with different nonces, signatures, and attestations. They agree on the meaningful result: same artifact hash, same policy decision, valid measurements, valid signatures, expected ordering behavior.
+        BitGraph&rsquo;s architecture supports running three independent TEEs in parallel as a tripwire, not a consensus system. Three TEEs witness the same input and produce three individual proofs with different nonces, signatures, and attestations. They agree on the meaningful result: same artifact hash, same policy decision, valid measurements, valid signatures, expected ordering behavior.
       </p>
 
       <p>
@@ -148,7 +148,7 @@ export default function OverviewPage() {
       <h2>The trust model</h2>
 
       <p>
-        OCC does not depend on blind trust in any single component. Not the operator, the TEE, Ethereum, the clock, a certificate authority, or a live server. Each layer adds an independently verifiable property.
+        BitGraph does not depend on blind trust in any single component. Not the operator, the TEE, Ethereum, the clock, a certificate authority, or a live server. Each layer adds an independently verifiable property.
       </p>
 
       <table>
@@ -178,13 +178,13 @@ export default function OverviewPage() {
       </p>
 
       <p>
-        OCC restores verifiable originality by separating it from the object. The artifact&rsquo;s hash is the proof&rsquo;s anchor, so any exact copy of the bytes carries the same causal provenance. The proof object itself can travel with the file, stay on the server that issued it, or be stored anywhere, and each can have multiple copies. Verification doesn&rsquo;t depend on where it lives. Originality moves from physical container to causal proof. Singularity is no longer required.
+        BitGraph restores verifiable originality by separating it from the object. The artifact&rsquo;s hash is the proof&rsquo;s anchor, so any exact copy of the bytes carries the same causal provenance. The proof object itself can travel with the file, stay on the server that issued it, or be stored anywhere, and each can have multiple copies. Verification doesn&rsquo;t depend on where it lives. Originality moves from physical container to causal proof. Singularity is no longer required.
       </p>
 
-      <h2>What OCC applies to</h2>
+      <h2>What BitGraph applies to</h2>
 
       <p>
-        OCC works on any digital state that can be hashed. The same primitive applies whether the artifact is a photograph, a contract, a model output, a dataset, or a software release.
+        BitGraph works on any digital state that can be hashed. The same primitive applies whether the artifact is a photograph, a contract, a model output, a dataset, or a software release.
       </p>
 
       <p>
@@ -207,10 +207,10 @@ export default function OverviewPage() {
         <strong>Research and IP.</strong> Datasets, experimental outputs, and possession proofs that commit to a hash without requiring the file to leave the user&rsquo;s device.
       </p>
 
-      <h2>How OCC differs from existing approaches</h2>
+      <h2>How BitGraph differs from existing approaches</h2>
 
       <p>
-        OCC is often confused with adjacent systems. The differences are structural:
+        BitGraph is often confused with adjacent systems. The differences are structural:
       </p>
 
       <table>
@@ -218,7 +218,7 @@ export default function OverviewPage() {
           <tr>
             <th>System</th>
             <th>Says</th>
-            <th>OCC says</th>
+            <th>BitGraph says</th>
           </tr>
         </thead>
         <tbody>
@@ -246,7 +246,7 @@ export default function OverviewPage() {
       </table>
 
       <p>
-        Signatures, timestamps, content credentials, and blockchains all answer &ldquo;who claimed what, when?&rdquo; OCC answers &ldquo;what construction path did this exact artifact satisfy?&rdquo; They are complementary, not competing. A signature can be inside an OCC proof. A timestamp can decorate one. Content credentials can ride alongside one. None of them, alone, do what OCC does.
+        Signatures, timestamps, content credentials, and blockchains all answer &ldquo;who claimed what, when?&rdquo; BitGraph answers &ldquo;what construction path did this exact artifact satisfy?&rdquo; They are complementary, not competing. A signature can be inside an BitGraph proof. A timestamp can decorate one. Content credentials can ride alongside one. None of them, alone, do what BitGraph does.
       </p>
 
       <h2>The simplest version</h2>
@@ -260,7 +260,7 @@ export default function OverviewPage() {
       </p>
 
       <footer className="overview-footer">
-        <em>Origin Controlled Computing, Patent Pending</em>
+        <em>BitGraph, Patent Pending</em>
       </footer>
     </article>
   );

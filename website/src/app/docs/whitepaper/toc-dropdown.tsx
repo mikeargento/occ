@@ -13,7 +13,7 @@ const sections = [
   { id: "sec-tota", num: "5", title: "Trusted Origin Token Architecture" },
   { id: "sec-functional-properties", num: "5.1", title: "Functional Properties", indent: true },
   { id: "sec-limits-token", num: "5.2", title: "Limits of Token-Based Enforcement", indent: true },
-  { id: "sec-occ", num: "6", title: "Origin Controlled Computing" },
+  { id: "sec-bitgraph", num: "6", title: "BitGraph" },
   { id: "sec-atomic-causality", num: "6.1", title: "Atomic Causality", indent: true },
   { id: "sec-not-attestation", num: "6.2", title: "Why This Is Not Attested Execution", indent: true },
   { id: "sec-token-equivalence", num: "6.3", title: "Token-Equivalence", indent: true },

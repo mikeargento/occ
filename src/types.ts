@@ -2,9 +2,9 @@
 // Copyright 2024-2026 Mike Argento
 
 /**
- * occ-core types
+ * bitgraph-core types
  *
- * All public-facing data structures for the OCC proof system.
+ * All public-facing data structures for the BitGraph proof system.
  * This file intentionally contains no logic.
  */
 
@@ -41,7 +41,7 @@
  *     Full causal enforcement. The commit gate, key management, nonce
  *     generation, monotonic counter, and signing all execute inside the
  *     attested enclave boundary. The host is treated as untrusted.
- *     Satisfies OCC's atomic causality invariant when combined with a
+ *     Satisfies BitGraph's atomic causality invariant when combined with a
  *     verifier that pins allowedMeasurements to a known-good enclave image.
  *     measurement MUST identify the attested enclave image.
  *     attestation SHOULD be present and verified by the relying party.
@@ -80,15 +80,15 @@ export type EnforcementTier = "stub" | "hw-key" | "measured-tee";
  *   signer.signatureB64, environment.attestation.reportB64,
  *   agency.authorization (P-256 signed, independently verifiable), metadata
  */
-export interface OCCProof {
+export interface BitGraphProof {
   /** Schema version. Hard-coded for forward-compatibility detection. */
-  version: "occ/1";
+  version: "bitgraph/1";
 
   /** Describes the committed artifact. */
   artifact: {
     /**
      * Hash algorithm applied to the raw input bytes.
-     * Only "sha256" is defined for occ/1.
+     * Only "sha256" is defined for bitgraph/1.
      */
     hashAlg: "sha256";
     /** Base64-standard (RFC 4648 §4) encoded SHA-256 digest of the input bytes. */
@@ -114,7 +114,7 @@ export interface OCCProof {
      */
     time?: number;
     /**
-     * Base64-encoded hash of a previous OCCProof's canonical form,
+     * Base64-encoded hash of a previous BitGraphProof's canonical form,
      * allowing callers to chain proofs into a verifiable sequence.
      */
     prevB64?: string;
@@ -359,7 +359,7 @@ export interface OCCProof {
 /**
  * Policy applied during Constructor initialization.
  */
-export interface OCCPolicy {
+export interface BitGraphPolicy {
   /**
    * If true, commits are rejected when host.nextCounter() is unavailable.
    * Defaults to false (counter is advisory).
@@ -374,7 +374,7 @@ export interface OCCPolicy {
 }
 
 /**
- * Constraints checked by the verifier against an OCCProof.
+ * Constraints checked by the verifier against an BitGraphProof.
  * All fields are optional; omitting a field skips that check.
  *
  * Trust model:
@@ -474,7 +474,7 @@ export interface VerificationPolicy {
 
   /**
    * If true, proof must contain a valid slotAllocation proving
-   * nonce-first atomic causality (OCC causal commit model).
+   * nonce-first atomic causality (BitGraph causal commit model).
    *
    * When enabled, the verifier checks:
    *   - slotAllocation is present with valid Ed25519 signature
@@ -484,7 +484,7 @@ export interface VerificationPolicy {
    *   - slotAllocation.publicKeyB64 === signer.publicKeyB64 (same enclave)
    *   - slotAllocation.epochId === commit.epochId (same lifecycle)
    *
-   * Required for verifiers that need to confirm true OCC causality,
+   * Required for verifiers that need to confirm true BitGraph causality,
    * not just TEE-enforced signing with freshness.
    */
   requireSlot?: boolean;
@@ -495,7 +495,7 @@ export interface VerificationPolicy {
 // ---------------------------------------------------------------------------
 
 /**
- * Binds an OCCProof to the policy document that governed the action.
+ * Binds an BitGraphProof to the policy document that governed the action.
  *
  * The digestB64 is the SHA-256 hash of the raw policy document bytes
  * (UTF-8 encoded). Any verifier can recompute this from the original
@@ -508,8 +508,8 @@ export interface PolicyBinding {
   /** SHA-256 hash of the policy document (Base64-standard, RFC 4648 §4). */
   digestB64: string;
   /**
-   * Digest of the OCC proof that committed this policy document.
-   * When present, the policy was authored through OCC (typically with
+   * Digest of the BitGraph proof that committed this policy document.
+   * When present, the policy was authored through BitGraph (typically with
    * biometric/passkey signing), making the authorship tamper-evident.
    * Verifiers can look up this proof to confirm WHO authored the rules
    * and WHEN they were signed — not just what the rules say.
@@ -553,7 +553,7 @@ export interface Attribution {
  *
  * This structure appears in two places:
  *   1. SignedBody.actor — signed by the TEE's Ed25519 key (tamper-evident)
- *   2. OCCProof.agency.actor — in the full agency envelope
+ *   2. BitGraphProof.agency.actor — in the full agency envelope
  *
  * The keyId is deterministic: hex(SHA-256(SPKI DER public key bytes)).
  * Any verifier can recompute it from the raw public key to confirm
@@ -585,7 +585,7 @@ export interface ActorIdentity {
  */
 export interface AuthorizationPayload {
   /** Domain separation: prevents cross-context signature reuse. */
-  purpose: "occ/commit-authorize/v1";
+  purpose: "bitgraph/commit-authorize/v1";
   /** Must match actor.keyId. */
   actorKeyId: string;
   /** Base64 SHA-256 of artifact — must match proof.artifact.digestB64. */
@@ -614,7 +614,7 @@ export interface AuthorizationPayload {
  */
 export interface WebAuthnAuthorization {
   /** Domain separation — same as direct. */
-  purpose: "occ/commit-authorize/v1";
+  purpose: "bitgraph/commit-authorize/v1";
   /** Discriminator for verification path. */
   format: "webauthn";
   /** Must match actor.keyId. */
@@ -634,7 +634,7 @@ export interface WebAuthnAuthorization {
 }
 
 /**
- * Full agency envelope — lives in OCCProof.agency.
+ * Full agency envelope — lives in BitGraphProof.agency.
  *
  * Contains the actor identity and the authorization payload
  * (including the device's P-256 signature). Independently verifiable:
@@ -692,16 +692,16 @@ export interface AgencyEnvelope {
  *   6. Same publicKeyB64 and epochId (same enclave lifecycle)
  *
  * Together these checks prove the nonce existed before the artifact was
- * bound to it — the OCC atomic causality invariant.
+ * bound to it — the BitGraph atomic causality invariant.
  */
 export interface SlotAllocation {
   /** Schema version for slot records. Domain separation from proof bodies. */
-  version: "occ/slot/1";
+  version: "bitgraph/slot/1";
   /** NSM-generated nonce. Becomes commit.nonceB64 when consumed. */
   nonceB64: string;
   /** Monotonic counter at allocation time. Must be < commit counter. */
   counter: string;
-  /** Advisory timestamp (Unix epoch ms) at allocation time. Optional — OCC is causal, not temporal. */
+  /** Advisory timestamp (Unix epoch ms) at allocation time. Optional — BitGraph is causal, not temporal. */
   time?: number;
   /** Enclave lifecycle identifier. Must match commit.epochId. */
   epochId: string;
@@ -732,9 +732,9 @@ export interface SlotAllocation {
  *   attribution (when provided)
  */
 export interface SignedBody {
-  version: "occ/1";
-  artifact: OCCProof["artifact"];
-  commit: OCCProof["commit"];
+  version: "bitgraph/1";
+  artifact: BitGraphProof["artifact"];
+  commit: BitGraphProof["commit"];
   /** Public key included to bind cryptographic identity to the body. */
   publicKeyB64: string;
   /** Enforcement tier — signed to prevent downgrade attacks. */

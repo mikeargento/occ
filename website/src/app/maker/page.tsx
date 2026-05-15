@@ -9,13 +9,13 @@ import {
   commitDigest,
   commitBatch,
   formatFileSize,
-  isOCCProof,
+  isBitGraphProof,
   verifyProofSignature,
-  type OCCProof,
+  type BitGraphProof,
   type AgencyEnvelope,
   type ActorIdentity,
   type ProofVerifyResult,
-} from "@/lib/occ";
+} from "@/lib/bitgraph";
 import { toUrlSafeB64, relativeTime } from "@/lib/explorer";
 import { zipSync } from "fflate";
 
@@ -37,8 +37,8 @@ interface ProofEntry {
 
 /* ── VERIFY.txt builder ── */
 
-function buildVerifyTxt(filename: string, p: OCCProof): string {
-  return `VERIFY.txt — OCC Proof Package
+function buildVerifyTxt(filename: string, p: BitGraphProof): string {
+  return `VERIFY.txt — BitGraph Proof Package
 ===================================
 
 FILE:       ${filename}
@@ -59,7 +59,7 @@ HOW TO VERIFY
 The proof was signed inside an AWS Nitro Enclave using Ed25519.
 The private key was generated inside the enclave and has never left it.
 
-Learn more: https://occ.wtf/docs
+Learn more: https://bitgraph.ing/docs
 `;
 }
 
@@ -101,7 +101,7 @@ async function createBiometricAuthorization(digestB64: string): Promise<AgencyEn
       actor,
       authorization: {
         format: "webauthn.get",
-        purpose: "occ/commit-authorize/v1",
+        purpose: "bitgraph/commit-authorize/v1",
         actorKeyId: credential.id,
         artifactHash: digestB64,
         challenge: challengeB64,
@@ -125,7 +125,7 @@ export default function MakerPage() {
   const [makeStep, setMakeStep] = useState<MakeStep>("drop");
   const [makeFiles, setMakeFiles] = useState<File[]>([]);
   const [makeDigest, setMakeDigest] = useState("");
-  const [makeProofs, setMakeProofs] = useState<OCCProof[]>([]);
+  const [makeProofs, setMakeProofs] = useState<BitGraphProof[]>([]);
   const [makeError, setMakeError] = useState("");
   const [makeProgress, setMakeProgress] = useState({ current: 0, total: 0, fileName: "" });
   const [copied, setCopied] = useState(false);
@@ -135,7 +135,7 @@ export default function MakerPage() {
   // Verify state
   const [verifyStep, setVerifyStep] = useState<VerifyStep>("drop");
   const [verifyFile, setVerifyFile] = useState<File | null>(null);
-  const [verifyProof, setVerifyProof] = useState<OCCProof | null>(null);
+  const [verifyProof, setVerifyProof] = useState<BitGraphProof | null>(null);
   const [verifyResult, setVerifyResult] = useState<ProofVerifyResult | null>(null);
   const [fileDigestMatch, setFileDigestMatch] = useState<boolean | null>(null);
 
@@ -273,8 +273,8 @@ export default function MakerPage() {
     const a = document.createElement("a");
     a.href = url;
     a.download = makeFiles.length === 1
-      ? `${makeFiles[0].name.replace(/\.[^.]+$/, "")}-occ-proof.zip`
-      : "occ-proof-batch.zip";
+      ? `${makeFiles[0].name.replace(/\.[^.]+$/, "")}-bitgraph-proof.zip`
+      : "bitgraph-proof-batch.zip";
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -290,7 +290,7 @@ export default function MakerPage() {
 
     try {
       const text = await f.text();
-      const proof = isOCCProof(text);
+      const proof = isBitGraphProof(text);
 
       if (proof) {
         // User dropped a proof.json — verify the signature
@@ -305,7 +305,7 @@ export default function MakerPage() {
         if (resp.ok) {
           const data = await resp.json();
           if (data.proofs?.length > 0) {
-            const p = data.proofs[0].proof as OCCProof;
+            const p = data.proofs[0].proof as BitGraphProof;
             setVerifyProof(p);
             setFileDigestMatch(true);
             const result = await verifyProofSignature(p);
@@ -738,7 +738,7 @@ export default function MakerPage() {
 
 function LedgerRow({ entry, isLast, viewMode }: { entry: ProofEntry; isLast: boolean; viewMode: "normal" | "timeonly" }) {
   const [expanded, setExpanded] = useState(false);
-  const [proof, setProof] = useState<OCCProof | null>(null);
+  const [proof, setProof] = useState<BitGraphProof | null>(null);
   const [loading, setLoading] = useState(false);
   const [copiedDigest, setCopiedDigest] = useState(false);
 
@@ -750,7 +750,7 @@ function LedgerRow({ entry, isLast, viewMode }: { entry: ProofEntry; isLast: boo
         const resp = await fetch(`/api/proofs/${encodeURIComponent(toUrlSafeB64(entry.digest))}`);
         if (resp.ok) {
           const data = await resp.json();
-          if (data.proofs?.[0]?.proof) setProof(data.proofs[0].proof as OCCProof);
+          if (data.proofs?.[0]?.proof) setProof(data.proofs[0].proof as BitGraphProof);
         }
       } catch { /* silent */ }
       setLoading(false);
@@ -854,7 +854,7 @@ function LedgerRow({ entry, isLast, viewMode }: { entry: ProofEntry; isLast: boo
           {proof && (
             <>
               {/* Ethereum anchor link */}
-              {(proof.commit && (proof.commit as Record<string, unknown>).chainId === "occ:ethereum-anchors") || (proof.attribution?.name?.startsWith("Ethereum #")) ? (
+              {(proof.commit && (proof.commit as Record<string, unknown>).chainId === "bitgraph:ethereum-anchors") || (proof.attribution?.name?.startsWith("Ethereum #")) ? (
                 <div style={{
                   padding: "10px 16px", marginBottom: 16, borderRadius: 0,
                   border: "1px solid rgba(59,130,246,0.2)", background: "rgba(59,130,246,0.05)",
@@ -963,7 +963,7 @@ function LedgerRow({ entry, isLast, viewMode }: { entry: ProofEntry; isLast: boo
                   const url = URL.createObjectURL(blob);
                   const a = document.createElement("a");
                   a.href = url;
-                  a.download = `occ-proof-${(proof.artifact?.digestB64 || "unknown").slice(0, 12)}.json`;
+                  a.download = `bitgraph-proof-${(proof.artifact?.digestB64 || "unknown").slice(0, 12)}.json`;
                   a.click();
                   URL.revokeObjectURL(url);
                 }} style={{

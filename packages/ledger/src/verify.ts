@@ -1,5 +1,5 @@
 /**
- * OCC Ledger — Verification
+ * BitGraph Ledger — Verification
  *
  * Verifies a proof's causal placement:
  *   1. Proof signature is valid (Ed25519)
@@ -13,7 +13,7 @@
 
 import { sha256 } from "@noble/hashes/sha256";
 import { verifyAsync } from "@noble/ed25519";
-import { canonicalize, computeProofHash } from "occproof";
+import { canonicalize, computeProofHash } from "bitgraph";
 import type { StoredProof, StoredAnchor, Finalization } from "./types.js";
 
 // ---------------------------------------------------------------------------
