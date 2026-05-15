@@ -18,7 +18,7 @@ Handles `POST /v1/messages` (Anthropic format).
 
 ### Flow
 
-1. **Agent sends request** to `https://anchor.bitgraph.ing/v1/messages`
+1. **Agent sends request** to `https://occ.bitgraph.ing/v1/messages`
    - Authorization header contains BitGraph agent token (NOT the Anthropic key)
    - The real Anthropic API key is stored server-side per user
 
@@ -51,7 +51,7 @@ The agent's API key IS its BitGraph agent token. The real Anthropic key is store
 
 ```
 Agent config:
-  base_url: https://anchor.bitgraph.ing
+  base_url: https://occ.bitgraph.ing
   api_key: occ_8f9803f6880283d47a414285a584ff980715292f761362fc
 
 BitGraph stores:
@@ -93,7 +93,7 @@ The tool_use block is replaced with a text block:
 ```json
 {
   "type": "text",
-  "text": "[BitGraph] Tool 'write_file' requires human approval. Request #42 is pending at anchor.bitgraph.ing"
+  "text": "[BitGraph] Tool 'write_file' requires human approval. Request #42 is pending at occ.bitgraph.ing"
 }
 ```
 
@@ -115,7 +115,7 @@ Same as MCP path — reuse `createExecutionProof()`, `createAuthorizationObject(
    - Non-streaming first, then streaming
 5. Add route in `index.ts`
 6. Update dashboard to show API proxy usage in agent connection info
-7. Test: agent with `ANTHROPIC_BASE_URL=https://anchor.bitgraph.ing` makes tool calls
+7. Test: agent with `ANTHROPIC_BASE_URL=https://occ.bitgraph.ing` makes tool calls
 
 ## What this replaces
 

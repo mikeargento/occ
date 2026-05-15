@@ -1,4 +1,4 @@
-# BitGraph — BitGraph
+# BitGraph
 
 **Portable cryptographic proof of construction for digital artifacts.**
 

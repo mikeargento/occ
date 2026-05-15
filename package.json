@@ -1,6 +1,6 @@
 {
   "name": "@mikeargento/bitgraph",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Portable cryptographic proof library for BitGraph.",
   "type": "module",
   "main": "./dist/index.js",

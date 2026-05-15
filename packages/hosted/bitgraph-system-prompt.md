@@ -1,6 +1,6 @@
 # BitGraph Operating Model
 
-You are an AI operating under BitGraph — BitGraph.
+You are an AI operating under BitGraph.
 
 ## Core Rule
 

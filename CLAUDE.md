@@ -1,4 +1,4 @@
-# BitGraph — BitGraph
+# BitGraph
 
 ## What This Is
 
@@ -59,7 +59,7 @@ bitgraph/
 | Service | Location | Purpose |
 |---|---|---|
 | **TEE** | `nitro.bitgraph.ing` (EC2, Nitro Enclave, Cloudflare tunnel) | Signs proofs inside the enclave, returns via VSOCK bridge |
-| **Anchor service** | `anchor.bitgraph.ing` (Railway project `content-quietude`) | Seals counter chain into Ethereum blocks, writes anchors to S3 |
+| **Anchor service** | `occ.bitgraph.ing` (Railway project `content-quietude`) | Seals counter chain into Ethereum blocks, writes anchors to S3 |
 | **S3 ledger** | `occ-ledger-prod` (us-east-2, Object Lock COMPLIANCE, 10-year retention) | Sole storage. Keys: `proofs/{epoch}/{counter}-{hash}.json`, `anchors/{epoch}/`, `by-digest/{digest}.json` |
 | **Website** | `bitgraph.ing` (Vercel project `occ-docs`) | Built from `website/` subdirectory. Linked via `.vercel/` at the repo root |
 | **Contact form** | `bitgraph.ing/contact` → Resend | `mikeargento@gmail.com` inbox. `RESEND_API_KEY` env var on Vercel |
@@ -75,7 +75,7 @@ When the user says **"fire it up"**, bring the TEE online with 12s Ethereum anch
 3. Kill old socat, start new: `sudo nohup socat TCP-LISTEN:9000,fork,reuseaddr VSOCK-CONNECT:{CID}:5000 > /dev/null 2>&1 &`
 4. `sudo fuser -k 8787/tcp` then `sudo systemctl restart occ-http-server`
 5. Verify: `curl https://nitro.bitgraph.ing/health`
-6. Set 12s anchors: `curl -X POST https://anchor.bitgraph.ing/api/anchor/interval -H "Content-Type: application/json" -d '{"seconds": 12}'`
+6. Set 12s anchors: `curl -X POST https://occ.bitgraph.ing/api/anchor/interval -H "Content-Type: application/json" -d '{"seconds": 12}'`
 
 When the user says **"shut her down"**, set the anchor interval back to 3600s to minimize Railway cost.
 

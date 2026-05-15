@@ -226,7 +226,7 @@ curl -X POST http://localhost:8080/commit \\
       </div>
 
       <h2>Step 10: Point BitGraph Dashboard at Your TEE</h2>
-      <p>By default, the hosted dashboard at anchor.bitgraph.ing points to <code>nitro.bitgraph.ing</code>. To use your own TEE, set the <code>TEE_URL</code> environment variable on your hosted server:</p>
+      <p>By default, the hosted dashboard at occ.bitgraph.ing points to <code>nitro.bitgraph.ing</code>. To use your own TEE, set the <code>TEE_URL</code> environment variable on your hosted server:</p>
       <div className="code-block">
         <pre>{`# In your hosted server environment (Railway, etc.)
 TEE_URL=https://your-tee-domain.com`}</pre>
