@@ -18,7 +18,11 @@ export default function OverviewPage() {
       </p>
 
       <p>
-        BitGraph enforces origin. A measured trusted execution environment creates an unpredictable cryptographic slot before the artifact&rsquo;s hash is known. The artifact&rsquo;s hash arrives later and is bound into the slot. The slot is consumed and cannot be reused. What emerges is not a description of provenance but a proof of construction.
+        BitGraph enforces origin.
+      </p>
+
+      <p>
+        A measured trusted execution environment creates an unpredictable cryptographic slot before the artifact&rsquo;s hash is known. The artifact&rsquo;s hash arrives later and is bound into the slot. The slot is consumed and cannot be reused. What emerges is not a description of provenance but a proof of construction.
       </p>
 
       <p className="lede">
