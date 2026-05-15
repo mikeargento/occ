@@ -226,14 +226,14 @@ curl -X POST http://localhost:8080/commit \\
       </div>
 
       <h2>Step 10: Point BitGraph Dashboard at Your TEE</h2>
-      <p>By default, the hosted dashboard at occ.bitgraph.ing points to <code>nitro.bitgraph.ing</code>. To use your own TEE, set the <code>TEE_URL</code> environment variable on your hosted server:</p>
+      <p>By default, the hosted dashboard at occ.bitgraph.ing points to <code>nitro.occproof.com</code>. To use your own TEE, set the <code>TEE_URL</code> environment variable on your hosted server:</p>
       <div className="code-block">
         <pre>{`# In your hosted server environment (Railway, etc.)
 TEE_URL=https://your-tee-domain.com`}</pre>
       </div>
       <p>The hosted server at <code>packages/hosted/src/authorization.ts</code> reads this variable:</p>
       <div className="code-block">
-        <pre>{`const TEE_URL = process.env.TEE_URL || "https://nitro.bitgraph.ing";`}</pre>
+        <pre>{`const TEE_URL = process.env.TEE_URL || "https://nitro.occproof.com";`}</pre>
       </div>
 
       <h2>Production Checklist</h2>

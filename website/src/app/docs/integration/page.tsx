@@ -23,7 +23,7 @@ export default function IntegrationPage() {
 DIGEST=$(openssl dgst -sha256 -binary myfile.pdf | base64)
 
 # 2. Send to BitGraph endpoint
-curl -X POST https://nitro.bitgraph.ing/commit \\
+curl -X POST https://nitro.occproof.com/commit \\
   -H "Content-Type: application/json" \\
   -d '{
     "digests": [{
@@ -45,7 +45,7 @@ const hashBuf = await crypto.subtle.digest("SHA-256", bytes);
 const digestB64 = btoa(String.fromCharCode(...new Uint8Array(hashBuf)));
 
 // Commit to enclave (with optional attribution)
-const resp = await fetch("https://nitro.bitgraph.ing/commit", {
+const resp = await fetch("https://nitro.occproof.com/commit", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
@@ -68,7 +68,7 @@ console.log(proof.attribution);      // signed creator metadata`}</pre>
       </p>
       <div className="code-block">
         <div className="code-block-header"><span>TypeScript</span></div>
-        <pre className="text-xs font-mono leading-relaxed text-[#1f2937] overflow-x-auto">{`const resp = await fetch("https://nitro.bitgraph.ing/commit", {
+        <pre className="text-xs font-mono leading-relaxed text-[#1f2937] overflow-x-auto">{`const resp = await fetch("https://nitro.occproof.com/commit", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
@@ -113,7 +113,7 @@ if (result.valid) {
       <div className="code-block">
         <div className="code-block-header"><span>Shell</span></div>
         <pre className="text-xs font-mono leading-relaxed text-[#1f2937] overflow-x-auto">{`# Get enclave public key and measurement
-curl https://nitro.bitgraph.ing/key
+curl https://nitro.occproof.com/key
 
 # Response:
 # {

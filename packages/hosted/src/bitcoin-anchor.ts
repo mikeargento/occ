@@ -122,7 +122,7 @@ async function persistAnchor(
 
 /* ── Ethereum RPC ── */
 
-const TEE_URL = "https://nitro.bitgraph.ing";
+const TEE_URL = "https://nitro.occproof.com";
 let anchorIntervalMs = 12 * 1000; // 12 seconds — every finalized Ethereum block
 
 function toBase64(bytes: Uint8Array): string {

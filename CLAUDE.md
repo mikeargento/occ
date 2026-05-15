@@ -58,7 +58,7 @@ bitgraph/
 
 | Service | Location | Purpose |
 |---|---|---|
-| **TEE** | `nitro.bitgraph.ing` (EC2, Nitro Enclave, Cloudflare tunnel) | Signs proofs inside the enclave, returns via VSOCK bridge |
+| **TEE** | `nitro.occproof.com` (EC2, Nitro Enclave, Cloudflare tunnel) | Signs proofs inside the enclave, returns via VSOCK bridge |
 | **Anchor service** | `occ.bitgraph.ing` (Railway project `content-quietude`) | Seals counter chain into Ethereum blocks, writes anchors to S3 |
 | **S3 ledger** | `occ-ledger-prod` (us-east-2, Object Lock COMPLIANCE, 10-year retention) | Sole storage. Keys: `proofs/{epoch}/{counter}-{hash}.json`, `anchors/{epoch}/`, `by-digest/{digest}.json` |
 | **Website** | `bitgraph.ing` (Vercel project `occ-docs`) | Built from `website/` subdirectory. Linked via `.vercel/` at the repo root |
@@ -74,7 +74,7 @@ When the user says **"fire it up"**, bring the TEE online with 12s Ethereum anch
 2. If no enclave: `nitro-cli run-enclave --eif-path /home/ec2-user/nsm-test/bitgraph-enclave-v2.eif --cpu-count 2 --memory 1024`
 3. Kill old socat, start new: `sudo nohup socat TCP-LISTEN:9000,fork,reuseaddr VSOCK-CONNECT:{CID}:5000 > /dev/null 2>&1 &`
 4. `sudo fuser -k 8787/tcp` then `sudo systemctl restart occ-http-server`
-5. Verify: `curl https://nitro.bitgraph.ing/health`
+5. Verify: `curl https://nitro.occproof.com/health`
 6. Set 12s anchors: `curl -X POST https://occ.bitgraph.ing/api/anchor/interval -H "Content-Type: application/json" -d '{"seconds": 12}'`
 
 When the user says **"shut her down"**, set the anchor interval back to 3600s to minimize Railway cost.

@@ -66,7 +66,7 @@ export default function APIReferencePage() {
             Base URL
           </div>
           <code className="text-sm font-mono text-text">
-            https://nitro.bitgraph.ing
+            https://nitro.occproof.com
           </code>
         </div>
       </div>
@@ -181,7 +181,7 @@ export default function APIReferencePage() {
           <CodeBlock
             code={`DIGEST=$(openssl dgst -sha256 -binary myfile.pdf | base64)
 
-curl -X POST https://nitro.bitgraph.ing/commit \\
+curl -X POST https://nitro.occproof.com/commit \\
   -H "Content-Type: application/json" \\
   -d '{
     "digests": [{
@@ -199,7 +199,7 @@ curl -X POST https://nitro.bitgraph.ing/commit \\
 const hashBuf = await crypto.subtle.digest("SHA-256", bytes);
 const digestB64 = btoa(String.fromCharCode(...new Uint8Array(hashBuf)));
 
-const resp = await fetch("https://nitro.bitgraph.ing/commit", {
+const resp = await fetch("https://nitro.occproof.com/commit", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({

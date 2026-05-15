@@ -1,4 +1,4 @@
-export const BITGRAPH_ENDPOINT = "https://nitro.bitgraph.ing";
+export const BITGRAPH_ENDPOINT = "https://nitro.occproof.com";
 
 export interface ActorIdentity {
   keyId: string;

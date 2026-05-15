@@ -8,7 +8,7 @@ interface HealthCheck {
   checkedAt: Date | null;
 }
 
-const TEE_ENDPOINT = "https://nitro.bitgraph.ing";
+const TEE_ENDPOINT = "https://nitro.occproof.com";
 
 // Known enclave measurement from our deployed image
 const ENCLAVE_MEASUREMENT =
@@ -83,7 +83,7 @@ export function TeeStatus() {
         <InfoRow label="Enforcement" value="measured-tee" />
         <InfoRow label="Attestation" value="aws-nitro" />
         <InfoRow label="Signing" value="Ed25519" />
-        <InfoRow label="Endpoint" value="nitro.bitgraph.ing" mono />
+        <InfoRow label="Endpoint" value="nitro.occproof.com" mono />
       </div>
 
       {/* Expandable measurement */}

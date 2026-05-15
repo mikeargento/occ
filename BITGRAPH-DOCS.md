@@ -379,7 +379,7 @@ Hash your artifact locally, then send only the digest to the BitGraph endpoint:
 DIGEST=$(openssl dgst -sha256 -binary myfile.pdf | base64)
 
 # 2. Send to BitGraph endpoint
-curl -X POST https://nitro.bitgraph.ing/commit \
+curl -X POST https://nitro.occproof.com/commit \
   -H "Content-Type: application/json" \
   -d '{
     "digests": [{
@@ -401,7 +401,7 @@ const hashBuf = await crypto.subtle.digest("SHA-256", bytes);
 const digestB64 = btoa(String.fromCharCode(...new Uint8Array(hashBuf)));
 
 // Commit to enclave (with optional attribution)
-const resp = await fetch("https://nitro.bitgraph.ing/commit", {
+const resp = await fetch("https://nitro.occproof.com/commit", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
@@ -423,7 +423,7 @@ console.log(proof.attribution);      // signed creator metadata
 Send multiple digests in one request. The enclave allocates a slot and commits each digest sequentially. If using actor-bound proofs (passkey), all proofs in the batch receive actor identity.
 
 ```typescript
-const resp = await fetch("https://nitro.bitgraph.ing/commit", {
+const resp = await fetch("https://nitro.occproof.com/commit", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
@@ -468,7 +468,7 @@ if (result.valid) {
 
 ```bash
 # Get enclave public key and measurement
-curl https://nitro.bitgraph.ing/key
+curl https://nitro.occproof.com/key
 
 # Response:
 # {
@@ -508,7 +508,7 @@ The built-in `fetch_url` tool is ready to use. Wrap it, call it, and get back yo
 import { wrapTool, fetchUrlTool } from "bitgraph-agent";
 
 const verifiedFetch = wrapTool(fetchUrlTool, {
-  apiUrl: "https://nitro.bitgraph.ing",
+  apiUrl: "https://nitro.occproof.com",
 });
 
 const result = await verifiedFetch({ url: "https://api.example.com/data" });
@@ -554,7 +554,7 @@ const summarizeTool: ToolDefinition<
 };
 
 const verifiedSummarize = wrapTool(summarizeTool, {
-  apiUrl: "https://nitro.bitgraph.ing",
+  apiUrl: "https://nitro.occproof.com",
 });
 
 const result = await verifiedSummarize({ text: "..." });
@@ -572,7 +572,7 @@ import { runVerifiedTool, fetchUrlTool } from "bitgraph-agent";
 const result = await runVerifiedTool(
   fetchUrlTool,
   { url: "https://httpbin.org/json" },
-  { apiUrl: "https://nitro.bitgraph.ing" },
+  { apiUrl: "https://nitro.occproof.com" },
 );
 ```
 
@@ -895,7 +895,7 @@ curl -X POST http://localhost:8080/commit \
 
 ### Step 10: Point BitGraph Dashboard at Your TEE
 
-By default, the hosted dashboard at occ.bitgraph.ing points to `nitro.bitgraph.ing`. To use your own TEE, set the `TEE_URL` environment variable on your hosted server:
+By default, the hosted dashboard at occ.bitgraph.ing points to `nitro.occproof.com`. To use your own TEE, set the `TEE_URL` environment variable on your hosted server:
 
 ```bash
 # In your hosted server environment (Railway, etc.)
@@ -905,7 +905,7 @@ TEE_URL=https://your-tee-domain.com
 The hosted server at `packages/hosted/src/authorization.ts` reads this variable:
 
 ```javascript
-const TEE_URL = process.env.TEE_URL || "https://nitro.bitgraph.ing";
+const TEE_URL = process.env.TEE_URL || "https://nitro.occproof.com";
 ```
 
 ### Production Checklist
