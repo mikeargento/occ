@@ -2,10 +2,10 @@
 
 ## What This Is
 
-OCC becomes a transparent proxy between agents and the Anthropic/OpenAI API. The agent changes one line — its base URL — and every tool call is now governed by OCC.
+BitGraph becomes a transparent proxy between agents and the Anthropic/OpenAI API. The agent changes one line — its base URL — and every tool call is now governed by BitGraph.
 
 ```
-Agent → api.occ.wtf/v1/messages → OCC forwards to Anthropic → Claude responds with tool calls → OCC intercepts → checks policy → strips denied tools → returns to agent
+Agent → api.bitgraph.ing/v1/messages → BitGraph forwards to Anthropic → Claude responds with tool calls → BitGraph intercepts → checks policy → strips denied tools → returns to agent
 ```
 
 The agent never sees a tool call that wasn't authorized. Zero bypass.
@@ -18,25 +18,25 @@ Handles `POST /v1/messages` (Anthropic format).
 
 ### Flow
 
-1. **Agent sends request** to `https://agent.occ.wtf/v1/messages`
-   - Authorization header contains OCC agent token (NOT the Anthropic key)
+1. **Agent sends request** to `https://anchor.bitgraph.ing/v1/messages`
+   - Authorization header contains BitGraph agent token (NOT the Anthropic key)
    - The real Anthropic API key is stored server-side per user
 
-2. **OCC authenticates** — looks up agent by token, gets user + agent + policy
+2. **BitGraph authenticates** — looks up agent by token, gets user + agent + policy
 
-3. **OCC forwards** the request to `https://api.anthropic.com/v1/messages`
+3. **BitGraph forwards** the request to `https://api.anthropic.com/v1/messages`
    - Swaps the auth header for the user's real Anthropic key
    - Passes through model, messages, tools, system, etc.
 
 4. **Claude responds** with content blocks including `tool_use` blocks
 
-5. **OCC intercepts each `tool_use` block**:
+5. **BitGraph intercepts each `tool_use` block**:
    - Look up tool name in agent's policy
    - **allowed_tools** → pass through, create proof
    - **blocked_tools** → strip from response, create denial proof
    - **neither** → strip from response, create pending request, add text block explaining the tool needs approval
 
-6. **OCC returns modified response** to agent
+6. **BitGraph returns modified response** to agent
    - Only authorized tool calls remain
    - Denied/pending tools replaced with text explaining what happened
 
@@ -47,19 +47,19 @@ Handles `POST /v1/messages` (Anthropic format).
 
 ### Authentication Model
 
-The agent's API key IS its OCC agent token. The real Anthropic key is stored in OCC.
+The agent's API key IS its BitGraph agent token. The real Anthropic key is stored in BitGraph.
 
 ```
 Agent config:
-  base_url: https://agent.occ.wtf
+  base_url: https://anchor.bitgraph.ing
   api_key: occ_8f9803f6880283d47a414285a584ff980715292f761362fc
 
-OCC stores:
+BitGraph stores:
   user's real Anthropic API key (encrypted in DB)
 ```
 
-This means the agent never has the real API key. OCC holds it. Double win:
-- Agent can't bypass OCC (no direct API access)
+This means the agent never has the real API key. BitGraph holds it. Double win:
+- Agent can't bypass BitGraph (no direct API access)
 - Agent can't leak the API key
 
 ### New DB field
@@ -85,7 +85,7 @@ The tool_use block is replaced with a text block:
 ```json
 {
   "type": "text",
-  "text": "[OCC] Tool 'write_file' was denied by policy. Capability: file.write"
+  "text": "[BitGraph] Tool 'write_file' was denied by policy. Capability: file.write"
 }
 ```
 
@@ -93,7 +93,7 @@ The tool_use block is replaced with a text block:
 ```json
 {
   "type": "text",
-  "text": "[OCC] Tool 'write_file' requires human approval. Request #42 is pending at agent.occ.wtf"
+  "text": "[BitGraph] Tool 'write_file' requires human approval. Request #42 is pending at anchor.bitgraph.ing"
 }
 ```
 
@@ -115,7 +115,7 @@ Same as MCP path — reuse `createExecutionProof()`, `createAuthorizationObject(
    - Non-streaming first, then streaming
 5. Add route in `index.ts`
 6. Update dashboard to show API proxy usage in agent connection info
-7. Test: agent with `ANTHROPIC_BASE_URL=https://agent.occ.wtf` makes tool calls
+7. Test: agent with `ANTHROPIC_BASE_URL=https://anchor.bitgraph.ing` makes tool calls
 
 ## What this replaces
 
@@ -124,7 +124,7 @@ The MCP integration still works — it's a different path to the same governance
 - Agent can't bypass it (no direct API access)
 - Works with every SDK, framework, and tool
 - No MCP support required in the client
-- The real API key never leaves OCC
+- The real API key never leaves BitGraph
 
 ## Files to create/modify
 

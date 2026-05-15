@@ -42,7 +42,7 @@ It is designed so that any AI system (ChatGPT, Claude, Gemini, Grok, etc.)
 can be given this file along with proof.json and the artifact to perform
 a complete, independent verification analysis.
 
-Proof system: BitGraph (BitGraph)
+Proof system: BitGraph
 Protocol version: ${p.version}
 Learn more: https://bitgraph.ing
 
@@ -282,7 +282,7 @@ checks (field presence, value matching, counter ordering) can always
 be performed by reading the proof.json directly.
 
 
-Powered by BitGraph (BitGraph)
+Powered by BitGraph
 https://bitgraph.ing
 `;
 

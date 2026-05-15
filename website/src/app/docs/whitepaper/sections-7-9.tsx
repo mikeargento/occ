@@ -210,8 +210,7 @@ export default function Sections7to9() {
           </h3>
 
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
-            The Trusted Origin Token Architecture and Origin Controlled
-            Computing enforce the same injective genesis invariant through dual
+            The Trusted Origin Token Architecture and BitGraph enforce the same injective genesis invariant through dual
             mechanisms:
           </p>
 

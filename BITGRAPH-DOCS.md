@@ -2,7 +2,7 @@
 
 ## What is BitGraph
 
-BitGraph (BitGraph) is a protocol that produces portable cryptographic proof when bytes are committed through an authorized execution boundary. The proof attests that a specific digital state was demonstrably possessed and committed in a specific form, by a specific boundary, no later than a specific moment.
+BitGraph is a protocol that produces portable cryptographic proof when bytes are committed through an authorized execution boundary. The proof attests that a specific digital state was demonstrably possessed and committed in a specific form, by a specific boundary, no later than a specific moment.
 
 ### The core idea
 
@@ -1570,7 +1570,7 @@ BitGraph applies wherever systems must distinguish admissible durable outputs fr
 
 ### 17 Birth-Death Semantics
 
-BitGraph (BitGraph) enforces what we term *birth-death semantics* for digital state. Under this model, every authoritative state transition has exactly one verifiable moment of creation (birth), and every transfer or succession requires cryptographic evidence that the prior authority has been irreversibly consumed (death).
+BitGraph enforces what we term *birth-death semantics* for digital state. Under this model, every authoritative state transition has exactly one verifiable moment of creation (birth), and every transfer or succession requires cryptographic evidence that the prior authority has been irreversibly consumed (death).
 
 Traditional provenance systems operate in a *detect-after* model: artifacts are produced freely, and conflicts such as replay, duplication, or double-spend are identified retrospectively through logs, ledgers, or consensus. BitGraph instead constrains the execution path such that invalid successor states are structurally unreachable within the enforcing boundary.
 
@@ -1619,7 +1619,7 @@ Within this envelope, birth-death semantics converts post-facto detection proble
 
 ### 18 Single-Transfer Value Without Consensus
 
-BitGraph (BitGraph) enables single-transfer digital value by binding authority to a consumptive, cryptographically enforced state transition rather than to a ledger entry. This is a concrete instantiation of the birth-death semantics described in Section 17: each transfer atomically consumes (kills) the prior holder's authority and produces (births) a new verifiable successor. Each artifact carries a proof that can only be produced through a protected commit path, where authorization, binding, and durable commit occur atomically inside a trusted execution boundary. When value is transferred, the prior holder's permission is provably consumed and the new state is independently verifiable offline using public keys and hash lineage. The bytes themselves may be copied, but the authoritative right cannot be duplicated, because the single-successor property guarantees that only one unspent lineage can exist at a time within the enforcing boundary. In this model, uniqueness and transfer integrity come from enforced execution semantics instead of global consensus, allowing blockchain-free, verifiable digital handoff.
+BitGraph enables single-transfer digital value by binding authority to a consumptive, cryptographically enforced state transition rather than to a ledger entry. This is a concrete instantiation of the birth-death semantics described in Section 17: each transfer atomically consumes (kills) the prior holder's authority and produces (births) a new verifiable successor. Each artifact carries a proof that can only be produced through a protected commit path, where authorization, binding, and durable commit occur atomically inside a trusted execution boundary. When value is transferred, the prior holder's permission is provably consumed and the new state is independently verifiable offline using public keys and hash lineage. The bytes themselves may be copied, but the authoritative right cannot be duplicated, because the single-successor property guarantees that only one unspent lineage can exist at a time within the enforcing boundary. In this model, uniqueness and transfer integrity come from enforced execution semantics instead of global consensus, allowing blockchain-free, verifiable digital handoff.
 
 ### 19 Conclusion
 

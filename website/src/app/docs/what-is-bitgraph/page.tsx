@@ -12,7 +12,7 @@ export default function WhatIsBitGraphPage() {
       <h1 className="text-3xl sm:text-4xl font-semibold tracking-[-0.03em] mb-6">What is BitGraph</h1>
 
       <p className="text-[#1f2937] leading-relaxed mb-10">
-        BitGraph (BitGraph) is a protocol that produces portable
+        BitGraph is a protocol that produces portable
         cryptographic proof when bytes are committed through an authorized
         execution boundary. The proof attests that a specific digital state was
         demonstrably possessed and committed in a specific form, by a specific

@@ -80,8 +80,7 @@ export default function Sections10to19() {
           </h3>
           <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
             The classical reference monitor concept (Anderson, 1972) mediates all operations on
-            existing objects: every access is checked against a policy before it is permitted. Origin
-            Controlled Computing is strictly stronger in one dimension: it controls not merely which{" "}
+            existing objects: every access is checked against a policy before it is permitted. BitGraph is strictly stronger in one dimension: it controls not merely which{" "}
             <em>operations</em> on objects are permitted, but which{" "}
             <em>objects are permitted to exist</em> in authenticated form. Classical access control
             assumes object creation is uncontrolled and focuses on subsequent access. BitGraph constrains
@@ -873,7 +872,7 @@ export default function Sections10to19() {
           <span className="text-[#6b7280] mr-2">17</span> Birth&ndash;Death Semantics
         </h2>
         <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
-          BitGraph (BitGraph) enforces what we term <em>birth&ndash;death
+          BitGraph enforces what we term <em>birth&ndash;death
           semantics</em> for digital state. Under this model, every authoritative state transition
           has exactly one verifiable moment of creation (birth), and every transfer or succession
           requires cryptographic evidence that the prior authority has been irreversibly consumed
@@ -1119,7 +1118,7 @@ export default function Sections10to19() {
           <span className="text-[#6b7280] mr-2">18</span> Single-Transfer Value Without Consensus
         </h2>
         <p className="text-sm text-[#1f2937] leading-relaxed mb-4">
-          BitGraph (BitGraph) enables single-transfer digital value by binding
+          BitGraph enables single-transfer digital value by binding
           authority to a consumptive, cryptographically enforced state transition rather than to a
           ledger entry. This is a concrete instantiation of the birth&ndash;death semantics
           described in{" "}
