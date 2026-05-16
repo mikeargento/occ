@@ -577,16 +577,30 @@ function SimpleView({
   const etherscanUrl = causalWindow?.anchorAfter?.etherscanUrl ?? null;
   const anchored = blockTime !== null;
 
+  // Format date and time separately, then join with a single breakable space
+  // before "at". Spaces inside each half become non-breaking — that way the
+  // line never breaks mid-time (e.g. orphaning "AM EDT" on mobile). On narrow
+  // viewports the line wraps cleanly between the date and "at 10:59 AM EDT".
   const prettyDate = blockTime
-    ? new Date(blockTime).toLocaleString(undefined, {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-        timeZoneName: "short",
-      })
+    ? (() => {
+        const d = new Date(blockTime);
+        const datePart = d
+          .toLocaleDateString(undefined, {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })
+          .replace(/ /g, " ");
+        const timePart = d
+          .toLocaleTimeString(undefined, {
+            hour: "numeric",
+            minute: "2-digit",
+            timeZoneName: "short",
+          })
+          .replace(/ /g, " ");
+        return `${datePart} at ${timePart}`;
+      })()
     : "Awaiting Ethereum anchor…";
 
   // Short proofHash — matches the title pill
