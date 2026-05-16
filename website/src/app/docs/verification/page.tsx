@@ -49,7 +49,7 @@ export default function VerificationPage() {
         ].map((item) => (
           <div key={item.step}>
             <h3 className="text-base font-semibold mb-2">
-              <span className="text-[#6b7280] mr-3 tabular-nums">{item.step}.</span>
+              <span className="text-[#4b5563] mr-3 tabular-nums">{item.step}.</span>
               {item.title}
             </h3>
             <p className="text-sm text-[#1f2937] leading-relaxed">{renderInline(item.desc)}</p>
@@ -100,8 +100,8 @@ export default function VerificationPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[#e5e7eb]">
-              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#6b7280]">Item</th>
-              <th className="text-left py-2 text-xs font-medium uppercase tracking-wider text-[#6b7280]">Why</th>
+              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#4b5563]">Item</th>
+              <th className="text-left py-2 text-xs font-medium uppercase tracking-wider text-[#4b5563]">Why</th>
             </tr>
           </thead>
           <tbody className="text-[#1f2937]">

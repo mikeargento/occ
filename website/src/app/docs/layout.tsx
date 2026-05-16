@@ -82,8 +82,8 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
         <aside className="docs-sidebar" style={{ width: 200, flexShrink: 0 }}>
           <div style={{ position: "sticky", top: 88 }}>
             <div style={{
-              fontSize: 11, fontWeight: 500, textTransform: "uppercase",
-              letterSpacing: "0.1em", color: "#6b7280", marginBottom: 16, paddingTop: 8,
+              fontSize: 11, fontWeight: 600, textTransform: "uppercase",
+              letterSpacing: "0.1em", color: "#4b5563", marginBottom: 16, paddingTop: 8,
             }}>
               Documentation
             </div>

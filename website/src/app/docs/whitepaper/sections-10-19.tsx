@@ -196,12 +196,12 @@ export default function Sections10to19() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[#e5e7eb]">
-                  <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#6b7280]">Property</th>
-                  <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#6b7280]">Digital Signing</th>
-                  <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#6b7280]">TEE / Attested Exec.</th>
-                  <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#6b7280]">Provenance (C2PA)</th>
-                  <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#6b7280]">Blockchain / Ledger</th>
-                  <th className="text-left py-2 text-xs font-medium uppercase tracking-wider text-[#6b7280]">BitGraph</th>
+                  <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#4b5563]">Property</th>
+                  <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#4b5563]">Digital Signing</th>
+                  <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#4b5563]">TEE / Attested Exec.</th>
+                  <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#4b5563]">Provenance (C2PA)</th>
+                  <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#4b5563]">Blockchain / Ledger</th>
+                  <th className="text-left py-2 text-xs font-medium uppercase tracking-wider text-[#4b5563]">BitGraph</th>
                 </tr>
               </thead>
               <tbody className="text-[#1f2937]">

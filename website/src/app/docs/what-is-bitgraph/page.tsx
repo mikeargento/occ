@@ -91,10 +91,10 @@ export default function WhatIsBitGraphPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[#e5e7eb]">
-              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#6b7280]">Tier</th>
-              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#6b7280]">Key Location</th>
-              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#6b7280]">Boundary</th>
-              <th className="text-left py-2 text-xs font-medium uppercase tracking-wider text-[#6b7280]">Use Case</th>
+              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#4b5563]">Tier</th>
+              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#4b5563]">Key Location</th>
+              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#4b5563]">Boundary</th>
+              <th className="text-left py-2 text-xs font-medium uppercase tracking-wider text-[#4b5563]">Use Case</th>
             </tr>
           </thead>
           <tbody className="text-[#1f2937]">

@@ -328,7 +328,8 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   background: #f9fafb;
   font-size: 0.6875rem;
   font-family: var(--font-mono);
-  color: #6b7280;
+  color: #4b5563;
+  font-weight: 600;
 }
 .code-block pre {
   padding: 1.25rem 1rem;

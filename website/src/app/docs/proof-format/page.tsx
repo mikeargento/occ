@@ -95,8 +95,8 @@ export default function ProofFormatPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[#e5e7eb]">
-              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#6b7280]">Field</th>
-              <th className="text-left py-2 text-xs font-medium uppercase tracking-wider text-[#6b7280]">Reason</th>
+              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#4b5563]">Field</th>
+              <th className="text-left py-2 text-xs font-medium uppercase tracking-wider text-[#4b5563]">Reason</th>
             </tr>
           </thead>
           <tbody className="text-[#1f2937]">
@@ -136,8 +136,8 @@ export default function ProofFormatPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[#e5e7eb]">
-              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#6b7280]">Binding</th>
-              <th className="text-left py-2 text-xs font-medium uppercase tracking-wider text-[#6b7280]">How</th>
+              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#4b5563]">Binding</th>
+              <th className="text-left py-2 text-xs font-medium uppercase tracking-wider text-[#4b5563]">How</th>
             </tr>
           </thead>
           <tbody className="text-[#1f2937]">
@@ -207,9 +207,9 @@ export default function ProofFormatPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[#e5e7eb]">
-              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#6b7280]">Purpose</th>
-              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#6b7280]">Algorithm</th>
-              <th className="text-left py-2 text-xs font-medium uppercase tracking-wider text-[#6b7280]">Details</th>
+              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#4b5563]">Purpose</th>
+              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#4b5563]">Algorithm</th>
+              <th className="text-left py-2 text-xs font-medium uppercase tracking-wider text-[#4b5563]">Details</th>
             </tr>
           </thead>
           <tbody className="text-[#1f2937]">

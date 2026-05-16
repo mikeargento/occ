@@ -6,7 +6,7 @@ export default function Sections1Through3() {
         id="abstract"
         className="border border-[#e5e7eb] bg-[#f9fafb] p-6 mb-10"
       >
-        <div className="text-xs font-bold uppercase tracking-wider text-[#6b7280] mb-3">
+        <div className="text-xs font-bold uppercase tracking-wider text-[#4b5563] mb-3">
           Abstract
         </div>
         <div className="space-y-4 text-sm text-[#1f2937] leading-relaxed">

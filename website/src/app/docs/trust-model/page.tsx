@@ -23,8 +23,8 @@ export default function TrustModelPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[#e5e7eb]">
-              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#6b7280]">Assumption</th>
-              <th className="text-left py-2 text-xs font-medium uppercase tracking-wider text-[#6b7280]">If it fails</th>
+              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#4b5563]">Assumption</th>
+              <th className="text-left py-2 text-xs font-medium uppercase tracking-wider text-[#4b5563]">If it fails</th>
             </tr>
           </thead>
           <tbody className="text-[#1f2937]">
@@ -163,8 +163,8 @@ export default function TrustModelPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-[#e5e7eb]">
-              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#6b7280]">Containment property</th>
-              <th className="text-left py-2 text-xs font-medium uppercase tracking-wider text-[#6b7280]">What it bounds</th>
+              <th className="text-left py-2 pr-4 text-xs font-medium uppercase tracking-wider text-[#4b5563]">Containment property</th>
+              <th className="text-left py-2 text-xs font-medium uppercase tracking-wider text-[#4b5563]">What it bounds</th>
             </tr>
           </thead>
           <tbody className="text-[#1f2937]">
