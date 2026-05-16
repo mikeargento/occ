@@ -308,7 +308,7 @@ export default function ProofPage() {
             </Card>
           ) : (
             <Card title="Proven Before">
-              <div style={{ padding: "18px 24px", fontSize: 14, color: "#9ca3af" }}>
+              <div style={{ padding: "18px 24px", fontSize: 14, color: "#6b7280" }}>
                 Awaiting next Ethereum block…
               </div>
             </Card>
@@ -733,7 +733,7 @@ function SimpleView({
             padding: "20px 24px",
           }}
         >
-          <div style={{ fontSize: 11, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>
             Submitter&apos;s note
           </div>
           {attr?.name && (
@@ -746,7 +746,7 @@ function SimpleView({
               &ldquo;{attr.message}&rdquo;
             </div>
           )}
-          <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 8 }}>
+          <div style={{ fontSize: 11, color: "#6b7280", marginTop: 8 }}>
             Self-attributed. Signed into the proof at commit time; identity is not verified.
           </div>
         </div>
@@ -972,7 +972,7 @@ function BigField({
       }}
       title={clickable ? hint : undefined}
     >
-      <div style={{ fontSize: 11, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.08em" }}>
         {label}
       </div>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 16, flexWrap: "wrap" }}>
@@ -981,7 +981,7 @@ function BigField({
             fontSize: isMono ? 22 : 20,
             fontFamily: isMono ? mono : "inherit",
             fontWeight: isMono ? 700 : 600,
-            color: copied ? "#0065A4" : muted ? "#9ca3af" : "#111827",
+            color: copied ? "#0065A4" : muted ? "#6b7280" : "#111827",
             letterSpacing: isMono ? "-0.01em" : "normal",
             wordBreak: "break-word",
             lineHeight: 1.3,
@@ -1106,17 +1106,17 @@ function AttestationButton({ reportB64, measurement }: { reportB64: string; meas
                   <div style={{ fontSize: 11, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>Decoded from Attestation Document</div>
                   {result.moduleId && (
                     <div style={{ fontSize: 12, color: "#374151", marginBottom: 4, wordBreak: "break-all" }}>
-                      <span style={{ color: "#9ca3af" }}>Module ID: </span>{result.moduleId}
+                      <span style={{ color: "#6b7280" }}>Module ID: </span>{result.moduleId}
                     </div>
                   )}
                   {result.timestamp && (
                     <div style={{ fontSize: 12, color: "#374151", marginBottom: 4 }}>
-                      <span style={{ color: "#9ca3af" }}>Timestamp: </span>{new Date(result.timestamp).toLocaleString()}
+                      <span style={{ color: "#6b7280" }}>Timestamp: </span>{new Date(result.timestamp).toLocaleString()}
                     </div>
                   )}
                   {result.certChainLength && (
                     <div style={{ fontSize: 12, color: "#374151" }}>
-                      <span style={{ color: "#9ca3af" }}>Certificate Chain: </span>{result.certChainLength} certificates
+                      <span style={{ color: "#6b7280" }}>Certificate Chain: </span>{result.certChainLength} certificates
                     </div>
                   )}
                 </div>
@@ -1130,7 +1130,7 @@ function AttestationButton({ reportB64, measurement }: { reportB64: string; meas
                     .filter(([idx]) => idx !== "0")
                     .map(([idx, hex]) => (
                       <div key={idx} style={{ fontSize: 11, fontFamily: mono, color: "#6b7280", marginBottom: 4, wordBreak: "break-all" }}>
-                        <span style={{ color: "#9ca3af" }}>PCR{idx}: </span>{hex}
+                        <span style={{ color: "#6b7280" }}>PCR{idx}: </span>{hex}
                       </div>
                     ))}
                 </div>
@@ -1158,7 +1158,7 @@ function AttestationButton({ reportB64, measurement }: { reportB64: string; meas
                     {copiedReport ? "Copied!" : "Copy"}
                   </button>
                 </div>
-                <div style={{ fontSize: 10, fontFamily: mono, color: "#9ca3af", wordBreak: "break-all", maxHeight: 60, overflow: "hidden" }}>
+                <div style={{ fontSize: 10, fontFamily: mono, color: "#6b7280", wordBreak: "break-all", maxHeight: 60, overflow: "hidden" }}>
                   {reportB64.slice(0, 200)}...
                 </div>
               </div>

@@ -63,7 +63,7 @@ export function CommitPathDiagram() {
             {eq.label}
           </div>
           {eq.math}
-          <p className="text-xs text-[#9ca3af] leading-relaxed">
+          <p className="text-xs text-[#6b7280] leading-relaxed">
             {eq.note}
           </p>
         </div>

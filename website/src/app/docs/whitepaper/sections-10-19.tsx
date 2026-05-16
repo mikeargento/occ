@@ -949,7 +949,7 @@ export default function Sections10to19() {
                 </div>
                 <div>
                   <div className="text-[#6b7280] text-lg">&darr;</div>
-                  <div className="bg-[#f9fafb] border border-dashed border-[#e5e7eb] p-2 px-3 text-xs text-[#9ca3af]">
+                  <div className="bg-[#f9fafb] border border-dashed border-[#e5e7eb] p-2 px-3 text-xs text-[#6b7280]">
                     S<sub>1</sub>&prime;
                   </div>
                 </div>
@@ -998,7 +998,7 @@ export default function Sections10to19() {
               </div>
               <div className="text-center">
                 <div className="text-[#6b7280]">&darr;</div>
-                <div className="bg-[#f9fafb] border border-dashed border-[#e5e7eb] p-1.5 px-2.5 text-xs text-[#9ca3af]">S<sub>1</sub>&prime;</div>
+                <div className="bg-[#f9fafb] border border-dashed border-[#e5e7eb] p-1.5 px-2.5 text-xs text-[#6b7280]">S<sub>1</sub>&prime;</div>
               </div>
             </div>
             <div className="text-[11px] text-[#6b7280]">fork structurally unreachable</div>

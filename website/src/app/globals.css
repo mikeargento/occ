@@ -35,7 +35,7 @@
   --c-border-subtle: #f0f0f0;
   --c-text: #111827;
   --c-text-secondary: #6b7280;
-  --c-text-tertiary: #9ca3af;
+  --c-text-tertiary: #6b7280;
   --c-accent: #0065A4;
   --c-accent-dim: #4A90E2;
   --c-syntax-key: #2563eb;
@@ -328,7 +328,7 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   background: #f9fafb;
   font-size: 0.6875rem;
   font-family: var(--font-mono);
-  color: #9ca3af;
+  color: #6b7280;
 }
 .code-block pre {
   padding: 1.25rem 1rem;

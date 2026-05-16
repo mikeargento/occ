@@ -138,7 +138,7 @@ export default function ChainCarousel({ epochId, currentCounter }: { epochId: st
                 #{p.commit.counter}
               </span>
               <span style={{
-                fontSize: 10, color: isAnchor ? "#16a34a" : "#9ca3af",
+                fontSize: 10, color: isAnchor ? "#16a34a" : "#6b7280",
                 textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600,
               }}>
                 {label}

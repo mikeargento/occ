@@ -475,9 +475,9 @@ export default function BitGraphPage() {
         {step === "scanning" && (
           <div style={{ textAlign: "center", padding: "80px 24px", animation: "slideIn 0.3s ease-out" }}>
             <div style={{ fontSize: 64, fontWeight: 800, color: "var(--c-text)", marginBottom: 8, fontFamily: "monospace", animation: "pulse 1s ease-in-out infinite", letterSpacing: "-0.04em" }}>
-              {scanProgress.current}<span style={{ color: "#9ca3af" }}>/{scanProgress.total}</span>
+              {scanProgress.current}<span style={{ color: "#6b7280" }}>/{scanProgress.total}</span>
             </div>
-            <div style={{ fontSize: 15, color: "#9ca3af", fontWeight: 500 }}>Scanning</div>
+            <div style={{ fontSize: 15, color: "#6b7280", fontWeight: 500 }}>Scanning</div>
             <div style={{ width: "40%", height: 2, borderRadius: 1, background: "var(--c-border-subtle)", overflow: "hidden", margin: "20px auto 0" }}>
               <div style={{ width: `${(scanProgress.current / scanProgress.total) * 100}%`, height: "100%", background: "#0065A4", transition: "width 0.2s", boxShadow: "none" }} />
             </div>
@@ -490,7 +490,7 @@ export default function BitGraphPage() {
             <div style={{ fontSize: 64, fontWeight: 800, color: "#0065A4", marginBottom: 8, fontFamily: "monospace", animation: "pulse 1s ease-in-out infinite", textShadow: "none", letterSpacing: "-0.04em" }}>
               {unproven.length}
             </div>
-            <div style={{ fontSize: 15, color: "#9ca3af", fontWeight: 500 }}>Signing in enclave</div>
+            <div style={{ fontSize: 15, color: "#6b7280", fontWeight: 500 }}>Signing in enclave</div>
           </div>
         )}
 
@@ -498,9 +498,9 @@ export default function BitGraphPage() {
         {step === "exporting" && (
           <div style={{ textAlign: "center", padding: "80px 24px", animation: "slideIn 0.3s ease-out" }}>
             <div style={{ fontSize: 64, fontWeight: 800, color: "var(--c-text)", marginBottom: 8, fontFamily: "monospace", animation: "pulse 1s ease-in-out infinite", letterSpacing: "-0.04em" }}>
-              {exportProgress.current}<span style={{ color: "#9ca3af" }}>/{exportProgress.total}</span>
+              {exportProgress.current}<span style={{ color: "#6b7280" }}>/{exportProgress.total}</span>
             </div>
-            <div style={{ fontSize: 15, color: "#9ca3af", fontWeight: 500 }}>Packaging</div>
+            <div style={{ fontSize: 15, color: "#6b7280", fontWeight: 500 }}>Packaging</div>
             <div style={{ width: "40%", height: 2, borderRadius: 1, background: "var(--c-border-subtle)", overflow: "hidden", margin: "20px auto 0" }}>
               <div style={{ width: `${(exportProgress.current / exportProgress.total) * 100}%`, height: "100%", background: "#0065A4", transition: "width 0.15s", boxShadow: "none" }} />
             </div>
@@ -567,7 +567,7 @@ export default function BitGraphPage() {
                     color: item.status === "found" || item.status === "proved" ? "#0065A4"
                       : item.status === "proving" ? "#f0c060"
                       : item.status === "error" ? "#f87171"
-                      : "#9ca3af",
+                      : "#6b7280",
                     fontWeight: 700,
                   }}>
                     {item.status === "found" || item.status === "proved" ? "✓"
@@ -578,10 +578,10 @@ export default function BitGraphPage() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {item.file.name}
-                      <span style={{ fontWeight: 400, color: "#9ca3af", marginLeft: 8 }}>{formatFileSize(item.file.size)}</span>
+                      <span style={{ fontWeight: 400, color: "#6b7280", marginLeft: 8 }}>{formatFileSize(item.file.size)}</span>
                     </div>
                     {item.proof && (
-                      <div style={{ fontSize: 11, fontFamily: "monospace", color: "#9ca3af", marginTop: 3 }}>
+                      <div style={{ fontSize: 11, fontFamily: "monospace", color: "#6b7280", marginTop: 3 }}>
                         #{item.proof.commit.counter} · {item.digestB64.slice(0, 20)}...
                       </div>
                     )}
@@ -592,7 +592,7 @@ export default function BitGraphPage() {
                       <div style={{ fontSize: 11, color: "#0065A4", marginTop: 2 }}>Just proved</div>
                     )}
                     {item.status === "new" && (
-                      <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>Not yet proven</div>
+                      <div style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}>Not yet proven</div>
                     )}
                   </div>
                   {item.proof && (

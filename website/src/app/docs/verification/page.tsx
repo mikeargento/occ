@@ -49,7 +49,7 @@ export default function VerificationPage() {
         ].map((item) => (
           <div key={item.step}>
             <h3 className="text-base font-semibold mb-2">
-              <span className="text-[#9ca3af] mr-3 tabular-nums">{item.step}.</span>
+              <span className="text-[#6b7280] mr-3 tabular-nums">{item.step}.</span>
               {item.title}
             </h3>
             <p className="text-sm text-[#1f2937] leading-relaxed">{renderInline(item.desc)}</p>

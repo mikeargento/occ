@@ -187,7 +187,7 @@ export default function ContactPage() {
 
             <div>
               <label htmlFor="contact-subject" style={labelStyle}>
-                Subject <span style={{ color: "#9ca3af", fontWeight: 400 }}>(optional)</span>
+                Subject <span style={{ color: "#6b7280", fontWeight: 400 }}>(optional)</span>
               </label>
               <input
                 id="contact-subject"
@@ -225,7 +225,7 @@ export default function ContactPage() {
               <div
                 style={{
                   fontSize: 12,
-                  color: "#9ca3af",
+                  color: "#6b7280",
                   marginTop: 6,
                   textAlign: "right",
                 }}
@@ -260,10 +260,10 @@ export default function ContactPage() {
                 type="submit"
                 disabled={status === "sending"}
                 style={{
-                  background: status === "sending" ? "#9ca3af" : "#0065A4",
+                  background: status === "sending" ? "#6b7280" : "#0065A4",
                   border:
                     status === "sending"
-                      ? "1px solid #9ca3af"
+                      ? "1px solid #6b7280"
                       : "1px solid #0065A4",
                   borderRadius: 0,
                   padding: "10px 20px",
