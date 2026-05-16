@@ -5,6 +5,23 @@ export const metadata: Metadata = {
   description: "Frequently asked questions about the BitGraph Protocol.",
 };
 
+// Splits a string on backticks and wraps the odd-indexed parts in <code>.
+// Lets answer strings include `inline-code` for field names and API paths.
+function renderInline(text: string) {
+  return text.split("`").map((part, i) =>
+    i % 2 === 1 ? (
+      <code
+        key={i}
+        className="font-mono text-[12px] bg-[#f3f4f6] text-[#1f2937] px-1.5 py-0.5 rounded"
+      >
+        {part}
+      </code>
+    ) : (
+      <span key={i}>{part}</span>
+    ),
+  );
+}
+
 const faqs = [
   {
     q: "Does BitGraph upload my file?",
@@ -16,7 +33,7 @@ const faqs = [
   },
   {
     q: "What happens if the enclave restarts?",
-    a: "A new epoch begins. The enclave generates a fresh Ed25519 keypair from hardware entropy, derives a new epochId, and resets the monotonic counter to 1. The previous epoch's signing key is destroyed and exists nowhere outside the terminated enclave. The first proof of the new epoch has no prevB64. Restarting is also a containment action: any undetected compromise is quarantined to the bounded window of a single epoch.",
+    a: "A new epoch begins. The enclave generates a fresh Ed25519 keypair from hardware entropy, derives a new `epochId`, and resets the monotonic counter to 1. The previous epoch's signing key is destroyed and exists nowhere outside the terminated enclave. The first proof of the new epoch has no `prevB64`. Restarting is also a containment action: any undetected compromise is quarantined to the bounded window of a single epoch.",
   },
   {
     q: "If the TEE were compromised, would all my old proofs be invalid?",
@@ -36,7 +53,7 @@ const faqs = [
   },
   {
     q: "What is the measurement field?",
-    a: "For AWS Nitro Enclaves, it is the PCR0 value, a SHA-384 hash of the enclave image. It uniquely identifies the exact code running inside the boundary. Verifiers should pin allowedMeasurements to known-good values.",
+    a: "For AWS Nitro Enclaves, it is the PCR0 value, a SHA-384 hash of the enclave image. It uniquely identifies the exact code running inside the boundary. Verifiers should pin `allowedMeasurements` to known-good values.",
   },
   {
     q: "How does BitGraph establish time?",
@@ -47,8 +64,8 @@ const faqs = [
     a: "Yes. Each commit generates a fresh nonce, increments the counter, and produces a new signature. The artifact digest will be the same (same file = same SHA-256), but the commit context differs. This is correct behavior. Each is a distinct commit event.",
   },
   {
-    q: "What is prevB64?",
-    a: "The SHA-256 hash of the previous complete proof in the chain. It creates a linked sequence within an epoch. If any proof in the chain is modified, deleted, or reordered, the hash chain breaks. The first proof of an epoch has no prevB64.",
+    q: "What is `prevB64`?",
+    a: "The SHA-256 hash of the previous complete proof in the chain. It creates a linked sequence within an epoch. If any proof in the chain is modified, deleted, or reordered, the hash chain breaks. The first proof of an epoch has no `prevB64`.",
   },
   {
     q: "How is this different from just signing a file?",
@@ -56,7 +73,7 @@ const faqs = [
   },
   {
     q: "What is a causal slot?",
-    a: "A slot is a pre-allocated nonce and counter pair created inside the enclave before any artifact hash is known. This proves the enclave committed to a specific position in its sequence independently of the artifact content. The slot has its own Ed25519 signature and is cryptographically bound to the final proof via slotHashB64. Every proof includes its slot allocation record.",
+    a: "A slot is a pre-allocated nonce and counter pair created inside the enclave before any artifact hash is known. This proves the enclave committed to a specific position in its sequence independently of the artifact content. The slot has its own Ed25519 signature and is cryptographically bound to the final proof via `slotHashB64`. Every proof includes its slot allocation record.",
   },
   {
     q: "What is attribution?",
@@ -64,11 +81,11 @@ const faqs = [
   },
   {
     q: "Can I batch multiple artifacts?",
-    a: "Yes. Send multiple digests in a single POST /commit request. The enclave allocates a slot and commits each digest sequentially. If using actor-bound proofs (passkey), all proofs in the batch receive actor identity via batchContext. Each proof is independently verifiable.",
+    a: "Yes. Send multiple digests in a single `POST /commit` request. The enclave allocates a slot and commits each digest sequentially. If using actor-bound proofs (passkey), all proofs in the batch receive actor identity via `batchContext`. Each proof is independently verifiable.",
   },
   {
     q: "What libraries does BitGraph use?",
-    a: "The core library uses @noble/ed25519 for signatures and @noble/hashes for SHA-256. Both are audited, pure TypeScript, zero-dependency libraries. No Node.js native bindings.",
+    a: "The core library uses `@noble/ed25519` for signatures and `@noble/hashes` for SHA-256. Both are audited, pure TypeScript, zero-dependency libraries. No Node.js native bindings.",
   },
 ];
 
@@ -83,8 +100,8 @@ export default function FAQPage() {
       <div className="space-y-8">
         {faqs.map((faq) => (
           <div key={faq.q} className="border-b border-[#e5e7eb] pb-8">
-            <h2 className="text-lg font-semibold mb-3">{faq.q}</h2>
-            <p className="text-sm text-[#1f2937] leading-relaxed">{faq.a}</p>
+            <h2 className="text-lg font-semibold mb-3">{renderInline(faq.q)}</h2>
+            <p className="text-sm text-[#1f2937] leading-relaxed">{renderInline(faq.a)}</p>
           </div>
         ))}
       </div>
