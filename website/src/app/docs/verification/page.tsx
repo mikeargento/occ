@@ -48,13 +48,11 @@ export default function VerificationPage() {
           },
         ].map((item) => (
           <div key={item.step}>
-            <div className="flex items-center gap-4 mb-2">
-              <span className="inline-flex w-8 h-8 rounded-full items-center justify-center bg-[#0065A4] text-white text-sm font-semibold flex-shrink-0">
-                {item.step}
-              </span>
-              <h3 className="text-base font-semibold">{item.title}</h3>
-            </div>
-            <p className="ml-12 text-sm text-[#1f2937] leading-relaxed">{renderInline(item.desc)}</p>
+            <h3 className="text-base font-semibold mb-2">
+              <span className="text-[#9ca3af] mr-3 tabular-nums">{item.step}.</span>
+              {item.title}
+            </h3>
+            <p className="text-sm text-[#1f2937] leading-relaxed">{renderInline(item.desc)}</p>
           </div>
         ))}
       </div>
