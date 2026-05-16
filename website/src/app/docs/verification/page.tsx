@@ -16,7 +16,7 @@ export default function VerificationPage() {
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Five-step algorithm</h2>
       <p className="text-[#1f2937] mb-6">
-        Input: a proof (<code className="text-xs font-mono bg-[#d1d5db] px-1">BitGraphProof</code>), the original bytes (<code className="text-xs font-mono bg-[#d1d5db] px-1">Uint8Array</code>), and an optional verification policy.
+        Input: a proof (<code className="text-xs font-mono bg-[#dbeafe] text-[#0065A4] px-1">BitGraphProof</code>), the original bytes (<code className="text-xs font-mono bg-[#dbeafe] text-[#0065A4] px-1">Uint8Array</code>), and an optional verification policy.
       </p>
 
       <div className="space-y-6 mb-12">
@@ -47,14 +47,16 @@ export default function VerificationPage() {
             desc: "If a `VerificationPolicy` is provided, enforce its constraints: enforcement tier, allowed measurements, allowed public keys, attestation requirements, counter range, time range, epoch requirements.",
           },
         ].map((item) => (
-          <div key={item.step} className="border-l-2 border-l-[#d0d5dd] pl-6">
-            <div className="flex items-center gap-3 mb-3">
-              <span className="inline-flex w-7 h-7 items-center justify-center bg-[#d1d5db] text-[#111827] text-xs font-mono font-semibold">
+          <div key={item.step} className="flex gap-4">
+            <div className="flex-shrink-0">
+              <span className="inline-flex w-8 h-8 rounded-full items-center justify-center bg-[#0065A4] text-white text-sm font-semibold">
                 {item.step}
               </span>
-              <h3 className="text-base font-semibold">{item.title}</h3>
             </div>
-            <p className="text-sm text-[#1f2937] leading-relaxed">{renderInline(item.desc)}</p>
+            <div className="flex-1 min-w-0 pt-1">
+              <h3 className="text-base font-semibold mb-2">{item.title}</h3>
+              <p className="text-sm text-[#1f2937] leading-relaxed">{renderInline(item.desc)}</p>
+            </div>
           </div>
         ))}
       </div>
