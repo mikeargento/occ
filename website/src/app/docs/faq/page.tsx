@@ -1,26 +1,10 @@
 import type { Metadata } from "next";
+import { renderInline } from "@/lib/render-inline";
 
 export const metadata: Metadata = {
   title: "FAQ",
   description: "Frequently asked questions about the BitGraph Protocol.",
 };
-
-// Splits a string on backticks and wraps the odd-indexed parts in <code>.
-// Lets answer strings include `inline-code` for field names and API paths.
-function renderInline(text: string) {
-  return text.split("`").map((part, i) =>
-    i % 2 === 1 ? (
-      <code
-        key={i}
-        className="font-mono text-[12px] bg-[#f3f4f6] text-[#1f2937] px-1.5 py-0.5 rounded"
-      >
-        {part}
-      </code>
-    ) : (
-      <span key={i}>{part}</span>
-    ),
-  );
-}
 
 const faqs = [
   {
@@ -41,7 +25,7 @@ const faqs = [
   },
   {
     q: "Is this a blockchain?",
-    a: "No. BitGraph has no distributed consensus, no global ledger, no tokens. It constrains a single execution boundary. Proof chaining (prevB64) is a local hash chain, not a distributed data structure.",
+    a: "No. BitGraph has no distributed consensus, no global ledger, no tokens. It constrains a single execution boundary. Proof chaining (`prevB64`) is a local hash chain, not a distributed data structure.",
   },
   {
     q: "Does BitGraph prove who created the content?",

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { renderInline } from "@/lib/render-inline";
 
 export const metadata: Metadata = {
   title: "What BitGraph is Not",
@@ -18,7 +19,7 @@ export default function WhatBitGraphIsNotPage() {
         {[
           {
             title: "BitGraph is not a blockchain",
-            body: "BitGraph does not use distributed consensus, a global ledger, or tokens. It constrains a single execution boundary. There is no mining, no gas, no network of validators. Proof chaining (prevB64) creates a local hash chain within one boundary, not a distributed data structure.",
+            body: "BitGraph does not use distributed consensus, a global ledger, or tokens. It constrains a single execution boundary. There is no mining, no gas, no network of validators. Proof chaining (`prevB64`) creates a local hash chain within one boundary, not a distributed data structure.",
           },
           {
             title: "BitGraph is not a watermark",
@@ -51,7 +52,7 @@ export default function WhatBitGraphIsNotPage() {
         ].map((item) => (
           <div key={item.title} className="border-l-2 border-l-[#d0d5dd] pl-6">
             <h2 className="text-base font-semibold mb-3">{item.title}</h2>
-            <p className="text-sm text-[#1f2937] leading-relaxed">{item.body}</p>
+            <p className="text-sm text-[#1f2937] leading-relaxed">{renderInline(item.body)}</p>
           </div>
         ))}
       </div>

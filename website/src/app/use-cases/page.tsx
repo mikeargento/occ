@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ScrollReveal } from "@/components/scroll-reveal";
+import { renderInline } from "@/lib/render-inline";
 
 export const metadata: Metadata = {
   title: "Use Cases",
@@ -17,8 +18,8 @@ const useCases = [
   {
     title: "Agent Runs & Traces",
     subtitle: "Evaluations, red-teaming, tool-call logs",
-    description: "AI agents produce traces of tool calls, reasoning steps, and intermediate results. BitGraph commits each step with linked proofs (prevB64), creating a verifiable sequence. If any step is inserted, deleted, or reordered, verification fails. Evaluators can verify the complete trace was produced by a specific agent environment.",
-    fields: "prevB64 links sequential proofs • epochId scopes to a single agent session • counter orders events",
+    description: "AI agents produce traces of tool calls, reasoning steps, and intermediate results. BitGraph commits each step with linked proofs (`prevB64`), creating a verifiable sequence. If any step is inserted, deleted, or reordered, verification fails. Evaluators can verify the complete trace was produced by a specific agent environment.",
+    fields: "`prevB64` links sequential proofs • `epochId` scopes to a single agent session • counter orders events",
   },
   {
     title: "Software Pipeline Artifacts",
@@ -36,19 +37,19 @@ const useCases = [
     title: "Scientific Instruments",
     subtitle: "Sensor readings, lab data, telescope output",
     description: "Instruments that commit raw data through BitGraph produce proofs establishing that specific readings came from a specific instrument environment. Data integrity is verifiable from collection through analysis. Linked proofs establish that no readings were inserted or deleted between collection and publication.",
-    fields: "prevB64 links sequential readings • measurement identifies the instrument boundary",
+    fields: "`prevB64` links sequential readings • measurement identifies the instrument boundary",
   },
   {
     title: "Compliance & Audit Logs",
     subtitle: "Financial records, regulatory filings, access logs",
     description: "BitGraph-committed logs produce a verifiable record where each entry is bound to the previous one. Any modification, insertion, or deletion breaks the proof sequence. Auditors can verify the complete sequence offline without trusting the log storage system.",
-    fields: "prevB64 provides sequential integrity • counter prevents gaps • timestamps establish time claims",
+    fields: "`prevB64` provides sequential integrity • counter prevents gaps • timestamps establish time claims",
   },
   {
     title: "Agent-to-Agent Handoff",
     subtitle: "Data passing between AI systems",
     description: "When Agent A passes data to Agent B, it can include a BitGraph proof. Agent B verifies the proof against the received bytes before processing. This eliminates trust in the transport layer. If the bytes match the proof, they are exactly what the source boundary committed.",
-    fields: "artifact.digestB64 verifies byte integrity • signer identifies the source boundary",
+    fields: "`artifact.digestB64` verifies byte integrity • signer identifies the source boundary",
   },
   {
     title: "Dataset Admission",
@@ -82,10 +83,10 @@ export default function UseCasesPage() {
               <div className="text-[11px] font-medium uppercase tracking-[0.15em] text-text-tertiary mb-3">{uc.subtitle}</div>
               <h2 className="text-xl font-semibold tracking-[-0.02em] mb-4">{uc.title}</h2>
               <p className="text-sm text-text-secondary leading-relaxed mb-4">
-                {uc.description}
+                {renderInline(uc.description)}
               </p>
               <div className="mt-4 pt-4 border-t border-border-subtle text-[11px] font-mono text-text-tertiary">
-                {uc.fields}
+                {renderInline(uc.fields)}
               </div>
             </div>
           </ScrollReveal>

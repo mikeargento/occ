@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { renderInline } from "@/lib/render-inline";
 
 export const metadata: Metadata = {
   title: "Trust Model",
@@ -63,19 +64,19 @@ export default function TrustModelPage() {
       <h3 className="text-base font-semibold mt-6 mb-3">In-scope threats</h3>
       <div className="space-y-3 mb-8">
         {[
-          { threat: "Proof replay", mitigation: "minCounter in policy rejects old proofs" },
-          { threat: "Measurement substitution", mitigation: "allowedMeasurements pins exact values" },
+          { threat: "Proof replay", mitigation: "`minCounter` in policy rejects old proofs" },
+          { threat: "Measurement substitution", mitigation: "`allowedMeasurements` pins exact values" },
           { threat: "Signature forgery", mitigation: "Ed25519 unforgeability" },
-          { threat: "Downgrade attack", mitigation: "Enforcement tier is signed; requireEnforcement rejects weaker tiers" },
-          { threat: "Chain gap insertion", mitigation: "prevB64 chaining: any removed link breaks hash continuity" },
-          { threat: "Counter position forgery", mitigation: "Causal slot pre-allocation: slotHashB64 binding + slotCounter < counter ordering proves pre-allocation" },
+          { threat: "Downgrade attack", mitigation: "Enforcement tier is signed; `requireEnforcement` rejects weaker tiers" },
+          { threat: "Chain gap insertion", mitigation: "`prevB64` chaining: any removed link breaks hash continuity" },
+          { threat: "Counter position forgery", mitigation: "Causal slot pre-allocation: `slotHashB64` binding + `slotCounter` < counter ordering proves pre-allocation" },
           { threat: "Agency replay across batches", mitigation: "Single-use challenge consumed on first validation; batch context scoped to declared digests" },
           { threat: "Retroactive forgery after compromise", mitigation: "Per-epoch keypair destroyed on restart + Ethereum block anchors seal pre-anchor proofs against rewrite" },
-          { threat: "Cross-epoch identity confusion", mitigation: "epochId binds every proof to a specific compartment; verifiers pin allowed epochs" },
+          { threat: "Cross-epoch identity confusion", mitigation: "`epochId` binds every proof to a specific compartment; verifiers pin allowed epochs" },
         ].map((t) => (
           <div key={t.threat} className="flex gap-4 border-l-2 border-l-[#d0d5dd] pl-4 py-1">
             <div className="text-sm font-medium text-[#111827] shrink-0 w-44">{t.threat}</div>
-            <div className="text-sm text-[#1f2937]">{t.mitigation}</div>
+            <div className="text-sm text-[#1f2937]">{renderInline(t.mitigation)}</div>
           </div>
         ))}
       </div>

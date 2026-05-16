@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { renderInline } from "@/lib/render-inline";
 
 export const metadata: Metadata = {
   title: "Verification",
@@ -23,27 +24,27 @@ export default function VerificationPage() {
           {
             step: "1",
             title: "Structural validation",
-            desc: "Check that all required fields are present with correct types. version must be \"bitgraph/1\", hashAlg must be \"sha256\", enforcement must be one of the valid tiers, all base64 fields must decode correctly.",
+            desc: "Check that all required fields are present with correct types. `version` must be `\"bitgraph/1\"`, `hashAlg` must be `\"sha256\"`, `enforcement` must be one of the valid tiers, all base64 fields must decode correctly.",
           },
           {
             step: "2",
             title: "Artifact digest verification",
-            desc: "Compute SHA-256 of the provided bytes. Compare against proof.artifact.digestB64 using constant-time comparison. If they don't match, the proof does not apply to these bytes.",
+            desc: "Compute SHA-256 of the provided bytes. Compare against `proof.artifact.digestB64` using constant-time comparison. If they don't match, the proof does not apply to these bytes.",
           },
           {
             step: "3",
             title: "Signed body reconstruction",
-            desc: "Build the SignedBody object from the proof fields (including actor identity from agency, attribution, and attestation format when present). Canonicalize to sorted-key JSON, encode as UTF-8 bytes. This is what the Ed25519 signature covers.",
+            desc: "Build the `SignedBody` object from the proof fields (including actor identity from agency, attribution, and attestation format when present). Canonicalize to sorted-key JSON, encode as UTF-8 bytes. This is what the Ed25519 signature covers.",
           },
           {
             step: "4",
             title: "Ed25519 signature verification",
-            desc: "Decode publicKeyB64 (must be 32 bytes) and signatureB64 (must be 64 bytes). Verify the Ed25519 signature against the canonical bytes. If invalid, the proof has been tampered with.",
+            desc: "Decode `publicKeyB64` (must be 32 bytes) and `signatureB64` (must be 64 bytes). Verify the Ed25519 signature against the canonical bytes. If invalid, the proof has been tampered with.",
           },
           {
             step: "5",
             title: "Policy checks",
-            desc: "If a VerificationPolicy is provided, enforce its constraints: enforcement tier, allowed measurements, allowed public keys, attestation requirements, counter range, time range, epoch requirements.",
+            desc: "If a `VerificationPolicy` is provided, enforce its constraints: enforcement tier, allowed measurements, allowed public keys, attestation requirements, counter range, time range, epoch requirements.",
           },
         ].map((item) => (
           <div key={item.step} className="border-l-2 border-l-[#d0d5dd] pl-6">
@@ -53,7 +54,7 @@ export default function VerificationPage() {
               </span>
               <h3 className="text-base font-semibold">{item.title}</h3>
             </div>
-            <p className="text-sm text-[#1f2937] leading-relaxed">{item.desc}</p>
+            <p className="text-sm text-[#1f2937] leading-relaxed">{renderInline(item.desc)}</p>
           </div>
         ))}
       </div>
