@@ -128,7 +128,7 @@ export default function TrustModelPage() {
       <p className="text-[#1f2937] leading-relaxed mb-4">
         BitGraph&apos;s strongest containment property is structural, not behavioral.
         Each restart of the enclave generates a new Ed25519 keypair inside the
-        boundary, derives a new <code className="text-xs font-mono bg-[#f3f4f6] px-1.5 py-0.5">epochId</code> from
+        boundary, derives a new <code className="text-xs font-mono bg-[#e5e7eb] px-1.5 py-0.5">epochId</code> from
         fresh hardware entropy, and resets the monotonic counter. This means
         every epoch is a sealed compartment, identified by a key that exists
         nowhere else in the world.

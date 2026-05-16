@@ -16,7 +16,7 @@ export default function VerificationPage() {
 
       <h2 className="text-xl font-semibold mt-12 mb-4">Five-step algorithm</h2>
       <p className="text-[#1f2937] mb-6">
-        Input: a proof (<code className="text-xs font-mono bg-[#f3f4f6] px-1">BitGraphProof</code>), the original bytes (<code className="text-xs font-mono bg-[#f3f4f6] px-1">Uint8Array</code>), and an optional verification policy.
+        Input: a proof (<code className="text-xs font-mono bg-[#e5e7eb] px-1">BitGraphProof</code>), the original bytes (<code className="text-xs font-mono bg-[#e5e7eb] px-1">Uint8Array</code>), and an optional verification policy.
       </p>
 
       <div className="space-y-6 mb-12">
@@ -49,7 +49,7 @@ export default function VerificationPage() {
         ].map((item) => (
           <div key={item.step} className="border-l-2 border-l-[#d0d5dd] pl-6">
             <div className="flex items-center gap-3 mb-3">
-              <span className="inline-flex w-7 h-7 items-center justify-center bg-[#f3f4f6] text-[#111827] text-xs font-mono font-semibold">
+              <span className="inline-flex w-7 h-7 items-center justify-center bg-[#e5e7eb] text-[#111827] text-xs font-mono font-semibold">
                 {item.step}
               </span>
               <h3 className="text-base font-semibold">{item.title}</h3>

@@ -63,7 +63,7 @@ export default function WhatIsBitGraphPage() {
 
       <h2 className="text-xl font-semibold mt-12 mb-4">What you get</h2>
       <p className="text-[#1f2937] leading-relaxed mb-4">
-        A BitGraph proof is a JSON object (schema version <code className="text-xs font-mono bg-[#f3f4f6] px-1.5 py-0.5">bitgraph/1</code>) containing:
+        A BitGraph proof is a JSON object (schema version <code className="text-xs font-mono bg-[#e5e7eb] px-1.5 py-0.5">bitgraph/1</code>) containing:
       </p>
       <ul className="space-y-2 mb-6">
         <li className="text-[#1f2937]"><strong className="text-text">artifact</strong> - SHA-256 digest of the committed bytes</li>
