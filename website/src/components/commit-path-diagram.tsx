@@ -1,70 +1,37 @@
 "use client";
 
-function Math({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="text-[9px] sm:text-base font-mono text-[#111827] leading-relaxed mb-3 whitespace-nowrap overflow-x-auto">
-      {children}
-    </div>
-  );
-}
-
-function Sub({ children }: { children: React.ReactNode }) {
-  return <sub className="text-[0.7em]">{children}</sub>;
-}
-
-const equations = [
+const properties = [
   {
-    label: "Genesis Invariant",
-    math: (
-      <Math>
-        s&prime; &isin; &Sigma;<Sub>auth</Sub> &rarr; &exist; s &isin; &Sigma;, e &isin; E<Sub>auth</Sub> : (s, e, s&prime;) &isin; C
-      </Math>
-    ),
-    note: "If authenticated state exists, an authorized event produced it.",
+    label: "Origin",
+    note: "Every authenticated artifact corresponds to exactly one authorized commit. State that did not traverse the commit path cannot acquire a valid proof, regardless of how it was constructed elsewhere.",
   },
   {
-    label: "Closure Property",
-    math: (
-      <Math>
-        &Sigma;<Sub>auth</Sub> = Cl(C, E<Sub>auth</Sub>)
-      </Math>
-    ),
-    note: "The authenticated state space is exactly the closure under authorized genesis.",
+    label: "Closure",
+    note: "The set of authenticated artifacts is exactly the set produced by authorized commits. There is no second route into the authenticated set.",
   },
   {
     label: "Atomicity",
-    math: (
-      <Math>
-        &forall; (s, e, s&prime;) &isin; C : authorize(e) &and; bind(e) &and; commit(s&prime;)
-      </Math>
-    ),
-    note: "Authorization, binding, and commit occur as one indivisible operation.",
+    note: "Authorization, binding, and commit are a single indivisible transition. There is no observable intermediate state in which authorization holds but binding has not occurred, or in which binding holds but commit has not.",
   },
   {
-    label: "Injective Genesis",
-    math: (
-      <Math>
-        &phi; : E<Sub>auth</Sub> &rarr; &Sigma;<Sub>auth</Sub> is injective
-      </Math>
-    ),
-    note: "Each authorization event maps to exactly one authenticated artifact.",
+    label: "Uniqueness",
+    note: "Each authorization event produces a distinct authenticated artifact. No two commits collide, and replays of the same input bytes through the commit path produce distinct proofs.",
   },
 ];
 
 export function CommitPathDiagram() {
   return (
     <div className="mt-10 grid gap-4">
-      {equations.map((eq) => (
+      {properties.map((p) => (
         <div
-          key={eq.label}
+          key={p.label}
           className="border border-[#e5e7eb] border-l-[3px] border-l-[#d0d5dd] bg-[#f9fafb] p-4 sm:p-5"
         >
           <div className="text-[10px] font-medium uppercase tracking-wider text-[#111827] mb-3">
-            {eq.label}
+            {p.label}
           </div>
-          {eq.math}
-          <p className="text-xs text-[#6b7280] leading-relaxed">
-            {eq.note}
+          <p className="text-sm text-[#1f2937] leading-relaxed">
+            {p.note}
           </p>
         </div>
       ))}

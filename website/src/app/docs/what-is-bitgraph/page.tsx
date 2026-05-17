@@ -120,7 +120,7 @@ export default function WhatIsBitGraphPage() {
         </table>
       </div>
 
-      <h2 className="text-xl font-semibold mt-12 mb-4">Formal properties</h2>
+      <h2 className="text-xl font-semibold mt-12 mb-4">Structural properties</h2>
       <p className="text-[#1f2937] leading-relaxed mb-4">
         The commit path satisfies these structural properties:
       </p>
