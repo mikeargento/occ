@@ -81,9 +81,13 @@ export default function BitGraphPage() {
       setScanProgress({ current: i + 1, total: files.length });
       const f = files[i];
       try {
-        // Check if it's a proof.json
-        const text = await f.text();
-        const proofJson = isBitGraphProof(text);
+        // Only read as text if the file could plausibly be a proof JSON.
+        // Reading a multi-MB photo as text allocates a UTF-16 copy of its bytes
+        // and crashes iOS Safari after ~15 files.
+        const couldBeProof =
+          f.size <= 1_000_000 &&
+          (f.type === "application/json" || /\.(json|proof)$/i.test(f.name));
+        const proofJson = couldBeProof ? isBitGraphProof(await f.text()) : null;
         if (proofJson) {
           const result = await verifyProofSignature(proofJson);
           results.push({ file: f, digestB64: proofJson.artifact.digestB64, proof: proofJson, valid: result.valid, status: "found" });
@@ -109,6 +113,9 @@ export default function BitGraphPage() {
         const d = await hashFile(f).catch(() => "");
         results.push({ file: f, digestB64: d, proof: null, valid: null, status: "new" });
       }
+
+      // Yield so iOS Safari can reclaim the previous file's buffer before the next iteration.
+      if (i < files.length - 1) await new Promise((r) => setTimeout(r, 0));
     }
 
     setItems(results);
