@@ -225,7 +225,7 @@ export function FileDrop({
             {hint ? (
               <span style={{ whiteSpace: "pre-line" }}>{hint}</span>
             ) : (
-              <span>Hashed locally. <br className="sm:hidden" />The file never leaves your device.</span>
+              <span>Hashed locally. The file never leaves your device.</span>
             )}
           </div>
         </div>
