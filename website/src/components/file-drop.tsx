@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, useRef } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { formatFileSize } from "@/lib/bitgraph";
 
 interface FileDropProps {
@@ -75,6 +75,21 @@ export function FileDrop({
     [onFile, onFiles, multiple]
   );
 
+  // Clipboard paste: ⌘V / Ctrl-V from anywhere on the page picks the file up,
+  // as long as no file is currently being processed.
+  useEffect(() => {
+    if (hasFiles || disabled) return;
+    const handlePaste = (e: ClipboardEvent) => {
+      const pasted = Array.from(e.clipboardData?.files || []);
+      if (pasted.length === 0) return;
+      e.preventDefault();
+      if (multiple && onFiles) onFiles(pasted);
+      else if (onFile) onFile(pasted[0]);
+    };
+    document.addEventListener("paste", handlePaste);
+    return () => document.removeEventListener("paste", handlePaste);
+  }, [hasFiles, disabled, multiple, onFile, onFiles]);
+
   const triggerBrowse = (e: React.MouseEvent) => {
     e.stopPropagation();
     inputRef.current?.click();
@@ -94,14 +109,23 @@ export function FileDrop({
       }}
       onDragLeave={() => setDragover(false)}
       onDrop={handleDrop}
+      role={!hasFiles ? "button" : undefined}
+      tabIndex={!hasFiles && !disabled ? 0 : -1}
+      aria-label={!hasFiles ? "Drop, paste, or click to select a file" : undefined}
+      onKeyDown={(e) => {
+        if (!hasFiles && !disabled && (e.key === "Enter" || e.key === " ")) {
+          e.preventDefault();
+          inputRef.current?.click();
+        }
+      }}
       className={`
-        h-full relative border-2 rounded-none transition-all duration-300 cursor-pointer flex items-center
+        h-full relative border-2 rounded-none transition-all duration-200 cursor-pointer flex items-center outline-none
         ${disabled ? "opacity-50 cursor-not-allowed" : ""}
         ${dragover
-          ? "border-[#0065A4] bg-[#f0f6ff] ring-2 ring-[#0065A4]/20 ring-offset-2 ring-offset-white scale-[1.01]"
+          ? "border-solid border-[#0065A4] bg-[#f0f6ff] ring-2 ring-[#0065A4]/20 scale-[1.005]"
           : hasFiles
-          ? "border-[#c3c8cf] bg-white"
-          : "border-[#c3c8cf] bg-white hover:border-[#0065A4] hover:bg-[#f9fafb]"
+          ? "border-solid border-[#d1d5db] bg-white"
+          : "border-dashed border-[#cbd2dc] bg-white hover:border-solid hover:border-[#0065A4] hover:bg-[#fafbfd] focus-visible:border-solid focus-visible:border-[#0065A4] focus-visible:ring-2 focus-visible:ring-[#0065A4]/20"
         }
       `}
     >
@@ -202,22 +226,57 @@ export function FileDrop({
           </button>
         </div>
       ) : (
-        <div className="flex flex-col items-center py-20 px-4 sm:px-6 w-full">
+        <div className="flex flex-col items-center py-16 px-4 sm:px-6 w-full">
+          {/* Icon */}
+          <div className="mb-5">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+          </div>
           <div
             className="font-semibold tracking-tight text-center"
             style={{
-              color: "#0065A4",
-              fontSize: "min(22px, 4.25vw)",
+              color: "#111827",
+              fontSize: "min(20px, 4vw)",
               whiteSpace: "nowrap",
             }}
           >
-            Drop files to create or check BitGraphs
+            Drop files here
           </div>
           <div
-            className="mt-2 text-center"
+            className="mt-1 text-center"
             style={{
-              color: hint ? "#6b7280" : "#0065A4",
+              color: "#6b7280",
               fontSize: "min(13px, 3vw)",
+            }}
+          >
+            or
+          </div>
+          <button
+            onClick={triggerBrowse}
+            disabled={disabled}
+            className="mt-3 transition-colors"
+            style={{
+              backgroundColor: "#0065A4",
+              color: "#ffffff",
+              padding: "10px 24px",
+              fontSize: "14px",
+              fontWeight: 500,
+              fontFamily: "inherit",
+              borderRadius: 0,
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#004f82")}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#0065A4")}
+          >
+            Choose files
+          </button>
+          <div
+            className="mt-6 text-center"
+            style={{
+              color: "#6b7280",
+              fontSize: "min(12px, 2.8vw)",
               lineHeight: 1.5,
               whiteSpace: "nowrap",
             }}
@@ -228,6 +287,21 @@ export function FileDrop({
               <span>Hashed locally. The file never leaves your device.</span>
             )}
           </div>
+          {showCapture && !hint && (
+            <button
+              onClick={triggerCapture}
+              className="mt-2 text-center"
+              style={{
+                color: "#0065A4",
+                fontSize: "min(12px, 2.8vw)",
+                textDecoration: "underline",
+                textUnderlineOffset: "3px",
+              }}
+              disabled={disabled}
+            >
+              {captureLabel}
+            </button>
+          )}
         </div>
       )}
     </div>
