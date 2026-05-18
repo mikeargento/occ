@@ -122,10 +122,10 @@ export function FileDrop({
         h-full relative border-2 rounded-none transition-all duration-200 cursor-pointer flex items-center outline-none
         ${disabled ? "opacity-50 cursor-not-allowed" : ""}
         ${dragover
-          ? "border-solid border-[#0065A4] bg-[#f0f6ff] ring-2 ring-[#0065A4]/20 scale-[1.005]"
+          ? "border-[#0065A4] bg-[#f0f6ff] ring-2 ring-[#0065A4]/20 scale-[1.005]"
           : hasFiles
-          ? "border-solid border-[#d1d5db] bg-white"
-          : "border-dashed border-[#cbd2dc] bg-white hover:border-solid hover:border-[#0065A4] hover:bg-[#fafbfd] focus-visible:border-solid focus-visible:border-[#0065A4] focus-visible:ring-2 focus-visible:ring-[#0065A4]/20"
+          ? "border-[#c3c8cf] bg-white"
+          : "border-[#c3c8cf] bg-white hover:border-[#0065A4] hover:bg-[#fafbfd] focus-visible:border-[#0065A4] focus-visible:ring-2 focus-visible:ring-[#0065A4]/20"
         }
       `}
     >
@@ -226,7 +226,14 @@ export function FileDrop({
           </button>
         </div>
       ) : (
-        <div className="flex flex-col items-center py-20 px-4 sm:px-6 w-full">
+        <div className="flex flex-col items-center py-16 px-4 sm:px-6 w-full">
+          <div className="mb-5">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#0065A4" strokeWidth="1.5">
+              <path d="M21 15 V21 H3 V15" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+          </div>
           <div
             className="font-semibold tracking-tight text-center"
             style={{
