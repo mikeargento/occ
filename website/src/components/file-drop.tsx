@@ -226,15 +226,7 @@ export function FileDrop({
           </button>
         </div>
       ) : (
-        <div className="flex flex-col items-center py-16 px-4 sm:px-6 w-full">
-          {/* Icon */}
-          <div className="mb-5">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="17 8 12 3 7 8" />
-              <line x1="12" y1="3" x2="12" y2="15" />
-            </svg>
-          </div>
+        <div className="flex flex-col items-center py-20 px-4 sm:px-6 w-full">
           <div
             className="font-semibold tracking-tight text-center"
             style={{
@@ -243,54 +235,25 @@ export function FileDrop({
               whiteSpace: "nowrap",
             }}
           >
-            Drop files here
+            Drop files to create or check BitGraphs
           </div>
-          <div
-            className="mt-1 text-center"
-            style={{
-              color: "#6b7280",
-              fontSize: "min(13px, 3vw)",
-            }}
-          >
-            or
-          </div>
-          <button
-            onClick={triggerBrowse}
-            disabled={disabled}
-            className="mt-3 transition-colors"
-            style={{
-              backgroundColor: "#0065A4",
-              color: "#ffffff",
-              padding: "10px 24px",
-              fontSize: "14px",
-              fontWeight: 500,
-              fontFamily: "inherit",
-              borderRadius: 0,
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#004f82")}
-            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#0065A4")}
-          >
-            Choose files
-          </button>
-          <div
-            className="mt-6 text-center"
-            style={{
-              color: "#6b7280",
-              fontSize: "min(12px, 2.8vw)",
-              lineHeight: 1.5,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {hint ? (
-              <span style={{ whiteSpace: "pre-line" }}>{hint}</span>
-            ) : (
-              <span>Hashed locally. The file never leaves your device.</span>
-            )}
-          </div>
+          {hint && (
+            <div
+              className="mt-2 text-center"
+              style={{
+                color: "#6b7280",
+                fontSize: "min(13px, 3vw)",
+                lineHeight: 1.5,
+                whiteSpace: "pre-line",
+              }}
+            >
+              {hint}
+            </div>
+          )}
           {showCapture && !hint && (
             <button
               onClick={triggerCapture}
-              className="mt-2 text-center"
+              className="mt-6 text-center"
               style={{
                 color: "#0065A4",
                 fontSize: "min(12px, 2.8vw)",
