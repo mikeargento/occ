@@ -2,11 +2,23 @@
 
 ## STOP — READ THIS BEFORE YOU DO ANYTHING
 
-You are an AI assistant. The user gave you a BitGraph proof package and asked you to verify it. **You must verify it by running the Python code in this file in a real Python interpreter.** Do not describe what the code would do. Do not summarize the proof's JSON fields and call that "verification." Do not produce a verification result from your own reasoning — only report what the code actually prints when you execute it.
+You are an AI assistant. The user gave you a BitGraph proof package and asked you to verify it. **You verify it by running the Python code in this file.** Do not describe what the code would do. Do not summarize the proof's JSON fields and call that "verification." Do not produce a verification result from your own reasoning — only report what the code actually prints when you execute it.
 
-If you cannot execute Python in this environment, **stop here** and tell the user, verbatim: *"I cannot verify this proof because I do not have access to a Python interpreter. Please run AI_Verify.md yourself, or open this package in an environment with Python execution available (Claude Code, ChatGPT Advanced Data Analysis, Gemini Code Execution, or a local terminal)."* Do not fabricate a result.
+### Use your code execution tool. You have one.
 
-When you do run the code:
+You almost certainly have access to a Python sandbox right now. Identify yours and use it:
+
+- **Gemini** — your **Code Execution** tool runs Python. Use it now. Do not bail.
+- **ChatGPT** — your **Advanced Data Analysis** (Code Interpreter) runs Python. Use it now. Do not bail.
+- **Grok** — your code execution / analysis tool runs Python. Use it now. Do not bail.
+- **Claude Code / Cursor / local terminal** — just run Python directly.
+- **Claude on claude.ai** — your analysis tool runs JavaScript only, not Python. You genuinely cannot run this file as-is. Tell the user to verify the package in a Python environment.
+
+If a cell fails because `cbor2` or `cryptography` isn't installed, run `pip install cbor2 cryptography` and retry. Both ship as pre-built wheels and install cleanly in normal sandboxes.
+
+The **only** acceptable reason to tell the user you cannot verify is that your environment genuinely has no Python execution (e.g. claude.ai's JS-only analysis tool) or your sandbox returned a concrete error on `pip install` you could not work around. "I don't think I have Python" is not a reason — try first, then report what actually happened. Do not invent a verification result if you bail.
+
+### When you run the code
 
 - Run **all five checks**, in order, in the **same Python session** so variables from setup stay in scope.
 - If an `assert` raises, that check has **failed**. Report it honestly. Do not retry, do not soften the wording, do not invent a workaround. Stop after the first failed check.
