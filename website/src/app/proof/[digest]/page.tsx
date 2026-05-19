@@ -115,10 +115,10 @@ export default function ProofPage() {
         }
       }
     } catch (_) { /* ignore */ }
-    // Include offline verifier
+    // Include AI verification instructions
     try {
-      const vResp = await fetch("/verify.html");
-      if (vResp.ok) files["verify.html"] = strToU8(await vResp.text());
+      const aiResp = await fetch("/AI_Verify.md");
+      if (aiResp.ok) files["AI_Verify.md"] = strToU8(await aiResp.text());
     } catch (_) { /* non-critical */ }
     const zipped = zipSync(files, { level: 0 });
     const blob = new Blob([zipped as unknown as BlobPart], { type: "application/zip" });

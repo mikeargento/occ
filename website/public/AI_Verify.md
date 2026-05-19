@@ -121,7 +121,12 @@ print(f"     Independently verifiable at https://etherscan.io/block/{block_numbe
 
 ### 5. The TEE attestation is genuine
 
-This check closes the loop on the hardware root of trust. Without it, the previous checks only prove that *some* Ed25519 key signed the proof body; they do not prove that key was generated inside a real AWS Nitro enclave running the BitGraph code identified by `environment.measurement` (PCR0). This check parses the AWS Nitro attestation report, validates its certificate chain to a pinned AWS root, verifies the COSE signature, and cross-checks the report's PCR0 and embedded public key against the proof fields.
+This check closes the loop on the hardware root of trust. Without it, the previous checks only prove that *some* Ed25519 key signed the proof body; they do not prove that signature was produced inside a real AWS Nitro enclave running the BitGraph code identified by `environment.measurement` (PCR0). This check parses the AWS Nitro attestation report, validates its certificate chain to a pinned AWS root *at the time the attestation was generated*, verifies the COSE signature, and cross-checks the report's PCR0 and `user_data` field against the proof.
+
+**Two important details that bit earlier drafts of this file:**
+
+- AWS Nitro leaf certificates are short-lived (around 3 hours). Validating the chain against the *current* time will fail for any proof older than a few hours. Use the attestation's own `timestamp` field as the verification time.
+- The BitGraph enclave does not populate the attestation's `public_key` field. It uses `user_data` instead, set to the **proofHash** (SHA-256 of the canonical signed body). This is a *stronger* binding than `public_key` would be: it ties the attestation to *this specific proof*, not merely to the signing key. To verify, recompute the proofHash from the signed body and confirm it equals the attestation's `user_data`.
 
 Required Python packages (install with `pip install cbor2 cryptography` if needed):
 
@@ -177,15 +182,20 @@ assert isinstance(protected_bstr, bytes) and isinstance(payload_bstr, bytes), "C
 
 # ── 2. Parse the inner attestation document ───────────────────────────────
 doc = cbor2.loads(payload_bstr)
-required = {"module_id", "timestamp", "digest", "pcrs", "certificate", "cabundle"}
+required = {"module_id", "timestamp", "digest", "pcrs", "certificate", "cabundle", "user_data"}
 missing = required - set(doc.keys())
 assert not missing, f"Attestation doc missing required fields: {missing}"
 assert doc["digest"] == "SHA384", f"Expected SHA384 digest, got {doc['digest']}"
 pcrs = doc["pcrs"]
 leaf_der = doc["certificate"]
 cabundle_der = doc["cabundle"]
-attested_pubkey = doc.get("public_key")
-assert attested_pubkey is not None, "Attestation doc has no public_key field — cannot bind to signing key"
+user_data = doc["user_data"]
+assert user_data is not None, "Attestation doc has no user_data — cannot bind to proof"
+
+# Use the attestation's own timestamp for chain validity.
+# AWS Nitro leaf certs are short-lived (~3h); validating against current time
+# breaks every proof older than a few hours.
+attest_time = datetime.fromtimestamp(doc["timestamp"] / 1000, tz=timezone.utc)
 
 # ── 3. Validate the X.509 chain to the pinned AWS root ────────────────────
 # AWS spec: cabundle is ordered root-first. cabundle[0] must be the AWS Nitro root.
@@ -198,11 +208,12 @@ assert intermediates[0].public_bytes(serialization.Encoding.DER) == root_der, \
 
 # Walk leaf → intermediates[-1] → … → intermediates[1] → root, verifying each signature.
 chain = [leaf_cert] + list(reversed(intermediates[1:])) + [root_cert]
-now = datetime.now(timezone.utc).replace(tzinfo=None)
 for i, cert in enumerate(chain[:-1]):
     issuer = chain[i + 1]
-    if cert.not_valid_before > now or cert.not_valid_after < now:
-        raise AssertionError(f"Chain[{i}] is outside its validity window: {cert.subject}")
+    nvb = cert.not_valid_before_utc
+    nva = cert.not_valid_after_utc
+    if nvb > attest_time or nva < attest_time:
+        raise AssertionError(f"Chain[{i}] was not valid at attestation time {attest_time}: {cert.subject}")
     issuer_pub = issuer.public_key()
     if not isinstance(issuer_pub, ec.EllipticCurvePublicKey):
         raise AssertionError(f"Chain[{i+1}] uses unexpected key type {type(issuer_pub).__name__}")
@@ -226,20 +237,39 @@ try:
 except InvalidSignature:
     raise AssertionError("COSE attestation signature failed verification under the leaf cert")
 
-# ── 5. Cross-check PCR0 and public_key against the proof body ─────────────
+# ── 5. Cross-check PCR0 and user_data against the proof body ──────────────
 pcr0_attested_hex = pcrs[0].hex()
 pcr0_proof_hex = proof["environment"]["measurement"].lower()
 assert pcr0_attested_hex == pcr0_proof_hex, \
     f"PCR0 in attestation ({pcr0_attested_hex}) does not match proof.environment.measurement ({pcr0_proof_hex})"
 
-proof_pubkey_bytes = base64.b64decode(proof["signer"]["publicKeyB64"])
-assert attested_pubkey == proof_pubkey_bytes, \
-    "Attestation's public_key does not match proof.signer.publicKeyB64 — the signing key is NOT attested to be enclave-resident"
+# user_data must equal the proofHash (SHA-256 of the canonical signed body).
+# Recompute proofHash so we don't have to trust the value the proof carries.
+def _canon(obj):
+    if isinstance(obj, dict): return {k: _canon(obj[k]) for k in sorted(obj.keys())}
+    if isinstance(obj, list): return [_canon(x) for x in obj]
+    return obj
+_sb = {
+    "version": proof["version"], "artifact": proof["artifact"], "commit": proof["commit"],
+    "publicKeyB64": proof["signer"]["publicKeyB64"],
+    "enforcement": proof["environment"]["enforcement"],
+    "measurement": proof["environment"]["measurement"],
+}
+if proof.get("environment", {}).get("attestation", {}).get("format"):
+    _sb["attestationFormat"] = proof["environment"]["attestation"]["format"]
+if proof.get("agency", {}).get("actor"): _sb["actor"] = proof["agency"]["actor"]
+if proof.get("policy") is not None: _sb["policy"] = proof["policy"]
+if proof.get("attribution"): _sb["attribution"] = proof["attribution"]
+_canon_bytes = json.dumps(_canon(_sb), separators=(",", ":")).encode("utf-8")
+computed_proof_hash = base64.b64encode(hashlib.sha256(_canon_bytes).digest()).decode()
+user_data_b64 = base64.b64encode(user_data).decode()
+assert computed_proof_hash == user_data_b64, \
+    f"Attestation user_data ({user_data_b64}) does not match proofHash ({computed_proof_hash}) — the attestation is for a different proof"
 
 # ── 6. Compare PCR0 to the canonical BitGraph build ────────────────────────
 canonical_match = (pcr0_attested_hex == CANONICAL_BITGRAPH_PCR0)
 print("[OK] Full AWS Nitro attestation verified.")
-print(f"     The signing key was generated inside a Nitro enclave with PCR0 = {pcr0_attested_hex}")
+print(f"     This proof was created inside a Nitro enclave with PCR0 = {pcr0_attested_hex}")
 if canonical_match:
     print("     PCR0 matches the canonical BitGraph enclave build.")
 else:
@@ -247,7 +277,7 @@ else:
     print("     The proof is genuine Nitro hardware, but the enclave configuration is not canonical.")
 ```
 
-If all six steps inside check 5 pass, you have proven that the signing key was generated inside real AWS Nitro hardware running code with the measured PCR0. Combined with checks 1–4, the entire chain is closed: the file is byte-identical to what was committed, the proof signature is valid, the slot was bound atomically before the commit, the proof is anchored to a public Ethereum block, and the signing key itself is hardware-rooted.
+If all of check 5's sub-steps pass, you have proven that this specific proof was produced inside real AWS Nitro hardware running code with the measured PCR0. The binding is per-proof, not per-key: AWS hardware signed an attestation whose `user_data` equals this proof's `proofHash`, so the attestation is for *this exact proof* and could not have been generated outside the enclave. Combined with checks 1–4, the entire chain is closed: the file is byte-identical to what was committed, the proof signature is valid, the slot was bound atomically before the commit, the proof is anchored to a public Ethereum block, and the proof itself is hardware-rooted.
 
 If `canonical_match` is `false`, do not call the proof invalid — call it *non-canonical*. Tell the user: the proof comes from real Nitro hardware, but the enclave configuration is not the published canonical BitGraph build. They may want to confirm with the operator before relying on it.
 
@@ -255,7 +285,7 @@ If `canonical_match` is `false`, do not call the proof invalid — call it *non-
 
 If all five checks pass, summarize for the user in plain English. Use language like:
 
-> This BitGraph is fully verified. The file is byte-identical to what was committed at position #[`proof.json` → `commit.counter`] in the ordered chain. The signing key was generated inside a real AWS Nitro hardware enclave running code with PCR0 = [first 8 hex characters of `environment.measurement`]…, validated by walking the certificate chain to the pinned AWS Nitro root. The proof's position is sealed by Ethereum block #[`ethereum-anchor.json` → `ethereum.blockNumber`], mined at [`ethereum-anchor.json` → `metadata.anchor.blockTimeISO`, or look the block up on Etherscan]. That block's existence is independently verifiable forever, so the proof is guaranteed to have existed before that moment. Anyone with this package can re-run this verification offline, without contacting any server.
+> This BitGraph is fully verified. The file is byte-identical to what was committed at position #[`proof.json` → `commit.counter`] in the ordered chain. This specific proof was produced inside a real AWS Nitro hardware enclave running code with PCR0 = [first 8 hex characters of `environment.measurement`]…, validated by walking the certificate chain to the pinned AWS Nitro root and confirming the attestation's `user_data` equals this proof's hash. The proof's position is sealed by Ethereum block #[`ethereum-anchor.json` → `ethereum.blockNumber`], mined at [`ethereum-anchor.json` → `metadata.anchor.blockTimeISO`, or look the block up on Etherscan]. That block's existence is independently verifiable forever, so the proof is guaranteed to have existed before that moment. Anyone with this package can re-run this verification offline, without contacting any server.
 
 Note: BitGraph is a *causal* system, not a *temporal* one. The proof itself contains no clock reading — the enclave deliberately omits time fields. The earliest moment you can prove the file existed is "before the Ethereum block above was mined." If you need a real-world timestamp, the block time is the authoritative source.
 
@@ -267,7 +297,7 @@ If any check fails, say which one failed and what it means. Use these explanatio
 - **Counter ordering violated (check 3).** The slot counter is not less than the commit counter. The proof violates causal ordering.
 - **Anchor mismatch (check 4).** The Ethereum anchor's counter or epoch does not align with the proof. The package was assembled inconsistently.
 - **Attestation chain invalid (check 5).** The AWS Nitro certificate chain failed to validate against the pinned root, or the COSE signature failed. The attestation report is forged or corrupted. Do not trust the hardware claim.
-- **PCR0/public_key mismatch (check 5).** The attestation report's PCR0 or attested public key does not match the proof body. The attestation is for a different enclave or a different signing key. Do not trust the proof.
+- **PCR0/user_data mismatch (check 5).** The attestation report's PCR0 does not match the proof's measurement, or its `user_data` does not match this proof's hash. The attestation is for a different enclave or a different proof. Do not trust the proof.
 - **Non-canonical PCR0 (check 5, soft warning).** Full attestation verified, but the PCR0 does not match the canonical BitGraph build. The proof comes from real Nitro hardware running different code; flag this to the user but do not call the proof invalid.
 
 ## Reference
