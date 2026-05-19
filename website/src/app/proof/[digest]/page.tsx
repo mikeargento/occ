@@ -766,7 +766,7 @@ function SimpleView({
           padding: "22px 28px",
         }}
       >
-        <div style={{ fontSize: 12, fontWeight: 700, color: "#0065A4", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>
           What this means
         </div>
         <p style={{ fontSize: 14, color: "#374151", lineHeight: 1.6, margin: 0 }}>
