@@ -682,7 +682,7 @@ function SimpleView({
           overflow: "hidden",
         }}
       >
-        <BigField label="File" value={fileTitle} />
+        <BigField label="File name" value={fileTitle} />
         <BigField
           label="File hash"
           value={shortFileHash}
