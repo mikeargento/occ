@@ -698,7 +698,7 @@ function SimpleView({
           hint="Unique identifier for this BitGraph. Click to copy the full ID."
         />
         <BigField
-          label="Proved on"
+          label="Zero bits have changed since"
           value={prettyDate}
           muted={!anchored}
         />
