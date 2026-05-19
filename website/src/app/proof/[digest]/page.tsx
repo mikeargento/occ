@@ -115,11 +115,6 @@ export default function ProofPage() {
         }
       }
     } catch (_) { /* ignore */ }
-    // Include README.txt — package overview + verification pointer
-    try {
-      const readmeResp = await fetch("/README.txt");
-      if (readmeResp.ok) files["README.txt"] = strToU8(await readmeResp.text());
-    } catch (_) { /* non-critical */ }
     const zipped = zipSync(files, { level: 0 });
     const blob = new Blob([zipped as unknown as BlobPart], { type: "application/zip" });
     const url = URL.createObjectURL(blob);

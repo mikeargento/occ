@@ -246,16 +246,6 @@ export default function BitGraphPage() {
         }
       }
     } catch { /* non-critical */ }
-    // Include README.txt — package overview + pointer to bitgraph.ing for verification
-    try {
-      const readmeResp = await fetch("/README.txt");
-      if (readmeResp.ok) {
-        const readmeEntry = new ZipPassThrough("README.txt");
-        z.add(readmeEntry);
-        readmeEntry.push(new TextEncoder().encode(await readmeResp.text()), true);
-      }
-    } catch { /* non-critical */ }
-
     setExportProgress({ current: totalSteps - 1, total: totalSteps });
     await tick();
     z.end();

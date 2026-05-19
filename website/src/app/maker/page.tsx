@@ -249,11 +249,6 @@ export default function MakerPage() {
         }
       }
     } catch (_) { /* non-critical */ }
-    // Include README.txt — package overview + verification pointer
-    try {
-      const readmeResp = await fetch("/README.txt");
-      if (readmeResp.ok) zipFiles["README.txt"] = new TextEncoder().encode(await readmeResp.text());
-    } catch (_) { /* non-critical */ }
 
     const zipped = zipSync(zipFiles);
     const blob = new Blob([zipped.buffer as ArrayBuffer], { type: "application/zip" });
