@@ -261,6 +261,26 @@ export default function MakerPage() {
         zipFiles["VERIFY.txt"] = new TextEncoder().encode(buildVerifyTxt(f.name, p));
       }
     }
+    // Fetch the bounding ETH anchor (highest counter in this batch = future boundary).
+    // AI_Verify.md depends on ethereum-anchor.json being present.
+    try {
+      const last = makeProofs.reduce((a, b) => {
+        const ac = parseInt(String(a?.commit?.counter ?? "0"), 10);
+        const bc = parseInt(String(b?.commit?.counter ?? "0"), 10);
+        return bc > ac ? b : a;
+      });
+      const lastCounter = last?.commit?.counter ?? "0";
+      const lastEpoch = last?.commit?.epochId ?? "";
+      if (lastEpoch) {
+        const resp = await fetch(`/api/proofs/anchors?counter=${lastCounter}&epoch=${encodeURIComponent(lastEpoch)}&limit=1`);
+        if (resp.ok) {
+          const data = await resp.json();
+          if (Array.isArray(data.anchors) && data.anchors.length > 0) {
+            zipFiles["ethereum-anchor.json"] = new TextEncoder().encode(JSON.stringify(data.anchors[0], null, 2));
+          }
+        }
+      }
+    } catch (_) { /* non-critical */ }
     // Include AI verification instructions
     try {
       const aiResp = await fetch("/AI_Verify.md");
