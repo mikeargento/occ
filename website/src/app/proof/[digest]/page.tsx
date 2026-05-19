@@ -858,7 +858,7 @@ function C2PACard({ c2pa, prettyProofDate }: { c2pa: C2PAReadResult; prettyProof
         display: "flex", alignItems: "baseline", justifyContent: "space-between",
         gap: 12, padding: "18px 24px 10px 24px",
       }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: "#0065A4", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.08em" }}>
           Content Credentials (C2PA)
         </div>
         <div style={{
