@@ -763,13 +763,18 @@ function SimpleView({
           background: "#ffffff",
           border: "1px solid #d0d5dd",
           borderRadius: 0,
-          padding: "22px 28px",
+          overflow: "hidden",
         }}
       >
-        <div style={{ fontSize: 12, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 10 }}>
+        <div style={{
+          fontSize: 14, fontWeight: 700, letterSpacing: "0.04em",
+          color: "#0065A4", padding: "18px 24px",
+          background: "rgba(0,101,164,0.04)",
+          borderBottom: "1px solid #e2e5e9",
+        }}>
           What this means
         </div>
-        <p style={{ fontSize: 14, color: "#374151", lineHeight: 1.6, margin: 0 }}>
+        <p style={{ fontSize: 14, color: "#374151", lineHeight: 1.6, margin: 0, padding: "20px 24px" }}>
           This BitGraph was recorded at commit time, not attached afterward.
           It fixes the file&apos;s position in a causal order. Ethereum later
           proves this position existed before a specific block, making the
@@ -855,10 +860,12 @@ function C2PACard({ c2pa, prettyProofDate }: { c2pa: C2PAReadResult; prettyProof
       }}
     >
       <div style={{
-        display: "flex", alignItems: "baseline", justifyContent: "space-between",
-        gap: 12, padding: "18px 24px 10px 24px",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        gap: 12, padding: "14px 24px",
+        background: "rgba(0,101,164,0.04)",
+        borderBottom: "1px solid #e2e5e9",
       }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: "#6b7280", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+        <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: "0.04em", color: "#0065A4" }}>
           Content Credentials (C2PA)
         </div>
         <div style={{
