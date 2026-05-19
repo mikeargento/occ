@@ -35,34 +35,6 @@ interface ProofEntry {
   signer: string;
 }
 
-/* ── VERIFY.txt builder ── */
-
-function buildVerifyTxt(filename: string, p: BitGraphProof): string {
-  return `VERIFY.txt — BitGraph Proof Package
-===================================
-
-FILE:       ${filename}
-DIGEST:     ${p.artifact.digestB64}
-ALGORITHM:  ${p.artifact.hashAlg.toUpperCase()}
-COUNTER:    #${p.commit.counter ?? "—"}
-TIME:       ${p.commit.time ? new Date(p.commit.time).toISOString() : "—"}
-ENFORCEMENT: ${p.environment?.enforcement === "measured-tee" ? "Hardware Enclave (AWS Nitro)" : "Software"}
-SIGNER:     ${p.signer.publicKeyB64}
-
-HOW TO VERIFY
--------------
-1. Compute SHA-256 of the original file
-2. Base64-encode the result (standard, not URL-safe)
-3. Compare to the DIGEST above
-4. If they match, proof.json covers this exact file
-
-The proof was signed inside an AWS Nitro Enclave using Ed25519.
-The private key was generated inside the enclave and has never left it.
-
-Learn more: https://bitgraph.ing/docs
-`;
-}
-
 /* ── WebAuthn / Biometric helpers ── */
 
 async function createBiometricAuthorization(digestB64: string): Promise<AgencyEnvelope | undefined> {
@@ -257,12 +229,8 @@ export default function MakerPage() {
       zipFiles[f.name] = new Uint8Array(await f.arrayBuffer());
       const proofName = makeFiles.length > 1 ? `proof-${i + 1}.json` : "proof.json";
       zipFiles[proofName] = new TextEncoder().encode(JSON.stringify(p, null, 2));
-      if (i === 0) {
-        zipFiles["VERIFY.txt"] = new TextEncoder().encode(buildVerifyTxt(f.name, p));
-      }
     }
     // Fetch the bounding ETH anchor (highest counter in this batch = future boundary).
-    // AI_Verify.md depends on ethereum-anchor.json being present.
     try {
       const last = makeProofs.reduce((a, b) => {
         const ac = parseInt(String(a?.commit?.counter ?? "0"), 10);
@@ -281,10 +249,10 @@ export default function MakerPage() {
         }
       }
     } catch (_) { /* non-critical */ }
-    // Include AI verification instructions
+    // Include README.txt — package overview + verification pointer
     try {
-      const aiResp = await fetch("/AI_Verify.md");
-      if (aiResp.ok) zipFiles["AI_Verify.md"] = new TextEncoder().encode(await aiResp.text());
+      const readmeResp = await fetch("/README.txt");
+      if (readmeResp.ok) zipFiles["README.txt"] = new TextEncoder().encode(await readmeResp.text());
     } catch (_) { /* non-critical */ }
 
     const zipped = zipSync(zipFiles);

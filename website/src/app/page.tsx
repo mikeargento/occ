@@ -246,13 +246,13 @@ export default function BitGraphPage() {
         }
       }
     } catch { /* non-critical */ }
-    // Include AI_Verify.md — instructions for an AI assistant to verify the proof
+    // Include README.txt — package overview + pointer to bitgraph.ing for verification
     try {
-      const aiResp = await fetch("/AI_Verify.md");
-      if (aiResp.ok) {
-        const aiEntry = new ZipPassThrough("AI_Verify.md");
-        z.add(aiEntry);
-        aiEntry.push(new TextEncoder().encode(await aiResp.text()), true);
+      const readmeResp = await fetch("/README.txt");
+      if (readmeResp.ok) {
+        const readmeEntry = new ZipPassThrough("README.txt");
+        z.add(readmeEntry);
+        readmeEntry.push(new TextEncoder().encode(await readmeResp.text()), true);
       }
     } catch { /* non-critical */ }
 

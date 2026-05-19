@@ -115,10 +115,10 @@ export default function ProofPage() {
         }
       }
     } catch (_) { /* ignore */ }
-    // Include AI verification instructions
+    // Include README.txt — package overview + verification pointer
     try {
-      const aiResp = await fetch("/AI_Verify.md");
-      if (aiResp.ok) files["AI_Verify.md"] = strToU8(await aiResp.text());
+      const readmeResp = await fetch("/README.txt");
+      if (readmeResp.ok) files["README.txt"] = strToU8(await readmeResp.text());
     } catch (_) { /* non-critical */ }
     const zipped = zipSync(files, { level: 0 });
     const blob = new Blob([zipped as unknown as BlobPart], { type: "application/zip" });
