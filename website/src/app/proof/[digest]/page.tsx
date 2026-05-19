@@ -770,8 +770,8 @@ function SimpleView({
           What this means
         </div>
         <p style={{ fontSize: 14, color: "#374151", lineHeight: 1.6, margin: 0 }}>
-          This BitGraph was created at commit time, not attached afterward. It
-          fixes the file&apos;s position in a causal order. Ethereum later
+          This BitGraph was recorded at commit time, not attached afterward.
+          It fixes the file&apos;s position in a causal order. Ethereum later
           proves this position existed before a specific block, making the
           order impossible to rewrite.
         </p>
