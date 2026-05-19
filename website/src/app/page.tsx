@@ -246,13 +246,13 @@ export default function BitGraphPage() {
         }
       }
     } catch { /* non-critical */ }
-    // Include offline verifier
+    // Include AI_Verify.md — instructions for an AI assistant to verify the proof
     try {
-      const vResp = await fetch("/verify.html");
-      if (vResp.ok) {
-        const verifyEntry = new ZipPassThrough("verify.html");
-        z.add(verifyEntry);
-        verifyEntry.push(new TextEncoder().encode(await vResp.text()), true);
+      const aiResp = await fetch("/AI_Verify.md");
+      if (aiResp.ok) {
+        const aiEntry = new ZipPassThrough("AI_Verify.md");
+        z.add(aiEntry);
+        aiEntry.push(new TextEncoder().encode(await aiResp.text()), true);
       }
     } catch { /* non-critical */ }
 

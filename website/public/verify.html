@@ -152,12 +152,13 @@ async function verifyProof(fileBytes, proof){
   const slot=proof.slotAllocation;const commit=proof.commit||{};
   let slotValid=false;
   if(slot&&commit.slotHashB64){
-    // Reconstruct slot body exactly as the enclave computes it:
-    // 5 core fields only. chainId is excluded for default chain ("bitgraph:main")
-    // even though it may appear in the slotAllocation record.
+    // Reconstruct slot body exactly as the enclave emitted it.
+    // The enclave only includes chainId in the slot body when it differs from
+    // its internal default ("global"); the emitted record therefore contains
+    // chainId iff the slot body that was signed contained it. So: include
+    // chainId iff it appears on the slotAllocation record.
     const slotBody={version:slot.version,nonceB64:slot.nonceB64,counter:slot.counter,epochId:slot.epochId,publicKeyB64:slot.publicKeyB64};
-    // Only include chainId if it's NOT the default chain
-    if(slot.chainId&&slot.chainId!=="bitgraph:main")slotBody.chainId=slot.chainId;
+    if(slot.chainId)slotBody.chainId=slot.chainId;
     const slotHash=toBase64(await sha256(canonicalize(slotBody)));
     slotValid=slotHash===commit.slotHashB64;
   }
@@ -178,10 +179,6 @@ async function verifyProof(fileBytes, proof){
   }else{
     checks.push({name:"Proof Hash",pass:hashValid,detail:hashValid?`Hash consistent: ${storedHash}`:"Computed hash does not match stored proofHash"});
   }
-
-  // 6. TEE enforcement
-  const isTee=env.enforcement==="measured-tee";
-  checks.push({name:"TEE Enforcement",pass:isTee?true:null,detail:isTee?"Hardware Enclave (AWS Nitro)":`Enforcement: ${env.enforcement||"unknown"}`});
 
   return checks;
 }
@@ -228,7 +225,9 @@ async function runVerification(){
   const checks=await verifyProof(fileData.bytes,proofData);
   statusEl.classList.add("hidden");
   const allPass=checks.every(c=>c.pass===true||c.pass===null);
-  resultsEl.innerHTML=`<div class="card"><div class="card-header">${allPass?"Verification Passed":"Verification Failed"}</div>${checks.map(c=>`<div class="check"><span class="${c.pass===true?"icon-pass":c.pass===false?"icon-fail":"icon-info"}">${c.pass===true?"\u2713":c.pass===false?"\u2717":"\u2022"}</span><div><div class="label">${c.name}</div><div class="detail">${c.detail}</div></div></div>`).join("")}</div><button class="reset-btn" onclick="location.reload()">Verify Another</button>`;
+  const pcr0=(proofData.environment&&proofData.environment.measurement)||"(missing)";
+  const teeNote=`<div class="card" style="margin-top:20px"><div class="card-header">TEE Attestation</div><div class="check" style="display:block"><div class="label" style="margin-bottom:6px">PCR0 measurement signed in this proof</div><div class="detail">${pcr0}</div></div><div class="check" style="display:block;border-bottom:none"><div class="detail" style="font-family:inherit;color:#374151;font-size:13px;line-height:1.6">Full AWS Nitro attestation verification (COSE_Sign1 + certificate chain) is not performed by this offline verifier. To confirm the PCR0 above matches the canonical BitGraph enclave build, compare it against the value published at <a href="https://bitgraph.ing/docs/self-host-tee" style="color:#0065A4;text-decoration:underline" target="_blank" rel="noopener">bitgraph.ing/docs/self-host-tee</a>.</div></div></div>`;
+  resultsEl.innerHTML=`<div class="card"><div class="card-header">${allPass?"Verification Passed":"Verification Failed"}</div>${checks.map(c=>`<div class="check"><span class="${c.pass===true?"icon-pass":c.pass===false?"icon-fail":"icon-info"}">${c.pass===true?"\u2713":c.pass===false?"\u2717":"\u2022"}</span><div><div class="label">${c.name}</div><div class="detail">${c.detail}</div></div></div>`).join("")}</div>${teeNote}<button class="reset-btn" onclick="location.reload()">Verify Another</button>`;
   resultsEl.classList.remove("hidden");
 }
 
