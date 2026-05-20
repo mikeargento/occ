@@ -229,12 +229,6 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   margin-bottom: 1.25rem;
   color: #1f2937;
 }
-.overview p.lede {
-  font-size: 1.1875rem;
-  font-weight: 500;
-  color: #111827;
-  letter-spacing: -0.01em;
-}
 .overview blockquote {
   border-left: 2px solid #d0d5dd;
   padding-left: 1.25rem;
@@ -300,7 +294,6 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 @media (max-width: 640px) {
   .overview { padding: 40px 20px 80px; }
   .overview p, .overview li { font-size: 1rem; }
-  .overview p.lede { font-size: 1.0625rem; }
   .overview td:first-child { white-space: normal; }
 }
 

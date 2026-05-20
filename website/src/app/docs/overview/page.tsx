@@ -13,7 +13,7 @@ export default function OverviewPage() {
         Overview
       </h1>
 
-      <p className="lede">
+      <p>
         A photograph captures photons using the constraint of a single frame of film. A BitGraph captures bits using the constraint of a single mathematical slot.
       </p>
 
