@@ -422,9 +422,9 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 /* ── Nav link hover ── */
 .nav-link:hover { background: var(--bg-elevated) !important; color: var(--c-text) !important; border-radius: 0; }
 
-/* ── Outline button hover — matches the drop zone's brand-blue border treatment ── */
-.bg-btn-outline { transition: border-color 0.15s, color 0.15s, background 0.15s; }
-.bg-btn-outline:hover { border-color: #0065A4 !important; color: #0065A4 !important; background: #fafbfd !important; }
+/* ── Outline button hover — matches the file row "Open BitGraph" treatment ── */
+.bg-btn-outline { transition: border-color 0.15s, background 0.15s; }
+.bg-btn-outline:hover { border-color: #0065A4 !important; background: #bfdbfe !important; }
 
 /* ── Nav responsive ── */
 @media (max-width: 768px) {
