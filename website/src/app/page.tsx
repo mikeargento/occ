@@ -411,7 +411,7 @@ export default function BitGraphPage() {
                         lineHeight: 1.65,
                       }}
                     >
-                      Just as a photograph captures photons using the constraint of a single frame of film, a BitGraph captures bits using the constraint of a single mathematical slot.
+                      Just as a photograph captures photons through the constraint of a single frame of film, a BitGraph captures bits through the constraint of a single mathematical slot.
                     </p>
                   </div>
                 </>
