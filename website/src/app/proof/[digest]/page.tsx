@@ -160,7 +160,7 @@ export default function ProofPage() {
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 </span>
-                <span style={{ color: "#0065A4" }}>Verified</span>
+                <span style={{ color: "#0065A4" }}>Verified BitGraph</span>
               </span>
             )}
           </div>
