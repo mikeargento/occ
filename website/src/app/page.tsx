@@ -536,6 +536,7 @@ export default function BitGraphPage() {
                 {found.length > 0 && (
                   <button
                     onClick={anchorCountdown > 0 ? undefined : downloadZip}
+                    className={anchorCountdown > 0 || !allDone ? "bg-btn-outline" : undefined}
                     style={{
                       ...(anchorCountdown > 0 ? { ...btnOut, opacity: 0.5, cursor: "default" } : allDone ? btnFill : btnOut),
                     }}
@@ -543,7 +544,7 @@ export default function BitGraphPage() {
                     {anchorCountdown > 0 ? <span style={{ fontSize: 14 }}>{`Anchoring to Ethereum... ${anchorCountdown}s`}</span> : "Download .zip"}
                   </button>
                 )}
-                <button onClick={reset} style={btnOut}>
+                <button onClick={reset} className="bg-btn-outline" style={btnOut}>
                   {allDone ? "Choose new files" : "Start over"}
                 </button>
               </div>

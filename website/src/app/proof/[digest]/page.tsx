@@ -178,6 +178,7 @@ export default function ProofPage() {
             {!isEth && (
               <button
                 onClick={() => setSimpleView((v) => !v)}
+                className="bg-btn-outline"
                 style={{
                   height: 68, fontSize: 16, fontWeight: 500,
                   color: "#111827", background: "#fff",
