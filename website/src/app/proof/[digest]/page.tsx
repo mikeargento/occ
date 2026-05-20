@@ -570,7 +570,10 @@ function SimpleView({
   const blockTime = causalWindow?.anchorAfter?.blockTime ?? null;
   const blockNumber = causalWindow?.anchorAfter?.blockNumber ?? null;
   const etherscanUrl = causalWindow?.anchorAfter?.etherscanUrl ?? null;
-  const anchored = blockTime !== null;
+  // Anchored means the anchor exists in S3 (blockNumber present). blockTime is
+  // cosmetic — fetched from a public Ethereum RPC and may be null if that RPC
+  // is slow/down. Don't gate the anchor's existence on the cosmetic timestamp.
+  const anchored = blockNumber !== null;
 
   // Format date and time separately, then join with a single breakable space
   // before "at". Spaces inside each half become non-breaking — that way the
@@ -596,7 +599,9 @@ function SimpleView({
           .replace(/ /g, " ");
         return `${datePart} at ${timePart}`;
       })()
-    : "Awaiting Ethereum anchor…";
+    : blockNumber !== null
+      ? `Ethereum block #${blockNumber.toLocaleString()}`
+      : "Awaiting Ethereum anchor…";
 
   // Short proofHash — matches the title pill
   const ph = (proof as BitGraphProof & { proofHash?: string });
@@ -716,7 +721,7 @@ function SimpleView({
       </div>
 
       {/* C2PA card — only when the file actually contains a manifest */}
-      {hasC2PA && <C2PACard c2pa={c2pa!} prettyProofDate={anchored ? prettyDate : null} />}
+      {hasC2PA && <C2PACard c2pa={c2pa!} prettyProofDate={blockTime ? prettyDate : null} />}
 
       {/* Submitter's note — self-attributed caption, clearly labelled */}
       {hasSubmitterNote && (
