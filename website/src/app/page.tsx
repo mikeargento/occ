@@ -295,6 +295,19 @@ export default function BitGraphPage() {
         {/* ── Drop zone + What is BitGraph button ── */}
         {step === "drop" && (
           <>
+            <p style={{
+              maxWidth: 640,
+              margin: "0 auto 20px",
+              padding: "0 20px",
+              textAlign: "center",
+              fontSize: 16,
+              fontWeight: 400,
+              color: "#111827",
+              lineHeight: 1.6,
+              animation: "slideIn 0.3s ease-out",
+            }}>
+              A photograph captures photons using the constraint of a single frame of film. A BitGraph captures bits using the constraint of a single mathematical slot.
+            </p>
             <div className="file-drop-container" style={{ animation: "slideIn 0.3s ease-out" }}>
               <FileDrop
                 multiple
@@ -401,17 +414,6 @@ export default function BitGraphPage() {
                       }}
                     >
                       <strong>BitGraphs</strong> are not labels or metadata added after the fact. They are new computations created when your file&apos;s hash <em>fills</em> a pre-existing cryptographic slot, constraining the commitment so it cannot be retroactively constructed. This occurs entirely off-chain and produces a proof file permanently bound to the original.
-                    </p>
-                    <p
-                      style={{
-                        margin: "12px 0 0 0",
-                        fontSize: 16,
-                        fontWeight: 400,
-                        color: "#111827",
-                        lineHeight: 1.65,
-                      }}
-                    >
-                      A photograph captures photons using the constraint of a single frame of film. A BitGraph captures bits using the constraint of a single mathematical slot.
                     </p>
                   </div>
                 </>
