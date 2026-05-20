@@ -774,7 +774,7 @@ function SimpleView({
         }}>
           What this means
         </div>
-        <p style={{ fontSize: 14, color: "#374151", lineHeight: 1.6, margin: 0, padding: "20px 24px" }}>
+        <p style={{ fontSize: 18, color: "#374151", lineHeight: 1.5, margin: 0, padding: "24px 24px" }}>
           Just as a photograph captures photons using the constraint of a
           single frame of film, a BitGraph captures bits using the constraint
           of a single mathematical slot.
