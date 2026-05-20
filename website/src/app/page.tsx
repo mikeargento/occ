@@ -515,20 +515,14 @@ export default function BitGraphPage() {
               <div style={{ textAlign: "center", padding: "56px 0 56px" }}>
                 <div style={{
                   fontSize: "min(36px, 5.5vw)",
-                  fontWeight: 500,
+                  fontWeight: 800,
                   letterSpacing: "-0.02em",
-                  color: "#374151",
+                  color: allDone ? "#0065A4" : "#111827",
                   whiteSpace: "nowrap",
                   lineHeight: 1.2,
                   animation: "countPop 0.4s ease-out",
                 }}>
-                  <span style={{
-                    fontWeight: 800,
-                    color: allDone ? "#0065A4" : "#111827",
-                  }}>
-                    {animCount}
-                  </span>
-                  {" "}of {items.length}{" "}{allDone ? "BitGraphed" : "found"}
+                  {animCount} of {items.length} {allDone ? "BitGraphed" : "found"}
                 </div>
               </div>
 
