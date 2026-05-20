@@ -27,19 +27,28 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ dig
           const anchorCommit = (anchorProof?.commit || anchor.commit) as { counter?: string } | undefined;
           const anchorAttr = (anchorProof?.attribution || anchor.attribution) as { name?: string; title?: string; message?: string } | undefined;
           const anchorArtifact = (anchorProof?.artifact || anchor.artifact) as { digestB64?: string } | undefined;
-          const eth = anchor.ethereum as { blockNumber?: number; blockHash?: string } | undefined;
+          const eth = anchor.ethereum as { blockNumber?: number; blockHash?: string; blockTime?: number; blockTimeISO?: string } | undefined;
           const blockNumber = eth?.blockNumber?.toString() || anchorAttr?.title?.match(/\/block\/(\d+)/)?.[1];
-          // Fetch block timestamp from Ethereum RPC.
-          //
-          // IMPORTANT: wrap in AbortSignal.timeout so a slow or unresponsive
-          // public node cannot hang the entire proof page. Block time is
-          // cosmetic (it populates the humanized "Proven before" field) — if
-          // the RPC is slow, we return the proof with blockTime: null rather
-          // than blocking the response indefinitely. Previously this caused
-          // intermittent "stuck on Loading proof..." symptoms when publicnode
-          // was flaky.
-          let blockTime: string | null = null;
-          if (blockNumber) {
+
+          // Block timestamp: the anchor service writes this into every anchor at
+          // commit time as metadata.anchor.blockTimeISO (signed-adjacent, advisory).
+          // Reading from S3 is fast, reliable, and removes the runtime dependency
+          // on third-party Ethereum RPCs. The RPC fallback below stays in place as
+          // a defensive measure for any anchor that for some reason lacks the
+          // field — should be rare, possibly never. Eventually the fallback can be
+          // deleted once we're confident every anchor in the ledger has blockTime.
+          const anchorMetadata = ((anchorProof?.metadata || anchor.metadata) as
+            { anchor?: { blockTimeISO?: string; blockTime?: number } } | undefined)?.anchor;
+          let blockTime: string | null =
+            anchorMetadata?.blockTimeISO
+            ?? eth?.blockTimeISO
+            ?? (anchorMetadata?.blockTime ? new Date(anchorMetadata.blockTime * 1000).toISOString() : null)
+            ?? (eth?.blockTime ? new Date(eth.blockTime * 1000).toISOString() : null);
+
+          if (!blockTime && blockNumber) {
+            // Defensive RPC fallback — only fires if the anchor's metadata is
+            // missing blockTime entirely. Tight timeout so a slow node can't hang
+            // the page; multiple endpoints so a single flaky RPC doesn't poison it.
             const rpcEndpoints = [
               "https://ethereum-rpc.publicnode.com",
               "https://cloudflare-eth.com",
