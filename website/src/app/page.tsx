@@ -270,14 +270,14 @@ export default function BitGraphPage() {
 
   /* ── Styles ── */
   const card: React.CSSProperties = { border: "1px solid #d0d5dd", padding: "24px 20px", background: "#fff", borderRadius: 0, marginBottom: 16 };
-  const btnFill: React.CSSProperties = { height: 60, fontSize: 16, fontWeight: 600, border: "none", borderRadius: 0, background: "#0065A4", color: "#ffffff", cursor: "pointer", letterSpacing: "-0.01em" };
-  const btnOut: React.CSSProperties = { height: 60, fontSize: 16, fontWeight: 500, borderRadius: 0, cursor: "pointer", border: "1px solid #d1d5db", background: "#fff", color: "#111827" };
+  const btnFill: React.CSSProperties = { height: 68, fontSize: 16, fontWeight: 600, border: "none", borderRadius: 0, background: "#0065A4", color: "#ffffff", cursor: "pointer", letterSpacing: "-0.01em" };
+  const btnOut: React.CSSProperties = { height: 68, fontSize: 16, fontWeight: 500, borderRadius: 0, cursor: "pointer", border: "1px solid #d1d5db", background: "#fff", color: "#111827" };
 
   return (
     <div style={{ background: "var(--bg)", color: "var(--c-text)", display: "flex", flexDirection: "column" }}>
       <style>{`
         .bitgraph-wrap { width: 90%; max-width: 640px; margin: 0 auto; padding: 0; display: flex; flex-direction: column; align-items: stretch; justify-content: center; gap: 24px; min-height: calc(100dvh - 57px); }
-        .bitgraph-wrap.bitgraph-results { justify-content: flex-start; padding-top: 32px; min-height: 0; }
+        .bitgraph-wrap.bitgraph-results { justify-content: flex-start; padding-top: 32px; min-height: 0; max-width: 800px; }
         .bitgraph-wrap .file-drop-container { height: 360px; }
         @media (max-width: 640px) { .bitgraph-wrap .file-drop-container { height: 280px; } }
         .bitgraph-actions { display: flex; flex-direction: column; gap: 12px; padding: 0 0 20px; }
@@ -594,7 +594,7 @@ export default function BitGraphPage() {
                     onClick={clickable ? openProof : undefined}
                     onKeyDown={clickable ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openProof(); } } : undefined}
                     style={{
-                      height: 60,
+                      height: 68,
                       padding: "0 12px",
                       margin: "0 -12px",
                       borderTop: i > 0 ? "1px solid #e5e7eb" : "none",
