@@ -400,7 +400,7 @@ export default function BitGraphPage() {
                         lineHeight: 1.65,
                       }}
                     >
-                      <strong>BitGraphs</strong> are not labels or metadata added after the fact. They are new computations created when your file&apos;s hash <em>fills</em> a pre-existing cryptographic slot, constraining the commitment so it cannot be retroactively constructed. This occurs entirely off-chain and produces a proof file permanently bound to the original, establishing its immutable position in the causal chain.
+                      <strong>BitGraphs</strong> are not labels or metadata added after the fact. They are new computations created when your file&apos;s hash <em>fills</em> a pre-existing cryptographic slot, constraining the commitment so it cannot be retroactively constructed. This occurs entirely off-chain and produces a proof file permanently bound to the original.
                     </p>
                     <p
                       style={{
