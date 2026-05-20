@@ -271,7 +271,7 @@ export default function BitGraphPage() {
   /* ── Styles ── */
   const card: React.CSSProperties = { border: "1px solid #d0d5dd", padding: "24px 20px", background: "#fff", borderRadius: 0, marginBottom: 16 };
   const btnFill: React.CSSProperties = { height: 68, fontSize: 16, fontWeight: 600, border: "none", borderRadius: 0, background: "#0065A4", color: "#ffffff", cursor: "pointer", letterSpacing: "-0.01em" };
-  const btnOut: React.CSSProperties = { height: 68, fontSize: 16, fontWeight: 500, borderRadius: 0, cursor: "pointer", border: "1px solid transparent", background: "#dbeafe", color: "#0065A4" };
+  const btnOut: React.CSSProperties = { height: 68, fontSize: 16, fontWeight: 500, borderRadius: 0, cursor: "pointer", border: "1px solid transparent", background: "#dceaf2", color: "#0065A4" };
 
   return (
     <div style={{ background: "var(--bg)", color: "var(--c-text)", display: "flex", flexDirection: "column" }}>
@@ -603,11 +603,11 @@ export default function BitGraphPage() {
                       animation: `slideIn 0.2s ease-out ${i * 0.05}s both`,
                       cursor: clickable ? "pointer" : "default",
                       transition: "background 0.15s, border-color 0.15s",
-                      background: clickable ? "#dbeafe" : "transparent",
+                      background: clickable ? "#dceaf2" : "transparent",
                       border: "1px solid transparent",
                     }}
-                    onMouseEnter={(e) => { if (clickable) { e.currentTarget.style.background = "#bfdbfe"; e.currentTarget.style.borderColor = "#0065A4"; } }}
-                    onMouseLeave={(e) => { if (clickable) { e.currentTarget.style.background = "#dbeafe"; e.currentTarget.style.borderColor = "transparent"; } }}
+                    onMouseEnter={(e) => { if (clickable) { e.currentTarget.style.background = "#c2d8e7"; e.currentTarget.style.borderColor = "#0065A4"; } }}
+                    onMouseLeave={(e) => { if (clickable) { e.currentTarget.style.background = "#dceaf2"; e.currentTarget.style.borderColor = "transparent"; } }}
                   >
                     <span style={{
                       fontSize: 20, flexShrink: 0, width: 22, textAlign: "center",

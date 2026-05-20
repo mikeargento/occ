@@ -181,7 +181,7 @@ export default function ProofPage() {
                 className="bg-btn-outline"
                 style={{
                   height: 68, fontSize: 16, fontWeight: 500,
-                  color: "#0065A4", background: "#dbeafe",
+                  color: "#0065A4", background: "#dceaf2",
                   border: "1px solid transparent", borderRadius: 0,
                   cursor: "pointer",
                 }}
