@@ -508,20 +508,27 @@ export default function BitGraphPage() {
           <div style={{ animation: "slideIn 0.3s ease-out" }}>
 
             <div style={card}>
-              {/* Big animated counter */}
-              <div style={{ textAlign: "center", padding: "12px 0 16px" }}>
+              {/* Counter as a single line. min() font-size scales down on
+                  narrow viewports so even "10000 of 10000 BitGraphed" stays
+                  on one line; whiteSpace nowrap is the belt to that
+                  suspenders. */}
+              <div style={{ textAlign: "center", padding: "20px 0 24px" }}>
                 <div style={{
-                  fontSize: 96, fontWeight: 800, letterSpacing: "-0.06em",
-                  color: allDone ? "#0065A4" : "var(--c-text)",
-                  fontFamily: "monospace", lineHeight: 1, animation: "countPop 0.4s ease-out",
-                  textShadow: "none",
+                  fontSize: "min(36px, 5.5vw)",
+                  fontWeight: 500,
+                  letterSpacing: "-0.02em",
+                  color: "#374151",
+                  whiteSpace: "nowrap",
+                  lineHeight: 1.2,
+                  animation: "countPop 0.4s ease-out",
                 }}>
-                  {animCount}
-                </div>
-                <div style={{ fontSize: 16, color: "#111827", marginTop: 12, fontWeight: 500, letterSpacing: "0.02em" }}>
-                  {allDone
-                    ? `of ${items.length} BitGraphed`
-                    : `of ${items.length} found`}
+                  <span style={{
+                    fontWeight: 800,
+                    color: allDone ? "#0065A4" : "#111827",
+                  }}>
+                    {animCount}
+                  </span>
+                  {" "}of {items.length}{" "}{allDone ? "BitGraphed" : "found"}
                 </div>
               </div>
 
