@@ -242,7 +242,7 @@ export function FileDrop({
               whiteSpace: "nowrap",
             }}
           >
-            Drop files to create or check BitGraphs
+            Choose files to create or check BitGraphs
           </div>
           {hint && (
             <div

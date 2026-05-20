@@ -140,7 +140,6 @@ export default function BitGraphPage() {
     if (!toProve.length) return;
 
     setStep("proving");
-    // Update items to show "proving" status
     setItems(prev => prev.map(i => i.status === "new" ? { ...i, status: "proving" as const } : i));
 
     try {
@@ -167,7 +166,6 @@ export default function BitGraphPage() {
     setStep("results");
     startAnchorCountdown();
 
-    // Animate new count
     const newTotal = items.filter(i => i.status === "found").length + toProve.length;
     let c = items.filter(i => i.status === "found").length;
     const interval = setInterval(() => {
@@ -272,8 +270,8 @@ export default function BitGraphPage() {
 
   /* ── Styles ── */
   const card: React.CSSProperties = { border: "1px solid #d0d5dd", padding: "24px 20px", background: "#fff", borderRadius: 0, marginBottom: 16 };
-  const btnFill: React.CSSProperties = { height: 52, fontSize: 15, fontWeight: 600, border: "none", borderRadius: 0, background: "#0065A4", color: "#ffffff", cursor: "pointer", flex: 1, letterSpacing: "-0.01em" };
-  const btnOut: React.CSSProperties = { height: 52, fontSize: 15, fontWeight: 500, borderRadius: 0, cursor: "pointer", flex: 1, border: "1px solid #d1d5db", background: "#fff", color: "#111827" };
+  const btnFill: React.CSSProperties = { height: 60, fontSize: 16, fontWeight: 600, border: "none", borderRadius: 0, background: "#0065A4", color: "#ffffff", cursor: "pointer", letterSpacing: "-0.01em" };
+  const btnOut: React.CSSProperties = { height: 60, fontSize: 16, fontWeight: 500, borderRadius: 0, cursor: "pointer", border: "1px solid #d1d5db", background: "#fff", color: "#111827" };
 
   return (
     <div style={{ background: "var(--bg)", color: "var(--c-text)", display: "flex", flexDirection: "column" }}>
@@ -282,6 +280,7 @@ export default function BitGraphPage() {
         .bitgraph-wrap.bitgraph-results { justify-content: flex-start; padding-top: 32px; min-height: 0; }
         .bitgraph-wrap .file-drop-container { height: 360px; }
         @media (max-width: 640px) { .bitgraph-wrap .file-drop-container { height: 280px; } }
+        .bitgraph-actions { display: flex; flex-direction: column; gap: 12px; padding: 0 0 20px; }
         @keyframes countPop { 0% { transform: scale(0.5); opacity: 0 } 50% { transform: scale(1.15) } 100% { transform: scale(1); opacity: 1 } }
         @keyframes slideIn { from { opacity: 0; transform: translateY(12px) } to { opacity: 1; transform: translateY(0) } }
         @keyframes popIn { from { opacity: 0 } to { opacity: 1 } }
@@ -521,16 +520,16 @@ export default function BitGraphPage() {
                 </div>
                 <div style={{ fontSize: 16, color: "#111827", marginTop: 12, fontWeight: 500, letterSpacing: "0.02em" }}>
                   {allDone
-                    ? `of ${items.length} proven`
+                    ? `of ${items.length} BitGraphed`
                     : `of ${items.length} found`}
                 </div>
               </div>
 
-              {/* Actions */}
-              <div style={{ display: "flex", gap: 12, padding: "0 0 20px" }}>
+              {/* Actions — stacked */}
+              <div className="bitgraph-actions">
                 {unproven.length > 0 && (
                   <button onClick={proveRemaining} style={{ ...btnFill, background: "var(--c-accent)", color: "#ffffff" }}>
-                    Prove {unproven.length} remaining
+                    BitGraph {unproven.length} remaining
                   </button>
                 )}
                 {found.length > 0 && (
@@ -540,111 +539,110 @@ export default function BitGraphPage() {
                       ...(anchorCountdown > 0 ? { ...btnOut, opacity: 0.5, cursor: "default" } : allDone ? btnFill : btnOut),
                     }}
                   >
-                    {anchorCountdown > 0 ? <span style={{ fontSize: 13 }}>{`Sealing with Ethereum... ${anchorCountdown}s`}</span> : "Download .zip"}
+                    {anchorCountdown > 0 ? <span style={{ fontSize: 14 }}>{`Anchoring to Ethereum... ${anchorCountdown}s`}</span> : "Download .zip"}
                   </button>
                 )}
                 <button onClick={reset} style={btnOut}>
-                  {allDone ? "New" : "Start over"}
+                  {allDone ? "Choose new files" : "Start over"}
                 </button>
               </div>
 
-              {/* Divider */}
-              <div style={{ borderTop: "1px solid #d0d5dd" }} />
-
-              {/* File list */}
+              {/* File list — whole row tappable when there's a proof */}
               <div>
-              {items.map((item, i) => (
-                <div key={item.file.name + i} style={{
-                  padding: "12px 0", borderTop: i > 0 ? "1px solid #d0d5dd" : "none",
-                  display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap",
-                  animation: `slideIn 0.2s ease-out ${i * 0.05}s both`,
-                }}>
-                  <span style={{
-                    fontSize: 22, marginTop: -2, flexShrink: 0, width: 28, textAlign: "center",
-                    color: item.status === "found" || item.status === "proved" ? "#0065A4"
-                      : item.status === "proving" ? "#f0c060"
-                      : item.status === "error" ? "#f87171"
-                      : "#6b7280",
-                    fontWeight: 700,
-                  }}>
-                    {item.status === "found" || item.status === "proved" ? "✓"
-                      : item.status === "proving" ? "~"
-                      : item.status === "error" ? "!"
-                      : "○"}
-                  </span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {item.file.name}
-                      <span style={{ fontWeight: 400, color: "#6b7280", marginLeft: 8 }}>{formatFileSize(item.file.size)}</span>
-                    </div>
-                    {item.proof && (
-                      <div style={{ fontSize: 11, fontFamily: "monospace", color: "#6b7280", marginTop: 3 }}>
-                        #{item.proof.commit.counter} · {item.digestB64.slice(0, 20)}...
+              {items.map((item, i) => {
+                const clickable = !!item.proof;
+                const openProof = () => {
+                  if (!item.proof) return;
+                  // Open immediately (synchronous) so mobile browsers don't block the popup.
+                  // Use the proof's digest (from TEE) for the URL, not the browser-computed hash.
+                  const proofDigest = item.proof.artifact.digestB64;
+                  window.open(`/proof/${encodeURIComponent(toUrlSafeB64(proofDigest))}`, "_blank");
+                  // Cache file (and any embedded C2PA manifest) to IndexedDB in the background
+                  // so the proof page can show them. C2PA parsing is best-effort and must
+                  // never block caching of the file itself.
+                  (async () => {
+                    try {
+                      const buf = await item.file.arrayBuffer();
+                      let c2pa = null;
+                      try {
+                        const { readC2PA } = await import("@/lib/c2pa-reader");
+                        c2pa = await readC2PA(item.file);
+                      } catch (e) {
+                        console.warn("[bitgraph] c2pa read failed:", e);
+                      }
+                      const db = await new Promise<IDBDatabase>((resolve, reject) => {
+                        const req = indexedDB.open("bitgraph-files", 1);
+                        req.onupgradeneeded = () => req.result.createObjectStore("files");
+                        req.onsuccess = () => resolve(req.result);
+                        req.onerror = () => reject(req.error);
+                      });
+                      const tx = db.transaction("files", "readwrite");
+                      tx.objectStore("files").put(
+                        { name: item.file.name, data: buf, c2pa },
+                        proofDigest
+                      );
+                      await new Promise((r, j) => { tx.oncomplete = r; tx.onerror = j; });
+                      db.close();
+                    } catch (e) { console.error("[bitgraph] cache error:", e); }
+                  })();
+                };
+                return (
+                  <div
+                    key={item.file.name + i}
+                    role={clickable ? "button" : undefined}
+                    tabIndex={clickable ? 0 : undefined}
+                    onClick={clickable ? openProof : undefined}
+                    onKeyDown={clickable ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openProof(); } } : undefined}
+                    style={{
+                      height: 60,
+                      padding: "0 12px",
+                      margin: "0 -12px",
+                      borderTop: i > 0 ? "1px solid #e5e7eb" : "none",
+                      display: "flex", alignItems: "center", gap: 12,
+                      animation: `slideIn 0.2s ease-out ${i * 0.05}s both`,
+                      cursor: clickable ? "pointer" : "default",
+                      transition: "background 0.15s",
+                      background: clickable ? "#f5fafd" : "transparent",
+                    }}
+                    onMouseEnter={(e) => { if (clickable) e.currentTarget.style.background = "#dbeafe"; }}
+                    onMouseLeave={(e) => { if (clickable) e.currentTarget.style.background = "#f5fafd"; }}
+                  >
+                    <span style={{
+                      fontSize: 20, flexShrink: 0, width: 22, textAlign: "center",
+                      color: item.status === "found" || item.status === "proved" ? "#0065A4"
+                        : item.status === "proving" ? "#f0c060"
+                        : item.status === "error" ? "#f87171"
+                        : "#9ca3af",
+                      fontWeight: 700, lineHeight: 1,
+                    }}>
+                      {item.status === "found" || item.status === "proved" ? "✓"
+                        : item.status === "proving" ? "~"
+                        : item.status === "error" ? "!"
+                        : "○"}
+                    </span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 14, fontWeight: 500, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {item.file.name}
                       </div>
-                    )}
-                    {item.status === "found" && item.valid && (
-                      <div style={{ fontSize: 11, color: "#0065A4", marginTop: 2 }}>Signature valid</div>
-                    )}
-                    {item.status === "proved" && (
-                      <div style={{ fontSize: 11, color: "#0065A4", marginTop: 2 }}>Just proved</div>
-                    )}
-                    {item.status === "new" && (
-                      <div style={{ fontSize: 11, color: "#6b7280", marginTop: 2 }}>Not yet proven</div>
+                      <div style={{ fontSize: 12, color: "#6b7280", marginTop: 3 }}>
+                        {formatFileSize(item.file.size)}
+                        {item.status === "found" && item.valid && <><span style={{ margin: "0 6px", color: "#d0d5dd" }}>·</span><span style={{ color: "#0065A4" }}>Signature valid</span></>}
+                        {item.status === "proved" && <><span style={{ margin: "0 6px", color: "#d0d5dd" }}>·</span><span style={{ color: "#0065A4" }}>Just BitGraphed</span></>}
+                        {item.status === "new" && <><span style={{ margin: "0 6px", color: "#d0d5dd" }}>·</span>Not yet BitGraphed</>}
+                        {item.status === "proving" && <><span style={{ margin: "0 6px", color: "#d0d5dd" }}>·</span>BitGraphing…</>}
+                        {item.status === "error" && <><span style={{ margin: "0 6px", color: "#d0d5dd" }}>·</span><span style={{ color: "#dc2626" }}>Error</span></>}
+                      </div>
+                    </div>
+                    {clickable && (
+                      <span aria-hidden="true" style={{ color: "#0065A4", fontSize: 26, flexShrink: 0, paddingRight: 4, lineHeight: 1, fontWeight: 600 }}>
+                        ›
+                      </span>
                     )}
                   </div>
-                  {item.proof && (
-                    <button
-                      onClick={() => {
-                        // Open immediately (synchronous) so mobile browsers don't block the popup
-                        // Use the proof's digest (from TEE) for the URL, not the browser-computed hash
-                        const proofDigest = item.proof!.artifact.digestB64;
-                        window.open(`/proof/${encodeURIComponent(toUrlSafeB64(proofDigest))}`, "_blank");
-                        // Cache file (and any embedded C2PA manifest) to
-                        // IndexedDB in the background so the proof page can
-                        // show them. C2PA parsing is best-effort and must
-                        // never block caching of the file itself.
-                        (async () => {
-                          try {
-                            const buf = await item.file.arrayBuffer();
-
-                            // Try to read C2PA. Fails silently; null result
-                            // means "no manifest or unsupported file type."
-                            let c2pa = null;
-                            try {
-                              const { readC2PA } = await import("@/lib/c2pa-reader");
-                              c2pa = await readC2PA(item.file);
-                            } catch (e) {
-                              console.warn("[bitgraph] c2pa read failed:", e);
-                            }
-
-                            const db = await new Promise<IDBDatabase>((resolve, reject) => {
-                              const req = indexedDB.open("bitgraph-files", 1);
-                              req.onupgradeneeded = () => req.result.createObjectStore("files");
-                              req.onsuccess = () => resolve(req.result);
-                              req.onerror = () => reject(req.error);
-                            });
-                            const tx = db.transaction("files", "readwrite");
-                            tx.objectStore("files").put(
-                              { name: item.file.name, data: buf, c2pa },
-                              proofDigest
-                            );
-                            await new Promise((r, j) => { tx.oncomplete = r; tx.onerror = j; });
-                            db.close();
-                          } catch (e) { console.error("[bitgraph] cache error:", e); }
-                        })();
-                      }}
-                      style={{
-                        fontSize: 15, fontWeight: 600, color: "#ffffff", textDecoration: "none",
-                        flexShrink: 0, padding: "12px 28px", borderRadius: 0,
-                        background: "#0065A4", border: "none", cursor: "pointer",
-                        whiteSpace: "nowrap",
-                      }}>
-                      View Details
-                    </button>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
+
             </div>
 
           </div>
