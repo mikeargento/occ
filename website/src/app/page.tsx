@@ -603,10 +603,10 @@ export default function BitGraphPage() {
                       animation: `slideIn 0.2s ease-out ${i * 0.05}s both`,
                       cursor: clickable ? "pointer" : "default",
                       transition: "background 0.15s",
-                      background: clickable ? "#f5fafd" : "transparent",
+                      background: clickable ? "#dbeafe" : "transparent",
                     }}
-                    onMouseEnter={(e) => { if (clickable) e.currentTarget.style.background = "#dbeafe"; }}
-                    onMouseLeave={(e) => { if (clickable) e.currentTarget.style.background = "#f5fafd"; }}
+                    onMouseEnter={(e) => { if (clickable) e.currentTarget.style.background = "#bfdbfe"; }}
+                    onMouseLeave={(e) => { if (clickable) e.currentTarget.style.background = "#dbeafe"; }}
                   >
                     <span style={{
                       fontSize: 20, flexShrink: 0, width: 22, textAlign: "center",
