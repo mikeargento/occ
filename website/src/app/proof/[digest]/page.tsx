@@ -775,10 +775,9 @@ function SimpleView({
           What this means
         </div>
         <p style={{ fontSize: 14, color: "#374151", lineHeight: 1.6, margin: 0, padding: "20px 24px" }}>
-          This BitGraph was recorded at commit time, not attached afterward.
-          It fixes the file&apos;s position in a causal order. Ethereum later
-          proves this position existed before a specific block, making the
-          order impossible to rewrite.
+          Just as a photograph captures photons using the constraint of a
+          single frame of film, a BitGraph captures bits using the constraint
+          of a single mathematical slot.
         </p>
       </div>
     </div>
