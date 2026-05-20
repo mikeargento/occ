@@ -14,7 +14,7 @@ export default function OverviewPage() {
       </h1>
 
       <p>
-        A photograph captures photons using the constraint of a single frame of film. A BitGraph captures bits using the constraint of a single mathematical slot.
+        Just as a photograph captures photons using the constraint of a single frame of film, a BitGraph captures bits using the constraint of a single mathematical slot.
       </p>
 
       <p>

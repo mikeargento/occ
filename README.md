@@ -8,7 +8,7 @@
 
 ---
 
-A photograph captures photons using the constraint of a single frame of film. A BitGraph captures bits using the constraint of a single mathematical slot.
+Just as a photograph captures photons using the constraint of a single frame of film, a BitGraph captures bits using the constraint of a single mathematical slot.
 
 Origin can be enforced or it can be claimed. Most digital provenance systems claim it. They produce an artifact and then attach a signature, a timestamp, or a metadata block describing where the artifact came from. The claim arrives after the artifact already exists, which is the wrong end of the timeline.
 
