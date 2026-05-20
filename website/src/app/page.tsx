@@ -512,7 +512,7 @@ export default function BitGraphPage() {
                   narrow viewports so even "10000 of 10000 BitGraphed" stays
                   on one line; whiteSpace nowrap is the belt to that
                   suspenders. */}
-              <div style={{ textAlign: "center", padding: "20px 0 24px" }}>
+              <div style={{ textAlign: "center", padding: "56px 0 56px" }}>
                 <div style={{
                   fontSize: "min(36px, 5.5vw)",
                   fontWeight: 500,
@@ -532,9 +532,7 @@ export default function BitGraphPage() {
                 </div>
               </div>
 
-              {/* Actions — stacked. "Start over" is an abort and stays at the
-                  top; "Choose new files" is a "next batch" action and moves
-                  below the file list. */}
+              {/* Actions — stacked */}
               <div className="bitgraph-actions">
                 {unproven.length > 0 && (
                   <button onClick={proveRemaining} style={{ ...btnFill, background: "var(--c-accent)", color: "#ffffff" }}>
@@ -551,11 +549,9 @@ export default function BitGraphPage() {
                     {anchorCountdown > 0 ? <span style={{ fontSize: 14 }}>{`Anchoring to Ethereum... ${anchorCountdown}s`}</span> : "Download .zip"}
                   </button>
                 )}
-                {!allDone && (
-                  <button onClick={reset} style={btnOut}>
-                    Start over
-                  </button>
-                )}
+                <button onClick={reset} style={btnOut}>
+                  {allDone ? "Choose new files" : "Start over"}
+                </button>
               </div>
 
               {/* File list — whole row tappable when there's a proof */}
@@ -654,14 +650,6 @@ export default function BitGraphPage() {
               })}
             </div>
 
-            {/* Continue action — sits below the file list once everything's done */}
-            {allDone && (
-              <div className="bitgraph-actions" style={{ paddingTop: 20 }}>
-                <button onClick={reset} style={btnOut}>
-                  Choose new files
-                </button>
-              </div>
-            )}
             </div>
 
           </div>
