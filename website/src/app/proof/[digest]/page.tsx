@@ -1048,8 +1048,10 @@ function AttestationButton({ reportB64, measurement }: { reportB64: string; meas
       <button
         onClick={() => { setOpen(true); runVerify(); }}
         style={{
-          padding: "8px 16px", fontSize: 13, fontWeight: 600, color: "#ffffff",
-          background: "var(--c-accent)", border: "none", borderRadius: 0, cursor: "pointer",
+          width: "100%", height: 68, fontSize: 16, fontWeight: 600,
+          color: "#ffffff", background: "var(--c-accent)",
+          border: "none", borderRadius: 0, cursor: "pointer",
+          letterSpacing: "-0.01em",
         }}
       >
         Verify Attestation
