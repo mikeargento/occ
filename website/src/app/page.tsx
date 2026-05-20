@@ -411,7 +411,7 @@ export default function BitGraphPage() {
                         lineHeight: 1.65,
                       }}
                     >
-                      A photograph records light at a moment in time. A BitGraph records a file&apos;s exact digital state at the moment of commitment. It proves that those bits filled that slot, in that order, and cannot be changed or recreated later without detection.
+                      A photograph captures photons using the constraint of a single frame of film. A BitGraph captures bits using the constraint of a single mathematical slot.
                     </p>
                   </div>
                 </>
