@@ -134,64 +134,71 @@ export default function ProofPage() {
 
       <div style={{ width: "90%", maxWidth: 800, margin: "0 auto", padding: "40px 0 80px", animation: "fadeIn .3s ease-out" }}>
 
-        {/* Title bar */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 40, flexWrap: "wrap", gap: 12 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+        {/* Title bar — centered hero + stacked actions, matching home */}
+        <div style={{ marginBottom: 40, display: "flex", flexDirection: "column", alignItems: "stretch", gap: 24 }}>
+          <div style={{ textAlign: "center", padding: "16px 0" }}>
             {isEth ? (
-              <span style={{ fontSize: 28, fontWeight: 900, fontFamily: 'var(--font-sans)', color: "var(--c-accent)" }}>
+              <span style={{ fontSize: "min(36px, 5.5vw)", fontWeight: 800, letterSpacing: "-0.02em", color: "var(--c-accent)", whiteSpace: "nowrap" }}>
                 Ethereum Anchor
               </span>
             ) : (
-              <span style={{ fontSize: 28, fontWeight: 900, fontFamily: 'var(--font-sans)', display: "inline-flex", alignItems: "center", gap: 10, flexWrap: "wrap", lineHeight: 1 }}>
+              <span style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 12,
+                fontSize: "min(36px, 5.5vw)",
+                fontWeight: 800,
+                letterSpacing: "-0.02em",
+                color: "#0065A4",
+                whiteSpace: "nowrap",
+                lineHeight: 1,
+              }}>
                 <span
                   aria-hidden="true"
                   style={{
                     display: "inline-flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    width: 28,
-                    height: 28,
+                    width: 32,
+                    height: 32,
                     borderRadius: 999,
                     background: "#0065A4",
                     flexShrink: 0,
                   }}
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 </span>
-                <span style={{ color: "#0065A4" }}>Verified BitGraph</span>
+                <span>Verified BitGraph</span>
               </span>
             )}
           </div>
-          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             {!isEth && (
               <button
                 onClick={() => setSimpleView((v) => !v)}
                 style={{
-                  padding: "8px 14px",
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: "#374151",
-                  background: "transparent",
-                  border: "1px solid #d0d5dd",
-                  borderRadius: 0,
+                  height: 68, fontSize: 16, fontWeight: 500,
+                  color: "#111827", background: "#fff",
+                  border: "1px solid #d1d5db", borderRadius: 0,
                   cursor: "pointer",
-                  transition: "border-color 0.15s, color 0.15s",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = "#0065A4";
-                  e.currentTarget.style.color = "#0065A4";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = "#d0d5dd";
-                  e.currentTarget.style.color = "#374151";
                 }}
               >
                 {simpleView ? "See details" : "← Overview"}
               </button>
             )}
-            <button onClick={exportZip} style={btnStyle}>Export Proof</button>
+            <button
+              onClick={exportZip}
+              style={{
+                height: 68, fontSize: 16, fontWeight: 600,
+                color: "#ffffff", background: "#0065A4",
+                border: "none", borderRadius: 0,
+                cursor: "pointer", letterSpacing: "-0.01em",
+              }}
+            >
+              Export Proof
+            </button>
           </div>
         </div>
 
