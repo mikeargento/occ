@@ -8,11 +8,11 @@
 
 ---
 
+A photograph captures photons using the constraint of a single frame of film. A BitGraph captures bits using the constraint of a single mathematical slot.
+
 Origin can be enforced or it can be claimed. Most digital provenance systems claim it. They produce an artifact and then attach a signature, a timestamp, or a metadata block describing where the artifact came from. The claim arrives after the artifact already exists, which is the wrong end of the timeline.
 
 BitGraph enforces origin. A measured trusted execution environment creates an unpredictable cryptographic slot before the artifact's hash is known. The artifact's hash arrives later and is bound into the slot. The slot is consumed and cannot be reused. What emerges is not a description of provenance but a proof of construction.
-
-BitGraph turns randomness into one-time causal space: a nonce becomes origin space when a TEE can prove it was unused before and consumed once.
 
 > This exact digital state was committed through this measured process, in this order, under these constraints.
 
