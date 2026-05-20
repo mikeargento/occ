@@ -596,17 +596,18 @@ export default function BitGraphPage() {
                     onClick={clickable ? openProof : undefined}
                     onKeyDown={clickable ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openProof(); } } : undefined}
                     style={{
-                      height: 68,
+                      height: 76,
                       padding: "0 12px",
                       margin: i > 0 ? "8px -12px 0 -12px" : "0 -12px",
                       display: "flex", alignItems: "center", gap: 12,
                       animation: `slideIn 0.2s ease-out ${i * 0.05}s both`,
                       cursor: clickable ? "pointer" : "default",
-                      transition: "background 0.15s",
+                      transition: "background 0.15s, border-color 0.15s",
                       background: clickable ? "#dbeafe" : "transparent",
+                      border: "1px solid transparent",
                     }}
-                    onMouseEnter={(e) => { if (clickable) e.currentTarget.style.background = "#bfdbfe"; }}
-                    onMouseLeave={(e) => { if (clickable) e.currentTarget.style.background = "#dbeafe"; }}
+                    onMouseEnter={(e) => { if (clickable) { e.currentTarget.style.background = "#bfdbfe"; e.currentTarget.style.borderColor = "#0065A4"; } }}
+                    onMouseLeave={(e) => { if (clickable) { e.currentTarget.style.background = "#dbeafe"; e.currentTarget.style.borderColor = "transparent"; } }}
                   >
                     <span style={{
                       fontSize: 20, flexShrink: 0, width: 22, textAlign: "center",
@@ -635,8 +636,11 @@ export default function BitGraphPage() {
                       </div>
                     </div>
                     {clickable && (
-                      <span aria-hidden="true" style={{ color: "#0065A4", fontSize: 26, flexShrink: 0, paddingRight: 4, lineHeight: 1, fontWeight: 600 }}>
-                        ›
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#0065A4", fontSize: 14, fontWeight: 600, flexShrink: 0, paddingRight: 4, letterSpacing: "-0.01em" }}>
+                        Open
+                        <span aria-hidden="true" style={{ fontSize: 22, lineHeight: 1, fontWeight: 600 }}>
+                          ›
+                        </span>
                       </span>
                     )}
                   </div>
