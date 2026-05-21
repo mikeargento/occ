@@ -277,7 +277,7 @@ export default function BitGraphPage() {
         .bitgraph-wrap.bitgraph-results { justify-content: flex-start; padding-top: 32px; min-height: 0; }
         .bitgraph-wrap .file-drop-container { height: 450px; }
         @media (max-width: 640px) { .bitgraph-wrap .file-drop-container { height: 280px; } }
-        .bitgraph-actions { display: flex; flex-direction: column; gap: 12px; padding: 0 0 20px; }
+        .bitgraph-actions { display: flex; flex-direction: column; gap: 12px; }
         @keyframes countPop { 0% { transform: scale(0.5); opacity: 0 } 50% { transform: scale(1.15) } 100% { transform: scale(1); opacity: 1 } }
         @keyframes slideIn { from { opacity: 0; transform: translateY(12px) } to { opacity: 1; transform: translateY(0) } }
         @keyframes popIn { from { opacity: 0 } to { opacity: 1 } }
@@ -338,14 +338,13 @@ export default function BitGraphPage() {
 
         {/* ── Results ── */}
         {step === "results" && items.length > 0 && (
-          <div style={{ animation: "slideIn 0.3s ease-out" }}>
+          <div style={{ animation: "slideIn 0.3s ease-out", display: "flex", flexDirection: "column", gap: 24 }}>
 
-            <div style={card}>
-              {/* Counter as a single line. min() font-size scales down on
-                  narrow viewports so even "10000 of 10000 BitGraphed" stays
-                  on one line; whiteSpace nowrap is the belt to that
-                  suspenders. */}
-              <div style={{ textAlign: "center", padding: "56px 0 56px" }}>
+            {/* Counter as a single line, floating on the page background to
+                match the proof page hero. min() font-size + whiteSpace nowrap
+                keep "10000 of 10000 BitGraphed" on a single line at every
+                viewport. */}
+              <div style={{ textAlign: "center", padding: "16px 0" }}>
                 <div style={{
                   fontSize: "min(36px, 5.5vw)",
                   fontWeight: 800,
@@ -477,8 +476,6 @@ export default function BitGraphPage() {
                   </div>
                 );
               })}
-            </div>
-
             </div>
 
           </div>
