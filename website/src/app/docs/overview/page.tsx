@@ -14,6 +14,10 @@ export default function OverviewPage() {
       </h1>
 
       <p>
+        BitGraphs are not labels or metadata added after the fact. They are new computations created when your file&rsquo;s hash fills a pre-existing cryptographic slot, constraining the commitment so it cannot be retroactively constructed. This occurs entirely off-chain and produces a proof file permanently bound to the original.
+      </p>
+
+      <p>
         Just as a photograph captures photons through the constraint of a single frame of film, a BitGraph captures bits through the constraint of a single mathematical slot.
       </p>
 

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Chat } from "@/components/chat";
 
 const sections = [
   { href: "/docs/overview", label: "Overview" },
@@ -39,7 +38,6 @@ function SidebarNav({ pathname, onNavigate }: { pathname: string; onNavigate?: (
 export default function DocsLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [chatOpen, setChatOpen] = useState(false);
   const currentLabel = sections.find(s => s.href === pathname)?.label || "Docs";
 
   return (
@@ -138,51 +136,6 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
           {children}
         </div>
       </div>
-
-      {/* Floating chat */}
-      {chatOpen ? (
-        <div className="docs-chat-container" style={{
-          position: "fixed", bottom: 24, right: 24, zIndex: 100,
-          width: 400, maxWidth: "calc(100vw - 48px)",
-          maxHeight: "calc(100vh - 120px)",
-          borderRadius: 0, overflow: "hidden",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08)",
-        }}>
-          <style>{`
-            @media (max-width: 640px) {
-              .docs-chat-container {
-                position: fixed !important;
-                inset: 0 !important;
-                width: 100% !important;
-                max-width: 100% !important;
-                max-height: 100% !important;
-                border-radius: 0 !important;
-                bottom: 0 !important;
-                right: 0 !important;
-              }
-            }
-          `}</style>
-          <Chat defaultOpen onOpenChange={setChatOpen} />
-        </div>
-      ) : (
-        <button
-          onClick={() => setChatOpen(true)}
-          style={{
-            position: "fixed", bottom: 24, right: 24, zIndex: 100,
-            width: 52, height: 52, borderRadius: 0,
-            background: "#0065A4", border: "none", cursor: "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            boxShadow: "0 4px 12px rgba(0,101,164,0.3)",
-            transition: "transform 0.15s, box-shadow 0.15s",
-          }}
-          onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.05)"; e.currentTarget.style.boxShadow = "0 6px 16px rgba(0,101,164,0.4)"; }}
-          onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,101,164,0.3)"; }}
-        >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-          </svg>
-        </button>
-      )}
     </div>
   );
 }

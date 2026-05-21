@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import { FileDrop } from "@/components/file-drop";
 // Footer is in root layout
-import { Chat } from "@/components/chat";
 import {
   hashFile,
   commitDigest,
@@ -33,8 +32,6 @@ export default function BitGraphPage() {
   const [scanProgress, setScanProgress] = useState({ current: 0, total: 0 });
   const [exportProgress, setExportProgress] = useState({ current: 0, total: 0 });
   const [animCount, setAnimCount] = useState(0);
-  const [chatOpen, setChatOpen] = useState(false);
-  const [infoOpen, setInfoOpen] = useState(false);
   const [anchorCountdown, setAnchorCountdown] = useState(0);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -293,178 +290,14 @@ export default function BitGraphPage() {
 
         {/* ── Drop zone + What is BitGraph button ── */}
         {step === "drop" && (
-          <>
-            <div className="file-drop-container" style={{ animation: "slideIn 0.3s ease-out" }}>
-              <FileDrop
-                multiple
-                onFile={(f) => handleFiles([f])}
-                onFiles={handleFiles}
-                hint=""
-              />
-            </div>
-            <div style={{ position: "relative", display: "flex", justifyContent: "center", animation: "slideIn 0.3s ease-out" }}>
-              <button
-                type="button"
-                onClick={() => setInfoOpen((v) => !v)}
-                aria-label="About BitGraph"
-                aria-expanded={infoOpen}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 8,
-                  background: "transparent",
-                  border: "1px solid #d0d5dd",
-                  borderRadius: 0,
-                  padding: "10px 20px",
-                  fontSize: 14,
-                  fontWeight: 500,
-                  color: "#374151",
-                  cursor: "pointer",
-                  transition: "border-color 0.15s, color 0.15s",
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.borderColor = "#0065A4";
-                  (e.currentTarget as HTMLButtonElement).style.color = "#0065A4";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.borderColor = "#d0d5dd";
-                  (e.currentTarget as HTMLButtonElement).style.color = "#374151";
-                }}
-              >
-                <span
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: 16,
-                    height: 16,
-                    borderRadius: 999,
-                    border: "1.25px solid currentColor",
-                    fontSize: 11,
-                    fontWeight: 700,
-                    fontFamily: "Georgia, serif",
-                    fontStyle: "italic",
-                    lineHeight: 1,
-                  }}
-                >
-                  i
-                </span>
-                What is a BitGraph?
-              </button>
-              {infoOpen && (
-                <>
-                  <div
-                    onClick={() => setInfoOpen(false)}
-                    style={{ position: "fixed", inset: 0, zIndex: 40 }}
-                    aria-hidden="true"
-                  />
-                  <div
-                    role="dialog"
-                    style={{
-                      position: "absolute",
-                      bottom: "calc(100% + 10px)",
-                      left: "50%",
-                      transform: "translateX(-50%)",
-                      zIndex: 50,
-                      width: "min(480px, calc(100vw - 32px))",
-                      background: "#ffffff",
-                      border: "1px solid #e5e7eb",
-                      borderRadius: 0,
-                      boxShadow: "0 10px 32px rgba(0,0,0,0.10)",
-                      padding: "18px 20px",
-                      animation: "popIn 0.18s ease-out",
-                    }}
-                  >
-                    <div
-                      aria-hidden="true"
-                      style={{
-                        position: "absolute",
-                        bottom: -6,
-                        left: "50%",
-                        marginLeft: -6,
-                        transform: "rotate(45deg)",
-                        width: 12,
-                        height: 12,
-                        background: "#ffffff",
-                        borderRight: "1px solid #e5e7eb",
-                        borderBottom: "1px solid #e5e7eb",
-                      }}
-                    />
-                    <p
-                      style={{
-                        margin: 0,
-                        fontSize: 16,
-                        fontWeight: 400,
-                        color: "#111827",
-                        lineHeight: 1.65,
-                      }}
-                    >
-                      <strong>BitGraphs</strong> are not labels or metadata added after the fact. They are new computations created when your file&apos;s hash <em>fills</em> a pre-existing cryptographic slot, constraining the commitment so it cannot be retroactively constructed. This occurs entirely off-chain and produces a proof file permanently bound to the original.
-                    </p>
-                    <p
-                      style={{
-                        margin: "12px 0 0 0",
-                        fontSize: 16,
-                        fontWeight: 400,
-                        color: "#111827",
-                        lineHeight: 1.65,
-                      }}
-                    >
-                      Just as a photograph captures photons through the constraint of a single frame of film, a BitGraph captures bits through the constraint of a single mathematical slot.
-                    </p>
-                  </div>
-                </>
-              )}
-            </div>
-          </>
-        )}
-
-        {/* Floating chat bubble: matches the docs layout */}
-        {step === "drop" && (
-          chatOpen ? (
-            <div className="docs-chat-container" style={{
-              position: "fixed", bottom: 24, right: 24, zIndex: 100,
-              width: 400, maxWidth: "calc(100vw - 48px)",
-              maxHeight: "calc(100vh - 120px)",
-              borderRadius: 0, overflow: "hidden",
-              boxShadow: "0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08)",
-            }}>
-              <style>{`
-                @media (max-width: 640px) {
-                  .docs-chat-container {
-                    position: fixed !important;
-                    inset: 0 !important;
-                    width: 100% !important;
-                    max-width: 100% !important;
-                    max-height: 100% !important;
-                    border-radius: 0 !important;
-                    bottom: 0 !important;
-                    right: 0 !important;
-                  }
-                }
-              `}</style>
-              <Chat defaultOpen onOpenChange={setChatOpen} />
-            </div>
-          ) : (
-            <button
-              onClick={() => setChatOpen(true)}
-              aria-label="Open chat"
-              style={{
-                position: "fixed", bottom: 24, right: 24, zIndex: 100,
-                width: 52, height: 52, borderRadius: 0,
-                background: "#0065A4", border: "none", cursor: "pointer",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                boxShadow: "0 4px 12px rgba(0,101,164,0.3)",
-                transition: "transform 0.15s, box-shadow 0.15s",
-              }}
-              onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.05)"; e.currentTarget.style.boxShadow = "0 6px 16px rgba(0,101,164,0.4)"; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,101,164,0.3)"; }}
-            >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-              </svg>
-            </button>
-          )
+          <div className="file-drop-container" style={{ animation: "slideIn 0.3s ease-out" }}>
+            <FileDrop
+              multiple
+              onFile={(f) => handleFiles([f])}
+              onFiles={handleFiles}
+              hint=""
+            />
+          </div>
         )}
 
         {/* ── Scanning ── */}
