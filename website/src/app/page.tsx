@@ -595,6 +595,7 @@ export default function BitGraphPage() {
                     tabIndex={clickable ? 0 : undefined}
                     onClick={clickable ? openProof : undefined}
                     onKeyDown={clickable ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openProof(); } } : undefined}
+                    className={clickable ? "bitgraph-file-row" : undefined}
                     style={{
                       height: 76,
                       padding: "0 12px",
@@ -602,12 +603,9 @@ export default function BitGraphPage() {
                       display: "flex", alignItems: "center", gap: 12,
                       animation: `slideIn 0.2s ease-out ${i * 0.05}s both`,
                       cursor: clickable ? "pointer" : "default",
-                      transition: "background 0.15s, border-color 0.15s",
                       background: "transparent",
                       border: clickable ? "1px solid #0065A4" : "1px solid transparent",
                     }}
-                    onMouseEnter={(e) => { if (clickable) e.currentTarget.style.background = "#f5f9fc"; }}
-                    onMouseLeave={(e) => { if (clickable) e.currentTarget.style.background = "transparent"; }}
                   >
                     <span style={{
                       fontSize: 20, flexShrink: 0, width: 22, textAlign: "center",

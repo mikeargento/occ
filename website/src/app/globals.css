@@ -422,11 +422,15 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 /* ── Nav link hover ── */
 .nav-link:hover { background: var(--bg-elevated) !important; color: var(--c-text) !important; border-radius: 0; }
 
-/* ── Outline button hover — white with brand-blue border at rest, a near-
-   white hover tint as the engagement signal. Tint stays barely-blue so
-   it doesn't drift into seafoam territory. ── */
+/* ── Outline button + file row hover — gated to (hover: hover) so touch
+   devices don't stick in the hover state after a tap. Desktop still
+   gets the engagement signal; mobile cleanly leaves the button alone. ── */
 .bg-btn-outline { transition: background 0.15s; }
-.bg-btn-outline:hover { background: #f5f9fc !important; }
+.bitgraph-file-row { transition: background 0.15s; }
+@media (hover: hover) {
+  .bg-btn-outline:hover { background: #f5f9fc !important; }
+  .bitgraph-file-row:hover { background: #f5f9fc; }
+}
 
 /* ── Nav responsive ── */
 @media (max-width: 768px) {
