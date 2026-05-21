@@ -10,7 +10,7 @@ export function SiteNav() {
       position: "sticky", top: 0, zIndex: 50,
     }}>
       <div style={{
-        maxWidth: 1120, margin: "0 auto", padding: "0 24px",
+        width: "90%", maxWidth: 800, margin: "0 auto", padding: 0,
         height: 56, display: "flex", alignItems: "center", justifyContent: "space-between",
       }}>
         <Link href="/" style={{

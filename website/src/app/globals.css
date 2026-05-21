@@ -297,13 +297,9 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .overview td:first-child { white-space: normal; }
 }
 
-/* ── Docs layout responsive ── */
-.docs-sidebar { display: block; }
-.docs-mobile-nav { display: none; }
-@media (max-width: 768px) {
-  .docs-sidebar { display: none; }
-  .docs-mobile-nav { display: block; }
-}
+/* ── Docs layout: dropdown nav at every viewport, no desktop sidebar.
+   Keeps docs at the same 800px content width as the rest of the site. ── */
+.docs-section-nav { display: block; }
 
 /* Code block container */
 .code-block {

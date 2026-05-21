@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 const sections = [
   { href: "/docs/overview", label: "Overview" },
@@ -17,40 +17,35 @@ const sections = [
   { href: "/docs/faq", label: "FAQ" },
 ];
 
-function SidebarNav({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
-  return (
-    <nav style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-      {sections.map((s) => (
-        <Link key={s.href} href={s.href} onClick={onNavigate} style={{
-          display: "block", padding: "6px 12px", fontSize: 14,
-          fontWeight: pathname === s.href ? 600 : 400,
-          color: pathname === s.href ? "#111827" : "#4b5563",
-          textDecoration: "none", borderRadius: 0,
-          background: pathname === s.href ? "#f3f4f6" : "transparent",
-        }}>
-          {s.label}
-        </Link>
-      ))}
-    </nav>
-  );
-}
-
 export default function DocsLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const currentLabel = sections.find(s => s.href === pathname)?.label || "Docs";
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Click outside to close
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [menuOpen]);
 
   return (
-    <div style={{ maxWidth: 1120, margin: "0 auto", padding: "32px 24px 80px" }}>
-      {/* Mobile section dropdown */}
-      <div className="docs-mobile-nav" style={{
+    <div style={{ width: "90%", maxWidth: 800, margin: "0 auto", padding: "32px 0 80px" }}>
+      {/* Section dropdown — used at every viewport now */}
+      <div ref={menuRef} className="docs-section-nav" style={{
         position: "sticky", top: 56, zIndex: 40,
         background: "#f5f5f5", marginBottom: 24,
         paddingTop: 8, paddingBottom: 8,
       }}>
         <button
-          onClick={() => setMobileMenuOpen(o => !o)}
-          aria-expanded={mobileMenuOpen}
+          onClick={() => setMenuOpen(o => !o)}
+          aria-expanded={menuOpen}
           aria-label="Documentation sections"
           style={{
             width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -60,60 +55,51 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
           }}
         >
           <span>{currentLabel}</span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: mobileMenuOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: menuOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}>
             <polyline points="6 9 12 15 18 9" />
           </svg>
         </button>
-        {mobileMenuOpen && (
+        {menuOpen && (
           <div style={{
             marginTop: 8, padding: 8,
             background: "#fff", border: "1px solid #d0d5dd", borderRadius: 0,
             boxShadow: "0 4px 12px rgba(0,0,0,0.06)",
           }}>
-            <SidebarNav pathname={pathname} onNavigate={() => setMobileMenuOpen(false)} />
-          </div>
-        )}
-      </div>
-
-      <div style={{ display: "flex", gap: 48 }}>
-        {/* Sidebar — desktop only */}
-        <aside className="docs-sidebar" style={{ width: 200, flexShrink: 0 }}>
-          <div style={{ position: "sticky", top: 88 }}>
-            <div style={{
-              fontSize: 11, fontWeight: 600, textTransform: "uppercase",
-              letterSpacing: "0.1em", color: "#4b5563", marginBottom: 16, paddingTop: 8,
-            }}>
-              Documentation
-            </div>
-            <SidebarNav pathname={pathname} />
-            <div style={{
-              marginTop: 24,
-              paddingTop: 16,
-              borderTop: "1px solid #e5e7eb",
-            }}>
+            <nav style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              {sections.map((s) => (
+                <Link
+                  key={s.href}
+                  href={s.href}
+                  onClick={() => setMenuOpen(false)}
+                  style={{
+                    display: "block", padding: "8px 12px", fontSize: 14,
+                    fontWeight: pathname === s.href ? 600 : 400,
+                    color: pathname === s.href ? "#111827" : "#4b5563",
+                    textDecoration: "none", borderRadius: 0,
+                    background: pathname === s.href ? "#f3f4f6" : "transparent",
+                  }}
+                >
+                  {s.label}
+                </Link>
+              ))}
+              {/* GitHub as a final, separated entry */}
               <a
                 href="https://github.com/mikeargento/bitgraph"
                 target="_blank"
                 rel="noopener"
+                onClick={() => setMenuOpen(false)}
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
                   gap: 8,
-                  padding: "6px 12px",
+                  marginTop: 8,
+                  paddingTop: 12,
+                  borderTop: "1px solid #e5e7eb",
+                  padding: "12px 12px 8px 12px",
                   fontSize: 14,
                   fontWeight: 400,
                   color: "#4b5563",
                   textDecoration: "none",
-                  borderRadius: 0,
-                  transition: "color 0.15s, background 0.15s",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = "#111827";
-                  e.currentTarget.style.background = "#f3f4f6";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = "#4b5563";
-                  e.currentTarget.style.background = "transparent";
                 }}
               >
                 <svg
@@ -127,15 +113,13 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
                 </svg>
                 GitHub
               </a>
-            </div>
+            </nav>
           </div>
-        </aside>
-
-        {/* Content */}
-        <div style={{ minWidth: 0, flex: 1 }}>
-          {children}
-        </div>
+        )}
       </div>
+
+      {/* Content */}
+      <div>{children}</div>
     </div>
   );
 }
