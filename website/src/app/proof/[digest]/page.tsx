@@ -175,20 +175,6 @@ export default function ProofPage() {
             )}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {!isEth && (
-              <button
-                onClick={() => setSimpleView((v) => !v)}
-                className="bg-btn-outline"
-                style={{
-                  height: 68, fontSize: 16, fontWeight: 500,
-                  color: "#0065A4", background: "#dceaf2",
-                  border: "1px solid transparent", borderRadius: 0,
-                  cursor: "pointer",
-                }}
-              >
-                {simpleView ? "See details" : "← Overview"}
-              </button>
-            )}
             <button
               onClick={exportZip}
               style={{
@@ -200,6 +186,20 @@ export default function ProofPage() {
             >
               Export Proof
             </button>
+            {!isEth && (
+              <button
+                onClick={() => setSimpleView((v) => !v)}
+                className="bg-btn-outline"
+                style={{
+                  height: 68, fontSize: 16, fontWeight: 500,
+                  color: "#0065A4", background: "#fff",
+                  border: "1px solid #0065A4", borderRadius: 0,
+                  cursor: "pointer",
+                }}
+              >
+                {simpleView ? "See details" : "← Overview"}
+              </button>
+            )}
           </div>
         </div>
 
@@ -1051,8 +1051,8 @@ function AttestationButton({ reportB64, measurement }: { reportB64: string; meas
         className="bg-btn-outline"
         style={{
           width: "100%", height: 68, fontSize: 16, fontWeight: 500,
-          color: "#0065A4", background: "#dceaf2",
-          border: "1px solid transparent", borderRadius: 0,
+          color: "#0065A4", background: "#fff",
+          border: "1px solid #0065A4", borderRadius: 0,
           cursor: "pointer",
         }}
       >

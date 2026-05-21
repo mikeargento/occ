@@ -422,12 +422,11 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 /* ── Nav link hover ── */
 .nav-link:hover { background: var(--bg-elevated) !important; color: var(--c-text) !important; border-radius: 0; }
 
-/* ── Outline button hover — matches the file row "Open BitGraph" treatment.
-   Tints are #0065A4 (brand blue) mixed ~15% / ~25% with white, so the
-   default and hover backgrounds stay in the same color family as the
-   brand color rather than being adjacent Tailwind blues. ── */
-.bg-btn-outline { transition: border-color 0.15s, background 0.15s; }
-.bg-btn-outline:hover { border-color: #0065A4 !important; background: #c2d8e7 !important; }
+/* ── Outline button hover — white with brand-blue border at rest, light
+   brand-derived tint on hover. Tint is #0065A4 mixed ~15% with white,
+   so default → hover stays in the same color family as the brand color. ── */
+.bg-btn-outline { transition: background 0.15s; }
+.bg-btn-outline:hover { background: #dceaf2 !important; }
 
 /* ── Nav responsive ── */
 @media (max-width: 768px) {

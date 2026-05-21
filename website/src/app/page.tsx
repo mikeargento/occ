@@ -271,7 +271,7 @@ export default function BitGraphPage() {
   /* ── Styles ── */
   const card: React.CSSProperties = { border: "1px solid #d0d5dd", padding: "24px 20px", background: "#fff", borderRadius: 0, marginBottom: 16 };
   const btnFill: React.CSSProperties = { height: 68, fontSize: 16, fontWeight: 600, border: "none", borderRadius: 0, background: "#0065A4", color: "#ffffff", cursor: "pointer", letterSpacing: "-0.01em" };
-  const btnOut: React.CSSProperties = { height: 68, fontSize: 16, fontWeight: 500, borderRadius: 0, cursor: "pointer", border: "1px solid transparent", background: "#dceaf2", color: "#0065A4" };
+  const btnOut: React.CSSProperties = { height: 68, fontSize: 16, fontWeight: 500, borderRadius: 0, cursor: "pointer", border: "1px solid #0065A4", background: "#fff", color: "#0065A4" };
 
   return (
     <div style={{ background: "var(--bg)", color: "var(--c-text)", display: "flex", flexDirection: "column" }}>
