@@ -603,11 +603,11 @@ export default function BitGraphPage() {
                       animation: `slideIn 0.2s ease-out ${i * 0.05}s both`,
                       cursor: clickable ? "pointer" : "default",
                       transition: "background 0.15s, border-color 0.15s",
-                      background: clickable ? "#dceaf2" : "transparent",
-                      border: "1px solid transparent",
+                      background: "transparent",
+                      border: clickable ? "1px solid #0065A4" : "1px solid transparent",
                     }}
-                    onMouseEnter={(e) => { if (clickable) { e.currentTarget.style.background = "#c2d8e7"; e.currentTarget.style.borderColor = "#0065A4"; } }}
-                    onMouseLeave={(e) => { if (clickable) { e.currentTarget.style.background = "#dceaf2"; e.currentTarget.style.borderColor = "transparent"; } }}
+                    onMouseEnter={(e) => { if (clickable) e.currentTarget.style.background = "#f5f9fc"; }}
+                    onMouseLeave={(e) => { if (clickable) e.currentTarget.style.background = "transparent"; }}
                   >
                     <span style={{
                       fontSize: 20, flexShrink: 0, width: 22, textAlign: "center",

@@ -422,11 +422,11 @@ pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 /* ── Nav link hover ── */
 .nav-link:hover { background: var(--bg-elevated) !important; color: var(--c-text) !important; border-radius: 0; }
 
-/* ── Outline button hover — white with brand-blue border at rest, light
-   brand-derived tint on hover. Tint is #0065A4 mixed ~15% with white,
-   so default → hover stays in the same color family as the brand color. ── */
+/* ── Outline button hover — white with brand-blue border at rest, a near-
+   white hover tint as the engagement signal. Tint stays barely-blue so
+   it doesn't drift into seafoam territory. ── */
 .bg-btn-outline { transition: background 0.15s; }
-.bg-btn-outline:hover { background: #dceaf2 !important; }
+.bg-btn-outline:hover { background: #f5f9fc !important; }
 
 /* ── Nav responsive ── */
 @media (max-width: 768px) {
