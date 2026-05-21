@@ -134,8 +134,10 @@ export default function ProofPage() {
 
       <div style={{ width: "90%", maxWidth: 800, margin: "0 auto", padding: "40px 0 80px", animation: "fadeIn .3s ease-out" }}>
 
-        {/* Title bar — centered hero + stacked actions, matching home */}
-        <div style={{ marginBottom: 40, display: "flex", flexDirection: "column", alignItems: "stretch", gap: 24 }}>
+        {/* Title bar — centered hero + stacked actions, matching home.
+            marginBottom matches the grid `gap` below so the spacing from the
+            last button to the first card equals the spacing between cards. */}
+        <div style={{ marginBottom: 24, display: "flex", flexDirection: "column", alignItems: "stretch", gap: 24 }}>
           <div style={{ textAlign: "center", padding: "16px 0" }}>
             {isEth ? (
               <span style={{ fontSize: "min(36px, 5.5vw)", fontWeight: 800, letterSpacing: "-0.02em", color: "var(--c-accent)", whiteSpace: "nowrap" }}>

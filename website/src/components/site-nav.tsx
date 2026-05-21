@@ -23,13 +23,13 @@ export function SiteNav() {
         <div style={{ display: "flex", gap: 24, alignItems: "center" }}>
           <Link href="/docs" style={{
             fontSize: 14, fontWeight: 600, color: "#111827",
-            textDecoration: "none", textTransform: "uppercase", letterSpacing: "0.04em",
+            textDecoration: "none",
           }}>
-            Documentation
+            Docs
           </Link>
           <Link href="/contact" style={{
             fontSize: 14, fontWeight: 600, color: "#111827",
-            textDecoration: "none", textTransform: "uppercase", letterSpacing: "0.04em",
+            textDecoration: "none",
           }}>
             Contact
           </Link>
