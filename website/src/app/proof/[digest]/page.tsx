@@ -178,7 +178,7 @@ export default function ProofPage() {
             <button
               onClick={exportZip}
               style={{
-                height: 68, fontSize: 16, fontWeight: 600,
+                height: 76, fontSize: 16, fontWeight: 600,
                 color: "#ffffff", background: "#0065A4",
                 border: "none", borderRadius: 0,
                 cursor: "pointer", letterSpacing: "-0.01em",
@@ -191,7 +191,7 @@ export default function ProofPage() {
                 onClick={() => setSimpleView((v) => !v)}
                 className="bg-btn-outline"
                 style={{
-                  height: 68, fontSize: 16, fontWeight: 500,
+                  height: 76, fontSize: 16, fontWeight: 500,
                   color: "#0065A4", background: "#fff",
                   border: "1px solid #0065A4", borderRadius: 0,
                   cursor: "pointer",
@@ -1050,7 +1050,7 @@ function AttestationButton({ reportB64, measurement }: { reportB64: string; meas
         onClick={() => { setOpen(true); runVerify(); }}
         className="bg-btn-outline"
         style={{
-          width: "100%", height: 68, fontSize: 16, fontWeight: 500,
+          width: "100%", height: 76, fontSize: 16, fontWeight: 500,
           color: "#0065A4", background: "#fff",
           border: "1px solid #0065A4", borderRadius: 0,
           cursor: "pointer",
