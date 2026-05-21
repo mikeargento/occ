@@ -599,7 +599,7 @@ export default function BitGraphPage() {
                     style={{
                       height: 76,
                       padding: "0 12px",
-                      margin: i > 0 ? "8px -12px 0 -12px" : "0 -12px",
+                      marginTop: i > 0 ? 8 : 0,
                       display: "flex", alignItems: "center", gap: 12,
                       animation: `slideIn 0.2s ease-out ${i * 0.05}s both`,
                       cursor: clickable ? "pointer" : "default",
